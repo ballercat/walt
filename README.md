@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
+
 # Walt
 :zap: **Walt** is syntax sugar for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. A sort-of C for the web. I wouldn't say it's
 compiled into `.wast` as much as it's a better way of writing wast code directly.
