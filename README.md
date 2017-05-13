@@ -35,8 +35,8 @@ new language.
 
 ### Reserved Keywords
 
+* Reserved words from JavaScript:
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
-
 ```javascript
 break       else          new
 case        export        return
@@ -49,6 +49,12 @@ default     import        typeof
 delete      in            var
 do          instanceof    void
 with        yield         while
+```
+
+* Reserved words from S-expression-syntax (todo) :
+```
+global
+i32
 ```
 
 ### Expressions
@@ -88,20 +94,59 @@ Each expression must end in a `;`
 
 Every `.walt` file is a module and is compiled into the above. Similar to node modules every module has access to a magic `module` global. `module` is a reserved keyword
 
+### Improting  modules
+
+* `counter.walt`
+```javascript
+global i32 counter = 0;
+function count() : i32 {
+  return counter++;
+}
+export count; // modules with exports get assigned linker names
+```
+
+* `main.walt`
+```javascript
+import { function count : i32 }  from './counter'; // counter.walt
+count(); // 0
+count(); // 1
+```
+
+Output `.wast`:
+
+```
+(module $__M0
+  (global $counter (mut i32) (i32.const 0))
+  (func $count (result i32)
+    (set_global $counter
+      (i32.add $get_global $counter (i32.const 1))
+    )
+    (return (get_global $counter))
+  )
+  (export "count" (func $count)) ; modules with exports get assigned linker names
+)
+(register "counter" $__M0)
+(module
+  (func $count (import "counter" "count") (result i32)) ; counter.walt
+  (call $count) ; 0
+  (call $count) ; 1
+)
+```
+
 ### Memory
 
 * Input `.walt`
 ```javascript
-module.memory = new Memory(0, 256);
+import Memory from 'Memory';
+module.memory = Memory(0, 256);
 ```
 
 * Result `.wast`
 ```
 (memory 1, 256)
 ```
-
-
-Module memory must be set on the `module.memory`. Only one memory entry is currently allowed, per the wasm spec.
+- Import a module `Memory` to create a new memory entry
+- Module memory must be set on the `module.memory`. Only one memory entry is currently allowed, per the wasm spec.
 
 
 
