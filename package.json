@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/ballercat/walt/issues"
   },
-  "homepage": "https://github.com/ballercat/walt#readme"
+  "homepage": "https://github.com/ballercat/walt#readme",
+  "dependencies": {
+    "esprima": "^3.1.3"
+  }
 }
