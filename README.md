@@ -51,11 +51,19 @@ do          instanceof    void
 with        yield         while
 ```
 
-* Reserved words from S-expression-syntax (todo) :
+* Reserved words from S-expression-syntax (wip) :
 ```
 global
-i32
+set_global
+get_global
+set_local
+get_local
+tee_local
 ```
+
+All s-expression-syntax words are reserved and can be written directly into `.walt` scripts.
+
+## Alternative Syntax
 
 ### Expressions
 
@@ -83,6 +91,32 @@ Each expression must end in a `;`
 ;)
 ```
 
+### Functions
+
+* **Traditional**
+
+  * Input `.walt`
+  ```javascript
+  function x() : i32 {
+    return 2;
+  }
+  ```
+  * Output `.wast`
+  ```
+  (func $x (result i32)
+    (return (i32.const 2)
+  )
+  ```
+
+* **Arrow functions**
+  - Input `.walt`
+  ```javascript
+  x = () : i32 => 2;
+  ```
+  - Output `.wast`
+  ```
+  (func $x (result i32) (i32.const 2))
+  ```
 ### Module
 
 * `.wast`
