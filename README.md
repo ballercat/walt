@@ -29,6 +29,7 @@ new language.
 * WebAssembly Text format semantics. https://github.com/WebAssembly/design/blob/master/Semantics.md
 * WebAssembly semantics test suite https://github.com/WebAssembly/spec/tree/master/test/core
 * WebAssembly Binary Toolkit https://github.com/WebAssembly/wabt.
+* S-syntax https://github.com/WebAssembly/spec/tree/master/interpreter#s-expression-syntax
 
 # Spec (WIP)
 
@@ -37,7 +38,7 @@ new language.
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
 
 ```javascript
-break       else				  new
+break       else          new
 case        export        return
 catch       extends       super
 class       finally       switch
