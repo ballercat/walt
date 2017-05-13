@@ -11,11 +11,11 @@ I feel like this is currently a problem. Most Web engineers are not familiar wit
 should be able to edit WebAssembly as easily as any other systems programmer.
 
 # Solution
-Provide a **thin layer** of syntax sugar on top of `.wast` text format. Preferably providing as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
-the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated.
+Provide a **thin layer** of syntax sugar on top of `.wast` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
+the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a
+new language.
 
 # Goals
-
 1. Use ES6 like syntax
 2. Type annotations (similar to flow).
 3. Simplify exports and imports
@@ -25,7 +25,6 @@ the WebAssembly output. Meaning there should be minimal to none post optimizatio
 7. Test Suite
 
 # Notes
-
 * WebAssembly spec https://github.com/WebAssembly/wabt
 * WebAssembly Text format semantics. https://github.com/WebAssembly/design/blob/master/Semantics.md
 * WebAssembly semantics test suite https://github.com/WebAssembly/spec/tree/master/test/core
@@ -39,9 +38,24 @@ Each expression must end in a `;`
 
 ### Comments
 
+* Input `.walt`
 ```javascript
-// single line
-/** multi-line **/
+// single line comment
+/**
+  multi
+  line
+  comment
+**/
+```
+
+* Result `.wast`
+```
+;; single line comment
+(;
+  multi
+  line
+  comment
+;)
 ```
 
 ### Module
@@ -57,15 +71,16 @@ Every `.walt` file is a module and is compiled into the above. Similar to node m
 
 ### Memory
 
-* `.wast`
+* Input `.walt`
+```javascript
+module.memory = new Memory(0, 256);
+```
+
+* Result `.wast`
 ```
 (memory 1, 256)
 ```
 
-* `.walt`
-```javascript
-module.memory = new Memory(0, 256);
-```
 
 Module memory must be set on the `module.memory`. Only one memory entry is currently allowed, per the wasm spec.
 
