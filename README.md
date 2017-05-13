@@ -32,6 +32,24 @@ new language.
 
 # Spec (WIP)
 
+### Reserved Keywords
+
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
+
+```javascript
+break				else				  new
+case        export        return
+catch       extends       super
+class       finally       switch
+const       for           this
+continue    function      throw
+debugger    if            try
+default     import        typeof
+delete      in            var
+do          instanceof    void
+with        yield         while
+```
+
 ### Expressions
 
 Each expression must end in a `;`
