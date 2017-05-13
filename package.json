@@ -1,0 +1,23 @@
+{
+  "name": "walt",
+  "version": "0.0.1",
+  "description": "Alternative syntax for WebAssembly text format",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ballercat/walt.git"
+  },
+  "keywords": [
+    "wasm",
+    "wast"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ballercat/walt/issues"
+  },
+  "homepage": "https://github.com/ballercat/walt#readme"
+}
