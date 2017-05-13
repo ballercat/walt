@@ -2,10 +2,14 @@ language: node_js
 node_js:
   - "7.8"
 
+os:
+  - osx
+
 git:
   submodules: false
 
 before_install:
+  - brew install ocaml ocamlbuild
   - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
   - git submodule update --init --remote --recursive
 
