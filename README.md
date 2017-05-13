@@ -37,7 +37,7 @@ new language.
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
 
 ```javascript
-break				else				  new
+break       else				  new
 case        export        return
 catch       extends       super
 class       finally       switch
