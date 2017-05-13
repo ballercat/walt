@@ -4,7 +4,7 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "./walt_tests.sh"
   },
   "repository": {
     "type": "git",
