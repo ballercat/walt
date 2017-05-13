@@ -1,0 +1,4 @@
+value-i32 = () : i32 => 2;
+
+assert_return(value-i32, 2);
+
