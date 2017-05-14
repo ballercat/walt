@@ -3,8 +3,9 @@
 set -e
 set -x
 
-git submodule init
-git submodule update
+# Make sure ocaml is installed
+# TODO: Use the .sh script which comses from the WebAssembly spec
+brew install ocaml ocamlbuild
 
 cd $(dirname ${BASH_SOURCE[0]})
 
