@@ -3,6 +3,8 @@ const keyword = require('./keyword');
 const operator = require('./operator');
 const punctuation = require('./punctuation');
 const identifier = require('./identifier');
+const constant = require('./constant');
+const type = require('./type');
 
 class Tokenizer {
 
@@ -53,15 +55,33 @@ class Tokenizer {
       token.type = operator.type;
     } else if (punctuation.is(value)) {
       token.type = punctuation.type;
-    } else {
+    } else if (type.is(value)) {
+      token.type = type.type;
+    } else if (constant.is(value)) {
+      token.type = constant.type;
+    } else if (identifier.is(value)) {
       token.type = identifier.type;
     }
 
     return token;
   }
 
+  /**
+   * Seek Stream until next non-whitespace character. Can end in eof/eol
+   */
   seekNonWhitespace() {
     while (Stream.whitespace(this.stream.peek())) this.stream.next();
+  }
+
+  parse() {
+    while (
+      !Stream.eol(this.stream.peek()) &&
+      !Stream.eof(this.stream.peek())
+    ) {
+      this.next();
+    }
+
+    return this.tokens;
   }
 }
 

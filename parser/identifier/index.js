@@ -1,4 +1,5 @@
 module.exports = {
-  type: 'identifier'
+  type: 'identifier',
+  is: (value) => typeof value === 'string'
 };
 

@@ -1,4 +1,1 @@
 global i32 a = -2;
-// global (;1;) f32 (f32.const -3))
-// global (;2;) f64 (f64.const -4))
-// global $b i64 (i64.const -5))

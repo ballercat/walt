@@ -2,8 +2,10 @@ const snapshot = require('snap-shot');
 const {
   Tokenizer,
   Stream,
+  type,
   keyword,
   operator,
+  constant,
   punctuation,
   identifier
 } = require('./../parser');
@@ -62,12 +64,39 @@ describe('Tokenizer', () => {
       });
     });
 
+    it('matches type values with type type', () => {
+      type.supported.map(value => {
+        const token = tokenizer.token(value);
+        expect(token).toEqual({ type: type.type, value });
+      });
+    });
+
     it('matches other values to identifiers', () => {
       const value = 'foobar';
       const token = tokenizer.token(value);
       expect(token).toEqual({ type: identifier.type, value });
     });
+
+    it('matches contant value to contant type', () => {
+      expect(tokenizer.token('-2')).toEqual({ type: constant.type, value: '-2' });
+      expect(tokenizer.token('+2')).toEqual({ type: constant.type, value: '+2' });
+      expect(tokenizer.token('0.2')).toEqual({ type: constant.type, value: '0.2' });
+      expect(tokenizer.token('.2')).toEqual({ type: constant.type, value: '.2' });
+      expect(tokenizer.token('-0.2')).toEqual({ type: constant.type, value: '-0.2' });
+    });
   });
 
+  describe('parse', () => {
+    let tokenizer;
+    beforeEach(() => {
+      tokenizer = new Tokenizer(new Stream(sources.globals))
+    });
+
+    xit('parses a stream into tokens', () => {
+      const result = tokenizer.parse();
+      console.log(result);
+      // expect(result).toEqual(expected);
+    });
+  });
 });
 
