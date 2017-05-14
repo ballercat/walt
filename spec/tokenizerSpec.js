@@ -1,5 +1,5 @@
 const snapshot = require('snap-shot');
-const { Tokenizer, Stream, keyword, operator } = require('./../parser');
+const { Tokenizer, Stream, keyword, operator, punctuation } = require('./../parser');
 const { sources } = require('./specUtils');
 const expected = [
   { type: 'keyword', value: 'global' },
@@ -45,6 +45,13 @@ describe('Tokenizer', () => {
       operator.supported.map(value => {
         const token = tokenizer.token(value);
         expect(token).toEqual({ type: operator.type, value });
+      });
+    });
+
+    it('matches punctuation value with punctuation type', () => {
+      punctuation.supported.map(value => {
+        const token = tokenizer.token(value);
+        expect(token).toEqual({ type: punctuation.type, value });
       });
     });
   });
