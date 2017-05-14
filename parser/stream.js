@@ -87,6 +87,18 @@ class Stream {
   static eof(char) {
     return char === '';
   }
+
+  /**
+   * Is the charater a whitespace
+   *
+   * @param {String} char Character
+   *
+   * @return {Boolean}
+   * @static
+   */
+  static whitespace(char) {
+    return char === ' ' || char === "\t";
+  }
 }
 
 module.exports = Stream;

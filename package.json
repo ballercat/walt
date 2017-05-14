@@ -7,7 +7,8 @@
     "test": "node jasmine.js || true",
     "integration": "./integration.sh",
     "test:units": "node jasmine.js",
-    "test:integration": "./integration.sh"
+    "test:integration": "./integration.sh",
+    "watch:units": "nodemon -w parser -w spec -x \"clear && npm test\""
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.0",
+    "nodemon": "^1.11.0",
     "snap-shot": "^2.17.0"
   }
 }
