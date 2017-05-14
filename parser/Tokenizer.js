@@ -2,6 +2,7 @@ const Stream = require('./Stream');
 const keyword = require('./keyword');
 const operator = require('./operator');
 const punctuation = require('./punctuation');
+const identifier = require('./identifier');
 
 class Tokenizer {
 
@@ -52,6 +53,8 @@ class Tokenizer {
       token.type = operator.type;
     } else if (punctuation.is(value)) {
       token.type = punctuation.type;
+    } else {
+      token.type = identifier.type;
     }
 
     return token;
