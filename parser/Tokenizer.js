@@ -8,13 +8,14 @@ const type = require('./type');
 
 class Tokenizer {
 
-  constructor(stream) {
+  constructor(stream, parsers = []) {
     if (!(stream instanceof Stream))
       this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
+    this.parsers = parsers;
   }
 
   /**
@@ -25,17 +26,29 @@ class Tokenizer {
   next() {
     let value = '';
     this.seekNonWhitespace();
-    let char = this.stream.next();
-    while (
-      !Stream.eol(char) &&
-      !Stream.eof(char) &&
-      !Stream.whitespace(char)
-    ) {
+    let char = '';
+    let parsers = this.parsers;
+
+    do {
+      if (char)
+        parsers = parsers.map(parse => parse(char)).filter(p => p);
+      // console.log(char, parsers.map(parser => [parser.type, parser.leaf]));
       value += char;
       char = this.stream.next();
+    } while (
+      !Stream.eol(char) &&
+      !Stream.eof(char) &&
+      !Stream.whitespace(char) &&
+      char !== ';'
+    );
+
+    if (!value && char === ';') {
+      value += char;
+      parsers = parsers.map(parse => parse(char)).filter(p => p);
     }
 
-    this.tokens.push(this.token(value));
+    const token = this.token(value, parsers);
+    this.tokens.push(token);
 
     return this.tokens[this.pos++];
   }
@@ -46,22 +59,16 @@ class Tokenizer {
    * @param {String} value Value to match
    * @return {Object} token
    */
-  token(value) {
-    const token = { type: 'unknown', value };
-
-    if (keyword.is(value)) {
-      token.type = keyword.type;
-    } else if (operator.is(value)) {
-      token.type = operator.type;
-    } else if (punctuation.is(value)) {
-      token.type = punctuation.type;
-    } else if (type.is(value)) {
-      token.type = type.type;
-    } else if (constant.is(value)) {
-      token.type = constant.type;
-    } else if (identifier.is(value)) {
-      token.type = identifier.type;
+  token(value, parsers, token = { type: 'unknown', value }) {
+    // Strict parsers must end on a leaf node
+    if (parsers.length > 1) {
+      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
+      if (parsers.length > 1)
+        parsers = parsers.filter(parser => parser.strict);
     }
+
+    if (parsers.length === 1)
+      token.type = parsers[0].type;
 
     return token;
   }

@@ -25,3 +25,30 @@ exports['tokenizes global expressions 1'] = [
   }
 ]
 
+exports['parses a stream into tokens 1'] = [
+  {
+    "type": "keyword",
+    "value": "global"
+  },
+  {
+    "type": "type",
+    "value": "i32"
+  },
+  {
+    "type": "identifier",
+    "value": "a"
+  },
+  {
+    "type": "operator",
+    "value": "="
+  },
+  {
+    "type": "constant",
+    "value": "-2"
+  },
+  {
+    "type": "punctuation",
+    "value": ";"
+  }
+]
+

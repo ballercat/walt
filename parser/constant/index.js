@@ -1,26 +1,32 @@
 const { isNaN, parseInt } = Number;
+const operator = require('./../operator');
+const token = require('./../token');
 
-const is = value => {
-  if (value == null)
-    return false;
+const isNumber = char => !isNaN(parseInt(char));
+const isDot = char => char === '.';
+const number = char => isNumber(char) ? isNumber : null;
+const numberOrDot = char => {
+  if (isDot(char))
+    return number;
 
-  const pieces = value.split('.');
-  if (pieces.length === 2) {
-    const integer = pieces[0] === '' ? '0' : pieces[0];
-    const factorial = pieces[1];
-
-    if (
-      !isNaN(parseInt(integer)) &&
-      !isNaN(parseInt(factorial))
-    ) {
-      return true;
-    }
-  } else if (pieces.length === 1) {
-    return !isNaN(parseInt(value));
+  if (isNumber(char)) {
+    return numberOrDot;
   }
-
-  return false;
+  return null;
 };
 
-module.exports = { is, type: 'constant' };
+const root = char => {
+  if (char === '-' || char === '+')
+    return numberOrDot;
+
+  if (isDot(char))
+    return number;
+
+  if (isNumber(char))
+    return numberOrDot;
+
+  return null;
+};
+
+module.exports = token(root, 'constant');
 

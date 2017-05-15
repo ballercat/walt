@@ -7,7 +7,8 @@ const {
   operator,
   constant,
   punctuation,
-  identifier
+  identifier,
+  tokenParsers
 } = require('./../parser');
 const { sources } = require('./specUtils');
 const expected = [
@@ -31,71 +32,81 @@ describe('Tokenizer', () => {
   });
 
   describe('next', () => {
-    it('reads tokens, ignoring whitespace', () => {
-      const tokenizer = new Tokenizer(new Stream('     global'));
-      expect(tokenizer.next()).toEqual({ type: 'keyword', value: 'global' });
-    });
-  });
-
-  describe('token', () => {
     let tokenizer;
-    beforeEach(() => {
-      tokenizer = new Tokenizer(new Stream(''));
+    it('reads tokens, ignoring whitespace', () => {
+      const tokenizer = new Tokenizer(new Stream('     global'), tokenParsers);
+      expect(tokenizer.next()).toEqual({ type: 'keyword', value: 'global' });
     });
 
     it('matches a keyword value with keyword type', () => {
       keyword.supported.map(value => {
-        const token = tokenizer.token(value);
+        const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
+        const token = tokenizer.next();
         expect(token).toEqual({ type: keyword.type, value });
       });
     });
 
     it('matches an operator value with operator type', () => {
       operator.supported.map(value => {
-        const token = tokenizer.token(value);
+        const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
+        const token = tokenizer.next();
         expect(token).toEqual({ type: operator.type, value });
       });
     });
 
     it('matches punctuation value with punctuation type', () => {
       punctuation.supported.map(value => {
-        const token = tokenizer.token(value);
+        const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
+        const token = tokenizer.next();
         expect(token).toEqual({ type: punctuation.type, value });
       });
     });
 
     it('matches type values with type type', () => {
       type.supported.map(value => {
-        const token = tokenizer.token(value);
+        const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
+        const token = tokenizer.next();
         expect(token).toEqual({ type: type.type, value });
       });
     });
 
     it('matches other values to identifiers', () => {
-      const value = 'foobar';
-      const token = tokenizer.token(value);
-      expect(token).toEqual({ type: identifier.type, value });
+      const tokenizer = new Tokenizer(new Stream('foobar'), tokenParsers);
+      expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'foobar' });
+
+      tokenizer.stream = new Stream('a');
+      expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'a' });
     });
 
     it('matches contant value to contant type', () => {
-      expect(tokenizer.token('-2')).toEqual({ type: constant.type, value: '-2' });
-      expect(tokenizer.token('+2')).toEqual({ type: constant.type, value: '+2' });
-      expect(tokenizer.token('0.2')).toEqual({ type: constant.type, value: '0.2' });
-      expect(tokenizer.token('.2')).toEqual({ type: constant.type, value: '.2' });
-      expect(tokenizer.token('-0.2')).toEqual({ type: constant.type, value: '-0.2' });
+      const tokenizer = new Tokenizer(new Stream('-2'), tokenParsers);
+      expect(tokenizer.next()).toEqual({ type: constant.type, value: '-2' });
+      tokenizer.stream = new Stream('+2');
+      expect(tokenizer.next()).toEqual({ type: constant.type, value: '+2' });
+
+      tokenizer.stream = new Stream('0.2');
+      expect(tokenizer.next()).toEqual({ type: constant.type, value: '0.2' });
+
+      tokenizer.stream = new Stream('.2');
+      expect(tokenizer.next()).toEqual({ type: constant.type, value: '.2' });
+
+      tokenizer.stream = new Stream('-0.2');
+      expect(tokenizer.next()).toEqual({ type: constant.type, value: '-0.2' });
     });
   });
 
   describe('parse', () => {
     let tokenizer;
     beforeEach(() => {
-      tokenizer = new Tokenizer(new Stream(sources.globals))
+      tokenizer = new Tokenizer(new Stream(sources.globals), tokenParsers)
+    });
+
+    it('can handle expressions without spaces', () => {
     });
 
     xit('parses a stream into tokens', () => {
       const result = tokenizer.parse();
-      console.log(result);
-      // expect(result).toEqual(expected);
+      snapshot(result);
     });
   });
 });

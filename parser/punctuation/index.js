@@ -1,10 +1,11 @@
+const Trie = require('./../../utils/trie');
+const token = require('./../token');
+
 const supported = [
-  '(', ')', ':', ';'
+  '(', ')', ':', ';', '.'
 ];
 
-module.exports = {
-  supported,
-  is: (value) => supported.includes(value),
-  type: 'punctuation'
-};
+const trie = new Trie(supported);
+
+module.exports = token(trie.fsearch, 'punctuation', supported);
 

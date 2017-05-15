@@ -1,3 +1,6 @@
+const Trie = require('./../../utils/trie');
+const token = require('./../token');
+
 const supported = [
   // EcmaScript
   'break',
@@ -59,11 +62,7 @@ const nosupport = [
   'typeof',
 ];
 
-module.exports = {
-  supported,
-  nosupport,
-  // TODO: add future
-  is: (value) => supported.includes(value),
-  type: 'keyword'
-};
+const trie = new Trie(supported);
+const root = trie.fsearch;
+module.exports = token(root, 'keyword', supported);
 

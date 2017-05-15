@@ -15,6 +15,9 @@ module.exports = {
   operator,
   constant,
   punctuation,
-  identifier
+  identifier,
+  tokenParsers: [
+    keyword, constant, operator, punctuation, type, identifier
+  ]
 };
 

@@ -1,3 +1,6 @@
+const Trie = require('./../../utils/trie');
+const token = require('../token');
+
 const supported = [
   '+',
   '++',
@@ -13,9 +16,6 @@ const supported = [
   '!'
 ];
 
-module.exports = {
-  supported,
-  is: (value) => supported.includes(value),
-  type: 'operator'
-};
+const trie = new Trie(supported);
+module.exports = token(trie.fsearch, 'operator', supported);
 
