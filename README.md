@@ -25,6 +25,7 @@ new language.
 5. Compile from `.walt` to `.wasm` directly
 6. Webpack loader to convert `.walt` files to importable JavaScript modules
 7. Test Suite
+8. Flexible parser to allow quick prototyping and new syntax options :octocat:
 
 # Notes
 * WebAssembly spec https://github.com/WebAssembly/wabt
@@ -32,12 +33,31 @@ new language.
 * WebAssembly semantics test suite https://github.com/WebAssembly/spec/tree/master/test/core
 * WebAssembly Binary Toolkit https://github.com/WebAssembly/wabt.
 * S-syntax https://github.com/WebAssembly/spec/tree/master/interpreter#s-expression-syntax
+* WAS Syntax experiment from Mozilla https://github.com/mbebenita/was
+
+# RoadMap
+* v0.1.0
+  - Complete Syntax Spec - WIP
+* v0.2.0
+  - Tokenizer/Lexer - WIP
+* v0.5.0a
+  - AST Compiler & Type Checker - TODO
+* v0.9.0b
+  - Code Generator - TODO
+* v0.9.5b
+  - node library + CLI walt2wasm generator
+* v1.0.0
+  - Webpack Plugin - TODO
+* v1+
+  - IDE integration
+  - linter
+  - VIM colors, syntax
 
 # Spec (WIP)
 
 ### Reserved Keywords
 
-* Reserved words from JavaScript:
+* Keywords from JavaScript (WIP):
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
 ```javascript
 break       else          new
@@ -51,16 +71,6 @@ default     import        typeof
 delete      in            var
 do          instanceof    void
 with        yield         while
-```
-
-* Reserved words from S-expression-syntax (wip) :
-```
-global
-set_global
-get_global
-set_local
-get_local
-tee_local
 ```
 
 All s-expression-syntax words are reserved and can be written directly into `.walt` scripts.
