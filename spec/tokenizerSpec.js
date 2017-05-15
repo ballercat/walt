@@ -11,23 +11,10 @@ const {
   tokenParsers
 } = require('./../parser');
 const { sources } = require('./specUtils');
-const expected = [
-  { type: 'keyword', value: 'global' },
-  { type: 'type', value: 'i32' },
-  { type: 'identifier', value: 'a' },
-  { type: 'operator', value: '=' },
-  { type: 'constant', value: '-2' },
-  { type: 'punctuation', value: ';' }
-];
+
 describe('Tokenizer', () => {
   it('must be initialized with a Stream object', () => {
     expect(() => new Tokenizer()).toThrow();
-  });
-
-  it('tokenizes global expressions', () => {
-    const source = 'global i32 a = -2;';
-
-    snapshot(expected);
   });
 
   describe('next', () => {
