@@ -26,31 +26,34 @@ class Tokenizer {
   next() {
     let value = '';
     this.seekNonWhitespace();
-    let char = '';
-    let parsers = this.parsers;
+    let char;
+    let matchers = this.parsers;
+    let nextMatchers = this.match(char, matchers);
 
     do {
-      if (char)
-        parsers = parsers.map(parse => parse(char)).filter(p => p);
-      // console.log(char, parsers.map(parser => [parser.type, parser.leaf]));
+      char = this.stream.peek();
+      matchers = this.match(char, matchers);
       value += char;
-      char = this.stream.next();
+      this.stream.next();
+      nextMatchers = this.match(this.stream.peek(), matchers);
     } while (
-      !Stream.eol(char) &&
-      !Stream.eof(char) &&
-      !Stream.whitespace(char) &&
-      char !== ';'
+      !Stream.eol(this.stream.peek()) &&
+      !Stream.eof(this.stream.peek()) &&
+      !Stream.whitespace(this.stream.peek()) &&
+      nextMatchers.length > 0
     );
 
-    if (!value && char === ';') {
-      value += char;
-      parsers = parsers.map(parse => parse(char)).filter(p => p);
-    }
-
-    const token = this.token(value, parsers);
+    const token = this.token(value, matchers);
     this.tokens.push(token);
 
     return this.tokens[this.pos++];
+  }
+
+  match(char, parsers) {
+    if (char == null)
+      return parsers;
+
+    return parsers.map(parse => parse(char)).filter(p => p);
   }
 
   /**
