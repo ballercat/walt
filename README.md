@@ -36,6 +36,8 @@ new language.
 * WAS Syntax experiment from Mozilla https://github.com/mbebenita/was
 
 # RoadMap
+* v0.0.1
+  - Spec
 * v0.1.0
   - Complete Syntax Spec - WIP
 * v0.2.0
