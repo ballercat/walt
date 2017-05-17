@@ -28,6 +28,7 @@
   "devDependencies": {
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.0",
+    "jasmine2-custom-message": "^0.8.2",
     "nodemon": "^1.11.0",
     "snap-shot": "^2.17.0"
   }
