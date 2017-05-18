@@ -1,38 +1,30 @@
-require('jasmine2-custom-message');
+const x = require('jasmine2-custom-message');
 const checks = require('./nodeChecks');
-const declaration = require('./../parser/node/declaration');
-const assignment = require('./../parser/node/assignment');
+const nodes = require('./../parser/node');
 const { tokenize } = require('./specUtils');
 
 const mapNodeCheck = (cb, nodeType) => {
   Object.keys(nodeType).map(text => cb(tokenize(text), text, nodeType[text]));
 };
 
+const testNode = name => xit(
+  name,
+  () => {
+    mapNodeCheck(
+      (tokens, text, is) => {
+        const result = tokens.reduce(
+          (acc, token) => typeof acc === 'function' ? acc(token) : acc,
+          nodes[name]
+        );
+        since(`should parse ${text}`).expect(result !== null).toBe(is);
+      },
+      checks[name]
+    );
+  }
+);
+
 describe('Node', () => {
-
-  describe('declaration', () => {
-
-    xit('parses tokens', () => {
-      mapNodeCheck((tokens, text, is) => {
-        const result = tokens.reduce(
-          (acc, token) => typeof acc === 'function' ? acc(token) : acc,
-          declaration);
-        since(`should parse ${text}`).expect(result !== null).toBe(is);
-      }, checks.declaration);
-    });
-  });
-
-  describe('assignment', () => {
-
-    xit('parses tokens', () => {
-      mapNodeCheck((tokens, text, is) => {
-        const result = tokens.reduce(
-          (acc, token) => typeof acc === 'function' ? acc(token) : acc,
-          declaration);
-        since(`should parse ${text}`).expect(result !== null).toBe(is);
-      }, checks.assignment);
-    });
-  });
-
+  // These can be un-rolled while implementing a single spec.
+  Object.keys(checks).map(testNode);
 });
 

@@ -16,7 +16,11 @@ module.exports = {
     'const x': false
   },
   assignment: {
-    'x = 1': true
+    'x = 1': true,
+    'x = y': true,
+    '1 = x': false,
+    '1 = 0': false
   }
 };
+
 
