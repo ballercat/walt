@@ -24,7 +24,9 @@
     "url": "https://github.com/ballercat/walt/issues"
   },
   "homepage": "https://github.com/ballercat/walt#readme",
-  "dependencies": {},
+  "dependencies": {
+    "ramda": "^0.23.0"
+  },
   "devDependencies": {
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.0",
