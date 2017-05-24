@@ -56,6 +56,7 @@ class Tokenizer {
     return parsers.map(parse => parse(char)).filter(p => p);
   }
 
+
   /**
    * Match a particular non-whitespace value to a token
    *
@@ -92,6 +93,27 @@ class Tokenizer {
     }
 
     return this.tokens;
+  }
+
+  /**
+   * Stop parsing and throw a fatal error
+   *
+   * @param {String} reason
+   * @throws
+   */
+  die(reason) {
+    throw new Error(reason);
+  }
+
+  static walker(tokens) {
+    let pos = 0;
+    return {
+      seek(index) {
+        pos = index;
+      }
+
+
+    };
   }
 }
 

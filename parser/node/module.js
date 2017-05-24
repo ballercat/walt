@@ -1,9 +1,7 @@
-const { where, equals } = require('ramda');
-const keyword = require('./../keyword');
+const Node = require('./node');
 
-const moduleStart = where({
-  type: equals(keyword.type),
-  value: equals(keyword.supported.module)
-});
+class ModuleNode extends Node {
+}
 
+module.exports = ModuleNode;
 
