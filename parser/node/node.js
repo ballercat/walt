@@ -1,6 +1,10 @@
 class Node {
-  constructor(walker) {
+  constructor(walker, context) {
     this.walker = walker;
+    this.context = context || {
+      globals: [],
+      locals: []
+    };
   }
 }
 

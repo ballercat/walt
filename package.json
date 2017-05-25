@@ -8,7 +8,7 @@
     "integration": "./integration.sh",
     "test:units": "node jasmine.js",
     "test:integration": "./integration.sh",
-    "watch:units": "nodemon -w parser -w spec -x \"clear && npm test\""
+    "watch:units": "nodemon -w parser -w spec -w walt -w __snapshots__ -x \"clear && npm test\""
   },
   "repository": {
     "type": "git",

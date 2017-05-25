@@ -1,11 +1,7 @@
-exports['tokenizes global expressions 1'] = [
+exports['parses a stream into tokens 1'] = [
   {
     "type": "keyword",
     "value": "global"
-  },
-  {
-    "type": "type",
-    "value": "i32"
   },
   {
     "type": "identifier",
@@ -13,26 +9,11 @@ exports['tokenizes global expressions 1'] = [
   },
   {
     "type": "operator",
-    "value": "="
-  },
-  {
-    "type": "constant",
-    "value": "-2"
-  }
-]
-
-exports['parses a stream into tokens 1'] = [
-  {
-    "type": "keyword",
-    "value": "global"
+    "value": ":"
   },
   {
     "type": "type",
     "value": "i32"
-  },
-  {
-    "type": "identifier",
-    "value": "a"
   },
   {
     "type": "operator",

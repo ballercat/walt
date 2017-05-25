@@ -1,6 +1,9 @@
 const BodyNode = require('./body');
+const Node = require('./node');
 
-class FunctionNode {
+class FunctionNode extends Node {
+  constructor(walker) {
+  }
 }
 
 module.exports = FunctionNode;
