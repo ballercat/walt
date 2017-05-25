@@ -11,7 +11,6 @@ exports['can read an input stream 1'] = [
   "=",
   " ",
   "2",
-  ";",
   "\n",
   "a",
   "s",
@@ -25,7 +24,6 @@ exports['can read an input stream 1'] = [
   " ",
   "2",
   ")",
-  ";",
   "\n",
   "\n"
 ]

@@ -84,12 +84,6 @@ describe('Tokenizer', () => {
       const tokenizer = new Tokenizer(new Stream('sizeoffoobar'), tokenParsers);
       expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'sizeoffoobar' });
     });
-
-    it('matches semi-colon after keyword', () => {
-      const tokenizer = new Tokenizer(new Stream('sizeof;'), tokenParsers);
-      expect(tokenizer.next()).toEqual({ type: keyword.type, value: 'sizeof' });
-      expect(tokenizer.next()).toEqual({ type: punctuation.type, value: ';' });
-    });
   });
 
   describe('parse', () => {

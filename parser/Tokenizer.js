@@ -106,13 +106,16 @@ class Tokenizer {
   }
 
   static walker(tokens) {
-    let pos = 0;
-    return {
-      seek(index) {
-        pos = index;
+    return class Walker {
+      constructor(visitors) {
+        this.context = null;
+        this.pos = 0;
+        this.visitors = visitors;
       }
 
+      walk() {
 
+      }
     };
   }
 }

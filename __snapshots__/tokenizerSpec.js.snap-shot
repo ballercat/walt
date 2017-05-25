@@ -18,10 +18,6 @@ exports['tokenizes global expressions 1'] = [
   {
     "type": "constant",
     "value": "-2"
-  },
-  {
-    "type": "punctuation",
-    "value": ";"
   }
 ]
 
@@ -45,10 +41,6 @@ exports['parses a stream into tokens 1'] = [
   {
     "type": "constant",
     "value": "-2"
-  },
-  {
-    "type": "punctuation",
-    "value": ";"
   }
 ]
 
