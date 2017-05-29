@@ -14,6 +14,7 @@ const supported = [
   'case',
   'default',
   'const',
+  'let',
   'for',
   'continue',
   'do',
@@ -53,7 +54,6 @@ const nosupport = [
   'debugger',
   // vars and lets are replaced with types (i32, f32, etc)
   'var',
-  'let',
   // no classes in wast
   'class',
   'try',

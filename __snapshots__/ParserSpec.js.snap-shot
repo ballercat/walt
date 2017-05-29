@@ -1,0 +1,18 @@
+exports['builds an AST from a Token Stream 1'] = {
+  "type": "program",
+  "body": [
+    {
+      "start": {
+        "line": 1,
+        "col": 0
+      },
+      "end": {
+        "line": 1,
+        "col": 10
+      },
+      "id": "x",
+      "type": "i32"
+    }
+  ]
+}
+

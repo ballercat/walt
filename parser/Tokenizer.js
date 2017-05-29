@@ -1,7 +1,6 @@
 const Stream = require('./Stream');
 
 class Tokenizer {
-
   constructor(stream, parsers = []) {
     if (!(stream instanceof Stream))
       this.die(`Tokenizer expected instance of Stream in constructor.
@@ -106,15 +105,6 @@ class Tokenizer {
    */
   die(reason) {
     throw new Error(reason);
-  }
-
-  static walker(tokens) {
-    let pos = 0;
-    return {
-      next() {
-        return tokens[pos++];
-      }
-    };
   }
 }
 
