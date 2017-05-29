@@ -1,6 +1,6 @@
 exports['parses a stream into tokens 1'] = [
   {
-    "type": "keyword",
+    "type": "Keyword",
     "value": "global",
     "start": {
       "line": 1,
@@ -12,7 +12,7 @@ exports['parses a stream into tokens 1'] = [
     }
   },
   {
-    "type": "identifier",
+    "type": "Identifier",
     "value": "a",
     "start": {
       "line": 1,
@@ -36,7 +36,7 @@ exports['parses a stream into tokens 1'] = [
     }
   },
   {
-    "type": "type",
+    "type": "Type",
     "value": "i32",
     "start": {
       "line": 1,
@@ -60,7 +60,6 @@ exports['parses a stream into tokens 1'] = [
     }
   },
   {
-    "type": "constant",
     "value": "-2",
     "start": {
       "line": 1,

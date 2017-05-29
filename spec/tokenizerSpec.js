@@ -4,7 +4,6 @@ const {
   Stream,
   type,
   keyword,
-  operator,
   constant,
   punctuator,
   identifier,
@@ -23,7 +22,7 @@ describe('Tokenizer', () => {
     it('reads tokens, ignoring whitespace', () => {
       const tokenizer = new Tokenizer(new Stream('     global'), tokenParsers);
       expect(tokenizer.next()).toEqual({
-        type: 'keyword',
+        type: Syntax.Keyword,
         value: 'global',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -35,7 +34,7 @@ describe('Tokenizer', () => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
         expect(token).toEqual({
-          type: keyword.type,
+          type: Syntax.Keyword,
           value,
           start: jasmine.any(Object),
           end: jasmine.any(Object)
@@ -61,7 +60,7 @@ describe('Tokenizer', () => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
         expect(token).toEqual({
-          type: type.type,
+          type: Syntax.Type,
           value,
           start: jasmine.any(Object),
           end: jasmine.any(Object)
@@ -72,7 +71,7 @@ describe('Tokenizer', () => {
     it('matches other values to identifiers', () => {
       const tokenizer = new Tokenizer(new Stream('foobar'), tokenParsers);
       expect(tokenizer.next()).toEqual({
-        type: identifier.type,
+        type: Syntax.Identifier,
         value: 'foobar',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -80,7 +79,7 @@ describe('Tokenizer', () => {
 
       tokenizer.stream = new Stream('a');
       expect(tokenizer.next()).toEqual({
-        type: identifier.type,
+        type: Syntax.Identifier,
         value: 'a',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -90,14 +89,14 @@ describe('Tokenizer', () => {
     it('matches constant value to constant type', () => {
       const tokenizer = new Tokenizer(new Stream('-2'), tokenParsers);
       expect(tokenizer.next()).toEqual({
-        type: constant.type,
+        type: Syntax.Constant,
         value: '-2',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
       });
       tokenizer.stream = new Stream('+2');
       expect(tokenizer.next()).toEqual({
-        type: constant.type,
+        type: Syntax.Constant,
         value: '+2',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -105,7 +104,7 @@ describe('Tokenizer', () => {
 
       tokenizer.stream = new Stream('0.2');
       expect(tokenizer.next()).toEqual({
-        type: constant.type,
+        type: Syntax.Constant,
         value: '0.2',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -113,7 +112,7 @@ describe('Tokenizer', () => {
 
       tokenizer.stream = new Stream('.2');
       expect(tokenizer.next()).toEqual({
-        type: constant.type,
+        type: Syntax.Constant,
         value: '.2',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -121,7 +120,7 @@ describe('Tokenizer', () => {
 
       tokenizer.stream = new Stream('-0.2');
       expect(tokenizer.next()).toEqual({
-        type: constant.type,
+        type: Syntax.Constant,
         value: '-0.2',
         start: jasmine.any(Object),
         end: jasmine.any(Object)
@@ -131,7 +130,7 @@ describe('Tokenizer', () => {
     it('matches identifiers with keyword roots as identifiers', () => {
       const tokenizer = new Tokenizer(new Stream('sizeoffoobar'), tokenParsers);
       expect(tokenizer.next()).toEqual({
-        type: identifier.type,
+        type: Syntax.Identifier,
         value: 'sizeoffoobar',
         start: jasmine.any(Object),
         end: jasmine.any(Object)

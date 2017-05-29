@@ -1,6 +1,7 @@
 const token = require('./../token');
 const punctuator = require('./../punctuator');
 const constant = require('./../constant');
+const Syntax = require('./../Syntax');
 
 const parse = char => {
   if (!punctuator(char))
@@ -13,4 +14,4 @@ const root = char => {
   return null;
 }
 
-module.exports = token(parse, 'identifier');
+module.exports = token(parse, Syntax.Identifier);
