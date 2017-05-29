@@ -1,10 +1,4 @@
 const Stream = require('./Stream');
-const keyword = require('./keyword');
-const operator = require('./operator');
-const punctuation = require('./punctuation');
-const identifier = require('./identifier');
-const constant = require('./constant');
-const type = require('./type');
 
 class Tokenizer {
 

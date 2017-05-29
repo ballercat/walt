@@ -1,15 +1,14 @@
 const token = require('./../token');
-const punctuation = require('./../punctuation');
+const punctuator = require('./../punctuator');
 const constant = require('./../constant');
-const operator = require('./../operator');
 
 const parse = char => {
-  if (!punctuation(char) && !operator(char))
+  if (!punctuator(char))
     return parse;
   return null;
 }
 const root = char => {
-  if (operator(char) && !punctuation(char) && !constant(char))
+  if (!punctuator(char) && !constant(char))
     return parse;
   return null;
 }

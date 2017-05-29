@@ -6,10 +6,11 @@ const {
   keyword,
   operator,
   constant,
-  punctuation,
+  punctuator,
   identifier,
   tokenParsers
 } = require('./../parser');
+const Syntax = require('./../parser/Syntax');
 const { sources } = require('./specUtils');
 
 describe('Tokenizer', () => {
@@ -42,25 +43,12 @@ describe('Tokenizer', () => {
       });
     });
 
-    it('matches an operator value with operator type', () => {
-      operator.supported.map(value => {
+    it('matches an puntuator value with punctuator type', () => {
+      punctuator.supported.map(value => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
         expect(token).toEqual({
-          type: operator.type,
-          value,
-          start: jasmine.any(Object),
-          end: jasmine.any(Object)
-        });
-      });
-    });
-
-    it('matches punctuation value with punctuation type', () => {
-      punctuation.supported.map(value => {
-        const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
-        const token = tokenizer.next();
-        expect(token).toEqual({
-          type: punctuation.type,
+          type: Syntax.Punctuator,
           value,
           start: jasmine.any(Object),
           end: jasmine.any(Object)
