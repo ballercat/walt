@@ -1,4 +1,4 @@
-const { Tokenizer, Stream } = require('./../parser');
+const { Tokenizer, Stream, tokenParsers } = require('./../parser');
 
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
@@ -9,6 +9,6 @@ const sources = {
 
 module.exports = {
   sources,
-  tokenize: (text) => (new Tokenizer(new Stream(text))).parse()
+  tokenize: (text) => (new Tokenizer(new Stream(text), tokenParsers)).parse()
 };
 

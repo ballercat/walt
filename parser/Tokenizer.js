@@ -29,6 +29,10 @@ class Tokenizer {
     let char;
     let matchers = this.parsers;
     let nextMatchers = this.match(char, matchers);
+    let start = {
+      line: this.stream.line,
+      col: this.stream.col
+    };
 
     do {
       char = this.stream.peek();
@@ -44,6 +48,11 @@ class Tokenizer {
     );
 
     const token = this.token(value, matchers);
+    token.start = start;
+    token.end = {
+      line: this.stream.line,
+      col: this.stream.col
+    };
     this.tokens.push(token);
 
     return this.tokens[this.pos++];
@@ -106,15 +115,10 @@ class Tokenizer {
   }
 
   static walker(tokens) {
-    return class Walker {
-      constructor(visitors) {
-        this.context = null;
-        this.pos = 0;
-        this.visitors = visitors;
-      }
-
-      walk() {
-
+    let pos = 0;
+    return {
+      next() {
+        return tokens[pos++];
       }
     };
   }

@@ -8,13 +8,12 @@ const {
 } = require('./../parser');
 
 module.exports = {
-  declaration: {
-    'global i32 x': true,
-    'const i32 x': true,
-    'global const i32 x': true,
-    'const global x': false,
-    'const x': false
-  },
+  declaration: [
+    'global x : i32',
+    'const x : i32',
+    'global const x : i32',
+    'global x : i32 = 42'
+  ],
   assignment: {
     'x = 1': true,
     'x = y': true,

@@ -21,14 +21,24 @@ describe('Tokenizer', () => {
     let tokenizer;
     it('reads tokens, ignoring whitespace', () => {
       const tokenizer = new Tokenizer(new Stream('     global'), tokenParsers);
-      expect(tokenizer.next()).toEqual({ type: 'keyword', value: 'global' });
+      expect(tokenizer.next()).toEqual({
+        type: 'keyword',
+        value: 'global',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
     });
 
     it('matches a keyword value with keyword type', () => {
       keyword.supported.map(value => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
-        expect(token).toEqual({ type: keyword.type, value });
+        expect(token).toEqual({
+          type: keyword.type,
+          value,
+          start: jasmine.any(Object),
+          end: jasmine.any(Object)
+        });
       });
     });
 
@@ -36,7 +46,12 @@ describe('Tokenizer', () => {
       operator.supported.map(value => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
-        expect(token).toEqual({ type: operator.type, value });
+        expect(token).toEqual({
+          type: operator.type,
+          value,
+          start: jasmine.any(Object),
+          end: jasmine.any(Object)
+        });
       });
     });
 
@@ -44,7 +59,12 @@ describe('Tokenizer', () => {
       punctuation.supported.map(value => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
-        expect(token).toEqual({ type: punctuation.type, value });
+        expect(token).toEqual({
+          type: punctuation.type,
+          value,
+          start: jasmine.any(Object),
+          end: jasmine.any(Object)
+        });
       });
     });
 
@@ -52,37 +72,82 @@ describe('Tokenizer', () => {
       type.supported.map(value => {
         const tokenizer = new Tokenizer(new Stream(value), tokenParsers);
         const token = tokenizer.next();
-        expect(token).toEqual({ type: type.type, value });
+        expect(token).toEqual({
+          type: type.type,
+          value,
+          start: jasmine.any(Object),
+          end: jasmine.any(Object)
+        });
       });
     });
 
     it('matches other values to identifiers', () => {
       const tokenizer = new Tokenizer(new Stream('foobar'), tokenParsers);
-      expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'foobar' });
+      expect(tokenizer.next()).toEqual({
+        type: identifier.type,
+        value: 'foobar',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
 
       tokenizer.stream = new Stream('a');
-      expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'a' });
+      expect(tokenizer.next()).toEqual({
+        type: identifier.type,
+        value: 'a',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
     });
 
-    it('matches constant value to contant type', () => {
+    it('matches constant value to constant type', () => {
       const tokenizer = new Tokenizer(new Stream('-2'), tokenParsers);
-      expect(tokenizer.next()).toEqual({ type: constant.type, value: '-2' });
+      expect(tokenizer.next()).toEqual({
+        type: constant.type,
+        value: '-2',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
       tokenizer.stream = new Stream('+2');
-      expect(tokenizer.next()).toEqual({ type: constant.type, value: '+2' });
+      expect(tokenizer.next()).toEqual({
+        type: constant.type,
+        value: '+2',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
 
       tokenizer.stream = new Stream('0.2');
-      expect(tokenizer.next()).toEqual({ type: constant.type, value: '0.2' });
+      expect(tokenizer.next()).toEqual({
+        type: constant.type,
+        value: '0.2',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
 
       tokenizer.stream = new Stream('.2');
-      expect(tokenizer.next()).toEqual({ type: constant.type, value: '.2' });
+      expect(tokenizer.next()).toEqual({
+        type: constant.type,
+        value: '.2',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
 
       tokenizer.stream = new Stream('-0.2');
-      expect(tokenizer.next()).toEqual({ type: constant.type, value: '-0.2' });
+      expect(tokenizer.next()).toEqual({
+        type: constant.type,
+        value: '-0.2',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
     });
 
     it('matches identifiers with keyword roots as identifiers', () => {
       const tokenizer = new Tokenizer(new Stream('sizeoffoobar'), tokenParsers);
-      expect(tokenizer.next()).toEqual({ type: identifier.type, value: 'sizeoffoobar' });
+      expect(tokenizer.next()).toEqual({
+        type: identifier.type,
+        value: 'sizeoffoobar',
+        start: jasmine.any(Object),
+        end: jasmine.any(Object)
+      });
     });
   });
 
@@ -90,9 +155,6 @@ describe('Tokenizer', () => {
     let tokenizer;
     beforeEach(() => {
       tokenizer = new Tokenizer(new Stream(sources.globals), tokenParsers)
-    });
-
-    it('can handle expressions without spaces', () => {
     });
 
     it('parses a stream into tokens', () => {
