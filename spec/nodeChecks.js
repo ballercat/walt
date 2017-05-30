@@ -1,12 +1,3 @@
-const {
-  keyword,
-  operator,
-  punctuation,
-  identifier,
-  constant,
-  type
-} = require('./../parser');
-
 module.exports = {
   declaration: [
     'let x: i32',
@@ -14,12 +5,15 @@ module.exports = {
     'const x: i32',
     'const x : i32 = 42',
   ],
-  assignment: {
-    'x = 1': true,
-    'x = y': true,
-    '1 = x': false,
-    '1 = 0': false
-  }
+  rssignment: [
+    'x = 1',
+    'x = y',
+    '1 = x',
+    '1 = 0'
+  ],
+  binary: [
+    '2 + 2 * 1'
+  ]
 };
 
 

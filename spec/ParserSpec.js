@@ -9,11 +9,18 @@ const snapshot = require('snap-shot');
 describe('Parser', () => {
 
   it('builds an AST from a Token Stream', () => {
-    const decl = nodeChecks.declaration[0];
-    const tokenizer = new Tokenizer(new Stream(decl), tokenParsers);
+    nodeChecks.declaration.map(decl => {
+      const tokenizer = new Tokenizer(new Stream(decl), tokenParsers);
+      const parser = new Parser(new TokenStream(tokenizer.parse()));
+
+      snapshot(parser.parse());
+    });
+  });
+
+  it('builds an AST for binary expressions', () => {
+    const tokenizer = new Tokenizer(new Stream(nodeChecks.binary[0]), tokenParsers);
     const parser = new Parser(new TokenStream(tokenizer.parse()));
 
-    // console.log(parser.parse());
     snapshot(parser.parse());
   });
 });

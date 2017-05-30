@@ -4,11 +4,6 @@ const constant = require('./../constant');
 const Syntax = require('./../Syntax');
 
 const parse = char => {
-  if (!punctuator(char))
-    return parse;
-  return null;
-}
-const root = char => {
   if (!punctuator(char) && !constant(char))
     return parse;
   return null;

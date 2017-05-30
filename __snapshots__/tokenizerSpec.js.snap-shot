@@ -1,14 +1,14 @@
 exports['parses a stream into tokens 1'] = [
   {
     "type": "Keyword",
-    "value": "global",
+    "value": "let",
     "start": {
       "line": 1,
       "col": 0
     },
     "end": {
       "line": 1,
-      "col": 6
+      "col": 3
     }
   },
   {
@@ -16,11 +16,11 @@ exports['parses a stream into tokens 1'] = [
     "value": "a",
     "start": {
       "line": 1,
-      "col": 7
+      "col": 4
     },
     "end": {
       "line": 1,
-      "col": 8
+      "col": 5
     }
   },
   {
@@ -28,11 +28,11 @@ exports['parses a stream into tokens 1'] = [
     "value": ":",
     "start": {
       "line": 1,
-      "col": 8
+      "col": 5
     },
     "end": {
       "line": 1,
-      "col": 9
+      "col": 6
     }
   },
   {
@@ -40,11 +40,11 @@ exports['parses a stream into tokens 1'] = [
     "value": "i32",
     "start": {
       "line": 1,
-      "col": 10
+      "col": 7
     },
     "end": {
       "line": 1,
-      "col": 13
+      "col": 10
     }
   },
   {
@@ -52,22 +52,23 @@ exports['parses a stream into tokens 1'] = [
     "value": "=",
     "start": {
       "line": 1,
-      "col": 14
+      "col": 11
+    },
+    "end": {
+      "line": 1,
+      "col": 12
+    }
+  },
+  {
+    "type": "Constant",
+    "value": "42",
+    "start": {
+      "line": 1,
+      "col": 13
     },
     "end": {
       "line": 1,
       "col": 15
-    }
-  },
-  {
-    "value": "-2",
-    "start": {
-      "line": 1,
-      "col": 16
-    },
-    "end": {
-      "line": 1,
-      "col": 18
     }
   }
 ]

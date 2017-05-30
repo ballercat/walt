@@ -1,1 +1,1 @@
-global a: i32 = -2
+let a: i32 = 42
