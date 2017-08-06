@@ -1,0 +1,14 @@
+{
+  "presets": [
+    [
+      "env", {
+      "targets": {
+        "chrome": "60.0.0"
+      }
+    }]
+  ],
+  "plugins": [
+     "transform-runtime"
+  ]
+}
+

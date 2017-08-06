@@ -4,11 +4,10 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
-    "test": "node jasmine.js || true",
+    "test": "node_modules/ava/cli.js",
     "integration": "./integration.sh",
-    "test:units": "node jasmine.js",
-    "test:integration": "./integration.sh",
-    "watch:units": "nodemon -w parser -w spec -w walt -w __snapshots__ -x \"clear && npm test\""
+    "test:units": "npm test",
+    "test:integration": "./integration.sh"
   },
   "repository": {
     "type": "git",
@@ -28,11 +27,35 @@
     "ramda": "^0.23.0"
   },
   "devDependencies": {
-    "jasmine": "^2.6.0",
-    "jasmine-spec-reporter": "^4.1.0",
-    "jasmine2-custom-message": "^0.8.2",
-    "nodemon": "^1.11.0",
+    "ava": "^0.19.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.5.2",
+    "babel-preset-es2015": "^6.24.1",
+    "rollup": "^0.43.0",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-eslint": "^3.0.0",
+    "rollup-plugin-uglify": "^2.0.1",
+    "uglify-es": "^3.0.17",
     "snap-shot": "^2.17.0"
+  },
+  "ava": {
+    "files": [
+      "src/**/*[sS]pec.js",
+      "!**/utils.js"
+    ],
+    "source": [
+      "src/**/*.js"
+    ],
+    "concurrency": 5,
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false,
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
   }
 }
-
