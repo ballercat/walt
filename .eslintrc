@@ -6,6 +6,10 @@
     "node": true
   },
 
+  "globals": {
+    "WebAssembly": true
+  },
+
   "parserOptions": {
     "sourceType": "module"
   },
