@@ -1,14 +1,10 @@
 import test from 'ava';
-import { u8, get } from 'wasm-types';
 import { I32 } from '../value_type';
-import { IMPORT } from '../sectionCodes';
 import { EXTERN_GLOBAL } from '../external_kind';
 import emit from '..';
-import opcode from '../opcode';
-import imports from '../imports';
 
 const ast = {
-  imports: [
+  Imports: [
     {
       module: 'a',
       field: 'b',

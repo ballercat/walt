@@ -1,9 +1,6 @@
 import preamble from './preamble';
 import invariant from 'invariant';
-import imports from './imports';
-import exports from './exports';
-import globals from './globals';
-import code from './code';
+import section from './section';
 import OutputStream from '../utils/output-stream';
 
 export default function emit(
@@ -13,9 +10,10 @@ export default function emit(
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
   return stream.write(preamble())
-    .write(imports(ast))
-    .write(globals(ast))
-    .write(exports(ast))
-    .write(code(ast));
+    .write(section.function(ast))
+    .write(section.imports(ast))
+    .write(section.globals(ast))
+    .write(section.exports(ast))
+    .write(section.code(ast));
 };
 
