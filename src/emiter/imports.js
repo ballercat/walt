@@ -3,7 +3,7 @@ import { u8, i8,  u32, } from 'wasm-types';
 import { varint1, varint7, varuint32 } from './numbers';
 import { getTypeString } from './value_type';
 import { EXTERN_GLOBAL } from './external_kind';
-import { IMPORT } from './sectionCodes';
+import { SECTION_IMPORT } from './sectionCodes';
 import { emitString } from './string';
 
 const emitEntries = entries => {
@@ -12,7 +12,6 @@ const emitEntries = entries => {
   entries.forEach(({module, field, kind, global}) => {
     emitString(payload, module, 'module');
     emitString(payload, field, 'field');
-
 
     switch(kind) {
       case EXTERN_GLOBAL: {
@@ -31,7 +30,7 @@ export default function imports({ imports }) {
   if (!imports || !imports.length)
     return null;
   // Generate payload
-  const stream = new OutputStream().push(u8, IMPORT, 'import section');
+  const stream = new OutputStream().push(u8, SECTION_IMPORT, 'import section');
   const entries = emitEntries(imports);
 
   stream.push(varuint32, entries.size, 'section size');
