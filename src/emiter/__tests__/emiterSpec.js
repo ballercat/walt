@@ -4,7 +4,7 @@ import emit from '../';
 test('emiter, emits valid WebAssembly instance', t => {
   const output = emit();
   return WebAssembly.instantiate(
-    output.buffer
+    output.buffer()
   ).then(({ module, instance }) => {
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
