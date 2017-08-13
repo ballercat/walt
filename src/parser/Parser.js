@@ -1,5 +1,5 @@
+import TokenStream from './TokenStream';
 const { identity: I } = require('ramda');
-const TokenStream = require('./TokenStream');
 const Syntax = require('./Syntax');
 const Node = require('./Node');
 const Context = require('./Context');
@@ -159,7 +159,14 @@ class Parser {
     return Node.constant(start, end, value);
   }
 
+  // Get the ast
   parseProgram() {
+    // No code, no problem, empty ast equals
+    // (module) ; the most basic wasm module
+    if (!this.stream || !this.stream.length) {
+      return {};
+    }
+
     const body = [];
     const node = { body, context: new Context() };
 

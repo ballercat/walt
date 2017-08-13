@@ -1,5 +1,6 @@
 class TokenStream {
   constructor(tokens = []) {
+    this.length = tokens.length;
     this.tokens = tokens;
     this.pos = 0;
   }
