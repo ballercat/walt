@@ -8,6 +8,8 @@ export const getTypeString = (type) => {
       return 'f32';
     case F64:
       return 'f64';
+    case FUNC:
+      return 'func';
     case ANYFUNC:
       return 'anyfunc';
     default:
