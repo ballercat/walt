@@ -1,9 +1,19 @@
 import TokenStream from './TokenStream';
+import { I32 } from '../emiter/value_type';
 const { identity: I } = require('ramda');
 const Syntax = require('./Syntax');
 const Node = require('./Node');
 const Context = require('./Context');
 const { last } = require('ramda');
+
+function getTypeValue(typedef) {
+  switch(typedef) {
+    case 'i32':
+      return I32;
+    default:
+      throw new Error('unknown type ' + typedef);
+  }
+}
 
 class Parser {
   constructor(tokenStream) {
@@ -104,6 +114,15 @@ class Parser {
 
     const node = Node.assignment(start, end, left, right);
 
+    if (node.left.isGlobal) {
+      const entry = this.Globals.find(({ id }) => id === node.left.id);
+
+      switch(node.right.type) {
+        case 'Constant':
+          entry.init = parseInt(node.right.value);
+      }
+    }
+
     return node;
   }
 
@@ -141,8 +160,15 @@ class Parser {
 
     // @throws
     parent.context.finalizeDeclaration(decl);
-
     decl.isConstant = options.isConstant;
+
+    if (decl.isGlobal) {
+      this.writeGlobal({
+        mutable: +(!decl.isConstant),
+        type: getTypeValue(decl.typedef),
+        id: decl.id
+      });
+    }
 
     return decl;
   }
@@ -159,6 +185,11 @@ class Parser {
     return Node.constant(start, end, value);
   }
 
+  // mutable, type, id, init(node)
+  writeGlobal(entry) {
+    this.Globals.push(entry);
+  }
+
   // Get the ast
   parseProgram() {
     // No code, no problem, empty ast equals
@@ -166,6 +197,8 @@ class Parser {
     if (!this.stream || !this.stream.length) {
       return {};
     }
+
+    this.Globals = [];
 
     const body = [];
     const node = { body, context: new Context() };
@@ -177,8 +210,7 @@ class Parser {
     }
 
     return {
-      type: Syntax.Program,
-      body
+      Globals: this.Globals
     };
   }
 

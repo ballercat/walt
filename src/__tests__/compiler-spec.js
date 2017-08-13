@@ -9,3 +9,14 @@ test('empty module compilation', t =>
     t.is(module instanceof WebAssembly.Module, true);
   })
 );
+
+// Doesn't currently work :(
+test('global declaration compilation', t =>
+  WebAssembly.instantiate(
+    compile('let answer: i32 = 42')
+  ).then(({ module, instance }) => {
+    t.is(instance instanceof WebAssembly.Instance, true);
+    t.is(module instanceof WebAssembly.Module, true);
+  })
+);
+
