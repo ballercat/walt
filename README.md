@@ -18,7 +18,7 @@ the WebAssembly output. Meaning there should be minimal to none post optimizatio
 new language.
 
 # Goals
-1. Use ES6 like syntax
+1. Subset of ES6 syntax
 2. Type annotations (similar to flow).
 3. Simplify exports and imports
 4. Fast compilation
@@ -35,25 +35,18 @@ new language.
 * S-syntax https://github.com/WebAssembly/spec/tree/master/interpreter#s-expression-syntax
 * WAS Syntax experiment from Mozilla https://github.com/mbebenita/was
 
+# Prior Art
+* [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
+
 # RoadMap
-* v0.0.1
-  - Spec
-* v0.1.0
-  - Complete Syntax Spec - WIP
-* v0.2.0
-  - Tokenizer/Lexer - WIP
-* v0.5.0a
-  - AST Compiler & Type Checker - TODO
-* v0.9.0b
-  - Code Generator - TODO
-* v0.9.5b
-  - node library + CLI walt2wasm generator
-* v1.0.0
-  - Webpack Plugin - TODO
-* v1+
-  - IDE integration
-  - linter
-  - VIM colors, syntax
+* Spec
+* Tokenizer
+* Parser
+* Emiter
+* Webpack Loader
+* IDE integration
+* linter
+* VIM colors, syntax
 
 # Spec (WIP)
 
