@@ -78,7 +78,7 @@ Each expression must end in a `;`
 
 ### Comments
 
-* Input `.walt`
+* `.walt`
 ```javascript
 // single line comment
 /**
@@ -86,16 +86,6 @@ Each expression must end in a `;`
   line
   comment
 **/
-```
-
-* Result `.wast`
-```
-;; single line comment
-(;
-  multi
-  line
-  comment
-;)
 ```
 
 ### Functions
@@ -139,11 +129,11 @@ Every `.walt` file is a module and is compiled into the above. Similar to node m
 
 * `counter.walt`
 ```javascript
-global i32 counter = 0;
-function count() : i32 {
+let counter: i32 = 0;
+// modules with exports get assigned linker names
+export function count() : i32 {
   return counter++;
 }
-export count; // modules with exports get assigned linker names
 ```
 
 * `main.walt`
@@ -152,44 +142,4 @@ import { function count : i32 }  from './counter'; // counter.walt
 count(); // 0
 count(); // 1
 ```
-
-Output `.wast`:
-
-```
-(module $__M0
-  (global $counter (mut i32) (i32.const 0))
-  (func $count (result i32)
-    (set_global $counter
-      (i32.add $get_global $counter (i32.const 1))
-    )
-    (return (get_global $counter))
-  )
-  (export "count" (func $count)) ; modules with exports get assigned linker names
-)
-(register "counter" $__M0)
-(module
-  (func $count (import "counter" "count") (result i32)) ; counter.walt
-  (call $count) ; 0
-  (call $count) ; 1
-)
-```
-
-### Memory
-
-* Input `.walt`
-```javascript
-import Memory from 'Memory';
-module.memory = Memory(0, 256);
-```
-
-* Result `.wast`
-```
-(memory 1, 256)
-```
-- Import a module `Memory` to create a new memory entry
-- Module memory must be set on the `module.memory`. Only one memory entry is currently allowed, per the wasm spec.
-
-
-
-
 
