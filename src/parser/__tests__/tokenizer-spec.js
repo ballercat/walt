@@ -10,7 +10,6 @@ import {
   tokenParsers
 } from '../';
 import Syntax from '../Syntax';
-import { sources } from '../../utils/specUtils';
 import test from 'ava';
 
 test('next reads tokens, ignoring whitespace', t => {
@@ -31,7 +30,8 @@ test('next reads tokens, ignoring whitespace', t => {
 
 
 test('parses a stream into tokens', t => {
-  const tokenizer = new Tokenizer(new Stream(sources.globals), tokenParsers)
+  const stream = new Stream(`let x: i32 = 2;`);
+  const tokenizer = new Tokenizer(stream, tokenParsers)
   const result = tokenizer.parse();
   snapshot(result);
 });

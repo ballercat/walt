@@ -1,4 +1,4 @@
-const Stream = require('./Stream');
+import Stream from './Stream';
 
 class Tokenizer {
   constructor(stream, parsers = []) {
@@ -108,5 +108,5 @@ class Tokenizer {
   }
 }
 
-module.exports = Tokenizer;
+export default Tokenizer;
 

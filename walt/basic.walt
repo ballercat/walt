@@ -1,3 +1,2 @@
-global x: i32 = 2
-assert(x, 2)
+let x: i32 = 2;
 

@@ -18,5 +18,5 @@ class TokenStream {
   }
 }
 
-module.exports = TokenStream;
+export default TokenStream;
 
