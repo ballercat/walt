@@ -138,8 +138,8 @@ export function count() : i32 {
 
 * `main.walt`
 ```javascript
-import { function count : i32 }  from './counter'; // counter.walt
-count(); // 0
-count(); // 1
+import { count(): i32 }  from './counter'; // counter.walt
+
+export addCount = (value: i32): i32 => count() + value;
 ```
 
