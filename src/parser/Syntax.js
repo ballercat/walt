@@ -1,5 +1,6 @@
 const Syntax = {
   Keyword: 'Keyword',
+  Export: 'Export',
   BinaryExpression: 'BinaryExpression',
   NumberLiteral: 'NumberLiteral',
   StringLiteral: 'StringLiteral',

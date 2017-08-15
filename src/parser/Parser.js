@@ -1,8 +1,8 @@
 import TokenStream from './TokenStream';
 import { I32 } from '../emiter/value_type';
+import Node from './Node';
 const { identity: I } = require('ramda');
 const Syntax = require('./Syntax');
-const Node = require('./Node');
 const Context = require('./Context');
 const { last } = require('ramda');
 
@@ -44,12 +44,12 @@ class Parser {
     return new Error(`Language feature not supported ${line}:${col} ${value}`);
   }
 
-  expect(type, value) {
+  expect(type, values) {
     const { type: nextType, value: nextValue, start } = this.stream.peek();
     if (type !== nextType)
       throw this.unexpectedToken(type, start.line, start.col);
-    if (value && value !== nextValue)
-      throw this.unexpectedValue(value, start.line, start.col);
+    if (values && !values.find(v => v === nextValue))
+      throw this.unexpectedValue(nextValue, start.line, start.col);
   }
 
   startNode() {
@@ -64,43 +64,50 @@ class Parser {
     this.current = this.stream.next();
     mark = mark || this.startNode();
 
-    if (this.current.type === Syntax.Keyword) {
-
-      if (this.current.value === 'let')
-        return this.parseDeclaration(parent, mark);
-
-      if (this.current.value === 'const')
-        return this.parseDeclaration(parent, mark, { isConstant: true });
+    switch(this.current.type) {
+      case Syntax.Keyword:
+        return this.keyword(parent, mark);
+      case Syntax.Punctuator:
+        return this.punctuator(parent, mark);
+      case Syntax.Constant:
+        return this.constant(parent, mark);
+      case Syntax.Identifier:
+        return this.identifier(parent, mark);
+      default:
+        throw this.unknownToken(this.current);
     }
-
-    if (this.current.type === Syntax.Punctuator) {
-
-      switch(this.current.value) {
-        case '=':
-          return this.parseAssignment(parent, mark);
-        case '+':
-        case '*':
-        case '-':
-        case '/':
-        case '%':
-          return this.parseBinary(parent, mark);
-        default:
-          throw this.unsupported(this.current);
-      }
-    }
-
-    if (this.current.type === Syntax.Constant) {
-      return this.parseConstant(parent, mark);
-    }
-
-    if (this.current.type === Syntax.Identifier) {
-      return this.parseIdentifier(parent, mark);
-    }
-
-    throw this.unknownToken(this.current);
   }
 
-  parseAssignment(parent, mark) {
+  punctuator(parent, mark) {
+    switch(this.current.value) {
+      case '=':
+        return this.assignment(parent, mark);
+      case '+':
+      case '*':
+      case '-':
+      case '/':
+      case '%':
+        return this.binary(parent, mark);
+      default:
+        throw this.unsupported(this.current);
+    }
+  }
+
+  keyword(parent, mark) {
+    mark = mark || this.startNode();
+    switch(this.current.value) {
+      case 'let':
+      case 'const':
+        return this.declaration(parent, mark);
+      case 'export':
+        this.expect(Syntax.Keyword, ['let', 'const', 'function']);
+        return Node.export(this.expression(parent, mark));
+      default:
+        throw this.unsupported(this.current);
+    }
+  }
+
+  assignment(parent, mark) {
     const left = last(parent.body);
 
     if (!left.id)
@@ -114,23 +121,10 @@ class Parser {
 
     const node = Node.assignment(start, end, left, right);
 
-    if (node.left.isGlobal) {
-      const entry = this.Globals.find(({ id }) => id === node.left.id);
-
-      switch(node.right.type) {
-        case 'Constant':
-          entry.init = parseInt(node.right.value);
-      }
-    }
-
     return node;
   }
 
-  /**
-   * TODO: combine this and assignment
-   * @throws
-   */
-  parseBinary(parent, mark) {
+  binary(parent, mark) {
     const left = parent.body.pop();
 
     const node = Node.binaryExpression(this.current, left, this.expression(parent));
@@ -138,56 +132,30 @@ class Parser {
     return node;
   }
 
-  /**
-   * @throws
-   */
-  parseDeclaration(parent, mark, options = {
-    isConstant: false
-  }) {
+  declaration(parent, mark) {
     this.expect(Syntax.Identifier);
+    const decl = Node.declaration(this.current, mark)(this.stream.next());
 
-    const { start } = mark;
-    const { value: id } = this.stream.next();
-
-    this.expect(Syntax.Punctuator, ':');
+    this.expect(Syntax.Punctuator, [':']);
     this.stream.next();
-
     this.expect(Syntax.Type);
 
-    const { value: type, end } = this.stream.next();
-
-    const decl = Node.declaration(start, end, id, type);
-
     // @throws
-    parent.context.finalizeDeclaration(decl);
-    decl.isConstant = options.isConstant;
-
-    if (decl.isGlobal) {
-      this.writeGlobal({
-        mutable: +(!decl.isConstant),
-        type: getTypeValue(decl.typedef),
-        id: decl.id
-      });
-    }
-
-    return decl;
+    return parent
+      .context
+      .finalizeDeclaration(decl(this.stream.next()));
   }
 
-  parseIdentifier(parent, mark) {
+  identifier(parent, mark) {
     const { start, end } = mark;
     const { value: id } = this.current;
     return Node.identifier(start, end, id);
   }
 
-  parseConstant(parent, mark) {
+  constant(parent, mark) {
     const { start, end } = mark;
     const { value } = this.current;
     return Node.constant(start, end, value);
-  }
-
-  // mutable, type, id, init(node)
-  writeGlobal(entry) {
-    this.Globals.push(entry);
   }
 
   // Get the ast
@@ -197,8 +165,6 @@ class Parser {
     if (!this.stream || !this.stream.length) {
       return {};
     }
-
-    this.Globals = [];
 
     const body = [];
     const node = { body, context: new Context() };
@@ -210,7 +176,7 @@ class Parser {
     }
 
     return {
-      Globals: this.Globals
+      body
     };
   }
 

@@ -21,7 +21,7 @@ const ast = {
     { kind: EXTERN_FUNCTION, field: 'echo', index: 0 }
   ],
   Globals: [
-    { immutable: true, type: I32, init: meaningOfLife }
+    { mutable: 0, type: I32, init: meaningOfLife }
   ]
 };
 

@@ -13,7 +13,7 @@ const ast = {
     { kind: EXTERN_GLOBAL, field: 'meaningOfLife', index: 0 }
   ],
   Globals: [
-    { immutable: true, type: I32, init: meaningOfLife }
+    { mutable: 0, type: I32, init: meaningOfLife }
   ]
 };
 

@@ -1,57 +1,55 @@
-const Syntax = require('./../Syntax');
+import Syntax from './../Syntax';
+import curry from 'curry';
 
-const declaration = (start, end, id, typedef) => {
-  return {
-    type: Syntax.Declaration,
-    start,
-    end,
-    id,
-    typedef
-  };
+const Node = {
+  declaration: curry(
+    (decl,
+    { start },
+    { value: id },
+    { value: typedef, end }
+  ) => ({
+      type: Syntax.Declaration,
+      constant: decl.value === 'const',
+      start,
+      end,
+      id,
+      typedef
+  })),
+  assignment: (start, end, left, right) => {
+    return {
+      type: Syntax.Assignment,
+      start,
+      end,
+      left,
+      right
+    };
+  },
+  constant: (start, end, value) => {
+    return {
+      type: Syntax.Constant,
+      start,
+      end,
+      value
+    };
+  },
+  identifier: (start, end, id) => {
+    return {
+      type: Syntax.Identifier,
+      start,
+      end,
+      id
+    };
+  },
+  binaryExpression: (operator, left, right) => {
+    return {
+      type: Syntax.BinaryExpression,
+      start: left.start,
+      end: right.end,
+      operator: operator
+    };
+  },
+  export: (node) => ({ ...node, export: true })
 };
 
-const assignment = (start, end, left, right) => {
-  return {
-    type: Syntax.Assignment,
-    start,
-    end,
-    left,
-    right
-  };
-};
-
-const constant = (start, end, value) => {
-  return {
-    type: Syntax.Constant,
-    start,
-    end,
-    value
-  };
-};
-
-const identifier = (start, end, id) => {
-  return {
-    type: Syntax.Identifier,
-    start,
-    end,
-    id
-  };
-};
-
-const binaryExpression = (operator, left, right) => {
-  return {
-    type: Syntax.BinaryExpression,
-    start: left.start,
-    end: right.end,
-    operator: operator
-  };
-};
-
-module.exports = {
-  declaration,
-  assignment,
-  constant,
-  identifier,
-  binaryExpression
-}
+export default Node;
 
