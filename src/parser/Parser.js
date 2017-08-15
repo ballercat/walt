@@ -1,6 +1,5 @@
 import TokenStream from './TokenStream';
 import { I32 } from '../emiter/value_type';
-import Node from './Node';
 const { identity: I } = require('ramda');
 const Syntax = require('./Syntax');
 const Context = require('./Context');
@@ -31,12 +30,12 @@ class Parser {
                       Expected ${value}`);
   }
 
-  unexpectedToken(token, line, col) {
+  unexpected(token, line, col) {
     return new Error(`Unexpected value at ${line}:${col}.
                       Expected ${token}`);
   }
 
-  unknownToken({ value, start: { line, col } }) {
+  unknown({ value, start: { line, col } }) {
     return new Error(`Unexpected token at ${line}:${col} ${value}`);
   }
 
@@ -47,7 +46,7 @@ class Parser {
   expect(type, values) {
     const { type: nextType, value: nextValue, start } = this.stream.peek();
     if (type !== nextType)
-      throw this.unexpectedToken(type, start.line, start.col);
+      throw this.unexpected(type, start.line, start.col);
     if (values && !values.find(v => v === nextValue))
       throw this.unexpectedValue(nextValue, start.line, start.col);
   }
@@ -60,7 +59,7 @@ class Parser {
     };
   }
 
-  expression(parent, mark = null) {
+  expression(parent = { body: [] }, mark = null) {
     this.current = this.stream.next();
     mark = mark || this.startNode();
 
@@ -74,7 +73,7 @@ class Parser {
       case Syntax.Identifier:
         return this.identifier(parent, mark);
       default:
-        throw this.unknownToken(this.current);
+        throw this.unknown(this.current);
     }
   }
 
@@ -98,64 +97,70 @@ class Parser {
     switch(this.current.value) {
       case 'let':
       case 'const':
+      case 'function':
         return this.declaration(parent, mark);
       case 'export':
         this.expect(Syntax.Keyword, ['let', 'const', 'function']);
-        return Node.export(this.expression(parent, mark));
+        return this.export(parent, mark);
       default:
         throw this.unsupported(this.current);
     }
   }
 
-  assignment(parent, mark) {
+  export(parent, mark) {
+    return {
+      target: this.expression(parent, mark)
+    };
+  }
+
+  assignment(parent, { start }) {
     const left = last(parent.body);
-
-    if (!left.id)
-      throw this.unexpectedToken(Syntax.Identifier, left.start.line, left.start.col);
-
-    const { start } = mark;
-
-    const right = this.expression({ context: new Context(parent.context, false), body: [] });
-
+    const right = this.expression();
     const { end } = this.current;
-
-    const node = Node.assignment(start, end, left, right);
-
-    return node;
+    return {
+      type: Syntax.Assignment,
+      start, end, left, right
+    };
   }
 
   binary(parent, mark) {
-    const left = parent.body.pop();
-
-    const node = Node.binaryExpression(this.current, left, this.expression(parent));
-
-    return node;
+    const { start } = parent.body.pop();
+    const operator = this.current;
+    return {
+      start,
+      operator,
+      type: Syntax.BinaryExpression,
+      right: this.expression(parent)
+    };
   }
 
-  declaration(parent, mark) {
+  declaration(parent, { start }) {
     this.expect(Syntax.Identifier);
-    const decl = Node.declaration(this.current, mark)(this.stream.next());
+    const mutable = 'const' === this.current.value;
+    const { value: id } = this.stream.next();
 
     this.expect(Syntax.Punctuator, [':']);
     this.stream.next();
     this.expect(Syntax.Type);
+    const { end, value: typedef } = this.stream.next();
 
-    // @throws
-    return parent
-      .context
-      .finalizeDeclaration(decl(this.stream.next()));
+    return {
+      type: Syntax.Declaration,
+      mutable,
+      id,
+      start,
+      end
+    };
   }
 
-  identifier(parent, mark) {
-    const { start, end } = mark;
+  identifier(parent, { start, end }) {
     const { value: id } = this.current;
-    return Node.identifier(start, end, id);
+    return { type: Syntax.Identifier, start, end, id };
   }
 
-  constant(parent, mark) {
-    const { start, end } = mark;
+  constant(parent, { start, end }) {
     const { value } = this.current;
-    return Node.constant(start, end, value);
+    return { type: Syntax.Constant, start, end };
   }
 
   // Get the ast
