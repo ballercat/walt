@@ -40,6 +40,8 @@ new language.
 
 # RoadMap
 * Spec
+  * ~A basic Grammar~
+  * Examples
 * Tokenizer
 * Parser
 * Emiter
