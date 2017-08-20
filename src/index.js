@@ -4,7 +4,6 @@ import Parser, {
   TokenStream,
   tokenParsers
 } from './parser';
-import generator from './generator';
 import emit from './emiter';
 
 // Compiles a raw binary wasm buffer
@@ -14,8 +13,7 @@ const compile = source => {
   const tokenStream = new TokenStream(tokenizer.parse());
   const parser = new Parser(tokenStream);
   const ast = parser.parse();
-  const ir = generator(ast);
-  const wasm = emit(ir);
+  const wasm = emit(ast);
 
   return wasm.buffer();
 }
