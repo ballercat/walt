@@ -4,6 +4,10 @@
 :zap: **Walt** is syntax sugar for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. A sort-of C for the web. I wouldn't say it's
 compiled into `.wast` as much as it's a better way of writing wast code directly.
 
+:construction: **currently under heavy construction** :construction:
+
+Contributions are welcomed! :pray:
+
 # Problem
 Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for .wast files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
 then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final .wasm. This is an
