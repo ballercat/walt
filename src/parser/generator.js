@@ -1,5 +1,6 @@
 import {
-  EXTERN_GLOBAL
+  EXTERN_GLOBAL,
+  EXTERN_FUNCTION
 } from '../emiter/external_kind';
 import {
   I32,
@@ -7,9 +8,10 @@ import {
   F32,
   F64
 } from '../emiter/value_type';
+import opcode from '../emiter/opcode';
 import Syntax from './Syntax';
 
-const getType = str => {
+export const getType = str => {
   switch(str) {
     case 'f32': return F32;
     case 'f64': return F64;
@@ -18,12 +20,18 @@ const getType = str => {
   }
 };
 
-export const generateExport = node => {
+export const generateExport = decl => {
   const _export = {};
-  if (node.decl) {
-    _export.index = node.decl.globalIndex;
+  if (decl && decl.init) {
+    _export.index = decl.globalIndex;
     _export.kind = EXTERN_GLOBAL;
-    _export.field = node.decl.id;
+    _export.field = decl.id;
+  }
+
+  if (decl && decl.func) {
+    _export.index = decl.functionIndex;
+    _export.kind = EXTERN_FUNCTION;
+    _export.field = decl.id;
   }
 
   return _export;
@@ -50,4 +58,46 @@ export const generateGlobal = node => {
 
   return _global;
 };
+
+export const generateType = node => {
+  const type = { params: [], result: null };
+  if (node.result !== 'void') {
+    type.result = getType(node.result);
+  }
+
+  type.params = node.paramList.map(p => getType(p.type));
+
+  return type;
+}
+
+export const generateCode = func => {
+  // TODO generate locals
+  const block = { locals: [], code: [] };
+  // the binary encoding is not a tree per se, so we need to concat everything
+  func.body.forEach(node => {
+    switch(node.Type) {
+      case Syntax.ReturnStatement:
+        block.code = [...block.code, ...generateReturn(node)];
+        break;
+    }
+  });
+
+  return block;
+};
+
+export const generateReturn = node => {
+  return generateExpression(node.expr);
+};
+
+export const generateExpression = expr => {
+  const block = [];
+  switch(expr.Type) {
+    case Syntax.Constant: {
+      const op = opcode[expr.type + 'Const'];
+      block.push({ kind: op.code, params: [expr.value] });
+      break;
+    }
+  };
+  return block;
+}
 

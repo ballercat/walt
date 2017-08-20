@@ -2,12 +2,16 @@ import TokenStream from './TokenStream';
 import { I32 } from '../emiter/value_type';
 import {
   generateExport,
-  generateGlobal
+  generateGlobal,
+  generateType,
+  generateCode,
+  getType
 } from './generator';
 import Syntax from './Syntax';
 import Context from './Context'
 import { last } from 'ramda';
 
+// Utilities
 const precedence = {
   '+': 0,
   '-': 0,
@@ -27,7 +31,18 @@ const assoc = op => {
     default:
       return 'left';
   }
-}
+};
+
+const findTypeIndex = (node, Types) => {
+  return Types.findIndex(t => {
+    const paramsMatch = t.params.reduce(
+      (a, v, i) => a && v === getType(node.paramList[i].type),
+      true
+    );
+
+    return paramsMatch && t.result === getType(node.result.type);
+  });
+};
 
 class Parser {
   constructor(tokenStream) {
@@ -50,9 +65,9 @@ class Parser {
 
   unexpectedValue(value) {
     return this.syntaxError(
-      'Unexpected value',
       `Value   : ${this.token.value}
-       Expected: ${Array.isArray(value) ? value.join('|') : value}`
+       Expected: ${Array.isArray(value) ? value.join('|') : value}`,
+      'Unexpected value'
     );
   }
 
@@ -60,7 +75,7 @@ class Parser {
     return this.syntaxError(
       'Unexpected token',
        `Token   : ${this.token.type}
-       Expected: ${token}`
+       Expected: ${Array.isArray(token) ? token.join(' | ') : token}`
     );
   }
 
@@ -72,12 +87,13 @@ class Parser {
     return this.syntaxError('Language feature not supported', this.token.value);
   }
 
-  expect(type, values) {
-    const { type: nextType, value: nextValue, start } = this.stream.peek();
-    if (type !== nextType)
-      throw this.unexpected(type, start.line, start.col);
-    if (values && !values.find(v => v === nextValue))
-      throw this.unexpectedValue(nextValue, start.line, start.col);
+  expect(value, type) {
+    const token = this.token;
+    if (!this.eat(value, type)) {
+      throw value ? this.unexpectedValue(value) : this.unexpected(type);
+    }
+
+    return token;
   }
 
   next() {
@@ -182,6 +198,8 @@ class Parser {
         return this.functionDeclaration(node);
       case 'export':
         return this.export(node);
+      case 'return':
+        return this.returnStatement(node);
       default:
         throw this.unsupported(this.current);
     }
@@ -189,33 +207,29 @@ class Parser {
 
   export(node) {
     this.eat(['export']);
-    const decl = this.declaration(this.startNode());
-    if (!decl.init)
-      throw this.syntaxError('Exports must have a value');
+    const decl = this.maybeFunctionDeclaration(this.startNode());
+    if(!decl.func) {
+      if(!decl.init)
+        throw this.syntaxError('Exports must have a value');
+    }
 
+    this.Program.Exports.push(generateExport(decl));
     node.decl = decl;
 
     this.endNode(node, Syntax.Export);
-    this.Program.Exports.push(generateExport(node));
 
     return node;
   }
 
-  declaration(node, inFunction) {
+  declaration(node) {
     node.const = this.token.value === 'const';
     if (!this.eat(['const', 'let']))
       throw this.unexpectedValue(['const', 'let']);
 
-    node.id = this.token.value
-    if (!this.eat(null, Syntax.Identifier))
-      throw this.unexpected(Syntax.Identifier);
+    node.id = this.expect(null, Syntax.Identifier).value;
+    this.expect([':']);
 
-    if (!this.eat([':']))
-      throw this.unexpectedValue(':');
-
-    node.type = this.token.value;
-    if (!this.eat(null, Syntax.Type))
-      throw this.unexpected(Syntax.Type);
+    node.type = this.expect(null, Syntax.Type).value;
 
     if (this.eat(['=']))
       node.init = this.expression();
@@ -223,7 +237,7 @@ class Parser {
     if (node.const && !node.init)
       throw this.syntaxError('Constant value must be initialized');
 
-    if (!inFunction) {
+    if (!this.inFunction) {
       node.globalIndex = this.Program.Globals.length;
       this.Program.Globals.push(generateGlobal(node));
     }
@@ -231,10 +245,85 @@ class Parser {
     return this.endNode(node, Syntax.Declaration);
   }
 
-  functionDeclaration(node) {
+  maybeFunctionDeclaration(node) {
+    if (!this.eat(['function']))
+      return this.declaration(node);
+
+    this.inFunction = node;
+    node.id = this.expect(null, Syntax.Identifier).value;
+    node.paramList = this.paramList();
+    this.expect([':']);
+    node.result = this.expect(null, Syntax.Type).value;
+    this.expect(['{']);
+    node.body = [];
+    let stmt = null;
+    while(this.token.value !== '}') {
+      stmt = this.statement();
+      if (stmt)
+        node.body.push(stmt);
+    }
+
+    // Sanity check the return statement
+    const ret = last(node.body);
+    if(node.type === 'void' && ret.Type === Syntax.ReturnStatement)
+      throw this.syntaxError('Unexpected return value in a function with result : void');
+    if(node.type !== 'void' && ret.Type !== Syntax.ReturnStatement)
+      throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
+
+
+    // Either re-use an existing type or write a new one
+    const typeIndex = findTypeIndex(node, this.Program.Types);
+    if(typeIndex !== -1) {
+      node.typeIndex = typeIndex;
+    } else {
+      node.typeIndex = this.Program.Types.length;
+      this.Program.Types.push(generateType(node));
+    }
+
+    // attach to a type index
+    node.functionIndex = this.Program.Functions.length;
+    this.Program.Functions.push(node.typeIndex);
+
+    // generate the code block for the emiter
+    this.Program.Code.push(generateCode(node));
+
+    this.expect(['}']);
+    this.inFunction = false;
+
+    node.func = true;
+    return this.endNode(node, Syntax.FunctionDeclaration);
   }
 
-  identifier(node) {
+  paramList() {
+    const paramList = [];
+    this.expect(['(']);
+    while(this.token.value !== ')')
+      paramList.push(this.param());
+    this.expect([')']);
+    return paramList;
+  }
+
+  param(node = this.startNode()) {
+    node.id = this.expect(null, Syntax.Identifier).value;
+    this.expect([':']);
+    node.type = this.expect(null, Syntax.Type).value;
+    return this.endNode(node, Syntax.Param);
+  }
+
+  returnStatement(node = this.startNode()) {
+    if(!this.inFunction)
+      throw this.syntaxError('Return statement is only valid inside a function');
+    this.expect(['return']);
+    node.expr = this.expression();
+
+    // For generator to emit correct consant they must have a correct type
+    // in the syntax it's not necessary to define the type since we can infer it here
+    if (node.expr.type && this.inFunction.result !== node.expr.type)
+      throw this.syntaxError('Return type mismatch');
+    else if(!node.expr.type && this.inFunction.result)
+      node.expr.type = this.inFunction.result;
+
+    return this.endNode(node, Syntax.ReturnStatement);
   }
 
   constant(token = this.token) {
@@ -252,9 +341,14 @@ class Parser {
     }
 
     const node = this.Program = this.startNode();
+
+    // Setup keys needed for the emiter
+    this.Program.Types = [];
+    this.Program.Code = [];
     this.Program.Exports = [];
     this.Program.Imports = [];
     this.Program.Globals = [];
+    this.Program.Functions = [];
 
     node.body = [];
     while (this.stream.peek()) {

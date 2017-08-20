@@ -20,6 +20,10 @@ const emitFunctionBody = (stream, { locals, code }) => {
         body.push(varuint32, params[0], 'global index');
         body.push(varuint32, params[1], `value (${params[1]})`);
         break;
+      case opcode.i32Const.code:
+        body.push(u8, kind, opcode.i32Const.text);
+        body.push(varuint32, params[0], `value (${params[0]})`);
+        break;
     };
   });
 

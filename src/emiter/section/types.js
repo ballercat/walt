@@ -1,5 +1,5 @@
 import { u8 } from 'wasm-types';
-import { I32, FUNC } from '../value_type';
+import { I32, FUNC, getTypeString } from '../value_type';
 import { varuint32, varint7, varint1 } from '../numbers';
 import { emitString } from '../string';
 import opcode from '../opcode';
@@ -12,7 +12,7 @@ const emitType = (stream, { params, result }) => {
   params.forEach(type => stream.push(varint7, type, 'param'));
   if (result) {
     stream.push(varint1, 1, 'result count');
-    stream.push(varint7, result, 'result type');
+    stream.push(varint7, result, `result type ${getTypeString(result)}`);
   }
 }
 

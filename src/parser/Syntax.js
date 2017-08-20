@@ -12,7 +12,9 @@ const Syntax = {
   Declaration: 'Declaration',
   FunctionDeclaration: 'FunctionDeclaration',
   Program: 'Program',
-  Assignment: 'Assignment'
+  Assignment: 'Assignment',
+  Param: 'Param',
+  ReturnStatement: 'ReturnStatement'
 }
 
 module.exports = Syntax;
