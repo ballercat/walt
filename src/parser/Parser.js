@@ -2,7 +2,7 @@ import TokenStream from './TokenStream';
 import { I32 } from '../emiter/value_type';
 import {
   generateExport,
-  generateGlobal,
+  generateInit,
   generateType,
   generateCode,
   getType
@@ -159,6 +159,8 @@ class Parser {
     while(this.token && this.token.value !== ';') {
       if (this.token.type === Syntax.Constant)
         operands.push(this.constant());
+      if (this.token.type === Syntax.Identifier)
+        operands.push(this.identifier());
 
       if (this.token.type === Syntax.Punctuator) {
         while(last(operators)
@@ -237,9 +239,13 @@ class Parser {
     if (node.const && !node.init)
       throw this.syntaxError('Constant value must be initialized');
 
-    if (!this.inFunction) {
+    if (!this.func) {
       node.globalIndex = this.Program.Globals.length;
-      this.Program.Globals.push(generateGlobal(node));
+      this.Program.Globals.push(generateInit(node));
+      this.globals.push(node);
+    } else {
+      node.localIndex = this.func.locals.length;
+      this.func.locals.push(node);
     }
 
     return this.endNode(node, Syntax.Declaration);
@@ -249,7 +255,9 @@ class Parser {
     if (!this.eat(['function']))
       return this.declaration(node);
 
-    this.inFunction = node;
+    this.func = node;
+    node.func = true;
+    node.locals = [];
     node.id = this.expect(null, Syntax.Identifier).value;
     node.paramList = this.paramList();
     this.expect([':']);
@@ -288,9 +296,9 @@ class Parser {
     this.Program.Code.push(generateCode(node));
 
     this.expect(['}']);
-    this.inFunction = false;
 
-    node.func = true;
+    this.func = null;
+
     return this.endNode(node, Syntax.FunctionDeclaration);
   }
 
@@ -311,17 +319,17 @@ class Parser {
   }
 
   returnStatement(node = this.startNode()) {
-    if(!this.inFunction)
+    if(!this.func)
       throw this.syntaxError('Return statement is only valid inside a function');
     this.expect(['return']);
     node.expr = this.expression();
 
     // For generator to emit correct consant they must have a correct type
     // in the syntax it's not necessary to define the type since we can infer it here
-    if (node.expr.type && this.inFunction.result !== node.expr.type)
+    if (node.expr.type && this.func.result !== node.expr.type)
       throw this.syntaxError('Return type mismatch');
-    else if(!node.expr.type && this.inFunction.result)
-      node.expr.type = this.inFunction.result;
+    else if(!node.expr.type && this.func.result)
+      node.expr.type = this.func.result;
 
     return this.endNode(node, Syntax.ReturnStatement);
   }
@@ -332,6 +340,20 @@ class Parser {
     return this.endNode(node, Syntax.Constant);
   }
 
+  identifier(token = this.token) {
+    const node = this.startNode();
+    let target = this.func.locals.findIndex(l => l.id === this.token.value);
+    if (target !== -1) {
+      node.localIndex = target;
+      node.target = this.func.locals[target];
+    } else {
+      node.globalIndex = this.globals.findIndex(g => g.id === this.token.value);
+      node.target = this.globals[node.globalIndex];
+    }
+
+    return this.endNode(node, Syntax.Identifier);
+  }
+
   // Get the ast
   program() {
     // No code, no problem, empty ast equals
@@ -340,6 +362,7 @@ class Parser {
       return {};
     }
 
+    this.globals = [];
     const node = this.Program = this.startNode();
 
     // Setup keys needed for the emiter
