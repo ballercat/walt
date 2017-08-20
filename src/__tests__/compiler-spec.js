@@ -32,7 +32,7 @@ test('global constant exports', t =>
   })
 );
 
-test.only('function exports', t =>
+test('function exports', t =>
   WebAssembly.instantiate(
     compile(`
       export function echo() : i32 {
