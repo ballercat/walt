@@ -4,13 +4,16 @@ import {
 import {
   I32,
   I64,
-  F32
+  F32,
+  F64
 } from '../emiter/value_type';
 import Syntax from './Syntax';
 
 const getType = str => {
   switch(str) {
-    case 'i32': return I32;
+    case 'f32': return F32;
+    case 'f64': return F64;
+    case 'i32':
     default: return I32;
   }
 };
@@ -35,6 +38,7 @@ export const generateGlobal = node => {
   if (Type === Syntax.Constant) {
     switch(_global.type) {
       case F32:
+      case F64:
         _global.init = parseFloat(value);
         break;
       case I32:

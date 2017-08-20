@@ -15,6 +15,7 @@ const compile = source => {
   const ast = parser.parse();
   const wasm = emit(ast);
 
+  console.log(wasm.debug());
   return wasm.buffer();
 }
 
