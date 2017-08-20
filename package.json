@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node_modules/ava/cli.js",
-    "integration": "./integration.sh",
     "test:units": "npm test",
-    "test:integration": "./integration.sh"
+    "debug": "node --inspect-brk node_modules/ava/profile.js"
   },
   "repository": {
     "type": "git",

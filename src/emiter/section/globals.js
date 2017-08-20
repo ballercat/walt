@@ -13,9 +13,19 @@ const emit = (globals) => {
     switch (type) {
       case I32:
         payload.push(u8, I32, 'i32');
-        payload.push(u8, mutable, 'immuatble');
-        payload.push(u8, opcode.i32Const.code, 'i32.const');
-        payload.push(varuint32, init, `value (${init})`);
+        payload.push(u8, mutable, 'mutable');
+        if (!Array.isArray(init)) {
+          // Encode a constant
+          payload.push(u8, opcode.i32Const.code, 'i32.const');
+          payload.push(varuint32, init, `value (${init})`);
+        } else {
+          // Encode a list of opcodes
+          init.forEach(({ kind, params }) => {
+            payload.push(u8, kind.code, kind.text);
+            params.forEach(p => payload.push(varuint32, p, `value (${p})`));
+          });
+        }
+
         payload.push(u8, opcode.End.code, 'end');
         break;
     }
