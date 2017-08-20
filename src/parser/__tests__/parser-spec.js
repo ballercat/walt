@@ -13,34 +13,26 @@ const tokenizer = {
   exportGlobals: new Tokenizer(new Stream('export const answer: i32 = 42;'), tokenParsers)
 };
 
+const prepare = string =>
+  new TokenStream(
+    new Tokenizer(
+      new Stream(string), tokenParsers).parse()
+  );
+
 test('the most basic of modules in wasm', t => {
-  const tokens = tokenizer.empty.parse();
-  const result = new Parser(new TokenStream(tokens)).parse();
+  const result = new Parser(prepare('')).parse();
   // Empty ast, empty module
   snapshot(result);
 });
 
 test('compiles globals', t => {
-  const tokens = tokenizer.constGlobals.parse();
-  const ast = new Parser(new TokenStream(tokens)).parse();
-  const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  });
+  const result = new Parser(prepare('const answer: i32 = 42;')).parse();
+  snapshot(result);
 });
 
 test('compiles exports', t => {
-  const tokens = tokenizer.exportGlobals.parse();
-  const ast = new Parser(new TokenStream(tokens)).parse();
-  const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance.exports.answer, 42);
-  });
+  const result = new Parser(prepare('export const answer: i32 = 42;')).parse();
+  snapshot(result);
 });
 
 
