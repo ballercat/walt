@@ -97,7 +97,7 @@ class Stream {
    * @static
    */
   static whitespace(char) {
-    return char === ' ' || char === "\t" || char === "\v" || char === "\r" || char === "\f";
+    return char === "\n" || char === ' ' || char === "\t" || char === "\v" || char === "\r" || char === "\f";
   }
 }
 

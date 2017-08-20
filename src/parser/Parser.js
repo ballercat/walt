@@ -118,6 +118,9 @@ class Parser {
     switch(this.token.type) {
       case Syntax.Keyword:
         return this.keyword(node);
+      case Syntax.Punctuator:
+        if (this.eat([';']))
+          return null;
       default:
         throw this.unknown();
     }

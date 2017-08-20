@@ -19,9 +19,15 @@ test('global declaration compilation', t =>
   })
 );
 
-test('global constant export', t =>
+test.only('global constant exports', t =>
   WebAssembly.instantiate(
-    compile('export const answer: i32 = 42;')
-  ).then(result => t.is(result.instance.exports.answer, 42))
+    compile(`export const a: i32 = 42;
+      export const b: f32 = 42;
+    `)
+  ).then(
+    result =>
+      t.is(result.instance.exports.a, 42)
+      && t.is(result.instance.exports.b, 42)
+  )
 );
 

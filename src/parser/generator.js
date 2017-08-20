@@ -2,7 +2,9 @@ import {
   EXTERN_GLOBAL
 } from '../emiter/external_kind';
 import {
-  I32
+  I32,
+  I64,
+  F32
 } from '../emiter/value_type';
 import Syntax from './Syntax';
 
@@ -29,8 +31,18 @@ export const generateGlobal = node => {
   _global.mutable = node.const ? 0 : 1;
   _global.type = getType(node.type);
 
-  if (node.init.Type === Syntax.Constant)
-    _global.init = parseInt(node.init.value);
+  const { Type, value } = node.init;
+  if (Type === Syntax.Constant) {
+    switch(_global.type) {
+      case F32:
+        _global.init = parseFloat(value);
+        break;
+      case I32:
+      case I64:
+      default:
+        _global.init = parseInt(value);
+    }
+  }
 
   return _global;
 };

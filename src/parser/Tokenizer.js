@@ -87,12 +87,8 @@ class Tokenizer {
   }
 
   parse() {
-    while (
-      !Stream.eol(this.stream.peek()) &&
-      !Stream.eof(this.stream.peek())
-    ) {
+    while (!Stream.eof(this.stream.peek()))
       this.next();
-    }
 
     return this.tokens;
   }
