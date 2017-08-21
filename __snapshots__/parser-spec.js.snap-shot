@@ -113,6 +113,10 @@ exports['compiles exports 1'] = {
         {
           "line": 1,
           "col": 0
+        },
+        {
+          "line": 1,
+          "col": 30
         }
       ],
       "decl": {
@@ -161,6 +165,11 @@ exports['compiles exports 1'] = {
           "line": 1,
           "col": 30
         }
+      },
+      "Type": "Export",
+      "end": {
+        "line": 1,
+        "col": 30
       }
     }
   ]

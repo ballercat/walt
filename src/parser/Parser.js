@@ -9,7 +9,7 @@ import {
 } from './generator';
 import Syntax from './Syntax';
 import Context from './Context'
-import { last } from 'ramda';
+const last = list => list[list.length - 1];
 
 // Utilities
 const precedence = {
@@ -122,12 +122,13 @@ class Parser {
   }
 
   endNode(node, Type) {
-    return {
-      ...node,
-      Type,
-      end: this.token.end,
-      range: node.range.concat(this.token.end)
-    };
+    return Object.assign(
+      node,
+      {
+        Type,
+        end: this.token.end,
+        range: node.range.concat(this.token.end)
+      });
   }
 
   statement(node = this.startNode()) {
@@ -184,10 +185,10 @@ class Parser {
   }
 
   binary(opts) {
-    const node = {
-      ...this.startNode(opts.left),
-      ...opts
-    };
+    const node = Object.assing(
+      this.startNode(opts.left),
+      opts
+    );
     return this.endNode(node, Syntax.BinaryExpression);
   }
 
@@ -388,5 +389,5 @@ class Parser {
   }
 }
 
-module.exports = Parser;
+export default Parser;
 

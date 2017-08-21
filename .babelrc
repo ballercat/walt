@@ -8,6 +8,7 @@
     }]
   ],
   "plugins": [
+     "external-helpers",
      "transform-runtime",
      "transform-object-rest-spread"
   ]
