@@ -6,6 +6,8 @@ compiled into `.wast` as much as it's a better way of writing wast code directly
 
 :construction: **currently under heavy construction** :construction:
 
+:rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
+
 Contributions are welcomed! :pray:
 
 # Problem
@@ -45,10 +47,10 @@ new language.
 # RoadMap
 * Spec
   * ~A basic Grammar~
-  * Examples
-* Tokenizer
-* Parser
-* Emiter
+  * Examples - WIP, [Explorer](https://ballercat.github.io/walt/)
+* ~Tokenizer~
+* Parser - WIP
+* Emiter - WIP
 * Webpack Loader
 * IDE integration
 * linter
