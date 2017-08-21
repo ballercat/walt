@@ -78,7 +78,7 @@ Initial gramar definition is provided in the `/docs/gramar.md`
 
 ### Statements and Expressions
 
-WAlt splits it's syntax into statements and expressions(like JavaScript). 
+WAlt splits its syntax into statements and expressions(like JavaScript). 
 
 ### Comments
 
