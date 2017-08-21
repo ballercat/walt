@@ -1,8 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.Walt = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.Walt = global.Walt || {})));
+}(this, (function (exports) { 'use strict';
 
 /**
  * Base Character stream class
@@ -216,6 +216,10 @@ class TokenStream$1 {
   seek(relative) {
     this.pos = relative;
     return this.tokens[this.pos];
+  }
+
+  last() {
+    return this.tokens[this.length - 1];
   }
 }
 
@@ -852,7 +856,6 @@ const generateCode = func => {
 
   // the binary encoding is not a tree per se, so we need to concat everything
   func.body.forEach(node => {
-    debugger;
     switch (node.Type) {
       case Syntax_1.ReturnStatement:
         block.code = [...block.code, ...generateReturn(node)];
@@ -1000,10 +1003,11 @@ class Parser$1 {
   }
 
   endNode(node, Type) {
+    const token = this.token || this.stream.last();
     return Object.assign(node, {
       Type,
-      end: this.token.end,
-      range: node.range.concat(this.token.end)
+      end: token.end,
+      range: node.range.concat(token.end)
     });
   }
 
@@ -1050,7 +1054,7 @@ class Parser$1 {
   }
 
   binary(opts) {
-    const node = Object.assing(this.startNode(opts.left), opts);
+    const node = Object.assign(this.startNode(opts.left), opts);
     return this.endNode(node, Syntax_1.BinaryExpression);
   }
 
@@ -1150,7 +1154,6 @@ class Parser$1 {
     this.Program.Code.push(generateCode(node));
 
     this.expect(['}']);
-
     this.func = null;
 
     return this.endNode(node, Syntax_1.FunctionDeclaration);
@@ -1619,19 +1622,26 @@ function emit(ast = {}) {
   return stream.write(write()).write(section.type(ast)).write(section.function(ast)).write(section.imports(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.code(ast));
 }
 
-// Compiles a raw binary wasm buffer
-const compile = source => {
+// Used for deugging purposes
+const getAst = source => {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream, tokenParsers);
   const tokenStream = new TokenStream(tokenizer.parse());
   const parser = new Parser$1(tokenStream);
   const ast = parser.parse();
   const wasm = emit(ast);
+  return wasm;
+};
 
-  // console.log(wasm.debug());
+// Compiles a raw binary wasm buffer
+const compile = source => {
+  const wasm = getAst(source);
   return wasm.buffer();
 };
 
-return compile;
+exports.getAst = getAst;
+exports['default'] = compile;
+
+Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

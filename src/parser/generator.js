@@ -82,7 +82,6 @@ export const generateCode = func => {
 
   // the binary encoding is not a tree per se, so we need to concat everything
   func.body.forEach(node => {
-    debugger;
     switch(node.Type) {
       case Syntax.ReturnStatement:
         block.code = [...block.code, ...generateReturn(node)];

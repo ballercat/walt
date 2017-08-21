@@ -122,12 +122,13 @@ class Parser {
   }
 
   endNode(node, Type) {
+    const token = this.token || this.stream.last();
     return Object.assign(
       node,
       {
         Type,
-        end: this.token.end,
-        range: node.range.concat(this.token.end)
+        end: token.end,
+        range: node.range.concat(token.end)
       });
   }
 
@@ -185,7 +186,7 @@ class Parser {
   }
 
   binary(opts) {
-    const node = Object.assing(
+    const node = Object.assign(
       this.startNode(opts.left),
       opts
     );
@@ -297,7 +298,6 @@ class Parser {
     this.Program.Code.push(generateCode(node));
 
     this.expect(['}']);
-
     this.func = null;
 
     return this.endNode(node, Syntax.FunctionDeclaration);

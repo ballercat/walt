@@ -17,6 +17,10 @@ class TokenStream {
     this.pos = relative;
     return this.tokens[this.pos];
   }
+
+  last() {
+    return this.tokens[this.length - 1];
+  }
 }
 
 export default TokenStream;
