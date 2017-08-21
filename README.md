@@ -1,8 +1,7 @@
 [![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
 
-# Walt
-:zap: **Walt** is syntax sugar for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. A sort-of C for the web. I wouldn't say it's
-compiled into `.wast` as much as it's a better way of writing wast code directly.
+# WAlt
+:zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
 
 :construction: **currently under heavy construction** :construction:
 
@@ -11,21 +10,21 @@ compiled into `.wast` as much as it's a better way of writing wast code directly
 Contributions are welcomed! :pray:
 
 # Problem
-Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for .wast files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
-then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final .wasm. This is an
-attempt to take C out of the equation and write 'as close to the metal' as possible without loosing readability.
+Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for `.wat` files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
+then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final WebAssembly binary. This is an
+attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without loosing readability.
 
 I feel like this is currently a problem. Most Web engineers are not familiar with the C family languages or Rust. It's a barrier for wide spread adoption of WebAssembly. A competent Front-end engineer
 should be able to edit WebAssembly as easily as any other systems programmer.
 
 # Solution
-Provide a **thin layer** of syntax sugar on top of `.wast` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
+Provide a **thin layer** of syntax sugar on top of `.wat` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
 the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a
 new language.
 
 # Goals
-1. Subset of ES6 syntax
-2. Type annotations (similar to flow).
+1. Subset of JavaScript(with flow-types if possible)
+2. Types (flow syntax)
 3. Simplify exports and imports
 4. Fast compilation
 5. Compile from `.walt` to `.wasm` directly
@@ -51,6 +50,7 @@ new language.
 * ~Tokenizer~
 * Parser - WIP
 * Emiter - WIP
+* Support 100% of native Wasm functions
 * Webpack Loader
 * IDE integration
 * linter
@@ -60,94 +60,56 @@ new language.
 
 ### Reserved Keywords
 
-* Keywords from JavaScript (WIP):
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
-```javascript
-break       else          new
-case        export        return
-catch       extends       super
-class       finally       switch
-const       for           this
-continue    function      throw
-debugger    if            try
-default     import        typeof
-delete      in            var
-do          instanceof    void
-with        yield         while
-```
+Initial release of WAlt has very few keywords.
+
+* `let`, `const`, `type` - Declarations
+* `import`, `export` - Imports and exports
+* `function`, `return` - Functions and return statements
+* `i32`, `i64`, `f32`, `f64` - Built in types
+* `void` - is a custom label used to indicate functions which return nothing (because it's easy to parse). It's compiled out of the final binary.
+* `module` - reserved for :unicorn: future features
+* `memory` - reserved for :unicorn: future memory declarations and operations
 
 All s-expression-syntax words are reserved and can be written directly into `.walt` scripts.
 
-## Alternative Syntax
+## Syntax
 
-### Expressions
+Initial gramar definition is provided in the `/docs/gramar.md`
 
-Each expression must end in a `;`
+### Statements and Expressions
+
+WAlt splits it's syntax into statements and expressions(like JavaScript). 
 
 ### Comments
 
-* `.walt`
-```javascript
-// single line comment
-/**
-  multi
-  line
-  comment
-**/
-```
+WAlt will support C99 style comments `//` and `/* */` blocks. _Not yet implemented_
 
 ### Functions
 
-* **Traditional**
+Everything in WAlt as in WebAssembly must have a Type. Function are no exception to the rule. When a function is declared it's type is hoisted by the compiler behind the scenes. A function type is a list of parameters and a result type.
 
-  * Input `.walt`
-  ```javascript
-  function x() : i32 {
-    return 2;
-  }
-  ```
-  * Output `.wast`
-  ```
-  (func $x (result i32)
-    (return (i32.const 2)
-  )
-  ```
+:unicorn: Currently a custom functon type syntax is not implemented, but is required in order to use custom-function imports.
+```javascript
+import { log: Log } from 'console';
+type Log = (i32) => void
+```
+:unicorn: **Arror Functions**. _Might be implemented._
 
-* **Arrow functions**
-  - Input `.walt`
-  ```javascript
-  x = () : i32 => 2;
-  ```
-  - Output `.wast`
-  ```
-  (func $x (result i32) (i32.const 2))
-  ```
 ### Module
 
-* `.wast`
-```
-(module
-  ;;; code here
-)
-```
+Every WAlt file is compiled into a stand alone module. `module` is a reserved keyword
 
-Every `.walt` file is a module and is compiled into the above. Similar to node modules every module has access to a magic `module` global. `module` is a reserved keyword
+### Improting WAlt from JavaScript
 
-### Improting  modules
+With an implemented loader it will be possible to pipe the output to `wasm-loader` allowing for code like this:
 
-* `counter.walt`
 ```javascript
-let counter: i32 = 0;
-// modules with exports get assigned linker names
-export function count() : i32 {
-  return counter++;
-}
+import makeCounter from './counter'; // <-- a .walt file
+
+makeCounter() // returns a Promise
+  .then(result => {
+    console.log(result.exports.counter()); // 0, 1, 2, 3 etc.,
+  });
 ```
 
-* `main.walt`
-```javascript
-import { count(): i32 }  from './counter'; // counter.walt
-
-export addCount = (value: i32): i32 => count() + value;
-```
 
