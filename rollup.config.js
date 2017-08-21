@@ -19,9 +19,24 @@ export default {
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
-    commonjs(),
     resolve(),
-    babel(),
+    commonjs(),
+    babel({
+      babelrc: false,
+      "presets": [
+        [
+          "env", {
+            "modules": false,
+            "targets": {
+              "chrome": "60.0.0"
+            }
+          }]
+      ],
+      "plugins": [
+        "external-helpers",
+        "transform-object-rest-spread"
+      ]
+}),
     (PROD && uglify({}, minify))
   ],
 };

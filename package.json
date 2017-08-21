@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
-  "build": "node_modules/rollup/bin/rollup .",
   "scripts": {
     "test": "node_modules/ava/cli.js",
     "test:units": "npm test",
-    "debug": "node --inspect-brk node_modules/ava/profile.js"
+    "debug": "node --inspect-brk node_modules/ava/profile.js",
+    "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp -r ./dist/walt.js ./docs/dist/"
   },
   "repository": {
     "type": "git",
