@@ -1,8 +1,8 @@
-import { u8 } from 'wasm-types';
+import { u8, i32, i64, f32, f64  } from 'wasm-types';
 import { varuint32, varint7, varint1 } from '../numbers';
 import { getTypeString } from '../value_type';
 import OutputStream from '../../utils/output-stream';
-import opcode from '../opcode';
+import opcode, { opcodeMap } from '../opcode';
 
 // TODO
 const emitLocal = (stream, local) => {
@@ -14,29 +14,25 @@ const emitFunctionBody = (stream, { locals, code }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
   code.forEach(({ kind, params }) => {
-    switch(kind) {
-      case opcode.GetGlobal.code:
-        body.push(u8, kind, opcode.GetGlobal.text);
-        body.push(varuint32, params[0], 'global index');
-        break;
-      case opcode.GetLocal.code:
-        body.push(u8, kind, opcode.GetLocal.text);
-        body.push(varuint32, params[0], 'local index');
-        break;
-      case opcode.SetGlobal.code:
-        body.push(u8, kind, opcode.SetGlobal.text);
-        body.push(varuint32, params[0], 'global index');
-        body.push(varuint32, params[1], `value (${params[1]})`);
-        break;
-      case opcode.SetLocal.code:
-        body.push(u8, kind, opcode.SetLocal.text);
-        body.push(varuint32, params[0], 'local index');
-        break;
-      case opcode.i32Const.code:
-        body.push(u8, kind, opcode.i32Const.text);
-        body.push(varuint32, params[0], `value (${params[0]})`);
-        break;
-    };
+    // There is a much nicer way of doing this
+    body.push(u8, kind, opcodeMap[kind].text);
+    // map over all params, if any and encode each one
+    (params || []).forEach(p => {
+      let type = varuint32;
+      // either encode unsigned 32 bit values or floats
+      switch(opcodeMap[kind].result) {
+        case f64:
+          type = f64;
+          break;
+        case f32:
+          type = f32;
+          break;
+        case i32:
+        default:
+          type = varuint32;
+      }
+      body.push(type, p, 'param')
+    });
   });
 
   // output locals to the stream

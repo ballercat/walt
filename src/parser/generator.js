@@ -20,6 +20,18 @@ export const getType = str => {
   }
 };
 
+const isLocal = node => ('localIndex' in node);
+const scopeOperation = (node, op) => {
+  const index = isLocal(node) ? node.localIndex : node.globalIndex;
+  const kind = isLocal(node) ? op + 'Local' : op + 'Global';
+  return { kind: opcode[kind].code, params: [index] };
+}
+
+const getConstOpcode = node => ({
+  kind: (opcode[node.type + 'Const'] || opcode.i32Const).code,
+  params: [node.value]
+});
+
 export const generateExport = decl => {
   const _export = {};
   if (decl && decl.init) {
@@ -108,19 +120,59 @@ export const generateReturn = node => {
   return generateExpression(node.expr);
 };
 
+export const generateBinaryExpression = node => {
+  let block = [];
+  if (node.left.Type === Syntax.Constant)
+    block.push(getConstOpcode(node.left));
+  if (node.right.Type === Syntax.Constant)
+    block.push(getConstOpcode(node.right));
+
+  if (node.left.Type === Syntax.BinaryExpression)
+    block = [...block, ...generateBinaryExpression(node.left)];
+
+  if (node.right.Type === Syntax.BinaryExpression)
+    block = [...block, ...generateBinaryExpression(node.right)];
+
+  if (node.left.Type === Syntax.Identifier)
+    block.push(scopeOperation(node.left, 'Get'));
+
+  if (node.right.Type === Syntax.Identifier)
+    block.push(scopeOperation(node.right, 'Get'));
+
+  //block.push(scopeOperation(node, 'Set'));
+  switch(node.operator.value) {
+    case '+':
+      block.push({ kind: opcode[node.type + 'Add'].code });
+      break;
+    case '-':
+      block.push({ kind: opcode[node.type + 'Sub'].code });
+      break;
+    case '*':
+      block.push({ kind: opcode[node.type + 'Mul'].code });
+      break;
+    case '/':
+      block.push({ kind: (opcode[node.type + 'Div'] || opcode[node.type + 'DivS']).code });
+      break;
+  }
+
+  return block;
+};
+
 export const generateExpression = expr => {
-  const block = [];
+  let block = [];
   switch(expr.Type) {
+    case Syntax.BinaryExpression: {
+      const ops = generateBinaryExpression(expr);
+      block = [...block, ...ops];
+      break;
+    }
     case Syntax.Constant: {
       const op = opcode[expr.type + 'Const'];
       block.push({ kind: op.code, params: [expr.value] });
       break;
     }
     case Syntax.Identifier: {
-      if ('globalIndex' in expr)
-        block.push({ kind: opcode.GetGlobal.code, params: [expr.globalIndex] });
-      if ('localIndex' in expr)
-        block.push({ kind: opcode.GetLocal.code, params: [expr.localIndex] });
+      block.push(scopeOperation(expr, 'Get'));
       break;
     }
   };

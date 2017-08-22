@@ -145,13 +145,14 @@ class Parser {
   }
 
   // Simplified version of the Shunting yard algorithm
-  expression(node = this.startNode(), inGroup) {
+  expression(type, inGroup) {
     const operators = [];
     const operands = [];
 
     const consume = () =>
       operands.push(
         this.binary({
+          type,
           operator: operators.pop(),
           right: operands.pop(),
           left: operands.pop()
@@ -236,7 +237,7 @@ class Parser {
     node.type = this.expect(null, Syntax.Type).value;
 
     if (this.eat(['=']))
-      node.init = this.expression();
+      node.init = this.expression(node.type);
 
     if (node.const && !node.init)
       throw this.syntaxError('Constant value must be initialized');
@@ -275,11 +276,14 @@ class Parser {
 
     // Sanity check the return statement
     const ret = last(node.body);
-    if(node.type === 'void' && ret.Type === Syntax.ReturnStatement)
-      throw this.syntaxError('Unexpected return value in a function with result : void');
-    if(node.type !== 'void' && ret.Type !== Syntax.ReturnStatement)
-      throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
-
+    if (ret) {
+      if(node.type === 'void' && ret.Type === Syntax.ReturnStatement)
+        throw this.syntaxError('Unexpected return value in a function with result : void');
+      if(node.type !== 'void' && ret.Type !== Syntax.ReturnStatement)
+        throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
+    } else if (node.result){
+      throw this.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
+    }
 
     // Either re-use an existing type or write a new one
     const typeIndex = findTypeIndex(node, this.Program.Types);
@@ -323,7 +327,7 @@ class Parser {
     if(!this.func)
       throw this.syntaxError('Return statement is only valid inside a function');
     this.expect(['return']);
-    node.expr = this.expression();
+    node.expr = this.expression(this.func.result);
 
     // For generator to emit correct consant they must have a correct type
     // in the syntax it's not necessary to define the type since we can infer it here

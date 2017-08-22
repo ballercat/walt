@@ -56,20 +56,28 @@ test('function locals', t =>
 test('function scope', t =>
   compileAndRun(`
     const x : i32 = 11;
-    export function echo() : i32 {
+    export function test() : i32 {
       const x : i32 = 42;
       return x;
     }
-  `).then(result => t.is(result.instance.exports.echo(), 42))
+  `).then(result => t.is(result.instance.exports.test(), 42))
 );
 
 test('global reference in function scope', t =>
   compileAndRun(`
     const x : i32 = 42;
-    export function echo() : i32 {
+    export function test() : i32 {
       return x;
     }
-  `).then(result => t.is(result.instance.exports.echo(), 42))
+  `).then(result => t.is(result.instance.exports.test(), 42))
+);
+
+test('compiles math', t =>
+  compileAndRun(`
+    export function test(): i32 {
+      return 2 + 2 - 4;
+    }
+  `).then(result => t.is(result.instance.exports.test(), 0))
 );
 
 
