@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const binary = window.ace.edit('binary');
   binary.setReadOnly(true);
-
+  console.log('test');
   const compileButton = document.getElementById('compile');
   compileButton.addEventListener('click', () => {
     const src = editor.getValue();
