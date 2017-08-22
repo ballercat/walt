@@ -794,6 +794,18 @@ const getType = str => {
   }
 };
 
+const isLocal = node => 'localIndex' in node;
+const scopeOperation = (node, op) => {
+  const index = isLocal(node) ? node.localIndex : node.globalIndex;
+  const kind = isLocal(node) ? op + 'Local' : op + 'Global';
+  return { kind: def[kind].code, params: [index] };
+};
+
+const getConstOpcode = node => ({
+  kind: (def[node.type + 'Const'] || def.i32Const).code,
+  params: [node.value]
+});
+
 const generateExport = decl => {
   const _export = {};
   if (decl && decl.init) {
@@ -883,9 +895,47 @@ const generateReturn = node => {
   return generateExpression(node.expr);
 };
 
+const generateBinaryExpression = node => {
+  let block = [];
+  if (node.left.Type === Syntax_1.Constant) block.push(getConstOpcode(node.left));
+  if (node.right.Type === Syntax_1.Constant) block.push(getConstOpcode(node.right));
+
+  if (node.left.Type === Syntax_1.BinaryExpression) block = [...block, ...generateBinaryExpression(node.left)];
+
+  if (node.right.Type === Syntax_1.BinaryExpression) block = [...block, ...generateBinaryExpression(node.right)];
+
+  if (node.left.Type === Syntax_1.Identifier) block.push(scopeOperation(node.left, 'Get'));
+
+  if (node.right.Type === Syntax_1.Identifier) block.push(scopeOperation(node.right, 'Get'));
+
+  //block.push(scopeOperation(node, 'Set'));
+  switch (node.operator.value) {
+    case '+':
+      block.push({ kind: def[node.type + 'Add'].code });
+      break;
+    case '-':
+      block.push({ kind: def[node.type + 'Sub'].code });
+      break;
+    case '*':
+      block.push({ kind: def[node.type + 'Mul'].code });
+      break;
+    case '/':
+      block.push({ kind: (def[node.type + 'Div'] || def[node.type + 'DivS']).code });
+      break;
+  }
+
+  return block;
+};
+
 const generateExpression = expr => {
-  const block = [];
+  let block = [];
   switch (expr.Type) {
+    case Syntax_1.BinaryExpression:
+      {
+        const ops = generateBinaryExpression(expr);
+        block = [...block, ...ops];
+        break;
+      }
     case Syntax_1.Constant:
       {
         const op = def[expr.type + 'Const'];
@@ -894,8 +944,7 @@ const generateExpression = expr => {
       }
     case Syntax_1.Identifier:
       {
-        if ('globalIndex' in expr) block.push({ kind: def.GetGlobal.code, params: [expr.globalIndex] });
-        if ('localIndex' in expr) block.push({ kind: def.GetLocal.code, params: [expr.localIndex] });
+        block.push(scopeOperation(expr, 'Get'));
         break;
       }
   }
@@ -1023,11 +1072,12 @@ class Parser$1 {
   }
 
   // Simplified version of the Shunting yard algorithm
-  expression(node = this.startNode(), inGroup) {
+  expression(type, inGroup) {
     const operators = [];
     const operands = [];
 
     const consume = () => operands.push(this.binary({
+      type,
       operator: operators.pop(),
       right: operands.pop(),
       left: operands.pop()
@@ -1098,7 +1148,7 @@ class Parser$1 {
 
     node.type = this.expect(null, Syntax_1.Type).value;
 
-    if (this.eat(['='])) node.init = this.expression();
+    if (this.eat(['='])) node.init = this.expression(node.type);
 
     if (node.const && !node.init) throw this.syntaxError('Constant value must be initialized');
 
@@ -1134,8 +1184,12 @@ class Parser$1 {
 
     // Sanity check the return statement
     const ret = last(node.body);
-    if (node.type === 'void' && ret.Type === Syntax_1.ReturnStatement) throw this.syntaxError('Unexpected return value in a function with result : void');
-    if (node.type !== 'void' && ret.Type !== Syntax_1.ReturnStatement) throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
+    if (ret) {
+      if (node.type === 'void' && ret.Type === Syntax_1.ReturnStatement) throw this.syntaxError('Unexpected return value in a function with result : void');
+      if (node.type !== 'void' && ret.Type !== Syntax_1.ReturnStatement) throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
+    } else if (node.result) {
+      throw this.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
+    }
 
     // Either re-use an existing type or write a new one
     const typeIndex = findTypeIndex(node, this.Program.Types);
@@ -1177,7 +1231,7 @@ class Parser$1 {
   returnStatement(node = this.startNode()) {
     if (!this.func) throw this.syntaxError('Return statement is only valid inside a function');
     this.expect(['return']);
-    node.expr = this.expression();
+    node.expr = this.expression(this.func.result);
 
     // For generator to emit correct consant they must have a correct type
     // in the syntax it's not necessary to define the type since we can infer it here
@@ -1547,29 +1601,25 @@ const emitFunctionBody = (stream, { locals, code }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
   code.forEach(({ kind, params }) => {
-    switch (kind) {
-      case def.GetGlobal.code:
-        body.push(index_9, kind, def.GetGlobal.text);
-        body.push(varuint32, params[0], 'global index');
-        break;
-      case def.GetLocal.code:
-        body.push(index_9, kind, def.GetLocal.text);
-        body.push(varuint32, params[0], 'local index');
-        break;
-      case def.SetGlobal.code:
-        body.push(index_9, kind, def.SetGlobal.text);
-        body.push(varuint32, params[0], 'global index');
-        body.push(varuint32, params[1], `value (${params[1]})`);
-        break;
-      case def.SetLocal.code:
-        body.push(index_9, kind, def.SetLocal.text);
-        body.push(varuint32, params[0], 'local index');
-        break;
-      case def.i32Const.code:
-        body.push(index_9, kind, def.i32Const.text);
-        body.push(varuint32, params[0], `value (${params[0]})`);
-        break;
-    }
+    // There is a much nicer way of doing this
+    body.push(index_9, kind, opcodeMap[kind].text);
+    // map over all params, if any and encode each one
+    (params || []).forEach(p => {
+      let type = varuint32;
+      // either encode unsigned 32 bit values or floats
+      switch (opcodeMap[kind].result) {
+        case index_4:
+          type = index_4;
+          break;
+        case index_3:
+          type = index_3;
+          break;
+        case index_1:
+        default:
+          type = varuint32;
+      }
+      body.push(type, p, 'param');
+    });
   });
 
   // output locals to the stream
@@ -1640,7 +1690,9 @@ const getIR = source => {
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
+  debugger;
   const wasm = getIR(source);
+  console.log(wasm.debug());
   return wasm.buffer();
 };
 
