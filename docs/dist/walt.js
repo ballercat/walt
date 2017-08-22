@@ -1629,17 +1629,23 @@ const getAst = source => {
   const tokenStream = new TokenStream(tokenizer.parse());
   const parser = new Parser$1(tokenStream);
   const ast = parser.parse();
+  return ast;
+};
+
+const getIR = source => {
+  const ast = getAst(source);
   const wasm = emit(ast);
   return wasm;
 };
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
-  const wasm = getAst(source);
+  const wasm = getIR(source);
   return wasm.buffer();
 };
 
 exports.getAst = getAst;
+exports.getIR = getIR;
 exports['default'] = compile;
 
 Object.defineProperty(exports, '__esModule', { value: true });

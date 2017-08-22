@@ -1633,14 +1633,14 @@ const getAst = source => {
 };
 
 const getIR = source => {
-  const ast = getAst(ast);
+  const ast = getAst(source);
   const wasm = emit(ast);
   return wasm;
 };
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
-  const wasm = getAst(source);
+  const wasm = getIR(source);
   return wasm.buffer();
 };
 
