@@ -49,7 +49,19 @@ new language.
   * Examples - WIP, [Explorer](https://ballercat.github.io/walt/)
 * ~Tokenizer~
 * Parser - WIP
+  * ~Exports: functions, constant globals~
+  * ~Declarations~
+  * BinaryExpressions - partial support, buggy
+  * ~Local Scope & Global Scope~
+  * Compile warnings/errors - partial support
+  * Branches
+  * Types
 * Emiter - WIP
+  * Exports
+  * Functions
+  * Types - partial support(opaque function types)
+  * Arithmetic - wip(some bugs around variable references)
+  * ~Globals, Locals~
 * Support 100% of native Wasm functions
 * Webpack Loader
 * IDE integration
