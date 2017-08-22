@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const binary = window.ace.edit('binary');
   binary.setReadOnly(true);
-  console.log('test');
+
   const compileButton = document.getElementById('compile');
   compileButton.addEventListener('click', () => {
     const src = editor.getValue();
-    const wasm = window.Walt.getAst(src);
+    const wasm = window.Walt.getIR(src);
     binary.$blockScrolling = Infinity;
     binary.setValue(wasm.debug(), -1);
     WebAssembly.instantiate(wasm.buffer())

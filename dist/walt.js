@@ -1629,6 +1629,11 @@ const getAst = source => {
   const tokenStream = new TokenStream(tokenizer.parse());
   const parser = new Parser$1(tokenStream);
   const ast = parser.parse();
+  return ast;
+};
+
+const getIR = source => {
+  const ast = getAst(ast);
   const wasm = emit(ast);
   return wasm;
 };
@@ -1640,6 +1645,7 @@ const compile = source => {
 };
 
 exports.getAst = getAst;
+exports.getIR = getIR;
 exports['default'] = compile;
 
 Object.defineProperty(exports, '__esModule', { value: true });

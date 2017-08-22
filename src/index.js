@@ -6,6 +6,7 @@ import Parser, {
 } from './parser';
 import emit from './emiter';
 
+
 // Used for deugging purposes
 export const getAst = source => {
   const stream = new Stream(source);
@@ -13,13 +14,18 @@ export const getAst = source => {
   const tokenStream = new TokenStream(tokenizer.parse());
   const parser = new Parser(tokenStream);
   const ast = parser.parse();
+  return ast;
+};
+
+export const getIR = source => {
+  const ast = getAst(source);
   const wasm = emit(ast);
   return wasm;
 };
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
-  const wasm = getAst(source);
+  const wasm = getIR(source);
   return wasm.buffer();
 }
 
