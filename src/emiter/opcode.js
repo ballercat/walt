@@ -216,5 +216,20 @@ opcode(i64, f32, ___, 0, 0xbd, 'i64Reinterpretf32', "i64.reinterpret/f64");
 opcode(f32, i32, ___, 0, 0xbe, 'f32Reinterpreti32', "f32.reinterpret/i32");
 opcode(f32, i64, ___, 0, 0xbf, 'f32Reinterpreti64', "f64.reinterpret/i64");
 
+export const opcodeFromOperator = ({ type, operator: { value } }) => {
+  switch(value) {
+    case '+':
+      return def[type + 'Add'];
+    case '-':
+      return def[type + 'Sub'];
+    case '*':
+      return def[type + 'Mul'];
+    case '/':
+      return def[type + 'Div'] || def[type + 'DivS'];
+    default:
+      throw new Error(`No mapping from operator to opcode ${value}`);
+  };
+};
+
 export default def;
 

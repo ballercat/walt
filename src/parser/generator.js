@@ -1,16 +1,10 @@
-import {
-  EXTERN_GLOBAL,
-  EXTERN_FUNCTION
-} from '../emiter/external_kind';
-import {
-  I32,
-  I64,
-  F32,
-  F64
-} from '../emiter/value_type';
-import opcode from '../emiter/opcode';
+import { EXTERN_GLOBAL, EXTERN_FUNCTION } from '../emiter/external_kind';
+import { I32, I64, F32, F64 } from '../emiter/value_type';
+import opcode, { opcodeFromOperator } from '../emiter/opcode';
 import Syntax from './Syntax';
+import curry from 'curry';
 
+// clean this up
 export const getType = str => {
   switch(str) {
     case 'f32': return F32;
@@ -21,16 +15,27 @@ export const getType = str => {
 };
 
 const isLocal = node => ('localIndex' in node);
-const scopeOperation = (node, op) => {
+const scopeOperation = curry((op, node) => {
   const index = isLocal(node) ? node.localIndex : node.globalIndex;
   const kind = isLocal(node) ? op + 'Local' : op + 'Global';
-  return { kind: opcode[kind].code, params: [index] };
-}
+  return { kind: opcode[kind], params: [index] };
+});
 
 const getConstOpcode = node => ({
-  kind: (opcode[node.type + 'Const'] || opcode.i32Const).code,
+  kind: opcode[node.type + 'Const'] || opcode.i32Const,
   params: [node.value]
 });
+
+const getInScope = scopeOperation('Get');
+const mergeBlock = (block, v) => {
+  // some node types are a sequence of opcodes:
+  // nested expressions for example
+  if (Array.isArray(v))
+    block = [...block, ...v];
+  else
+    block.push(v);
+  return block;
+};
 
 export const generateExport = decl => {
   const _export = {};
@@ -50,10 +55,10 @@ export const generateExport = decl => {
 };
 
 export const generateValueType = node => {
-  const value = {};
-  value.mutable = node.const ? 0 : 1;
-  value.type = getType(node.type);
-
+  const value = {
+    mutable: node.const ? 0 : 1,
+    type: getType(node.type)
+  };
   return value;
 };
 
@@ -88,94 +93,66 @@ export const generateType = node => {
   return type;
 }
 
-export const generateCode = func => {
-  // TODO generate locals
-  const block = { locals: [], code: [] };
+export const generateReturn = node => {
+  return generateExpression(node.expr);
+};
 
-  // the binary encoding is not a tree per se, so we need to concat everything
-  func.body.forEach(node => {
-    switch(node.Type) {
-      case Syntax.ReturnStatement:
-        block.code = [...block.code, ...generateReturn(node)];
-        break;
-      case Syntax.Declaration: {
-        // add possible set_local call
-        if (node.init) {
-          node.init.type = node.type;
-          block.code = [...block.code, ...generateExpression(node.init)];
-          block.code.push({ kind: opcode.SetLocal.code, params: [block.locals.length] });
-        }
+export const generateDeclaration = (node, parent) => {
+  let block = [];
+  if (node.init) {
+    node.init.type = node.type;
+    block = [...block, ...generateExpression(node.init)];
+    block.push({ kind: opcode.SetLocal, params: [parent.locals.length] });
+  }
+  parent.locals.push(generateValueType(node));
+  return block;
+};
 
-        // add a local entry
-        block.locals.push(generateValueType(node));
-        break;
-      }
-    }
+/**
+ * Transform a binary expression node into a list of opcodes
+ */
+export const generateBinaryExpression = node => {
+  // Map operands first
+  const block = node.operands
+    .map(mapSyntax(null))
+    .reduce(mergeBlock, []);
+
+  // Map the operator last
+  block.push({
+    kind: opcodeFromOperator(node)
   });
 
   return block;
 };
 
-export const generateReturn = node => {
-  return generateExpression(node.expr);
+const syntaxMap = {
+  // Unary
+  [Syntax.Constant]: getConstOpcode,
+  [Syntax.BinaryExpression]: generateBinaryExpression,
+  [Syntax.Identifier]: getInScope,
+  [Syntax.ReturnStatement]: generateReturn,
+  // Binary
+  [Syntax.Declaration]: generateDeclaration
 };
 
-export const generateBinaryExpression = node => {
-  let block = [];
-  if (node.left.Type === Syntax.Constant)
-    block.push(getConstOpcode(node.left));
-  if (node.right.Type === Syntax.Constant)
-    block.push(getConstOpcode(node.right));
+export const mapSyntax = curry((parent, operand) => {
+  const mapping = syntaxMap[operand.Type];
+  if (!mapping)
+    throw new Error('Unexpected Syntax Token');
+  return mapping(operand, parent);
+});
 
-  if (node.left.Type === Syntax.BinaryExpression)
-    block = [...block, ...generateBinaryExpression(node.left)];
-
-  if (node.right.Type === Syntax.BinaryExpression)
-    block = [...block, ...generateBinaryExpression(node.right)];
-
-  if (node.left.Type === Syntax.Identifier)
-    block.push(scopeOperation(node.left, 'Get'));
-
-  if (node.right.Type === Syntax.Identifier)
-    block.push(scopeOperation(node.right, 'Get'));
-
-  //block.push(scopeOperation(node, 'Set'));
-  switch(node.operator.value) {
-    case '+':
-      block.push({ kind: opcode[node.type + 'Add'].code });
-      break;
-    case '-':
-      block.push({ kind: opcode[node.type + 'Sub'].code });
-      break;
-    case '*':
-      block.push({ kind: opcode[node.type + 'Mul'].code });
-      break;
-    case '/':
-      block.push({ kind: (opcode[node.type + 'Div'] || opcode[node.type + 'DivS']).code });
-      break;
-  }
-
-  return block;
-};
-
-export const generateExpression = expr => {
-  let block = [];
-  switch(expr.Type) {
-    case Syntax.BinaryExpression: {
-      const ops = generateBinaryExpression(expr);
-      block = [...block, ...ops];
-      break;
-    }
-    case Syntax.Constant: {
-      const op = opcode[expr.type + 'Const'];
-      block.push({ kind: op.code, params: [expr.value] });
-      break;
-    }
-    case Syntax.Identifier: {
-      block.push(scopeOperation(expr, 'Get'));
-      break;
-    }
-  };
+export const generateExpression = node => {
+  const block = [node].map(mapSyntax(null)).reduce(mergeBlock, []);
   return block;
 }
 
+export const generateCode = func => {
+  const block = { code: [], locals: [] };
+
+  // NOTE: Declarations have a side-effect of changing the local count
+  //       This is why mapSyntax takes a parent argument
+  block.code = func.body.map(mapSyntax(block)).reduce(mergeBlock, []);
+
+  return block;
+};

@@ -154,8 +154,7 @@ class Parser {
         this.binary({
           type,
           operator: operators.pop(),
-          right: operands.pop(),
-          left: operands.pop()
+          operands: operands.splice(-2)
         })
       );
 

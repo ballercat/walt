@@ -15,12 +15,12 @@ const emitFunctionBody = (stream, { locals, code }) => {
   const body = new OutputStream();
   code.forEach(({ kind, params }) => {
     // There is a much nicer way of doing this
-    body.push(u8, kind, opcodeMap[kind].text);
+    body.push(u8, kind.code, kind.text);
     // map over all params, if any and encode each one
     (params || []).forEach(p => {
       let type = varuint32;
       // either encode unsigned 32 bit values or floats
-      switch(opcodeMap[kind].result) {
+      switch(kind.result) {
         case f64:
           type = f64;
           break;

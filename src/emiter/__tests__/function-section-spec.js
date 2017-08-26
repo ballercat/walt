@@ -15,7 +15,7 @@ const ast = {
   ],
   Functions: [0],
   Code: [
-    { locals: [], code: [ { kind: opcode.GetGlobal.code, params: [0] } ] }
+    { locals: [], code: [ { kind: opcode.GetGlobal, params: [0] } ] }
   ],
   Exports: [
     { kind: EXTERN_FUNCTION, field: 'echo', index: 0 }
