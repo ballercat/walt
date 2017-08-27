@@ -8,7 +8,6 @@ import {
   getType
 } from './generator';
 import Syntax from './Syntax';
-import Context from './Context'
 const last = list => list[list.length - 1];
 
 // Utilities
