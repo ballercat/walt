@@ -3,6 +3,7 @@ const Syntax = {
   Export: 'Export',
   Statement: 'Statement',
   BinaryExpression: 'BinaryExpression',
+  UnaryExpression: 'UnaryExpression',
   NumberLiteral: 'NumberLiteral',
   StringLiteral: 'StringLiteral',
   Punctuator: 'Punctuator',

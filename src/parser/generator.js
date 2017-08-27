@@ -26,6 +26,7 @@ const getConstOpcode = node => ({
   params: [node.value]
 });
 
+const setInScope = scopeOperation('Set');
 const getInScope = scopeOperation('Get');
 const mergeBlock = (block, v) => {
   // some node types are a sequence of opcodes:
@@ -94,7 +95,16 @@ export const generateType = node => {
 }
 
 export const generateReturn = node => {
-  return generateExpression(node.expr);
+  const parent = { postfix: [] };
+  // Postfix in return statement should be a no-op UNLESS it's editing globals
+  const block = generateExpression(node.expr, parent);
+  if (parent.postfix.length) {
+    // do we have postfix operations?
+    // are they editing globals?
+    // TODO: do things to globals
+  }
+
+  return block;
 };
 
 export const generateDeclaration = (node, parent) => {
@@ -111,11 +121,22 @@ export const generateDeclaration = (node, parent) => {
 /**
  * Transform a binary expression node into a list of opcodes
  */
-export const generateBinaryExpression = node => {
+export const generateBinaryExpression = (node, parent) => {
   // Map operands first
   const block = node.operands
-    .map(mapSyntax(null))
+    .map(mapSyntax(parent))
     .reduce(mergeBlock, []);
+
+  // Increment and decrement make this less clean:
+  // If either increment or decrement then:
+  //  1. generate the expression
+  //  2. APPEND TO PARENT post-expressions
+  //  3. return [];
+  if (node.isPostfix && parent) {
+    parent.postfix.push(block);
+    // Simply return the left-hand
+    return node.operands.slice(0, 1).map(mapSyntax(parent)).reduce(mergeBlock, []);
+  }
 
   // Map the operator last
   block.push({
@@ -125,6 +146,17 @@ export const generateBinaryExpression = node => {
   return block;
 };
 
+export const generateAssignment = (node, parent) => {
+  const subParent = { postfix: [] };
+  const block = node.operands.slice(1)
+    .map(mapSyntax(subParent))
+    .reduce(mergeBlock, []);
+
+  block.push(setInScope(node.operands[0]));
+
+  return subParent.postfix.reduce(mergeBlock, block);
+};
+
 const syntaxMap = {
   // Unary
   [Syntax.Constant]: getConstOpcode,
@@ -132,18 +164,19 @@ const syntaxMap = {
   [Syntax.Identifier]: getInScope,
   [Syntax.ReturnStatement]: generateReturn,
   // Binary
-  [Syntax.Declaration]: generateDeclaration
+  [Syntax.Declaration]: generateDeclaration,
+  [Syntax.Assignment]: generateAssignment
 };
 
 export const mapSyntax = curry((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
   if (!mapping)
-    throw new Error('Unexpected Syntax Token');
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.operator.value}`);
   return mapping(operand, parent);
 });
 
-export const generateExpression = node => {
-  const block = [node].map(mapSyntax(null)).reduce(mergeBlock, []);
+export const generateExpression = (node, parent) => {
+  const block = [node].map(mapSyntax(parent)).reduce(mergeBlock, []);
   return block;
 }
 
@@ -156,3 +189,4 @@ export const generateCode = func => {
 
   return block;
 };
+

@@ -16,7 +16,10 @@ const precedence = {
   '+': 0,
   '-': 0,
   '*': 1,
-  '/': 1
+  '/': 1,
+  '++': 2,
+  '--': 2,
+  '=': 3
 };
 
 const assoc = op => {
@@ -27,6 +30,8 @@ const assoc = op => {
     case '*':
       return 'left';
     case '=':
+    case '--':
+    case '++':
       return 'right';
     default:
       return 'left';
@@ -53,6 +58,9 @@ class Parser {
     this.token = this.stream.next();
     this.globalSymbols = {};
     this.localSymbols = {};
+
+    // decrement/increment associativity
+    this.diAssoc = 'right';
   }
 
   syntaxError(msg, error) {
@@ -139,24 +147,24 @@ class Parser {
       case Syntax.Punctuator:
         if (this.eat([';']))
           return null;
+      case Syntax.Identifier:
+        return this.maybeAssignment(node);
       default:
-        throw this.unknown();
+        throw this.unknown(this.token);
     }
   }
 
   // Simplified version of the Shunting yard algorithm
-  expression(type, inGroup) {
+  expression(type = 'i32', inGroup, associativity = 'right') {
     const operators = [];
     const operands = [];
 
     const consume = () =>
       operands.push(
-        this.binary({
-          type,
-          operator: operators.pop(),
-          operands: operands.splice(-2)
-        })
+        this.binaryOrUnary(type, operators.pop(), operands)
       );
+
+    this.diAssoc = associativity;
 
     while(this.token && this.token.value !== ';') {
       if (this.token.type === Syntax.Constant)
@@ -165,12 +173,26 @@ class Parser {
         operands.push(this.identifier());
 
       if (this.token.type === Syntax.Punctuator) {
+        const op = Object.assign({
+          precedence: precedence[this.token.value]
+        }, this.token);
+
+        // Increment, decrement are a bit annoying...
+        // we don't know if it's left associative or right without a lot of gymnastics
+        if (this.token.value === '--' || this.token.value === '++') {
+          // As we create different nodes the diAssoc is changed
+          op.assoc = this.diAssoc;
+        } else {
+          // vanilla binary operator
+          op.assoc = assoc(op.value);
+        }
+
         while(last(operators)
-          && precedence[last(operators).value] >= precedence[this.token.type]
-          && assoc(last(operators).value) === 'left'
+          && last(operators).precedence >= op.precedence
+          && last(operators).assoc === 'left'
         ) consume();
 
-        operators.push(this.token);
+        operators.push(op);
       }
       // TODO "("
       // TODO ")"
@@ -185,12 +207,74 @@ class Parser {
     return operands.pop();
   }
 
-  binary(opts) {
+  // Abstraction for handling operations
+  binaryOrUnary(type, operator, operands) {
+    switch(operator.value) {
+      case '++':
+      case '--':
+        return this.unary({ type, operator, operands: operands.splice(-1) });
+      default:
+        return this.binary({ type, operator, operands: operands.splice(-2) });
+    }
+  }
+
+  unary(opts) {
+    // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
+    // convert this unary to a binary expression by throwing in an extra operand of 1
+    if (opts.operator.value === '--' || opts.operator.value === '++') {
+      // set isPostfix to help the IR generator
+      const binary = Object.assign({ isPostfix: opts.operator.assoc === 'left' }, opts);
+      binary.operator.value = opts.operator.value[0];
+      binary.operands.push({ Type: Syntax.Constant, value: '1' });
+      return this.binary(binary);
+    }
     const node = Object.assign(
-      this.startNode(opts.left),
+      this.startNode(opts.operands[0]),
       opts
     );
-    return this.endNode(node, Syntax.BinaryExpression);
+    return this.endNode(node, Syntax.UnaryExpression);
+  }
+
+  binary(opts) {
+    const node = Object.assign(
+      this.startNode(opts.operands[0]),
+      opts
+    );
+
+    this.diAssoc = 'left';
+    let Type = Syntax.BinaryExpression;
+    if (node.operator.value === '=') {
+      Type = Syntax.Assignment;
+      this.diAssoc = 'right';
+    }
+
+    return this.endNode(node, Type);
+  }
+
+  // It is easier to parse assignment this way as we need to maintain a valid type
+  // through out the right-hand side of the expression
+  maybeAssignment() {
+    const target = this.identifier();
+
+    const nextValue = this.stream.peek().value;
+    const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
+    if (operator) {
+      if (nextValue === '=') {
+        this.eat(null, Syntax.Identifier);
+        this.eat(['=']);
+      }
+      const assignment = this.startNode();
+      assignment.operator = { value: '=' };
+      // Push the reference to the local/global
+      assignment.operands = [target];
+      const expr = this.expression(target.type);
+      // not a postfix
+      expr.isPostfix = false;
+      assignment.operands.push(expr);
+      return this.endNode(assignment, Syntax.Assignment);
+    }
+
+    return this.expression(target.type);
   }
 
   keyword(node) {
@@ -211,6 +295,7 @@ class Parser {
 
   export(node) {
     this.eat(['export']);
+
     const decl = this.maybeFunctionDeclaration(this.startNode());
     if(!decl.func) {
       if(!decl.init)
@@ -350,11 +435,14 @@ class Parser {
     if (target !== -1) {
       node.localIndex = target;
       node.target = this.func.locals[target];
+      node.type = node.target.type;
     } else {
       node.globalIndex = this.globals.findIndex(g => g.id === this.token.value);
       node.target = this.globals[node.globalIndex];
+      node.type = node.target.type;
     }
 
+    this.diAssoc = 'left';
     return this.endNode(node, Syntax.Identifier);
   }
 
