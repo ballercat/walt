@@ -3,7 +3,6 @@
  *
  * @author  Arthur Buldauskas <arthurbuldauskas@gmail.com>
  */
-
 class Stream {
   /**
    * @constructor
