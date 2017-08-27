@@ -310,6 +310,7 @@ const Syntax = {
   Export: 'Export',
   Statement: 'Statement',
   BinaryExpression: 'BinaryExpression',
+  UnaryExpression: 'UnaryExpression',
   NumberLiteral: 'NumberLiteral',
   StringLiteral: 'StringLiteral',
   Punctuator: 'Punctuator',
@@ -782,6 +783,160 @@ opcode(index_2, index_3, ___, 0, 0xbd, 'i64Reinterpretf32', "i64.reinterpret/f64
 opcode(index_3, index_1, ___, 0, 0xbe, 'f32Reinterpreti32', "f32.reinterpret/i32");
 opcode(index_3, index_2, ___, 0, 0xbf, 'f32Reinterpreti64', "f64.reinterpret/i64");
 
+/**
+ * Return opcode mapping to the operator. Signed result is always prefered
+ */
+const opcodeFromOperator = ({ type, operator: { value } }) => {
+  switch (value) {
+    case '+':
+      return def[type + 'Add'];
+    case '-':
+      return def[type + 'Sub'];
+    case '*':
+      return def[type + 'Mul'];
+    case '/':
+      return def[type + 'DivS'] || def[type + 'Div'];
+    case '%':
+      return def[type + 'RemS'] || def[type + 'RemU'];
+    default:
+      throw new Error(`No mapping from operator to opcode ${value}`);
+  }
+};
+
+var slice = Array.prototype.slice;
+var toArray = function (a) {
+    return slice.call(a);
+};
+var tail = function (a) {
+    return slice.call(a, 1);
+};
+
+// fn, [value] -> fn
+//-- create a curried function, incorporating any number of
+//-- pre-existing arguments (e.g. if you're further currying a function).
+var createFn = function (fn, args, totalArity) {
+    var remainingArity = totalArity - args.length;
+
+    switch (remainingArity) {
+        case 0:
+            return function () {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 1:
+            return function (a) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 2:
+            return function (a, b) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 3:
+            return function (a, b, c) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 4:
+            return function (a, b, c, d) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 5:
+            return function (a, b, c, d, e) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 6:
+            return function (a, b, c, d, e, f) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 7:
+            return function (a, b, c, d, e, f, g) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 8:
+            return function (a, b, c, d, e, f, g, h) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 9:
+            return function (a, b, c, d, e, f, g, h, i) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        case 10:
+            return function (a, b, c, d, e, f, g, h, i, j) {
+                return processInvocation(fn, concatArgs(args, arguments), totalArity);
+            };
+        default:
+            return createEvalFn(fn, args, remainingArity);
+    }
+};
+
+// [value], arguments -> [value]
+//-- concat new arguments onto old arguments array
+var concatArgs = function (args1, args2) {
+    return args1.concat(toArray(args2));
+};
+
+// fn, [value], int -> fn
+//-- create a function of the correct arity by the use of eval,
+//-- so that curry can handle functions of any arity
+var createEvalFn = function (fn, args, arity) {
+    var argList = makeArgList(arity);
+
+    //-- hack for IE's faulty eval parsing -- http://stackoverflow.com/a/6807726
+    var fnStr = 'false||' + 'function(' + argList + '){ return processInvocation(fn, concatArgs(args, arguments)); }';
+    return eval(fnStr);
+};
+
+var makeArgList = function (len) {
+    var a = [];
+    for (var i = 0; i < len; i += 1) a.push('a' + i.toString());
+    return a.join(',');
+};
+
+var trimArrLength = function (arr, length) {
+    if (arr.length > length) return arr.slice(0, length);else return arr;
+};
+
+// fn, [value] -> value
+//-- handle a function being invoked.
+//-- if the arg list is long enough, the function will be called
+//-- otherwise, a new curried version is created.
+var processInvocation = function (fn, argsArr, totalArity) {
+    argsArr = trimArrLength(argsArr, totalArity);
+
+    if (argsArr.length === totalArity) return fn.apply(null, argsArr);
+    return createFn(fn, argsArr, totalArity);
+};
+
+// fn -> fn
+//-- curries a function! <3
+var curry = function (fn) {
+    return createFn(fn, [], fn.length);
+};
+
+// num, fn -> fn
+//-- curries a function to a certain arity! <33
+curry.to = curry(function (arity, fn) {
+    return createFn(fn, [], arity);
+});
+
+// num, fn -> fn
+//-- adapts a function in the context-first style
+//-- to a curried version. <3333
+curry.adaptTo = curry(function (num, fn) {
+    return curry.to(num, function (context) {
+        var args = tail(arguments).concat(context);
+        return fn.apply(this, args);
+    });
+});
+
+// fn -> fn
+//-- adapts a function in the context-first style to
+//-- a curried version. <333
+curry.adapt = function (fn) {
+    return curry.adaptTo(fn.length, fn);
+};
+
+var curry_1$1 = curry;
+
+// clean this up
 const getType = str => {
   switch (str) {
     case 'f32':
@@ -795,16 +950,25 @@ const getType = str => {
 };
 
 const isLocal = node => 'localIndex' in node;
-const scopeOperation = (node, op) => {
+const scopeOperation = curry_1$1((op, node) => {
   const index = isLocal(node) ? node.localIndex : node.globalIndex;
   const kind = isLocal(node) ? op + 'Local' : op + 'Global';
-  return { kind: def[kind].code, params: [index] };
-};
+  return { kind: def[kind], params: [index] };
+});
 
 const getConstOpcode = node => ({
-  kind: (def[node.type + 'Const'] || def.i32Const).code,
+  kind: def[node.type + 'Const'] || def.i32Const,
   params: [node.value]
 });
+
+const setInScope = scopeOperation('Set');
+const getInScope = scopeOperation('Get');
+const mergeBlock = (block, v) => {
+  // some node types are a sequence of opcodes:
+  // nested expressions for example
+  if (Array.isArray(v)) block = [...block, ...v];else block.push(v);
+  return block;
+};
 
 const generateExport = decl => {
   const _export = {};
@@ -824,10 +988,10 @@ const generateExport = decl => {
 };
 
 const generateValueType = node => {
-  const value = {};
-  value.mutable = node.const ? 0 : 1;
-  value.type = getType(node.type);
-
+  const value = {
+    mutable: node.const ? 0 : 1,
+    type: getType(node.type)
+  };
   return value;
 };
 
@@ -862,92 +1026,94 @@ const generateType = node => {
   return type;
 };
 
-const generateCode = func => {
-  // TODO generate locals
-  const block = { locals: [], code: [] };
+const generateReturn = node => {
+  const parent = { postfix: [] };
+  // Postfix in return statement should be a no-op UNLESS it's editing globals
+  const block = generateExpression(node.expr, parent);
+  if (parent.postfix.length) {
+    // do we have postfix operations?
+    // are they editing globals?
+    // TODO: do things to globals
+  }
 
-  // the binary encoding is not a tree per se, so we need to concat everything
-  func.body.forEach(node => {
-    switch (node.Type) {
-      case Syntax_1.ReturnStatement:
-        block.code = [...block.code, ...generateReturn(node)];
-        break;
-      case Syntax_1.Declaration:
-        {
-          // add possible set_local call
-          if (node.init) {
-            node.init.type = node.type;
-            block.code = [...block.code, ...generateExpression(node.init)];
-            block.code.push({ kind: def.SetLocal.code, params: [block.locals.length] });
-          }
+  return block;
+};
 
-          // add a local entry
-          block.locals.push(generateValueType(node));
-          break;
-        }
-    }
+const generateDeclaration = (node, parent) => {
+  let block = [];
+  if (node.init) {
+    node.init.type = node.type;
+    block = [...block, ...generateExpression(node.init)];
+    block.push({ kind: def.SetLocal, params: [parent.locals.length] });
+  }
+  parent.locals.push(generateValueType(node));
+  return block;
+};
+
+/**
+ * Transform a binary expression node into a list of opcodes
+ */
+const generateBinaryExpression = (node, parent) => {
+  // Map operands first
+  const block = node.operands.map(mapSyntax(parent)).reduce(mergeBlock, []);
+
+  // Increment and decrement make this less clean:
+  // If either increment or decrement then:
+  //  1. generate the expression
+  //  2. APPEND TO PARENT post-expressions
+  //  3. return [];
+  if (node.isPostfix && parent) {
+    parent.postfix.push(block);
+    // Simply return the left-hand
+    return node.operands.slice(0, 1).map(mapSyntax(parent)).reduce(mergeBlock, []);
+  }
+
+  // Map the operator last
+  block.push({
+    kind: opcodeFromOperator(node)
   });
 
   return block;
 };
 
-const generateReturn = node => {
-  return generateExpression(node.expr);
+const generateAssignment = (node, parent) => {
+  const subParent = { postfix: [] };
+  const block = node.operands.slice(1).map(mapSyntax(subParent)).reduce(mergeBlock, []);
+
+  block.push(setInScope(node.operands[0]));
+
+  return subParent.postfix.reduce(mergeBlock, block);
 };
 
-const generateBinaryExpression = node => {
-  let block = [];
-  if (node.left.Type === Syntax_1.Constant) block.push(getConstOpcode(node.left));
-  if (node.right.Type === Syntax_1.Constant) block.push(getConstOpcode(node.right));
+const syntaxMap = {
+  // Unary
+  [Syntax_1.Constant]: getConstOpcode,
+  [Syntax_1.BinaryExpression]: generateBinaryExpression,
+  [Syntax_1.Identifier]: getInScope,
+  [Syntax_1.ReturnStatement]: generateReturn,
+  // Binary
+  [Syntax_1.Declaration]: generateDeclaration,
+  [Syntax_1.Assignment]: generateAssignment
+};
 
-  if (node.left.Type === Syntax_1.BinaryExpression) block = [...block, ...generateBinaryExpression(node.left)];
+const mapSyntax = curry_1$1((parent, operand) => {
+  const mapping = syntaxMap[operand.Type];
+  if (!mapping) throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.operator.value}`);
+  return mapping(operand, parent);
+});
 
-  if (node.right.Type === Syntax_1.BinaryExpression) block = [...block, ...generateBinaryExpression(node.right)];
-
-  if (node.left.Type === Syntax_1.Identifier) block.push(scopeOperation(node.left, 'Get'));
-
-  if (node.right.Type === Syntax_1.Identifier) block.push(scopeOperation(node.right, 'Get'));
-
-  //block.push(scopeOperation(node, 'Set'));
-  switch (node.operator.value) {
-    case '+':
-      block.push({ kind: def[node.type + 'Add'].code });
-      break;
-    case '-':
-      block.push({ kind: def[node.type + 'Sub'].code });
-      break;
-    case '*':
-      block.push({ kind: def[node.type + 'Mul'].code });
-      break;
-    case '/':
-      block.push({ kind: (def[node.type + 'Div'] || def[node.type + 'DivS']).code });
-      break;
-  }
-
+const generateExpression = (node, parent) => {
+  const block = [node].map(mapSyntax(parent)).reduce(mergeBlock, []);
   return block;
 };
 
-const generateExpression = expr => {
-  let block = [];
-  switch (expr.Type) {
-    case Syntax_1.BinaryExpression:
-      {
-        const ops = generateBinaryExpression(expr);
-        block = [...block, ...ops];
-        break;
-      }
-    case Syntax_1.Constant:
-      {
-        const op = def[expr.type + 'Const'];
-        block.push({ kind: op.code, params: [expr.value] });
-        break;
-      }
-    case Syntax_1.Identifier:
-      {
-        block.push(scopeOperation(expr, 'Get'));
-        break;
-      }
-  }
+const generateCode = func => {
+  const block = { code: [], locals: [] };
+
+  // NOTE: Declarations have a side-effect of changing the local count
+  //       This is why mapSyntax takes a parent argument
+  block.code = func.body.map(mapSyntax(block)).reduce(mergeBlock, []);
+
   return block;
 };
 
@@ -958,7 +1124,10 @@ const precedence = {
   '+': 0,
   '-': 0,
   '*': 1,
-  '/': 1
+  '/': 1,
+  '++': 2,
+  '--': 2,
+  '=': 3
 };
 
 const assoc = op => {
@@ -969,6 +1138,8 @@ const assoc = op => {
     case '*':
       return 'left';
     case '=':
+    case '--':
+    case '++':
       return 'right';
     default:
       return 'left';
@@ -991,6 +1162,9 @@ class Parser$1 {
     this.token = this.stream.next();
     this.globalSymbols = {};
     this.localSymbols = {};
+
+    // decrement/increment associativity
+    this.diAssoc = 'right';
   }
 
   syntaxError(msg, error) {
@@ -1066,31 +1240,44 @@ class Parser$1 {
         return this.keyword(node);
       case Syntax_1.Punctuator:
         if (this.eat([';'])) return null;
+      case Syntax_1.Identifier:
+        return this.maybeAssignment(node);
       default:
-        throw this.unknown();
+        throw this.unknown(this.token);
     }
   }
 
   // Simplified version of the Shunting yard algorithm
-  expression(type, inGroup) {
+  expression(type = 'i32', inGroup, associativity = 'right') {
     const operators = [];
     const operands = [];
 
-    const consume = () => operands.push(this.binary({
-      type,
-      operator: operators.pop(),
-      right: operands.pop(),
-      left: operands.pop()
-    }));
+    const consume = () => operands.push(this.binaryOrUnary(type, operators.pop(), operands));
+
+    this.diAssoc = associativity;
 
     while (this.token && this.token.value !== ';') {
       if (this.token.type === Syntax_1.Constant) operands.push(this.constant());
       if (this.token.type === Syntax_1.Identifier) operands.push(this.identifier());
 
       if (this.token.type === Syntax_1.Punctuator) {
-        while (last(operators) && precedence[last(operators).value] >= precedence[this.token.type] && assoc(last(operators).value) === 'left') consume();
+        const op = Object.assign({
+          precedence: precedence[this.token.value]
+        }, this.token);
 
-        operators.push(this.token);
+        // Increment, decrement are a bit annoying...
+        // we don't know if it's left associative or right without a lot of gymnastics
+        if (this.token.value === '--' || this.token.value === '++') {
+          // As we create different nodes the diAssoc is changed
+          op.assoc = this.diAssoc;
+        } else {
+          // vanilla binary operator
+          op.assoc = assoc(op.value);
+        }
+
+        while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
+
+        operators.push(op);
       }
       // TODO "("
       // TODO ")"
@@ -1103,9 +1290,68 @@ class Parser$1 {
     return operands.pop();
   }
 
+  // Abstraction for handling operations
+  binaryOrUnary(type, operator, operands) {
+    switch (operator.value) {
+      case '++':
+      case '--':
+        return this.unary({ type, operator, operands: operands.splice(-1) });
+      default:
+        return this.binary({ type, operator, operands: operands.splice(-2) });
+    }
+  }
+
+  unary(opts) {
+    // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
+    // convert this unary to a binary expression by throwing in an extra operand of 1
+    if (opts.operator.value === '--' || opts.operator.value === '++') {
+      // set isPostfix to help the IR generator
+      const binary = Object.assign({ isPostfix: opts.operator.assoc === 'left' }, opts);
+      binary.operator.value = opts.operator.value[0];
+      binary.operands.push({ Type: Syntax_1.Constant, value: '1' });
+      return this.binary(binary);
+    }
+    const node = Object.assign(this.startNode(opts.operands[0]), opts);
+    return this.endNode(node, Syntax_1.UnaryExpression);
+  }
+
   binary(opts) {
-    const node = Object.assign(this.startNode(opts.left), opts);
-    return this.endNode(node, Syntax_1.BinaryExpression);
+    const node = Object.assign(this.startNode(opts.operands[0]), opts);
+
+    this.diAssoc = 'left';
+    let Type = Syntax_1.BinaryExpression;
+    if (node.operator.value === '=') {
+      Type = Syntax_1.Assignment;
+      this.diAssoc = 'right';
+    }
+
+    return this.endNode(node, Type);
+  }
+
+  // It is easier to parse assignment this way as we need to maintain a valid type
+  // through out the right-hand side of the expression
+  maybeAssignment() {
+    const target = this.identifier();
+
+    const nextValue = this.stream.peek().value;
+    const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
+    if (operator) {
+      if (nextValue === '=') {
+        this.eat(null, Syntax_1.Identifier);
+        this.eat(['=']);
+      }
+      const assignment = this.startNode();
+      assignment.operator = { value: '=' };
+      // Push the reference to the local/global
+      assignment.operands = [target];
+      const expr = this.expression(target.type);
+      // not a postfix
+      expr.isPostfix = false;
+      assignment.operands.push(expr);
+      return this.endNode(assignment, Syntax_1.Assignment);
+    }
+
+    return this.expression(target.type);
   }
 
   keyword(node) {
@@ -1126,6 +1372,7 @@ class Parser$1 {
 
   export(node) {
     this.eat(['export']);
+
     const decl = this.maybeFunctionDeclaration(this.startNode());
     if (!decl.func) {
       if (!decl.init) throw this.syntaxError('Exports must have a value');
@@ -1252,11 +1499,14 @@ class Parser$1 {
     if (target !== -1) {
       node.localIndex = target;
       node.target = this.func.locals[target];
+      node.type = node.target.type;
     } else {
       node.globalIndex = this.globals.findIndex(g => g.id === this.token.value);
       node.target = this.globals[node.globalIndex];
+      node.type = node.target.type;
     }
 
+    this.diAssoc = 'left';
     return this.endNode(node, Syntax_1.Identifier);
   }
 
@@ -1602,12 +1852,12 @@ const emitFunctionBody = (stream, { locals, code }) => {
   const body = new OutputStream();
   code.forEach(({ kind, params }) => {
     // There is a much nicer way of doing this
-    body.push(index_9, kind, opcodeMap[kind].text);
+    body.push(index_9, kind.code, kind.text);
     // map over all params, if any and encode each one
     (params || []).forEach(p => {
       let type = varuint32;
       // either encode unsigned 32 bit values or floats
-      switch (opcodeMap[kind].result) {
+      switch (kind.result) {
         case index_4:
           type = index_4;
           break;
