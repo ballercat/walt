@@ -10,7 +10,7 @@
  * @author  Arthur Buldauskas <arthurbuldauskas@gmail.com>
  */
 
-class Stream$1 {
+class Stream {
   /**
    * @constructor
    *
@@ -53,7 +53,7 @@ class Stream$1 {
   next() {
     const char = this.input.charAt(this.pos++);
 
-    if (Stream$1.eol(char)) this.newLine();else this.col++;
+    if (Stream.eol(char)) this.newLine();else this.col++;
 
     return char;
   }
@@ -103,125 +103,7 @@ class Stream$1 {
   }
 }
 
-var Stream_1 = Stream$1;
-
-class Tokenizer$1 {
-  constructor(stream, parsers = []) {
-    if (!(stream instanceof Stream_1)) this.die(`Tokenizer expected instance of Stream in constructor.
-                Instead received ${JSON.stringify(stream)}`);
-    this.stream = stream;
-    this.tokens = [];
-    this.pos = 0;
-    this.parsers = parsers;
-  }
-
-  /**
-   * Get next token
-   *
-   * @return {Object} token
-   */
-  next() {
-    let value = '';
-    this.seekNonWhitespace();
-    let char;
-    let matchers = this.parsers;
-    let nextMatchers = this.match(char, matchers);
-    let start = {
-      line: this.stream.line,
-      col: this.stream.col
-    };
-
-    do {
-      char = this.stream.peek();
-      matchers = this.match(char, matchers);
-      value += char;
-      this.stream.next();
-      nextMatchers = this.match(this.stream.peek(), matchers);
-    } while (!Stream_1.eol(this.stream.peek()) && !Stream_1.eof(this.stream.peek()) && !Stream_1.whitespace(this.stream.peek()) && nextMatchers.length > 0);
-
-    const token = this.token(value, matchers);
-    token.start = start;
-    token.end = {
-      line: this.stream.line,
-      col: this.stream.col
-    };
-    this.tokens.push(token);
-
-    return this.tokens[this.pos++];
-  }
-
-  match(char, parsers) {
-    if (char == null) return parsers;
-
-    return parsers.map(parse => parse(char)).filter(p => p);
-  }
-
-  /**
-   * Match a particular non-whitespace value to a token
-   *
-   * @param {String} value Value to match
-   * @return {Object} token
-   */
-  token(value, parsers, token = { type: 'unknown', value }) {
-    // Strict parsers must end on a leaf node
-    if (parsers.length > 1) {
-      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
-      if (parsers.length > 1) parsers = parsers.filter(parser => parser.strict);
-    }
-
-    if (parsers.length === 1) token.type = parsers[0].type;
-
-    return token;
-  }
-
-  /**
-   * Seek Stream until next non-whitespace character. Can end in eof/eol
-   */
-  seekNonWhitespace() {
-    while (Stream_1.whitespace(this.stream.peek())) this.stream.next();
-  }
-
-  parse() {
-    while (!Stream_1.eof(this.stream.peek())) this.next();
-
-    return this.tokens;
-  }
-
-  /**
-   * Stop parsing and throw a fatal error
-   *
-   * @param {String} reason
-   * @throws
-   */
-  die(reason) {
-    throw new Error(reason);
-  }
-}
-
-class TokenStream$1 {
-  constructor(tokens = []) {
-    this.length = tokens.length;
-    this.tokens = tokens;
-    this.pos = 0;
-  }
-
-  next() {
-    return this.tokens[this.pos++];
-  }
-
-  peek() {
-    return this.tokens[this.pos];
-  }
-
-  seek(relative) {
-    this.pos = relative;
-    return this.tokens[this.pos];
-  }
-
-  last() {
-    return this.tokens[this.length - 1];
-  }
-}
+var stream = Stream;
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -319,6 +201,7 @@ const Syntax = {
   Type: 'Type',
   Declaration: 'Declaration',
   FunctionDeclaration: 'FunctionDeclaration',
+  FunctionCall: 'FunctionCall',
   Program: 'Program',
   Assignment: 'Assignment',
   Param: 'Param',
@@ -327,33 +210,12 @@ const Syntax = {
 
 var Syntax_1 = Syntax;
 
-const supported = [
-// EcmaScript
-'break', 'if', 'else', 'import', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'void', 'while',
-
-// walt replacement, matching s-expression syntax
-'func',
-
-// s-expression
-'global', 'module', 'memory', 'table', 'type',
-
-// specials/asserts
-'invoke', 'assert', 'assert_return',
-
-// additional syntax
-// statically replaced with consant value at compile time
-'sizeof'];
+const supported = ['+', '++', '-', '--', '=', '==', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';'];
 
 const trie = new trie$1(supported);
-const root = trie.fsearch;
-var index = token(root, Syntax_1.Keyword, supported);
+var index = token(trie.fsearch, Syntax_1.Punctuator, supported);
 
-const supported$1 = ['+', '++', '-', '--', '=', '==', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';'];
-
-const trie$3 = new trie$1(supported$1);
-var index$1 = token(trie$3.fsearch, Syntax_1.Punctuator, supported$1);
-
-var index$3 = createCommonjsModule(function (module) {
+var index$1 = createCommonjsModule(function (module) {
   const { isNaN, parseInt } = Number;
 
   const isNumber = char => !isNaN(parseInt(char));
@@ -384,16 +246,155 @@ var index$3 = createCommonjsModule(function (module) {
 
 var index$2 = createCommonjsModule(function (module) {
   const parse = char => {
-    if (!index$1(char) && !index$3(char)) return parse;
+    if (!index(char) && !index$1(char)) return parse;
     return null;
   };
 
   module.exports = token(parse, Syntax_1.Identifier);
 });
 
+const supported$1 = [
+// EcmaScript
+'break', 'if', 'else', 'import', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'void', 'while',
+
+// walt replacement, matching s-expression syntax
+'function',
+
+// s-expression
+'global', 'module', 'memory', 'table', 'type',
+
+// specials/asserts
+'invoke', 'assert', 'assert_return',
+
+// additional syntax
+// statically replaced with consant value at compile time
+'sizeof'];
+
+const trie$3 = new trie$1(supported$1);
+const root = trie$3.fsearch;
+var index$3 = token(root, Syntax_1.Keyword, supported$1);
+
 const supported$2 = ['i32', 'i64', 'f32', 'f64', 'anyfunc'];
 const trie$4 = new trie$1(supported$2);
 var index$4 = token(trie$4.fsearch, Syntax_1.Type, supported$2);
+
+class Tokenizer {
+  constructor(stream$$1, parsers = [index, index$1, index$2, index$3, index$4]) {
+    if (!(stream$$1 instanceof stream)) this.die(`Tokenizer expected instance of Stream in constructor.
+                Instead received ${JSON.stringify(stream$$1)}`);
+    this.stream = stream$$1;
+    this.tokens = [];
+    this.pos = 0;
+    this.parsers = parsers;
+  }
+
+  /**
+   * Get next token
+   *
+   * @return {Object} token
+   */
+  next() {
+    let value = '';
+    this.seekNonWhitespace();
+    let char;
+    let matchers = this.parsers;
+    let nextMatchers = this.match(char, matchers);
+    let start = {
+      line: this.stream.line,
+      col: this.stream.col
+    };
+
+    do {
+      char = this.stream.peek();
+      matchers = this.match(char, matchers);
+      value += char;
+      this.stream.next();
+      nextMatchers = this.match(this.stream.peek(), matchers);
+    } while (!stream.eol(this.stream.peek()) && !stream.eof(this.stream.peek()) && !stream.whitespace(this.stream.peek()) && nextMatchers.length > 0);
+
+    const token = this.token(value, matchers);
+    token.start = start;
+    token.end = {
+      line: this.stream.line,
+      col: this.stream.col
+    };
+    this.tokens.push(token);
+
+    return this.tokens[this.pos++];
+  }
+
+  match(char, parsers) {
+    if (char == null) return parsers;
+
+    return parsers.map(parse => parse(char)).filter(p => p);
+  }
+
+  /**
+   * Match a particular non-whitespace value to a token
+   *
+   * @param {String} value Value to match
+   * @return {Object} token
+   */
+  token(value, parsers, token = { type: 'unknown', value }) {
+    // Strict parsers must end on a leaf node
+    if (parsers.length > 1) {
+      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
+      if (parsers.length > 1) parsers = parsers.filter(parser => parser.strict);
+    }
+
+    if (parsers.length === 1) token.type = parsers[0].type;
+
+    return token;
+  }
+
+  /**
+   * Seek Stream until next non-whitespace character. Can end in eof/eol
+   */
+  seekNonWhitespace() {
+    while (stream.whitespace(this.stream.peek())) this.stream.next();
+  }
+
+  parse() {
+    while (!stream.eof(this.stream.peek())) this.next();
+
+    return this.tokens;
+  }
+
+  /**
+   * Stop parsing and throw a fatal error
+   *
+   * @param {String} reason
+   * @throws
+   */
+  die(reason) {
+    throw new Error(reason);
+  }
+}
+
+class TokenStream {
+  constructor(tokens = []) {
+    this.length = tokens.length;
+    this.tokens = tokens;
+    this.pos = 0;
+  }
+
+  next() {
+    return this.tokens[this.pos++];
+  }
+
+  peek() {
+    return this.tokens[this.pos];
+  }
+
+  seek(relative) {
+    this.pos = relative;
+    return this.tokens[this.pos];
+  }
+
+  last() {
+    return this.tokens[this.length - 1];
+  }
+}
 
 const getTypeString = type => {
   switch (type) {
@@ -1085,7 +1086,15 @@ const generateAssignment = (node, parent) => {
   return subParent.postfix.reduce(mergeBlock, block);
 };
 
+const generateFunctionCall = (node, parent) => {
+  return {
+    kind: def.Call,
+    params: [node.functionIndex]
+  };
+};
+
 const syntaxMap = {
+  [Syntax_1.FunctionCall]: generateFunctionCall,
   // Unary
   [Syntax_1.Constant]: getConstOpcode,
   [Syntax_1.BinaryExpression]: generateBinaryExpression,
@@ -1098,7 +1107,7 @@ const syntaxMap = {
 
 const mapSyntax = curry_1$1((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
-  if (!mapping) throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.operator.value}`);
+  if (!mapping) throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.id || operand.operator.value}`);
   return mapping(operand, parent);
 });
 
@@ -1154,9 +1163,9 @@ const findTypeIndex = (node, Types) => {
   });
 };
 
-class Parser$1 {
+class Parser {
   constructor(tokenStream) {
-    if (!(tokenStream instanceof TokenStream$1)) throw `Parser expects a TokenStream instead received ${tokenStream}`;
+    if (!(tokenStream instanceof TokenStream)) throw `Parser expects a TokenStream instead received ${tokenStream}`;
 
     this.stream = tokenStream;
     this.token = this.stream.next();
@@ -1175,12 +1184,12 @@ class Parser$1 {
 
   unexpectedValue(value) {
     return this.syntaxError(`Value   : ${this.token.value}
-       Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
+      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
   }
 
   unexpected(token) {
     return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
-       Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
+        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
   }
 
   unknown({ value }) {
@@ -1256,11 +1265,8 @@ class Parser$1 {
 
     this.diAssoc = associativity;
 
-    while (this.token && this.token.value !== ';') {
-      if (this.token.type === Syntax_1.Constant) operands.push(this.constant());
-      if (this.token.type === Syntax_1.Identifier) operands.push(this.identifier());
-
-      if (this.token.type === Syntax_1.Punctuator) {
+    while (this.token && this.token.value !== ';' && this.token.value !== ',') {
+      if (this.token.type === Syntax_1.Constant) operands.push(this.constant());else if (this.token.type === Syntax_1.Identifier) operands.push(this.maybeIdentifier());else if (this.token.type === Syntax_1.Punctuator) {
         const op = Object.assign({
           precedence: precedence[this.token.value]
         }, this.token);
@@ -1275,12 +1281,20 @@ class Parser$1 {
           op.assoc = assoc(op.value);
         }
 
-        while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
+        if (op.value === '(') {
+          operators.push(op);
+        } else if (op.value === ')') {
+          while (last(operators) && last(operators).value !== '(') consume();
+          if (last(operators).value !== '(') throw this.syntaxError('Unmatched left bracket');
+          // Pop left bracket
+          operators.pop();
+        } else {
+          while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
 
-        operators.push(op);
+          operators.push(op);
+        }
       }
-      // TODO "("
-      // TODO ")"
+
       this.next();
     }
 
@@ -1331,7 +1345,7 @@ class Parser$1 {
   // It is easier to parse assignment this way as we need to maintain a valid type
   // through out the right-hand side of the expression
   maybeAssignment() {
-    const target = this.identifier();
+    const target = this.maybeIdentifier();
 
     const nextValue = this.stream.peek().value;
     const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
@@ -1360,7 +1374,7 @@ class Parser$1 {
       case 'const':
         return this.declaration(node);
       case 'function':
-        return this.functionDeclaration(node);
+        return this.maybeFunctionDeclaration(node);
       case 'export':
         return this.export(node);
       case 'return':
@@ -1424,7 +1438,7 @@ class Parser$1 {
     this.expect(['{']);
     node.body = [];
     let stmt = null;
-    while (this.token.value !== '}') {
+    while (this.token && this.token.value !== '}') {
       stmt = this.statement();
       if (stmt) node.body.push(stmt);
     }
@@ -1450,6 +1464,7 @@ class Parser$1 {
     // attach to a type index
     node.functionIndex = this.Program.Functions.length;
     this.Program.Functions.push(node.typeIndex);
+    this.functions.push(node);
 
     // generate the code block for the emiter
     this.Program.Code.push(generateCode(node));
@@ -1472,6 +1487,7 @@ class Parser$1 {
     node.id = this.expect(null, Syntax_1.Identifier).value;
     this.expect([':']);
     node.type = this.expect(null, Syntax_1.Type).value;
+    this.eat([',']);
     return this.endNode(node, Syntax_1.Param);
   }
 
@@ -1493,21 +1509,52 @@ class Parser$1 {
     return this.endNode(node, Syntax_1.Constant);
   }
 
-  identifier(token = this.token) {
+  // Maybe identifier, maybe function call
+  maybeIdentifier(token = this.token) {
     const node = this.startNode();
-    let target = this.func.locals.findIndex(l => l.id === this.token.value);
-    if (target !== -1) {
-      node.localIndex = target;
-      node.target = this.func.locals[target];
+    const localIndex = this.func.locals.findIndex(l => l.id === this.token.value);
+    const globalIndex = this.globals.findIndex(g => g.id === this.token.value);
+    const isFuncitonCall = this.stream.peek().value === '(';
+
+    // if function call then encode it as such
+    if (isFuncitonCall) return this.functionCall(node);
+
+    if (localIndex !== -1) {
+      node.localIndex = localIndex;
+      node.target = this.func.locals[localIndex];
       node.type = node.target.type;
-    } else {
-      node.globalIndex = this.globals.findIndex(g => g.id === this.token.value);
+    } else if (globalIndex !== -1) {
+      node.globalIndex = globalIndex;
       node.target = this.globals[node.globalIndex];
       node.type = node.target.type;
     }
 
     this.diAssoc = 'left';
     return this.endNode(node, Syntax_1.Identifier);
+  }
+
+  functionCall(node = this.startNode()) {
+    node.id = this.expect(null, Syntax_1.Identifier).value;
+    node.functionIndex = this.functions.findIndex(({ id }) => id == node.id);
+    if (node.functionIndex === -1) throw this.syntaxError(`Undefined function ${node.id}`);
+
+    node.arguments = this.argumentList();
+
+    return this.endNode(node, Syntax_1.FunctionCall);
+  }
+
+  argumentList() {
+    const list = [];
+    this.expect(['(']);
+    while (this.token.value !== ')') list.push(this.argument());
+    // this.expect([')']);
+    return list;
+  }
+
+  argument() {
+    const node = this.expression();
+    this.eat([',']);
+    return node;
   }
 
   // Get the ast
@@ -1519,6 +1566,7 @@ class Parser$1 {
     }
 
     this.globals = [];
+    this.functions = [];
     const node = this.Program = this.startNode();
 
     // Setup keys needed for the emiter
@@ -1542,17 +1590,6 @@ class Parser$1 {
     return this.program();
   }
 }
-
-const tokenParsers = [index, index$3, index$1, index$4, index$2];
-
-const Tokenizer = Tokenizer$1;
-const Stream = Stream_1;
-
-
-
-
-
-const TokenStream = TokenStream$1;
 
 /**
  * Copyright 2013-2015, Facebook, Inc.
@@ -1605,13 +1642,6 @@ var invariant_1 = invariant;
 
 // Used to output raw binary, holds values and types in a large array 'stream'
 class OutputStream {
-  static bufferToHex(buffer) {
-    const view = new DataView(buffer);
-    const result = [];
-    for (let i = 0; i < buffer.byteLength; i++) result.push('0x' + view.getUint8(i, true).toString(16));
-    return result;
-  }
-
   constructor() {
     // Our data, expand it
     this.data = [];
@@ -1739,7 +1769,7 @@ const writer = ({
   return stream;
 };
 
-const emitter = entries => {
+const emit$1 = entries => {
   const payload = new OutputStream().push(varuint32, entries.length, 'entry count');
 
   entries.forEach(({ module, field, kind, global }) => {
@@ -1760,7 +1790,7 @@ const emitter = entries => {
   return payload;
 };
 
-const emitter$1 = exports => {
+const emit$2 = exports => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, 'count');
 
@@ -1803,7 +1833,7 @@ const encode = (payload, { type, init, mutable }) => {
   payload.push(index_9, def.End.code, 'end');
 };
 
-const emit$1 = globals => {
+const emit$3 = globals => {
   const payload = new OutputStream();
   payload.push(varuint32, globals.length, 'count');
 
@@ -1812,7 +1842,8 @@ const emit$1 = globals => {
   return payload;
 };
 
-const emitter$2 = functions => {
+// Emits function section. For function code emiter look into code.js
+const emit$4 = functions => {
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, 'count');
 
@@ -1832,7 +1863,7 @@ const emitType = (stream, { params, result }) => {
   }
 };
 
-const emitter$3 = types => {
+const emit$5 = types => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, 'count');
 
@@ -1885,7 +1916,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
   stream.push(index_9, def.End.code, 'end');
 };
 
-const emit$2 = functions => {
+const emit$6 = functions => {
   // do stuff with ast
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, 'function count');
@@ -1907,12 +1938,12 @@ const SECTION_CODE = 10; // Function bodies (code)
  // Data segments
 
 var section = {
-  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: emitter$3 }),
-  function: writer({ type: SECTION_FUNCTION, label: 'Functions', emitter: emitter$2 }),
-  imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: emitter }),
-  exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: emitter$1 }),
-  globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: emit$1 }),
-  code: writer({ type: SECTION_CODE, label: 'Code', emitter: emit$2 })
+  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: emit$5 }),
+  function: writer({ type: SECTION_FUNCTION, label: 'Functions', emitter: emit$4 }),
+  imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: emit$1 }),
+  exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: emit$2 }),
+  globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: emit$3 }),
+  code: writer({ type: SECTION_CODE, label: 'Code', emitter: emit$6 })
 };
 
 function emit(ast = {}) {
@@ -1924,10 +1955,10 @@ function emit(ast = {}) {
 
 // Used for deugging purposes
 const getAst = source => {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream, tokenParsers);
+  const stream$$1 = new stream(source);
+  const tokenizer = new Tokenizer(stream$$1);
   const tokenStream = new TokenStream(tokenizer.parse());
-  const parser = new Parser$1(tokenStream);
+  const parser = new Parser(tokenStream);
   const ast = parser.parse();
   return ast;
 };

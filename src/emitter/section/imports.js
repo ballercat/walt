@@ -6,7 +6,7 @@ import { EXTERN_GLOBAL } from '../external_kind';
 import { emitString } from '../string';
 import writer from './writer';
 
-const emitter = entries => {
+const emit = entries => {
   const payload = new OutputStream().push(varuint32, entries.length, 'entry count');
 
   entries.forEach(({module, field, kind, global}) => {
@@ -26,5 +26,5 @@ const emitter = entries => {
   return payload;
 };
 
-export default emitter;
+export default emit;
 

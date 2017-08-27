@@ -12,6 +12,7 @@ const Syntax = {
   Type: 'Type',
   Declaration: 'Declaration',
   FunctionDeclaration: 'FunctionDeclaration',
+  FunctionCall: 'FunctionCall',
   Program: 'Program',
   Assignment: 'Assignment',
   Param: 'Param',

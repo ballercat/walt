@@ -1,6 +1,6 @@
-const Trie = require('./../../utils/trie');
-const token = require('./../token');
-const Syntax = require('./../Syntax');
+const Trie = require('../../utils/trie');
+const token = require('../token');
+const Syntax = require('../../Syntax');
 
 const supported = [
   // EcmaScript
@@ -22,7 +22,7 @@ const supported = [
   'while',
 
   // walt replacement, matching s-expression syntax
-  'func',
+  'function',
 
   // s-expression
   'global',

@@ -3,14 +3,6 @@ import { sizeof, set, u8 } from 'wasm-types';
 
 // Used to output raw binary, holds values and types in a large array 'stream'
 export default class OutputStream {
-  static bufferToHex(buffer) {
-    const view = new DataView(buffer);
-    const result = [];
-    for(let i = 0; i < buffer.byteLength; i++)
-      result.push('0x' + view.getUint8(i, true).toString(16));
-    return result;
-  }
-
   constructor() {
     // Our data, expand it
     this.data = [];

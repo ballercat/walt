@@ -1,6 +1,6 @@
 const { isNaN, parseInt } = Number;
-const token = require('./../token');
-const Syntax = require('./../Syntax');
+const token = require('../token');
+const Syntax = require('../../Syntax');
 
 const isNumber = char => !isNaN(parseInt(char));
 const isDot = char => char === '.';

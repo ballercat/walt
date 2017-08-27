@@ -1,7 +1,21 @@
-import Stream from './Stream';
+import Stream from '../utils/stream';
+import punctuator from './punctuator';
+import constant from './constant';
+import identifier from './identifier';
+import keyword from './keyword';
+import type from './type';
 
 class Tokenizer {
-  constructor(stream, parsers = []) {
+  constructor(
+    stream,
+    parsers = [
+      punctuator,
+      constant,
+      identifier,
+      keyword,
+      type
+    ]
+  ) {
     if (!(stream instanceof Stream))
       this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);

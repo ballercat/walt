@@ -1,22 +1,24 @@
 import test from 'ava';
 import snapshot from 'snap-shot';
-import Parser from '../Parser';
-import { I32 } from '../../emiter/value_type';
-import { EXTERN_GLOBAL } from '../../emiter/external_kind';
-import { tokenParsers, Tokenizer, TokenStream, Stream } from '..';
-import emit from '../../emiter';
+import Parser from '..';
+import { I32 } from '../../emitter/value_type';
+import { EXTERN_GLOBAL } from '../../emitter/external_kind';
+import Tokenizer from '../../tokenizer';
+import TokenStream from '../../utils/token-stream';
+import Stream from '../../utils/stream';
+import emit from '../../emitter';
 
 const tokenizer = {
-  empty: new Tokenizer(new Stream(''), tokenParsers),
-  semicolon: new Tokenizer(new Stream(''), tokenParsers),
-  constGlobals: new Tokenizer(new Stream('const answer: i32 = 42;'), tokenParsers),
-  exportGlobals: new Tokenizer(new Stream('export const answer: i32 = 42;'), tokenParsers)
+  empty: new Tokenizer(new Stream('')),
+  semicolon: new Tokenizer(new Stream('')),
+  constGlobals: new Tokenizer(new Stream('const answer: i32 = 42;')),
+  exportGlobals: new Tokenizer(new Stream('export const answer: i32 = 42;'))
 };
 
 const prepare = string =>
   new TokenStream(
     new Tokenizer(
-      new Stream(string), tokenParsers).parse()
+      new Stream(string)).parse()
   );
 
 test('the most basic of modules in wasm', t => {

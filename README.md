@@ -8,7 +8,9 @@
 
 :rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
 
-Contributions are welcomed! :pray:
+:pray: Contributions are welcomed! [Contributing guide](https://github.com/ballercat/walt/blob/master/CONTRIBUTING.md).
+
+:partly_sunny: Current status: **pre-alpha**
 
 # Problem
 Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for `.wat` files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,

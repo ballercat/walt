@@ -1,7 +1,7 @@
-import { EXTERN_GLOBAL, EXTERN_FUNCTION } from '../emiter/external_kind';
-import { I32, I64, F32, F64 } from '../emiter/value_type';
-import opcode, { opcodeFromOperator } from '../emiter/opcode';
-import Syntax from './Syntax';
+import { EXTERN_GLOBAL, EXTERN_FUNCTION } from '../emitter/external_kind';
+import { I32, I64, F32, F64 } from '../emitter/value_type';
+import opcode, { opcodeFromOperator } from '../emitter/opcode';
+import Syntax from '../Syntax';
 import curry from 'curry';
 
 // clean this up
@@ -157,7 +157,15 @@ export const generateAssignment = (node, parent) => {
   return subParent.postfix.reduce(mergeBlock, block);
 };
 
+const generateFunctionCall = (node, parent) => {
+  return {
+    kind: opcode.Call,
+    params: [node.functionIndex]
+  };
+}
+
 const syntaxMap = {
+  [Syntax.FunctionCall]: generateFunctionCall,
   // Unary
   [Syntax.Constant]: getConstOpcode,
   [Syntax.BinaryExpression]: generateBinaryExpression,
@@ -171,7 +179,7 @@ const syntaxMap = {
 export const mapSyntax = curry((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
   if (!mapping)
-    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.operator.value}`);
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.id || operand.operator.value}`);
   return mapping(operand, parent);
 });
 

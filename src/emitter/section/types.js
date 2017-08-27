@@ -16,7 +16,7 @@ const emitType = (stream, { params, result }) => {
   }
 }
 
-const emitter = (types) => {
+const emit = (types) => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, 'count');
 
@@ -25,4 +25,4 @@ const emitter = (types) => {
   return stream;
 };
 
-export default emitter;
+export default emit;

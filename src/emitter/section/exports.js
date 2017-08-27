@@ -3,7 +3,7 @@ import { varuint32 } from '../numbers';
 import { emitString } from '../string';
 import OutputStream from '../../utils/output-stream';
 
-const emitter = (exports) => {
+const emit = (exports) => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, 'count');
 
@@ -17,5 +17,5 @@ const emitter = (exports) => {
   return payload;
 };
 
-export default emitter;
+export default emit;
 
