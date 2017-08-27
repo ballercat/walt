@@ -186,15 +186,26 @@ class Parser {
           op.assoc = assoc(op.value);
         }
 
-        while(last(operators)
-          && last(operators).precedence >= op.precedence
-          && last(operators).assoc === 'left'
-        ) consume();
+        if (op.value === '(') {
+          operators.push(op);
+        } else if (op.value === ')') {
+          while(last(operators)
+            && last(operators).value !== '('
+          ) consume();
+          if (last(operators).value !== '(')
+            throw this.syntaxError('Unmatched left bracket');
+          // Pop left bracket
+          operators.pop();
+        } else {
+          while(last(operators)
+            && last(operators).precedence >= op.precedence
+            && last(operators).assoc === 'left'
+          ) consume();
 
-        operators.push(op);
+          operators.push(op);
+        }
       }
-      // TODO "("
-      // TODO ")"
+
       this.next();
     };
 

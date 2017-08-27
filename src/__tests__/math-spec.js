@@ -80,4 +80,27 @@ test.skip('unary negation', t =>
   .then(outputIs(t, -2))
 );
 
+test('uses precedence correctly', t =>
+  compileAndRun(`
+  export function test(): i32 {
+    return 2 + 2 * 5 - 10;
+  }`)
+  .then(outputIs(t, 2))
+);
+
+test('brackets', t =>
+  compileAndRun(`
+  export function test(): i32 {
+    return 2 + (2 - 1);
+  }`)
+  .then(outputIs(t, 3))
+  .then(
+    // Slightly more complex brackets
+    compileAndRun(`
+    export function test(): i32 {
+      return (2 * (3 - 1) - 1) / 3;
+    }`).then(outputIs(t, 1))
+  )
+);
+
 
