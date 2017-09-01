@@ -9,7 +9,6 @@
  *
  * @author  Arthur Buldauskas <arthurbuldauskas@gmail.com>
  */
-
 class Stream {
   /**
    * @constructor
@@ -396,31 +395,87 @@ class TokenStream {
   }
 }
 
-const getTypeString = type => {
-  switch (type) {
-    case I32:
-      return 'i32';
-    case I64:
-      return 'i64';
-    case F32:
-      return 'f32';
-    case F64:
-      return 'f64';
-    case FUNC:
-      return 'func';
-    case ANYFUNC:
-      return 'anyfunc';
-    default:
-      return '?';
-  }
-};
+class Context {
+  constructor(options) {
+    Object.assign(this, options);
 
-const I32 = 0x7F;
-const I64 = 0x7E;
-const F32 = 0x7D;
-const F64 = 0x7C;
-const ANYFUNC = 0x70;
-const FUNC = 0x60;
+    this.Program = { body: [] };
+    // Setup keys needed for the emiter
+    this.Program.Types = [];
+    this.Program.Code = [];
+    this.Program.Exports = [];
+    this.Program.Imports = [];
+    this.Program.Globals = [];
+    this.Program.Functions = [];
+  }
+
+  syntaxError(msg, error) {
+    const { line, col } = this.token.start;
+    return new SyntaxError(`${error || 'Syntax error'} at ${line}:${col}
+      ${msg}`);
+  }
+
+  unexpectedValue(value) {
+    return this.syntaxError(`Value   : ${this.token.value}
+      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
+  }
+
+  unexpected(token) {
+    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
+        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
+  }
+
+  unknown({ value }) {
+    return this.syntaxError('Unknown token', value);
+  }
+
+  unsupported() {
+    return this.syntaxError('Language feature not supported', this.token.value);
+  }
+
+  expect(value, type) {
+    const token = this.token;
+    if (!this.eat(value, type)) {
+      throw value ? this.unexpectedValue(value) : this.unexpected(type);
+    }
+
+    return token;
+  }
+
+  next() {
+    this.token = this.stream.next();
+  }
+
+  eat(value, type) {
+    if (value) {
+      if (value.includes(this.token.value)) {
+        this.next();
+        return true;
+      }
+      return false;
+    }
+
+    if (this.token.type === type) {
+      this.next();
+      return true;
+    }
+
+    return false;
+  }
+
+  startNode(token = this.token) {
+    return { start: token.start, range: [token.start] };
+  }
+
+  endNode(node, Type) {
+    const token = this.token || this.stream.last();
+    return Object.assign(node, {
+      Type,
+      end: token.end,
+      range: node.range.concat(token.end)
+    });
+  }
+}
 
 var index$5 = createCommonjsModule(function (module) {
   /* eslint-env es6 */
@@ -566,6 +621,32 @@ const EXTERN_FUNCTION = 0;
 
 
 const EXTERN_GLOBAL = 3;
+
+const getTypeString = type => {
+  switch (type) {
+    case I32:
+      return 'i32';
+    case I64:
+      return 'i64';
+    case F32:
+      return 'f32';
+    case F64:
+      return 'f64';
+    case FUNC:
+      return 'func';
+    case ANYFUNC:
+      return 'anyfunc';
+    default:
+      return '?';
+  }
+};
+
+const I32 = 0x7F;
+const I64 = 0x7E;
+const F32 = 0x7D;
+const F64 = 0x7C;
+const ANYFUNC = 0x70;
+const FUNC = 0x60;
 
 /**
  * Ported from https://github.com/WebAssembly/wabt/blob/master/src/opcode.def
@@ -1126,7 +1207,48 @@ const generateCode = func => {
   return block;
 };
 
-const last = list => list[list.length - 1];
+function binary(ctx, opts) {
+  const node = Object.assign(ctx.startNode(opts.operands[0]), opts);
+
+  ctx.diAssoc = 'left';
+  let Type = Syntax_1.BinaryExpression;
+  if (node.operator.value === '=') {
+    Type = Syntax_1.Assignment;
+    ctx.diAssoc = 'right';
+  }
+
+  return ctx.endNode(node, Type);
+}
+function unary(ctx, opts) {
+  // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
+  // convert this unary to a binary expression by throwing in an extra operand of 1
+  if (opts.operator.value === '--' || opts.operator.value === '++') {
+    // set isPostfix to help the IR generator
+    const bopts = Object.assign({ isPostfix: opts.operator.assoc === 'left' }, opts);
+    bopts.operator.value = opts.operator.value[0];
+    bopts.operands.push({ Type: Syntax_1.Constant, value: '1' });
+    return binary(ctx, bopts);
+  }
+  const node = Object.assign(ctx.startNode(opts.operands[0]), opts);
+  return ctx.endNode(node, Syntax_1.UnaryExpression);
+}
+
+// Abstraction for handling operations
+function binaryOrUnary(ctx, type, operator, operands) {
+  switch (operator.value) {
+    case '++':
+    case '--':
+      return unary(ctx, { type, operator, operands: operands.splice(-1) });
+    default:
+      return binary(ctx, { type, operator, operands: operands.splice(-2) });
+  }
+}
+
+const constant$2 = ctx => {
+  const node = ctx.startNode();
+  node.value = ctx.token.value;
+  return ctx.endNode(node, Syntax_1.Constant);
+};
 
 // Utilities
 const precedence = {
@@ -1138,6 +1260,56 @@ const precedence = {
   '--': 2,
   '=': 3
 };
+
+const argumentList = ctx => {
+  const list = [];
+  ctx.expect(['(']);
+  while (ctx.token.value !== ')') list.push(argument(ctx));
+  // ctx.expect([')']);
+  return list;
+};
+
+const argument = ctx => {
+  const node = expression(ctx);
+  ctx.eat([',']);
+  return node;
+};
+const functionCall = ctx => {
+  const node = ctx.startNode();
+  node.id = ctx.expect(null, Syntax_1.Identifier).value;
+  node.functionIndex = ctx.functions.findIndex(({ id }) => id == node.id);
+  if (node.functionIndex === -1) throw ctx.syntaxError(`Undefined function ${node.id}`);
+
+  node.arguments = argumentList(ctx);
+
+  return ctx.endNode(node, Syntax_1.FunctionCall);
+};
+
+// Maybe identifier, maybe function call
+const maybeIdentifier = ctx => {
+  const node = ctx.startNode();
+  const localIndex = ctx.func.locals.findIndex(l => l.id === ctx.token.value);
+  const globalIndex = ctx.globals.findIndex(g => g.id === ctx.token.value);
+  const isFuncitonCall = ctx.stream.peek().value === '(';
+
+  // if function call then encode it as such
+  if (isFuncitonCall) return functionCall(ctx);
+
+  if (localIndex !== -1) {
+    node.localIndex = localIndex;
+    node.target = ctx.func.locals[localIndex];
+    node.type = node.target.type;
+  } else if (globalIndex !== -1) {
+    node.globalIndex = globalIndex;
+    node.target = ctx.globals[node.globalIndex];
+    node.type = node.target.type;
+  }
+
+  ctx.diAssoc = 'left';
+  return ctx.endNode(node, Syntax_1.Identifier);
+};
+
+const last = list => list[list.length - 1];
 
 const assoc = op => {
   switch (op) {
@@ -1155,6 +1327,86 @@ const assoc = op => {
   }
 };
 
+// Simplified version of the Shunting yard algorithm
+const expression = (ctx, type = 'i32', inGroup, associativity = 'right') => {
+  const operators = [];
+  const operands = [];
+
+  const consume = () => operands.push(binaryOrUnary(ctx, type, operators.pop(), operands));
+
+  ctx.diAssoc = associativity;
+
+  while (ctx.token && ctx.token.value !== ';' && ctx.token.value !== ',') {
+    if (ctx.token.type === Syntax_1.Constant) operands.push(constant$2(ctx));else if (ctx.token.type === Syntax_1.Identifier) operands.push(maybeIdentifier(ctx));else if (ctx.token.type === Syntax_1.Punctuator) {
+      const op = Object.assign({
+        precedence: precedence[ctx.token.value]
+      }, ctx.token);
+
+      // Increment, decrement are a bit annoying...
+      // we don't know if it's left associative or right without a lot of gymnastics
+      if (ctx.token.value === '--' || ctx.token.value === '++') {
+        // As we create different nodes the diAssoc is changed
+        op.assoc = ctx.diAssoc;
+      } else {
+        // vanilla binary operator
+        op.assoc = assoc(op.value);
+      }
+
+      if (op.value === '(') {
+        operators.push(op);
+      } else if (op.value === ')') {
+        while (last(operators) && last(operators).value !== '(') consume();
+        if (last(operators).value !== '(') throw ctx.syntaxError('Unmatched left bracket');
+        // Pop left bracket
+        operators.pop();
+      } else {
+        while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
+
+        operators.push(op);
+      }
+    }
+
+    ctx.next();
+  }
+
+  while (operators.length) consume();
+
+  // Should be a node
+  return operands.pop();
+};
+
+const generate = (ctx, node) => {
+  if (!ctx.func) {
+    node.globalIndex = ctx.Program.Globals.length;
+    ctx.Program.Globals.push(generateInit(node));
+    ctx.globals.push(node);
+  } else {
+    node.localIndex = ctx.func.locals.length;
+    ctx.func.locals.push(node);
+  }
+};
+
+const declaration = ctx => {
+  const node = ctx.startNode();
+  node.const = ctx.token.value === 'const';
+  if (!ctx.eat(['const', 'let'])) throw ctx.unexpectedValue(['const', 'let']);
+
+  node.id = ctx.expect(null, Syntax_1.Identifier).value;
+  ctx.expect([':']);
+
+  node.type = ctx.expect(null, Syntax_1.Type).value;
+
+  if (ctx.eat(['='])) node.init = expression(ctx, node.type);
+
+  if (node.const && !node.init) throw ctx.syntaxError('Constant value must be initialized');
+
+  generate(ctx, node);
+
+  return ctx.endNode(node, Syntax_1.Declaration);
+};
+
+const last$1 = list => list[list.length - 1];
+
 const findTypeIndex = (node, Types) => {
   return Types.findIndex(t => {
     const paramsMatch = t.params.reduce((a, v, i) => a && v === getType(node.paramList[i].type), true);
@@ -1163,431 +1415,189 @@ const findTypeIndex = (node, Types) => {
   });
 };
 
+const paramList = ctx => {
+  const paramList = [];
+  ctx.expect(['(']);
+  while (ctx.token.value !== ')') paramList.push(param(ctx));
+  ctx.expect([')']);
+  return paramList;
+};
+
+const param = ctx => {
+  const node = ctx.startNode();
+  node.id = ctx.expect(null, Syntax_1.Identifier).value;
+  ctx.expect([':']);
+  node.type = ctx.expect(null, Syntax_1.Type).value;
+  ctx.eat([',']);
+  return ctx.endNode(node, Syntax_1.Param);
+};
+
+const maybeFunctionDeclaration = ctx => {
+  const node = ctx.startNode();
+  if (!ctx.eat(['function'])) return declaration(ctx);
+
+  ctx.func = node;
+  node.func = true;
+  node.locals = [];
+  node.id = ctx.expect(null, Syntax_1.Identifier).value;
+  node.paramList = paramList(ctx);
+  ctx.expect([':']);
+  node.result = ctx.expect(null, Syntax_1.Type).value;
+  ctx.expect(['{']);
+  node.body = [];
+  let stmt = null;
+  while (ctx.token && ctx.token.value !== '}') {
+    stmt = statement(ctx);
+    if (stmt) node.body.push(stmt);
+  }
+
+  // Sanity check the return statement
+  const ret = last$1(node.body);
+  if (ret) {
+    if (node.type === 'void' && ret.Type === Syntax_1.ReturnStatement) throw ctx.syntaxError('Unexpected return value in a function with result : void');
+    if (node.type !== 'void' && ret.Type !== Syntax_1.ReturnStatement) throw ctx.syntaxError('Expected a return value in a function with result : ' + node.result);
+  } else if (node.result) {
+    throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
+  }
+
+  // Either re-use an existing type or write a new one
+  const typeIndex = findTypeIndex(node, ctx.Program.Types);
+  if (typeIndex !== -1) {
+    node.typeIndex = typeIndex;
+  } else {
+    node.typeIndex = ctx.Program.Types.length;
+    ctx.Program.Types.push(generateType(node));
+  }
+
+  // attach to a type index
+  node.functionIndex = ctx.Program.Functions.length;
+  ctx.Program.Functions.push(node.typeIndex);
+  ctx.functions.push(node);
+
+  // generate the code block for the emiter
+  ctx.Program.Code.push(generateCode(node));
+
+  ctx.expect(['}']);
+  ctx.func = null;
+
+  return ctx.endNode(node, Syntax_1.FunctionDeclaration);
+};
+
+const _export = ctx => {
+  const node = ctx.startNode();
+  ctx.eat(['export']);
+
+  const decl = maybeFunctionDeclaration(ctx);
+  if (!decl.func) {
+    if (!decl.init) throw ctx.syntaxError('Exports must have a value');
+  }
+
+  ctx.Program.Exports.push(generateExport(decl));
+  node.decl = decl;
+
+  ctx.endNode(node, Syntax_1.Export);
+
+  return node;
+};
+
+const returnStatement = ctx => {
+  const node = ctx.startNode();
+  if (!ctx.func) throw ctx.syntaxError('Return statement is only valid inside a function');
+  ctx.expect(['return']);
+  node.expr = expression(ctx);
+
+  // For generator to emit correct consant they must have a correct type
+  // in the syntax it's not necessary to define the type since we can infer it here
+  if (node.expr.type && ctx.func.result !== node.expr.type) throw ctx.syntaxError('Return type mismatch');else if (!node.expr.type && ctx.func.result) node.expr.type = ctx.func.result;
+
+  return ctx.endNode(node, Syntax_1.ReturnStatement);
+};
+
+const keyword$1 = ctx => {
+  switch (ctx.token.value) {
+    case 'let':
+    case 'const':
+      return declaration(ctx);
+    case 'function':
+      return maybeFunctionDeclaration(ctx);
+    case 'export':
+      return _export(ctx);
+    case 'return':
+      return returnStatement(ctx);
+    default:
+      throw ctx.unsupported();
+  }
+};
+
+// It is easier to parse assignment this way as we need to maintain a valid type
+// through out the right-hand side of the expression
+function maybeAssignment(ctx) {
+  const target = maybeIdentifier(ctx);
+
+  const nextValue = ctx.stream.peek().value;
+  const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
+  if (operator) {
+    if (nextValue === '=') {
+      ctx.eat(null, Syntax_1.Identifier);
+      ctx.eat(['=']);
+    }
+    const assignment = ctx.startNode();
+    assignment.operator = { value: '=' };
+    // Push the reference to the local/global
+    assignment.operands = [target];
+    const expr = expression(ctx);
+    // not a postfix
+    expr.isPostfix = false;
+    assignment.operands.push(expr);
+    return ctx.endNode(assignment, Syntax_1.Assignment);
+  }
+
+  return expression(ctx);
+}
+
+const statement = ctx => {
+  switch (ctx.token.type) {
+    case Syntax_1.Keyword:
+      return keyword$1(ctx);
+    case Syntax_1.Punctuator:
+      if (ctx.eat([';'])) return null;
+    case Syntax_1.Identifier:
+      return maybeAssignment(ctx);
+    default:
+      throw ctx.unknown(ctx.token);
+  }
+};
+
 class Parser {
-  constructor(tokenStream) {
-    if (!(tokenStream instanceof TokenStream)) throw `Parser expects a TokenStream instead received ${tokenStream}`;
-
-    this.stream = tokenStream;
-    this.token = this.stream.next();
-    this.globalSymbols = {};
-    this.localSymbols = {};
-
-    // decrement/increment associativity
-    this.diAssoc = 'right';
+  constructor(stream, context = new Context({
+    body: [],
+    diAssoc: 'right',
+    stream: stream,
+    token: stream.next(),
+    globalSymbols: {},
+    localSymbols: {},
+    globals: [],
+    functions: []
+  })) {
+    this.context = context;
   }
-
-  syntaxError(msg, error) {
-    const { line, col } = this.token.start;
-    return new SyntaxError(`${error || 'Syntax error'} at ${line}:${col}
-      ${msg}`);
-  }
-
-  unexpectedValue(value) {
-    return this.syntaxError(`Value   : ${this.token.value}
-      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
-  }
-
-  unexpected(token) {
-    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
-        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
-  }
-
-  unknown({ value }) {
-    return this.syntaxError('Unknown token', value);
-  }
-
-  unsupported() {
-    return this.syntaxError('Language feature not supported', this.token.value);
-  }
-
-  expect(value, type) {
-    const token = this.token;
-    if (!this.eat(value, type)) {
-      throw value ? this.unexpectedValue(value) : this.unexpected(type);
-    }
-
-    return token;
-  }
-
-  next() {
-    this.token = this.stream.next();
-  }
-
-  eat(value, type) {
-    if (value) {
-      if (value.includes(this.token.value)) {
-        this.next();
-        return true;
-      }
-      return false;
-    }
-
-    if (this.token.type === type) {
-      this.next();
-      return true;
-    }
-
-    return false;
-  }
-
-  startNode(token = this.token) {
-    return { start: token.start, range: [token.start] };
-  }
-
-  endNode(node, Type) {
-    const token = this.token || this.stream.last();
-    return Object.assign(node, {
-      Type,
-      end: token.end,
-      range: node.range.concat(token.end)
-    });
-  }
-
-  statement(node = this.startNode()) {
-    switch (this.token.type) {
-      case Syntax_1.Keyword:
-        return this.keyword(node);
-      case Syntax_1.Punctuator:
-        if (this.eat([';'])) return null;
-      case Syntax_1.Identifier:
-        return this.maybeAssignment(node);
-      default:
-        throw this.unknown(this.token);
-    }
-  }
-
-  // Simplified version of the Shunting yard algorithm
-  expression(type = 'i32', inGroup, associativity = 'right') {
-    const operators = [];
-    const operands = [];
-
-    const consume = () => operands.push(this.binaryOrUnary(type, operators.pop(), operands));
-
-    this.diAssoc = associativity;
-
-    while (this.token && this.token.value !== ';' && this.token.value !== ',') {
-      if (this.token.type === Syntax_1.Constant) operands.push(this.constant());else if (this.token.type === Syntax_1.Identifier) operands.push(this.maybeIdentifier());else if (this.token.type === Syntax_1.Punctuator) {
-        const op = Object.assign({
-          precedence: precedence[this.token.value]
-        }, this.token);
-
-        // Increment, decrement are a bit annoying...
-        // we don't know if it's left associative or right without a lot of gymnastics
-        if (this.token.value === '--' || this.token.value === '++') {
-          // As we create different nodes the diAssoc is changed
-          op.assoc = this.diAssoc;
-        } else {
-          // vanilla binary operator
-          op.assoc = assoc(op.value);
-        }
-
-        if (op.value === '(') {
-          operators.push(op);
-        } else if (op.value === ')') {
-          while (last(operators) && last(operators).value !== '(') consume();
-          if (last(operators).value !== '(') throw this.syntaxError('Unmatched left bracket');
-          // Pop left bracket
-          operators.pop();
-        } else {
-          while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
-
-          operators.push(op);
-        }
-      }
-
-      this.next();
-    }
-
-    while (operators.length) consume();
-
-    // Should be a node
-    return operands.pop();
-  }
-
-  // Abstraction for handling operations
-  binaryOrUnary(type, operator, operands) {
-    switch (operator.value) {
-      case '++':
-      case '--':
-        return this.unary({ type, operator, operands: operands.splice(-1) });
-      default:
-        return this.binary({ type, operator, operands: operands.splice(-2) });
-    }
-  }
-
-  unary(opts) {
-    // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
-    // convert this unary to a binary expression by throwing in an extra operand of 1
-    if (opts.operator.value === '--' || opts.operator.value === '++') {
-      // set isPostfix to help the IR generator
-      const binary = Object.assign({ isPostfix: opts.operator.assoc === 'left' }, opts);
-      binary.operator.value = opts.operator.value[0];
-      binary.operands.push({ Type: Syntax_1.Constant, value: '1' });
-      return this.binary(binary);
-    }
-    const node = Object.assign(this.startNode(opts.operands[0]), opts);
-    return this.endNode(node, Syntax_1.UnaryExpression);
-  }
-
-  binary(opts) {
-    const node = Object.assign(this.startNode(opts.operands[0]), opts);
-
-    this.diAssoc = 'left';
-    let Type = Syntax_1.BinaryExpression;
-    if (node.operator.value === '=') {
-      Type = Syntax_1.Assignment;
-      this.diAssoc = 'right';
-    }
-
-    return this.endNode(node, Type);
-  }
-
-  // It is easier to parse assignment this way as we need to maintain a valid type
-  // through out the right-hand side of the expression
-  maybeAssignment() {
-    const target = this.maybeIdentifier();
-
-    const nextValue = this.stream.peek().value;
-    const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
-    if (operator) {
-      if (nextValue === '=') {
-        this.eat(null, Syntax_1.Identifier);
-        this.eat(['=']);
-      }
-      const assignment = this.startNode();
-      assignment.operator = { value: '=' };
-      // Push the reference to the local/global
-      assignment.operands = [target];
-      const expr = this.expression(target.type);
-      // not a postfix
-      expr.isPostfix = false;
-      assignment.operands.push(expr);
-      return this.endNode(assignment, Syntax_1.Assignment);
-    }
-
-    return this.expression(target.type);
-  }
-
-  keyword(node) {
-    switch (this.token.value) {
-      case 'let':
-      case 'const':
-        return this.declaration(node);
-      case 'function':
-        return this.maybeFunctionDeclaration(node);
-      case 'export':
-        return this.export(node);
-      case 'return':
-        return this.returnStatement(node);
-      default:
-        throw this.unsupported(this.current);
-    }
-  }
-
-  export(node) {
-    this.eat(['export']);
-
-    const decl = this.maybeFunctionDeclaration(this.startNode());
-    if (!decl.func) {
-      if (!decl.init) throw this.syntaxError('Exports must have a value');
-    }
-
-    this.Program.Exports.push(generateExport(decl));
-    node.decl = decl;
-
-    this.endNode(node, Syntax_1.Export);
-
-    return node;
-  }
-
-  declaration(node) {
-    node.const = this.token.value === 'const';
-    if (!this.eat(['const', 'let'])) throw this.unexpectedValue(['const', 'let']);
-
-    node.id = this.expect(null, Syntax_1.Identifier).value;
-    this.expect([':']);
-
-    node.type = this.expect(null, Syntax_1.Type).value;
-
-    if (this.eat(['='])) node.init = this.expression(node.type);
-
-    if (node.const && !node.init) throw this.syntaxError('Constant value must be initialized');
-
-    if (!this.func) {
-      node.globalIndex = this.Program.Globals.length;
-      this.Program.Globals.push(generateInit(node));
-      this.globals.push(node);
-    } else {
-      node.localIndex = this.func.locals.length;
-      this.func.locals.push(node);
-    }
-
-    return this.endNode(node, Syntax_1.Declaration);
-  }
-
-  maybeFunctionDeclaration(node) {
-    if (!this.eat(['function'])) return this.declaration(node);
-
-    this.func = node;
-    node.func = true;
-    node.locals = [];
-    node.id = this.expect(null, Syntax_1.Identifier).value;
-    node.paramList = this.paramList();
-    this.expect([':']);
-    node.result = this.expect(null, Syntax_1.Type).value;
-    this.expect(['{']);
-    node.body = [];
-    let stmt = null;
-    while (this.token && this.token.value !== '}') {
-      stmt = this.statement();
-      if (stmt) node.body.push(stmt);
-    }
-
-    // Sanity check the return statement
-    const ret = last(node.body);
-    if (ret) {
-      if (node.type === 'void' && ret.Type === Syntax_1.ReturnStatement) throw this.syntaxError('Unexpected return value in a function with result : void');
-      if (node.type !== 'void' && ret.Type !== Syntax_1.ReturnStatement) throw this.syntaxError('Expected a return value in a function with result : ' + node.result);
-    } else if (node.result) {
-      throw this.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
-    }
-
-    // Either re-use an existing type or write a new one
-    const typeIndex = findTypeIndex(node, this.Program.Types);
-    if (typeIndex !== -1) {
-      node.typeIndex = typeIndex;
-    } else {
-      node.typeIndex = this.Program.Types.length;
-      this.Program.Types.push(generateType(node));
-    }
-
-    // attach to a type index
-    node.functionIndex = this.Program.Functions.length;
-    this.Program.Functions.push(node.typeIndex);
-    this.functions.push(node);
-
-    // generate the code block for the emiter
-    this.Program.Code.push(generateCode(node));
-
-    this.expect(['}']);
-    this.func = null;
-
-    return this.endNode(node, Syntax_1.FunctionDeclaration);
-  }
-
-  paramList() {
-    const paramList = [];
-    this.expect(['(']);
-    while (this.token.value !== ')') paramList.push(this.param());
-    this.expect([')']);
-    return paramList;
-  }
-
-  param(node = this.startNode()) {
-    node.id = this.expect(null, Syntax_1.Identifier).value;
-    this.expect([':']);
-    node.type = this.expect(null, Syntax_1.Type).value;
-    this.eat([',']);
-    return this.endNode(node, Syntax_1.Param);
-  }
-
-  returnStatement(node = this.startNode()) {
-    if (!this.func) throw this.syntaxError('Return statement is only valid inside a function');
-    this.expect(['return']);
-    node.expr = this.expression(this.func.result);
-
-    // For generator to emit correct consant they must have a correct type
-    // in the syntax it's not necessary to define the type since we can infer it here
-    if (node.expr.type && this.func.result !== node.expr.type) throw this.syntaxError('Return type mismatch');else if (!node.expr.type && this.func.result) node.expr.type = this.func.result;
-
-    return this.endNode(node, Syntax_1.ReturnStatement);
-  }
-
-  constant(token = this.token) {
-    const node = this.startNode();
-    node.value = token.value;
-    return this.endNode(node, Syntax_1.Constant);
-  }
-
-  // Maybe identifier, maybe function call
-  maybeIdentifier(token = this.token) {
-    const node = this.startNode();
-    const localIndex = this.func.locals.findIndex(l => l.id === this.token.value);
-    const globalIndex = this.globals.findIndex(g => g.id === this.token.value);
-    const isFuncitonCall = this.stream.peek().value === '(';
-
-    // if function call then encode it as such
-    if (isFuncitonCall) return this.functionCall(node);
-
-    if (localIndex !== -1) {
-      node.localIndex = localIndex;
-      node.target = this.func.locals[localIndex];
-      node.type = node.target.type;
-    } else if (globalIndex !== -1) {
-      node.globalIndex = globalIndex;
-      node.target = this.globals[node.globalIndex];
-      node.type = node.target.type;
-    }
-
-    this.diAssoc = 'left';
-    return this.endNode(node, Syntax_1.Identifier);
-  }
-
-  functionCall(node = this.startNode()) {
-    node.id = this.expect(null, Syntax_1.Identifier).value;
-    node.functionIndex = this.functions.findIndex(({ id }) => id == node.id);
-    if (node.functionIndex === -1) throw this.syntaxError(`Undefined function ${node.id}`);
-
-    node.arguments = this.argumentList();
-
-    return this.endNode(node, Syntax_1.FunctionCall);
-  }
-
-  argumentList() {
-    const list = [];
-    this.expect(['(']);
-    while (this.token.value !== ')') list.push(this.argument());
-    // this.expect([')']);
-    return list;
-  }
-
-  argument() {
-    const node = this.expression();
-    this.eat([',']);
-    return node;
-  }
-
   // Get the ast
-  program() {
+  parse() {
+    const ctx = this.context;
     // No code, no problem, empty ast equals
     // (module) ; the most basic wasm module
-    if (!this.stream || !this.stream.length) {
+    if (!ctx.stream || !ctx.stream.length) {
       return {};
     }
 
-    this.globals = [];
-    this.functions = [];
-    const node = this.Program = this.startNode();
+    const node = ctx.Program;
 
-    // Setup keys needed for the emiter
-    this.Program.Types = [];
-    this.Program.Code = [];
-    this.Program.Exports = [];
-    this.Program.Imports = [];
-    this.Program.Globals = [];
-    this.Program.Functions = [];
-
-    node.body = [];
-    while (this.stream.peek()) {
-      const child = this.statement();
+    while (ctx.stream.peek()) {
+      const child = statement(ctx);
       if (child) node.body.push(child);
     }
 
     return node;
-  }
-
-  parse() {
-    return this.program();
   }
 }
 
