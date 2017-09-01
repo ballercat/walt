@@ -12,7 +12,7 @@ const last = list => list[list.length - 1];
 const findTypeIndex = (node, Types) => {
   return Types.findIndex(t => {
     const paramsMatch = t.params.reduce(
-      (a, v, i) => a && v === getType(node.paramList[i].type),
+      (a, v, i) => node.paramList[i] && a && v === getType(node.paramList[i].type),
       true
     );
 
@@ -45,9 +45,9 @@ const maybeFunctionDeclaration = (ctx) => {
 
   ctx.func = node;
   node.func = true;
-  node.locals = [];
   node.id = ctx.expect(null, Syntax.Identifier).value;
   node.paramList = paramList(ctx);
+  node.locals = [...node.paramList];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax.Type).value;
   ctx.expect(['{']);

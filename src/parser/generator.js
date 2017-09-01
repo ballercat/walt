@@ -158,10 +158,16 @@ export const generateAssignment = (node, parent) => {
 };
 
 const generateFunctionCall = (node, parent) => {
-  return {
+  debugger;
+  const block = node.arguments.map(mapSyntax(parent))
+    .reduce(mergeBlock, []);
+
+  block.push({
     kind: opcode.Call,
     params: [node.functionIndex]
-  };
+  });
+
+  return block;
 }
 
 const syntaxMap = {
@@ -189,7 +195,10 @@ export const generateExpression = (node, parent) => {
 }
 
 export const generateCode = func => {
-  const block = { code: [], locals: [] };
+  const block = {
+    code: [],
+    locals: func.paramList.map(generateValueType)
+  };
 
   // NOTE: Declarations have a side-effect of changing the local count
   //       This is why mapSyntax takes a parent argument

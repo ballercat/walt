@@ -22,11 +22,15 @@ const assoc = op => {
   }
 };
 
+const isLBracket = op => op && op.value === '(';
+const isRBracket = op => op && op.value === ')';
+const hasLBracket = ops => ops.find(isLBracket);
+
 // Simplified version of the Shunting yard algorithm
 const expression = (
   ctx,
   type = 'i32',
-  inGroup,
+  inGroup = false,
   associativity = 'right'
 ) => {
   const operators = [];
@@ -34,6 +38,16 @@ const expression = (
 
   const consume = () =>
     operands.push(binaryOrUnary(ctx, type, operators.pop(), operands));
+
+  const eatUntilLBracket = () => {
+    let prev = last(operators);
+    while(prev && !isLBracket(prev)) {
+      consume();
+      prev = last(operators);
+    }
+    if (isRBracket(last(operators)))
+      throw ctx.syntaxError('Unmatched left bracket');
+  }
 
   ctx.diAssoc = associativity;
 
@@ -59,14 +73,17 @@ const expression = (
 
       if (op.value === '(') {
         operators.push(op);
-      } else if (op.value === ')') {
-        while(last(operators)
-          && last(operators).value !== '('
-        ) consume();
-        if (last(operators).value !== '(')
-          throw ctx.syntaxError('Unmatched left bracket');
-        // Pop left bracket
-        operators.pop();
+      } else if (isRBracket(op)) {
+        if (!inGroup) {
+          // If we are not in a group already find the last LBracket,
+          // consume everything until that point
+          eatUntilLBracket();
+
+          // Pop left bracket
+          operators.pop();
+        } else {
+          break;
+        }
       } else {
         while(last(operators)
           && last(operators).precedence >= op.precedence

@@ -1,4 +1,3 @@
-import BaseParser from './base-parser';
 import Syntax from '../Syntax';
 import keyword from './keyword';
 import maybeAssignment from './maybe-assignment';
