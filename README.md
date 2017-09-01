@@ -54,16 +54,18 @@ new language.
 * Parser - WIP
   * ~Exports: functions, constant globals~
   * ~Declarations~
-  * BinaryExpressions - partial support, buggy
+  * ~BinaryExpressions~
   * ~Local Scope & Global Scope~
   * Compile warnings/errors - partial support
-  * Branches
-  * Types
+  * Branches - if/then/else, switch, loops
+  * Memory
+  * Custom _Object_ Types
 * Emiter - WIP
-  * Exports
-  * Functions
-  * Types - partial support(opaque function types)
-  * Arithmetic - wip(some bugs around variable references)
+  * ~Exports~
+  * ~Functions~
+  * Types - partial support(opaque function types), wasm built-ins(only i32/f32 for now)
+  * Branches
+  * ~Arithmetic~
   * ~Globals, Locals~
 * Support 100% of native Wasm functions
 * Webpack Loader
