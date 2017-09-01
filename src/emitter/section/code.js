@@ -31,7 +31,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
         default:
           type = varuint32;
       }
-      body.push(type, p, 'param')
+      body.push(type, p, ' ')
     });
   });
 

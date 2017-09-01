@@ -158,7 +158,6 @@ export const generateAssignment = (node, parent) => {
 };
 
 const generateFunctionCall = (node, parent) => {
-  debugger;
   const block = node.arguments.map(mapSyntax(parent))
     .reduce(mergeBlock, []);
 

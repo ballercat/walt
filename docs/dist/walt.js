@@ -209,7 +209,7 @@ const Syntax = {
 
 var Syntax_1 = Syntax;
 
-const supported = ['+', '++', '-', '--', '=', '==', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';'];
+const supported = ['+', '++', '-', '--', '=', '==', '!=', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';', '>', '<'];
 
 const trie = new trie$1(supported);
 var index = token(trie.fsearch, Syntax_1.Punctuator, supported);
@@ -773,6 +773,14 @@ const opcodeFromOperator = ({ type, operator: { value } }) => {
       return def[type + 'DivS'] || def[type + 'Div'];
     case '%':
       return def[type + 'RemS'] || def[type + 'RemU'];
+    case '==':
+      return def[type + 'Eq'];
+    case '!=':
+      return def[type + 'Ne'];
+    case '>':
+      return def[type + 'GeS'] || def[type + 'Ge'];
+    case '<':
+      return def[type + 'LtS'] || def[type + 'Lt'];
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   }
@@ -1061,7 +1069,6 @@ const generateAssignment = (node, parent) => {
 };
 
 const generateFunctionCall = (node, parent) => {
-  debugger;
   const block = node.arguments.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
   block.push({
@@ -1159,6 +1166,8 @@ const precedence = {
   '/': 1,
   '++': 2,
   '--': 2,
+  '==': 2,
+  '!=': 2,
   '=': 3
 };
 
@@ -1938,7 +1947,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
         default:
           type = varuint32;
       }
-      body.push(type, p, 'param');
+      body.push(type, p, ' ');
     });
   });
 
