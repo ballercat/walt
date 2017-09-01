@@ -370,113 +370,6 @@ class Tokenizer {
   }
 }
 
-class TokenStream {
-  constructor(tokens = []) {
-    this.length = tokens.length;
-    this.tokens = tokens;
-    this.pos = 0;
-  }
-
-  next() {
-    return this.tokens[this.pos++];
-  }
-
-  peek() {
-    return this.tokens[this.pos];
-  }
-
-  seek(relative) {
-    this.pos = relative;
-    return this.tokens[this.pos];
-  }
-
-  last() {
-    return this.tokens[this.length - 1];
-  }
-}
-
-class Context {
-  constructor(options) {
-    Object.assign(this, options);
-
-    this.Program = { body: [] };
-    // Setup keys needed for the emiter
-    this.Program.Types = [];
-    this.Program.Code = [];
-    this.Program.Exports = [];
-    this.Program.Imports = [];
-    this.Program.Globals = [];
-    this.Program.Functions = [];
-  }
-
-  syntaxError(msg, error) {
-    const { line, col } = this.token.start;
-    return new SyntaxError(`${error || 'Syntax error'} at ${line}:${col}
-      ${msg}`);
-  }
-
-  unexpectedValue(value) {
-    return this.syntaxError(`Value   : ${this.token.value}
-      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
-  }
-
-  unexpected(token) {
-    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
-        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
-  }
-
-  unknown({ value }) {
-    return this.syntaxError('Unknown token', value);
-  }
-
-  unsupported() {
-    return this.syntaxError('Language feature not supported', this.token.value);
-  }
-
-  expect(value, type) {
-    const token = this.token;
-    if (!this.eat(value, type)) {
-      throw value ? this.unexpectedValue(value) : this.unexpected(type);
-    }
-
-    return token;
-  }
-
-  next() {
-    this.token = this.stream.next();
-  }
-
-  eat(value, type) {
-    if (value) {
-      if (value.includes(this.token.value)) {
-        this.next();
-        return true;
-      }
-      return false;
-    }
-
-    if (this.token.type === type) {
-      this.next();
-      return true;
-    }
-
-    return false;
-  }
-
-  startNode(token = this.token) {
-    return { start: token.start, range: [token.start] };
-  }
-
-  endNode(node, Type) {
-    const token = this.token || this.stream.last();
-    return Object.assign(node, {
-      Type,
-      end: token.end,
-      range: node.range.concat(token.end)
-    });
-  }
-}
-
 var index$5 = createCommonjsModule(function (module) {
   /* eslint-env es6 */
   /**
@@ -1168,10 +1061,15 @@ const generateAssignment = (node, parent) => {
 };
 
 const generateFunctionCall = (node, parent) => {
-  return {
+  debugger;
+  const block = node.arguments.map(mapSyntax(parent)).reduce(mergeBlock, []);
+
+  block.push({
     kind: def.Call,
     params: [node.functionIndex]
-  };
+  });
+
+  return block;
 };
 
 const syntaxMap = {
@@ -1198,7 +1096,10 @@ const generateExpression = (node, parent) => {
 };
 
 const generateCode = func => {
-  const block = { code: [], locals: [] };
+  const block = {
+    code: [],
+    locals: func.paramList.map(generateValueType)
+  };
 
   // NOTE: Declarations have a side-effect of changing the local count
   //       This is why mapSyntax takes a parent argument
@@ -1261,16 +1162,17 @@ const precedence = {
   '=': 3
 };
 
-const argumentList = ctx => {
+const argumentList = (ctx, proto) => {
   const list = [];
+  // return [];
   ctx.expect(['(']);
-  while (ctx.token.value !== ')') list.push(argument(ctx));
+  while (ctx.token.value !== ')') list.push(argument(ctx, proto));
   // ctx.expect([')']);
   return list;
 };
 
-const argument = ctx => {
-  const node = expression(ctx);
+const argument = (ctx, proto) => {
+  const node = expression(ctx, proto.type, true);
   ctx.eat([',']);
   return node;
 };
@@ -1278,9 +1180,12 @@ const functionCall = ctx => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   node.functionIndex = ctx.functions.findIndex(({ id }) => id == node.id);
+
   if (node.functionIndex === -1) throw ctx.syntaxError(`Undefined function ${node.id}`);
 
-  node.arguments = argumentList(ctx);
+  const proto = ctx.functions[node.functionIndex];
+
+  node.arguments = argumentList(ctx, proto);
 
   return ctx.endNode(node, Syntax_1.FunctionCall);
 };
@@ -1327,12 +1232,23 @@ const assoc = op => {
   }
 };
 
+const isLBracket = op => op && op.value === '(';
+const isRBracket = op => op && op.value === ')';
 // Simplified version of the Shunting yard algorithm
-const expression = (ctx, type = 'i32', inGroup, associativity = 'right') => {
+const expression = (ctx, type = 'i32', inGroup = false, associativity = 'right') => {
   const operators = [];
   const operands = [];
 
   const consume = () => operands.push(binaryOrUnary(ctx, type, operators.pop(), operands));
+
+  const eatUntilLBracket = () => {
+    let prev = last(operators);
+    while (prev && !isLBracket(prev)) {
+      consume();
+      prev = last(operators);
+    }
+    if (isRBracket(last(operators))) throw ctx.syntaxError('Unmatched left bracket');
+  };
 
   ctx.diAssoc = associativity;
 
@@ -1354,11 +1270,17 @@ const expression = (ctx, type = 'i32', inGroup, associativity = 'right') => {
 
       if (op.value === '(') {
         operators.push(op);
-      } else if (op.value === ')') {
-        while (last(operators) && last(operators).value !== '(') consume();
-        if (last(operators).value !== '(') throw ctx.syntaxError('Unmatched left bracket');
-        // Pop left bracket
-        operators.pop();
+      } else if (isRBracket(op)) {
+        if (!inGroup) {
+          // If we are not in a group already find the last LBracket,
+          // consume everything until that point
+          eatUntilLBracket();
+
+          // Pop left bracket
+          operators.pop();
+        } else {
+          break;
+        }
       } else {
         while (last(operators) && last(operators).precedence >= op.precedence && last(operators).assoc === 'left') consume();
 
@@ -1409,7 +1331,7 @@ const last$1 = list => list[list.length - 1];
 
 const findTypeIndex = (node, Types) => {
   return Types.findIndex(t => {
-    const paramsMatch = t.params.reduce((a, v, i) => a && v === getType(node.paramList[i].type), true);
+    const paramsMatch = t.params.reduce((a, v, i) => node.paramList[i] && a && v === getType(node.paramList[i].type), true);
 
     return paramsMatch && t.result === getType(node.result.type);
   });
@@ -1438,9 +1360,9 @@ const maybeFunctionDeclaration = ctx => {
 
   ctx.func = node;
   node.func = true;
-  node.locals = [];
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   node.paramList = paramList(ctx);
+  node.locals = [...node.paramList];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax_1.Type).value;
   ctx.expect(['{']);
@@ -1568,6 +1490,88 @@ const statement = ctx => {
   }
 };
 
+class Context {
+  constructor(options) {
+    Object.assign(this, options);
+
+    this.Program = { body: [] };
+    // Setup keys needed for the emiter
+    this.Program.Types = [];
+    this.Program.Code = [];
+    this.Program.Exports = [];
+    this.Program.Imports = [];
+    this.Program.Globals = [];
+    this.Program.Functions = [];
+  }
+
+  syntaxError(msg, error) {
+    const { line, col } = this.token.start;
+    return new SyntaxError(`${error || 'Syntax error'} at ${line}:${col}
+      ${msg}`);
+  }
+
+  unexpectedValue(value) {
+    return this.syntaxError(`Value   : ${this.token.value}
+      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
+  }
+
+  unexpected(token) {
+    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
+        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
+  }
+
+  unknown({ value }) {
+    return this.syntaxError('Unknown token', value);
+  }
+
+  unsupported() {
+    return this.syntaxError('Language feature not supported', this.token.value);
+  }
+
+  expect(value, type) {
+    const token = this.token;
+    if (!this.eat(value, type)) {
+      throw value ? this.unexpectedValue(value) : this.unexpected(type);
+    }
+
+    return token;
+  }
+
+  next() {
+    this.token = this.stream.next();
+  }
+
+  eat(value, type) {
+    if (value) {
+      if (value.includes(this.token.value)) {
+        this.next();
+        return true;
+      }
+      return false;
+    }
+
+    if (this.token.type === type) {
+      this.next();
+      return true;
+    }
+
+    return false;
+  }
+
+  startNode(token = this.token) {
+    return { start: token.start, range: [token.start] };
+  }
+
+  endNode(node, Type) {
+    const token = this.token || this.stream.last();
+    return Object.assign(node, {
+      Type,
+      end: token.end,
+      range: node.range.concat(token.end)
+    });
+  }
+}
+
 class Parser {
   constructor(stream, context = new Context({
     body: [],
@@ -1598,6 +1602,31 @@ class Parser {
     }
 
     return node;
+  }
+}
+
+class TokenStream {
+  constructor(tokens = []) {
+    this.length = tokens.length;
+    this.tokens = tokens;
+    this.pos = 0;
+  }
+
+  next() {
+    return this.tokens[this.pos++];
+  }
+
+  peek() {
+    return this.tokens[this.pos];
+  }
+
+  seek(relative) {
+    this.pos = relative;
+    return this.tokens[this.pos];
+  }
+
+  last() {
+    return this.tokens[this.length - 1];
   }
 }
 
