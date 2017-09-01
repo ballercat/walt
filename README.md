@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
-[![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=coverage)](https://coveralls.io/github/ballercat/walt?branch=coverage)
+[![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
 
 # WAlt
 :zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
