@@ -4,6 +4,13 @@
 # WAlt
 :zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
 
+Highlights:
+
+* Write _"close to the metal"_ JavaScript!
+* **No C/C++ or Rust required**, just _typed_ JavaScript.
+* **NO LLVM/binary toolkits required**, zero dependencies 100% written in JS.
+* Fast compilation, integrates into webpack!
+
 :construction: **currently under heavy construction** :construction:
 
 :rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
