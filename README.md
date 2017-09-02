@@ -55,30 +55,31 @@ new language.
 
 # RoadMap
 * Spec
-  * ~A basic Grammar~
-  * Examples - WIP, [Explorer](https://ballercat.github.io/walt/)
-* ~Tokenizer~
+  - [x] ~A basic Grammar~
+  - [ ] Examples - WIP, [Explorer](https://ballercat.github.io/walt/)
+* [x] ~Tokenizer~
 * Parser - WIP
-  * ~Exports: functions, constant globals~
-  * ~Declarations~
-  * ~BinaryExpressions~
-  * ~Local Scope & Global Scope~
-  * Compile warnings/errors - partial support
-  * Branches - if/then/else, switch, loops
-  * Memory
-  * Custom _Object_ Types
+  * [x] ~Exports: functions, constant globals~
+  * [x] ~Declarations~
+  * [x] ~BinaryExpressions~
+  * [x] ~Local Scope & Global Scope~
+  * [ ] Compile warnings/errors - partial support
+  * [ ] Branches - if/then/else, switch, loops (WIP)
+  * [ ] Function imports
+  * [ ] Memory
+  * [ ] Custom _Object_ Types
 * Emiter - WIP
-  * ~Exports~
-  * ~Functions~
-  * Types - partial support(opaque function types), wasm built-ins(only i32/f32 for now)
-  * Branches
-  * ~Arithmetic~
-  * ~Globals, Locals~
-* Support 100% of native Wasm functions
-* Webpack Loader
+  * [x] ~Exports~
+  * [x] ~Functions~
+  * [ ] Types - partial support(opaque function types), wasm built-ins(only i32/f32 for now)
+  * [ ] Branches
+  * [x] ~Arithmetic~
+  * [x] ~Globals, Locals~
+* [ ] Support 100% of native Wasm functions
+* [ ] Webpack Loader
 * IDE integration
-* linter
-* VIM colors, syntax
+  * [ ] linter
+  * [ ] VIM colors, syntax
 
 # Spec (WIP)
 
