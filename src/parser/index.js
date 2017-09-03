@@ -10,7 +10,8 @@ class Parser {
     globalSymbols: {},
     localSymbols: {},
     globals: [],
-    functions: []
+    functions: [],
+    filename: 'unknown.walt'
   })) {
     this.context = context;
   }

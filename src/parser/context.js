@@ -1,5 +1,26 @@
+const generateErrorString = (msg, error, line, col, filename, func) => {
+  return `${error} ${msg}
+    at ${func} (${filename}:${line}:${col})`;
+}
+
+/**
+ * Context is used to parse tokens into an AST and IR used by the generator.
+ * Originally the parser was a giant class and the context was the 'this' pointer.
+ * Maintaining a monolithic parser is rather difficult so it was broken up into a
+ * collection of self-contained parsers for each syntactic construct. The context
+ * is passed around between each one to generate the desired tree
+ */
 class Context {
-  constructor(options) {
+  constructor(options = {
+    body: [],
+    diAssoc: 'right',
+    stream: null,
+    token: null,
+    globalSymbols: {},
+    localSymbols: {},
+    globals: [],
+    functions: []
+  }) {
     Object.assign(this, options);
 
     this.Program = { body: [] };
@@ -15,8 +36,14 @@ class Context {
   syntaxError(msg, error) {
     const { line, col } = this.token.start;
     return new SyntaxError(
-      `${error || 'Syntax error'} at ${line}:${col}
-      ${msg}`
+      generateErrorString(
+        msg,
+        error || '',
+        line,
+        col,
+        this.filename || 'unknown',
+        (this.func && this.func.id) || 'global'
+      )
     );
   }
 
