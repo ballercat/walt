@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 [![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
 
 # WAlt
