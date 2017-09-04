@@ -30,8 +30,23 @@ should be able to edit WebAssembly as easily as any other systems programmer.
 
 # Solution
 Provide a **thin layer** of syntax sugar on top of `.wat` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
-the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a
-new language.
+the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a brand new language.
+
+Here is what an example of a `.walt` module which exports a recursive fibonacci function looks like:
+
+```js
+export function fibonacci(n: i32): i32 {
+  if (n == 0)
+    return 0;
+    
+  if (n == 1)
+    return 1;
+    
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+```
+
+When this code is ran trough the walt compiler you end up with a buffer which can be used to create a WebAssembly module with a `fibonacci` export just as you would expect. All done with familiar JS syntax and without any external binary toolkits! A working demo of this exists in the `fibonacci-spec.js` [unit test file](https://github.com/ballercat/walt/blob/master/src/__tests__/fibonacci-spec.js).
 
 # Goals
 1. Subset of JavaScript(with flow-types if possible)
