@@ -190,8 +190,10 @@ const Syntax = {
   Keyword: 'Keyword',
   Export: 'Export',
   Statement: 'Statement',
-  BinaryExpression: 'BinaryExpression',
+  IfThenElse: 'IfThenElse',
   UnaryExpression: 'UnaryExpression',
+  BinaryExpression: 'BinaryExpression',
+  TernaryExpression: 'TernaryExpression',
   NumberLiteral: 'NumberLiteral',
   StringLiteral: 'StringLiteral',
   Punctuator: 'Punctuator',
@@ -209,7 +211,7 @@ const Syntax = {
 
 var Syntax_1 = Syntax;
 
-const supported = ['+', '++', '-', '--', '=', '==', '!=', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';', '>', '<'];
+const supported = ['+', '++', '-', '--', '=', '==', '!=', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';', '>', '<', '?'];
 
 const trie = new trie$1(supported);
 var index = token(trie.fsearch, Syntax_1.Punctuator, supported);
@@ -778,9 +780,13 @@ const opcodeFromOperator = ({ type, operator: { value } }) => {
     case '!=':
       return def[type + 'Ne'];
     case '>':
-      return def[type + 'GeS'] || def[type + 'Ge'];
+      return def[type + 'GtS'] || def[type + 'Gt'];
     case '<':
       return def[type + 'LtS'] || def[type + 'Lt'];
+    case '?':
+      return def.If;
+    case ':':
+      return def.Else;
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   }
@@ -1013,6 +1019,7 @@ const generateReturn = node => {
   const parent = { postfix: [] };
   // Postfix in return statement should be a no-op UNLESS it's editing globals
   const block = generateExpression(node.expr, parent);
+  block.push({ kind: def.Return });
   if (parent.postfix.length) {
     // do we have postfix operations?
     // are they editing globals?
@@ -1059,6 +1066,24 @@ const generateBinaryExpression = (node, parent) => {
   return block;
 };
 
+const generateTernary = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = node.operands.slice(0, 1).map(mapper).reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcodeFromOperator(node),
+    valueType: generateValueType(node)
+  });
+  block.push.apply(block, node.operands.slice(1, 2).map(mapper).reduce(mergeBlock, []));
+  block.push({
+    kind: opcodeFromOperator({ operator: { value: ':' } })
+  });
+  block.push.apply(block, node.operands.slice(-1).map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: def.End });
+
+  return block;
+};
+
 const generateAssignment = (node, parent) => {
   const subParent = { postfix: [] };
   const block = node.operands.slice(1).map(mapSyntax(subParent)).reduce(mergeBlock, []);
@@ -1079,11 +1104,40 @@ const generateFunctionCall = (node, parent) => {
   return block;
 };
 
+// probably should be called "generateBranch" and be more generic
+// like handling ternary for example. A lot of shared logic here & ternary
+const generateIf = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
+
+  block.push({
+    kind: def.If,
+    // if-then-else blocks have no return value and the Wasm spec requires us to
+    // provide a literal byte '0x40' for "empty block" in these cases
+    params: [0x40]
+  });
+
+  // after the expression is on the stack and opcode is following it we can write the
+  // implicit 'then' block
+  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
+
+  // fllowed by the optional 'else'
+  if (node.else.length) {
+    block.push({ kind: def.Else });
+    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
+  }
+
+  block.push({ kind: def.End });
+  return block;
+};
+
 const syntaxMap = {
   [Syntax_1.FunctionCall]: generateFunctionCall,
   // Unary
   [Syntax_1.Constant]: getConstOpcode,
   [Syntax_1.BinaryExpression]: generateBinaryExpression,
+  [Syntax_1.TernaryExpression]: generateTernary,
+  [Syntax_1.IfThenElse]: generateIf,
   [Syntax_1.Identifier]: getInScope,
   [Syntax_1.ReturnStatement]: generateReturn,
   // Binary
@@ -1093,7 +1147,10 @@ const syntaxMap = {
 
 const mapSyntax = curry_1$1((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
-  if (!mapping) throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.id || operand.operator.value}`);
+  if (!mapping) {
+    const value = operand.id || operand.value || operand.operator && operand.operator.value;
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
+  }
   return mapping(operand, parent);
 });
 
@@ -1115,6 +1172,122 @@ const generateCode = func => {
   return block;
 };
 
+const generateErrorString = (msg, error, line, col, filename, func) => {
+  return `${error} ${msg}
+    at ${func} (${filename}:${line}:${col})`;
+};
+
+/**
+ * Context is used to parse tokens into an AST and IR used by the generator.
+ * Originally the parser was a giant class and the context was the 'this' pointer.
+ * Maintaining a monolithic parser is rather difficult so it was broken up into a
+ * collection of self-contained parsers for each syntactic construct. The context
+ * is passed around between each one to generate the desired tree
+ */
+class Context {
+  constructor(options = {
+    body: [],
+    diAssoc: 'right',
+    stream: null,
+    token: null,
+    globalSymbols: {},
+    localSymbols: {},
+    globals: [],
+    functions: []
+  }) {
+    Object.assign(this, options);
+
+    this.Program = { body: [] };
+    // Setup keys needed for the emiter
+    this.Program.Types = [];
+    this.Program.Code = [];
+    this.Program.Exports = [];
+    this.Program.Imports = [];
+    this.Program.Globals = [];
+    this.Program.Functions = [];
+  }
+
+  syntaxError(msg, error) {
+    const { line, col } = this.token.start;
+    return new SyntaxError(generateErrorString(msg, error || '', line, col, this.filename || 'unknown', this.func && this.func.id || 'global'));
+  }
+
+  unexpectedValue(value) {
+    return this.syntaxError(`Value   : ${this.token.value}
+      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
+  }
+
+  unexpected(token) {
+    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
+        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
+  }
+
+  unknown({ value }) {
+    return this.syntaxError('Unknown token', value);
+  }
+
+  unsupported() {
+    return this.syntaxError('Language feature not supported', this.token.value);
+  }
+
+  expect(value, type) {
+    const token = this.token;
+    if (!this.eat(value, type)) {
+      throw value ? this.unexpectedValue(value) : this.unexpected(type);
+    }
+
+    return token;
+  }
+
+  next() {
+    this.token = this.stream.next();
+  }
+
+  eat(value, type) {
+    if (value) {
+      if (value.includes(this.token.value)) {
+        this.next();
+        return true;
+      }
+      return false;
+    }
+
+    if (this.token.type === type) {
+      this.next();
+      return true;
+    }
+
+    return false;
+  }
+
+  startNode(token = this.token) {
+    return { start: token.start, range: [token.start] };
+  }
+
+  endNode(node, Type) {
+    const token = this.token || this.stream.last();
+    return Object.assign(node, {
+      Type,
+      end: token.end,
+      range: node.range.concat(token.end)
+    });
+  }
+}
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
 function binary(ctx, opts) {
   const node = Object.assign(ctx.startNode(opts.operands[0]), opts);
 
@@ -1127,12 +1300,15 @@ function binary(ctx, opts) {
 
   return ctx.endNode(node, Type);
 }
+
 function unary(ctx, opts) {
   // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
   // convert this unary to a binary expression by throwing in an extra operand of 1
   if (opts.operator.value === '--' || opts.operator.value === '++') {
     // set isPostfix to help the IR generator
-    const bopts = Object.assign({ isPostfix: opts.operator.assoc === 'left' }, opts);
+    const bopts = _extends({}, opts, {
+      isPostfix: opts.operator.assoc === 'left'
+    });
     bopts.operator.value = opts.operator.value[0];
     bopts.operands.push({ Type: Syntax_1.Constant, value: '1' });
     return binary(ctx, bopts);
@@ -1141,16 +1317,23 @@ function unary(ctx, opts) {
   return ctx.endNode(node, Syntax_1.UnaryExpression);
 }
 
+const ternary = (ctx, options) => {
+  const node = _extends({}, ctx.startNode(options.operands[0]), options);
+  return ctx.endNode(node, Syntax_1.TernaryExpression);
+};
+
 // Abstraction for handling operations
-function binaryOrUnary(ctx, type, operator, operands) {
-  switch (operator.value) {
+const operator = (ctx, options) => {
+  switch (options.operator.value) {
     case '++':
     case '--':
-      return unary(ctx, { type, operator, operands: operands.splice(-1) });
+      return unary(ctx, _extends({}, options, { operands: options.operands.splice(-1) }));
+    case '?':
+      return ternary(ctx, _extends({}, options, { operands: options.operands.splice(-3) }));
     default:
-      return binary(ctx, { type, operator, operands: operands.splice(-2) });
+      return binary(ctx, _extends({}, options, { operands: options.operands.splice(-2) }));
   }
-}
+};
 
 const constant$2 = ctx => {
   const node = ctx.startNode();
@@ -1168,7 +1351,11 @@ const precedence = {
   '--': 2,
   '==': 2,
   '!=': 2,
-  '=': 3
+  '=': 3,
+  ':': 4,
+  '?': 4,
+  '>': 5,
+  '<': 5
 };
 
 const argumentList = (ctx, proto) => {
@@ -1231,10 +1418,12 @@ const assoc = op => {
     case '-':
     case '/':
     case '*':
+    case ':':
       return 'left';
     case '=':
     case '--':
     case '++':
+    case '?':
       return 'right';
     default:
       return 'left';
@@ -1243,20 +1432,21 @@ const assoc = op => {
 
 const isLBracket = op => op && op.value === '(';
 const isRBracket = op => op && op.value === ')';
+const isTStart = op => op && op.value === '?';
+const isTEnd = op => op && op.value === ':';
 // Simplified version of the Shunting yard algorithm
 const expression = (ctx, type = 'i32', inGroup = false, associativity = 'right') => {
   const operators = [];
   const operands = [];
 
-  const consume = () => operands.push(binaryOrUnary(ctx, type, operators.pop(), operands));
+  const consume = () => operands.push(operator(ctx, { type, operator: operators.pop(), operands }));
 
-  const eatUntilLBracket = () => {
+  const eatUntil = predicate => {
     let prev = last(operators);
-    while (prev && !isLBracket(prev)) {
+    while (prev && !predicate(prev)) {
       consume();
       prev = last(operators);
     }
-    if (isRBracket(last(operators))) throw ctx.syntaxError('Unmatched left bracket');
   };
 
   ctx.diAssoc = associativity;
@@ -1277,13 +1467,15 @@ const expression = (ctx, type = 'i32', inGroup = false, associativity = 'right')
         op.assoc = assoc(op.value);
       }
 
-      if (op.value === '(') {
+      if (isLBracket(op)) {
         operators.push(op);
+      } else if (isTEnd(op)) {
+        eatUntil(isTStart);
       } else if (isRBracket(op)) {
         if (!inGroup) {
           // If we are not in a group already find the last LBracket,
           // consume everything until that point
-          eatUntilLBracket();
+          eatUntil(isLBracket);
 
           // Pop left bracket
           operators.pop();
@@ -1374,6 +1566,23 @@ const maybeFunctionDeclaration = ctx => {
   node.locals = [...node.paramList];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax_1.Type).value;
+
+  // NOTE: We need to write function into Program BEFORE
+  // we parse the body as the body may refer to the function
+  // itself recursively
+  // Either re-use an existing type or write a new one
+  const typeIndex = findTypeIndex(node, ctx.Program.Types);
+  if (typeIndex !== -1) {
+    node.typeIndex = typeIndex;
+  } else {
+    node.typeIndex = ctx.Program.Types.length;
+    ctx.Program.Types.push(generateType(node));
+  }
+  // attach to a type index
+  node.functionIndex = ctx.Program.Functions.length;
+  ctx.Program.Functions.push(node.typeIndex);
+  ctx.functions.push(node);
+
   ctx.expect(['{']);
   node.body = [];
   let stmt = null;
@@ -1390,20 +1599,6 @@ const maybeFunctionDeclaration = ctx => {
   } else if (node.result) {
     throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }
-
-  // Either re-use an existing type or write a new one
-  const typeIndex = findTypeIndex(node, ctx.Program.Types);
-  if (typeIndex !== -1) {
-    node.typeIndex = typeIndex;
-  } else {
-    node.typeIndex = ctx.Program.Types.length;
-    ctx.Program.Types.push(generateType(node));
-  }
-
-  // attach to a type index
-  node.functionIndex = ctx.Program.Functions.length;
-  ctx.Program.Functions.push(node.typeIndex);
-  ctx.functions.push(node);
 
   // generate the code block for the emiter
   ctx.Program.Code.push(generateCode(node));
@@ -1444,6 +1639,46 @@ const returnStatement = ctx => {
   return ctx.endNode(node, Syntax_1.ReturnStatement);
 };
 
+const ifThenElse = ctx => {
+  const node = _extends({}, ctx.startNode(ctx.token), {
+    then: [],
+    else: []
+  });
+  ctx.eat(['if']);
+
+  // First operand is the expression
+  ctx.expect(['(']);
+  node.expr = expression(ctx, 'i32', true);
+  ctx.expect([')']);
+
+  // maybe a curly brace or not
+  if (ctx.eat(['{'])) {
+    let stmt = null;
+    while (ctx.token && ctx.token.value !== '}') {
+      stmt = statement(ctx);
+      if (stmt) node.then.push(stmt);
+    }
+
+    ctx.expect(['}']);
+
+    if (ctx.eat(['else'])) {
+      ctx.expect(['{']);
+      while (ctx.token && ctx.token.value !== '}') {
+        stmt = statement(ctx);
+        if (stmt) node.else.push(stmt);
+      }
+      ctx.expect(['}']);
+    }
+  } else {
+    // parse single statements only
+    node.then.push(statement(ctx));
+    ctx.expect([';']);
+    if (ctx.eat(['else'])) node.else.push(statement(ctx));
+  }
+
+  return ctx.endNode(node, Syntax_1.IfThenElse);
+};
+
 const keyword$1 = ctx => {
   switch (ctx.token.value) {
     case 'let':
@@ -1453,6 +1688,8 @@ const keyword$1 = ctx => {
       return maybeFunctionDeclaration(ctx);
     case 'export':
       return _export(ctx);
+    case 'if':
+      return ifThenElse(ctx);
     case 'return':
       return returnStatement(ctx);
     default:
@@ -1499,88 +1736,6 @@ const statement = ctx => {
   }
 };
 
-class Context {
-  constructor(options) {
-    Object.assign(this, options);
-
-    this.Program = { body: [] };
-    // Setup keys needed for the emiter
-    this.Program.Types = [];
-    this.Program.Code = [];
-    this.Program.Exports = [];
-    this.Program.Imports = [];
-    this.Program.Globals = [];
-    this.Program.Functions = [];
-  }
-
-  syntaxError(msg, error) {
-    const { line, col } = this.token.start;
-    return new SyntaxError(`${error || 'Syntax error'} at ${line}:${col}
-      ${msg}`);
-  }
-
-  unexpectedValue(value) {
-    return this.syntaxError(`Value   : ${this.token.value}
-      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
-  }
-
-  unexpected(token) {
-    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
-        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
-  }
-
-  unknown({ value }) {
-    return this.syntaxError('Unknown token', value);
-  }
-
-  unsupported() {
-    return this.syntaxError('Language feature not supported', this.token.value);
-  }
-
-  expect(value, type) {
-    const token = this.token;
-    if (!this.eat(value, type)) {
-      throw value ? this.unexpectedValue(value) : this.unexpected(type);
-    }
-
-    return token;
-  }
-
-  next() {
-    this.token = this.stream.next();
-  }
-
-  eat(value, type) {
-    if (value) {
-      if (value.includes(this.token.value)) {
-        this.next();
-        return true;
-      }
-      return false;
-    }
-
-    if (this.token.type === type) {
-      this.next();
-      return true;
-    }
-
-    return false;
-  }
-
-  startNode(token = this.token) {
-    return { start: token.start, range: [token.start] };
-  }
-
-  endNode(node, Type) {
-    const token = this.token || this.stream.last();
-    return Object.assign(node, {
-      Type,
-      end: token.end,
-      range: node.range.concat(token.end)
-    });
-  }
-}
-
 class Parser {
   constructor(stream, context = new Context({
     body: [],
@@ -1590,7 +1745,8 @@ class Parser {
     globalSymbols: {},
     localSymbols: {},
     globals: [],
-    functions: []
+    functions: [],
+    filename: 'unknown.walt'
   })) {
     this.context = context;
   }
@@ -1929,14 +2085,23 @@ const emitLocal = (stream, local) => {
 const emitFunctionBody = (stream, { locals, code }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
-  code.forEach(({ kind, params }) => {
+  code.forEach(({ kind, params, valueType }) => {
     // There is a much nicer way of doing this
     body.push(index_9, kind.code, kind.text);
+
+    if (valueType) {
+      body.push(index_9, valueType.type, 'result type');
+      body.push(index_9, valueType.mutable, 'mutable');
+    }
+
     // map over all params, if any and encode each one
     (params || []).forEach(p => {
       let type = varuint32;
       // either encode unsigned 32 bit values or floats
       switch (kind.result) {
+        case index_9:
+          type = index_9;
+          break;
         case index_4:
           type = index_4;
           break;

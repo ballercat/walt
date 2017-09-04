@@ -98,6 +98,7 @@ export const generateReturn = node => {
   const parent = { postfix: [] };
   // Postfix in return statement should be a no-op UNLESS it's editing globals
   const block = generateExpression(node.expr, parent);
+  block.push({ kind: opcode.Return });
   if (parent.postfix.length) {
     // do we have postfix operations?
     // are they editing globals?
@@ -146,6 +147,26 @@ export const generateBinaryExpression = (node, parent) => {
   return block;
 };
 
+export const generateTernary = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = node.operands.slice(0, 1)
+    .map(mapper)
+    .reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcodeFromOperator(node),
+    valueType: generateValueType(node)
+  });
+  block.push.apply(block, node.operands.slice(1, 2).map(mapper).reduce(mergeBlock, []));
+  block.push({
+    kind: opcodeFromOperator({ operator: { value: ':' } })
+  });
+  block.push.apply(block, node.operands.slice(-1).map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: opcode.End });
+
+  return block;
+}
+
 export const generateAssignment = (node, parent) => {
   const subParent = { postfix: [] };
   const block = node.operands.slice(1)
@@ -169,11 +190,40 @@ const generateFunctionCall = (node, parent) => {
   return block;
 }
 
+// probably should be called "generateBranch" and be more generic
+// like handling ternary for example. A lot of shared logic here & ternary
+const generateIf = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcode.If,
+    // if-then-else blocks have no return value and the Wasm spec requires us to
+    // provide a literal byte '0x40' for "empty block" in these cases
+    params: [0x40]
+  });
+
+  // after the expression is on the stack and opcode is following it we can write the
+  // implicit 'then' block
+  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
+
+  // fllowed by the optional 'else'
+  if (node.else.length) {
+    block.push({ kind: opcode.Else });
+    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
+  }
+
+  block.push({ kind: opcode.End });
+  return block;
+}
+
 const syntaxMap = {
   [Syntax.FunctionCall]: generateFunctionCall,
   // Unary
   [Syntax.Constant]: getConstOpcode,
   [Syntax.BinaryExpression]: generateBinaryExpression,
+  [Syntax.TernaryExpression]: generateTernary,
+  [Syntax.IfThenElse]: generateIf,
   [Syntax.Identifier]: getInScope,
   [Syntax.ReturnStatement]: generateReturn,
   // Binary
@@ -183,8 +233,10 @@ const syntaxMap = {
 
 export const mapSyntax = curry((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
-  if (!mapping)
-    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${operand.id || operand.operator.value}`);
+  if (!mapping) {
+    const value = (operand.id || operand.value) || (operand.operator && operand.operator.value);
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
+  }
   return mapping(operand, parent);
 });
 

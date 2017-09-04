@@ -13,14 +13,23 @@ const emitLocal = (stream, local) => {
 const emitFunctionBody = (stream, { locals, code }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
-  code.forEach(({ kind, params }) => {
+  code.forEach(({ kind, params, valueType }) => {
     // There is a much nicer way of doing this
     body.push(u8, kind.code, kind.text);
+
+    if (valueType) {
+      body.push(u8, valueType.type, 'result type');
+      body.push(u8, valueType.mutable, 'mutable');
+    }
+
     // map over all params, if any and encode each one
     (params || []).forEach(p => {
       let type = varuint32;
       // either encode unsigned 32 bit values or floats
       switch(kind.result) {
+        case u8:
+          type = u8;
+          break;
         case f64:
           type = f64;
           break;

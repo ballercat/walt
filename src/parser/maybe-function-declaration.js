@@ -50,6 +50,23 @@ const maybeFunctionDeclaration = (ctx) => {
   node.locals = [...node.paramList];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax.Type).value;
+
+  // NOTE: We need to write function into Program BEFORE
+  // we parse the body as the body may refer to the function
+  // itself recursively
+  // Either re-use an existing type or write a new one
+  const typeIndex = findTypeIndex(node, ctx.Program.Types);
+  if(typeIndex !== -1) {
+    node.typeIndex = typeIndex;
+  } else {
+    node.typeIndex = ctx.Program.Types.length;
+    ctx.Program.Types.push(generateType(node));
+  }
+  // attach to a type index
+  node.functionIndex = ctx.Program.Functions.length;
+  ctx.Program.Functions.push(node.typeIndex);
+  ctx.functions.push(node);
+
   ctx.expect(['{']);
   node.body = [];
   let stmt = null;
@@ -70,19 +87,6 @@ const maybeFunctionDeclaration = (ctx) => {
     throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }
 
-  // Either re-use an existing type or write a new one
-  const typeIndex = findTypeIndex(node, ctx.Program.Types);
-  if(typeIndex !== -1) {
-    node.typeIndex = typeIndex;
-  } else {
-    node.typeIndex = ctx.Program.Types.length;
-    ctx.Program.Types.push(generateType(node));
-  }
-
-  // attach to a type index
-  node.functionIndex = ctx.Program.Functions.length;
-  ctx.Program.Functions.push(node.typeIndex);
-  ctx.functions.push(node);
 
   // generate the code block for the emiter
   ctx.Program.Code.push(generateCode(node));

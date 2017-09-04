@@ -236,9 +236,13 @@ export const opcodeFromOperator = ({ type, operator: { value } }) => {
     case '!=':
       return def[type + 'Ne'];
     case '>':
-      return def[type + 'GeS'] || def[type + 'Ge'];
+      return def[type + 'GtS'] || def[type + 'Gt'];
     case '<':
       return def[type + 'LtS'] || def[type + 'Lt'];
+    case '?':
+      return def.If;
+    case ':':
+      return def.Else;
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   };

@@ -1,5 +1,5 @@
 import Syntax from '../Syntax';
-import binaryOrUnary from './binary-or-unary';
+import operator from './operator';
 import constant from './constant';
 import precedence from './precedence';
 import maybeIdentifier from './maybe-identifier';
@@ -12,10 +12,12 @@ const assoc = op => {
     case '-':
     case '/':
     case '*':
+    case ':':
       return 'left';
     case '=':
     case '--':
     case '++':
+    case '?':
       return 'right';
     default:
       return 'left';
@@ -24,6 +26,8 @@ const assoc = op => {
 
 const isLBracket = op => op && op.value === '(';
 const isRBracket = op => op && op.value === ')';
+const isTStart = op => op && op.value === '?';
+const isTEnd = op => op && op.value === ':';
 const hasLBracket = ops => ops.find(isLBracket);
 
 // Simplified version of the Shunting yard algorithm
@@ -37,17 +41,15 @@ const expression = (
   const operands = [];
 
   const consume = () =>
-    operands.push(binaryOrUnary(ctx, type, operators.pop(), operands));
+    operands.push(operator(ctx, { type, operator: operators.pop(), operands }));
 
-  const eatUntilLBracket = () => {
+  const eatUntil = (predicate) => {
     let prev = last(operators);
-    while(prev && !isLBracket(prev)) {
+    while(prev && !predicate(prev)) {
       consume();
       prev = last(operators);
     }
-    if (isRBracket(last(operators)))
-      throw ctx.syntaxError('Unmatched left bracket');
-  }
+  };
 
   ctx.diAssoc = associativity;
 
@@ -71,13 +73,15 @@ const expression = (
         op.assoc = assoc(op.value);
       }
 
-      if (op.value === '(') {
+      if (isLBracket(op)) {
         operators.push(op);
+      } else if (isTEnd(op)) {
+        eatUntil(isTStart);
       } else if (isRBracket(op)) {
         if (!inGroup) {
           // If we are not in a group already find the last LBracket,
           // consume everything until that point
-          eatUntilLBracket();
+          eatUntil(isLBracket);
 
           // Pop left bracket
           operators.pop();

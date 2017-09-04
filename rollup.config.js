@@ -30,7 +30,8 @@ export default {
             "targets": {
               "chrome": "60.0.0"
             }
-          }]
+          }],
+        "flow"
       ],
       "plugins": [
         "external-helpers",
