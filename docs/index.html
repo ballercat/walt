@@ -114,14 +114,14 @@
       <script src="https://unpkg.com/babel-standalone@6.24.2/babel.min.js"
       charset="utf-8"></script>
     <script type="module">
-      import init from '/dist/explorer.js';
+      import init from './dist/explorer.js';
       window.init = init;
     </script>
       
     <script type="text/babel">
-      class MyApp extends React.Component {
+      class Explorer extends React.Component {
         componentDidMount() {
-          window.init ? init() : () => {}
+          window.init && init();
         }
         render() {
           return ([
@@ -131,11 +131,13 @@
             </header>,
             <main className="Main" key="main">
               <div className="Main-leftContainer">
-                <div className="Main-editor" id="editor">{`const x: i32 = 2;
-            export function echo(): i32 {
-            const x: i32 = 42;
-            return x;
-            }`}</div>
+                <div className="Main-editor" id="editor">
+{`const x: i32 = 2;
+export function echo(): i32 {
+  const x: i32 = 42;
+  return x;
+}`}
+              </div>
               </div>
               <div className="Main-rightContainer">
                 <div className="Main-binary" id="binary"></div>
@@ -148,7 +150,7 @@
         }
       }
       ReactDOM.render(
-        <MyApp/>,
+        <Explorer/>,
         document.getElementById('app')
       )
     </script>
