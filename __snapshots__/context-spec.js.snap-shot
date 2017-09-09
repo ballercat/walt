@@ -1,0 +1,5 @@
+exports['syntaxError generates an accurate error string 1'] = [
+  "SyntaxError:  Test Error",
+  "    at test (test.walt:24:42)"
+]
+

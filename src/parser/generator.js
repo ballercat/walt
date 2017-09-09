@@ -1,16 +1,10 @@
-import {
-  EXTERN_GLOBAL,
-  EXTERN_FUNCTION
-} from '../emiter/external_kind';
-import {
-  I32,
-  I64,
-  F32,
-  F64
-} from '../emiter/value_type';
-import opcode from '../emiter/opcode';
-import Syntax from './Syntax';
+import { EXTERN_GLOBAL, EXTERN_FUNCTION } from '../emitter/external_kind';
+import { I32, I64, F32, F64 } from '../emitter/value_type';
+import opcode, { opcodeFromOperator } from '../emitter/opcode';
+import Syntax from '../Syntax';
+import curry from 'curry';
 
+// clean this up
 export const getType = str => {
   switch(str) {
     case 'f32': return F32;
@@ -21,16 +15,28 @@ export const getType = str => {
 };
 
 const isLocal = node => ('localIndex' in node);
-const scopeOperation = (node, op) => {
+const scopeOperation = curry((op, node) => {
   const index = isLocal(node) ? node.localIndex : node.globalIndex;
   const kind = isLocal(node) ? op + 'Local' : op + 'Global';
-  return { kind: opcode[kind].code, params: [index] };
-}
+  return { kind: opcode[kind], params: [index] };
+});
 
 const getConstOpcode = node => ({
-  kind: (opcode[node.type + 'Const'] || opcode.i32Const).code,
+  kind: opcode[node.type + 'Const'] || opcode.i32Const,
   params: [node.value]
 });
+
+const setInScope = scopeOperation('Set');
+const getInScope = scopeOperation('Get');
+const mergeBlock = (block, v) => {
+  // some node types are a sequence of opcodes:
+  // nested expressions for example
+  if (Array.isArray(v))
+    block = [...block, ...v];
+  else
+    block.push(v);
+  return block;
+};
 
 export const generateExport = decl => {
   const _export = {};
@@ -50,10 +56,10 @@ export const generateExport = decl => {
 };
 
 export const generateValueType = node => {
-  const value = {};
-  value.mutable = node.const ? 0 : 1;
-  value.type = getType(node.type);
-
+  const value = {
+    mutable: node.const ? 0 : 1,
+    type: getType(node.type)
+  };
   return value;
 };
 
@@ -88,94 +94,167 @@ export const generateType = node => {
   return type;
 }
 
-export const generateCode = func => {
-  // TODO generate locals
-  const block = { locals: [], code: [] };
-
-  // the binary encoding is not a tree per se, so we need to concat everything
-  func.body.forEach(node => {
-    switch(node.Type) {
-      case Syntax.ReturnStatement:
-        block.code = [...block.code, ...generateReturn(node)];
-        break;
-      case Syntax.Declaration: {
-        // add possible set_local call
-        if (node.init) {
-          node.init.type = node.type;
-          block.code = [...block.code, ...generateExpression(node.init)];
-          block.code.push({ kind: opcode.SetLocal.code, params: [block.locals.length] });
-        }
-
-        // add a local entry
-        block.locals.push(generateValueType(node));
-        break;
-      }
-    }
-  });
-
-  return block;
-};
-
 export const generateReturn = node => {
-  return generateExpression(node.expr);
-};
-
-export const generateBinaryExpression = node => {
-  let block = [];
-  if (node.left.Type === Syntax.Constant)
-    block.push(getConstOpcode(node.left));
-  if (node.right.Type === Syntax.Constant)
-    block.push(getConstOpcode(node.right));
-
-  if (node.left.Type === Syntax.BinaryExpression)
-    block = [...block, ...generateBinaryExpression(node.left)];
-
-  if (node.right.Type === Syntax.BinaryExpression)
-    block = [...block, ...generateBinaryExpression(node.right)];
-
-  if (node.left.Type === Syntax.Identifier)
-    block.push(scopeOperation(node.left, 'Get'));
-
-  if (node.right.Type === Syntax.Identifier)
-    block.push(scopeOperation(node.right, 'Get'));
-
-  //block.push(scopeOperation(node, 'Set'));
-  switch(node.operator.value) {
-    case '+':
-      block.push({ kind: opcode[node.type + 'Add'].code });
-      break;
-    case '-':
-      block.push({ kind: opcode[node.type + 'Sub'].code });
-      break;
-    case '*':
-      block.push({ kind: opcode[node.type + 'Mul'].code });
-      break;
-    case '/':
-      block.push({ kind: (opcode[node.type + 'Div'] || opcode[node.type + 'DivS']).code });
-      break;
+  const parent = { postfix: [] };
+  // Postfix in return statement should be a no-op UNLESS it's editing globals
+  const block = generateExpression(node.expr, parent);
+  block.push({ kind: opcode.Return });
+  if (parent.postfix.length) {
+    // do we have postfix operations?
+    // are they editing globals?
+    // TODO: do things to globals
   }
 
   return block;
 };
 
-export const generateExpression = expr => {
+export const generateDeclaration = (node, parent) => {
   let block = [];
-  switch(expr.Type) {
-    case Syntax.BinaryExpression: {
-      const ops = generateBinaryExpression(expr);
-      block = [...block, ...ops];
-      break;
-    }
-    case Syntax.Constant: {
-      const op = opcode[expr.type + 'Const'];
-      block.push({ kind: op.code, params: [expr.value] });
-      break;
-    }
-    case Syntax.Identifier: {
-      block.push(scopeOperation(expr, 'Get'));
-      break;
-    }
-  };
+  if (node.init) {
+    node.init.type = node.type;
+    block = [...block, ...generateExpression(node.init)];
+    block.push({ kind: opcode.SetLocal, params: [parent.locals.length] });
+  }
+  parent.locals.push(generateValueType(node));
+  return block;
+};
+
+/**
+ * Transform a binary expression node into a list of opcodes
+ */
+export const generateBinaryExpression = (node, parent) => {
+  // Map operands first
+  const block = node.operands
+    .map(mapSyntax(parent))
+    .reduce(mergeBlock, []);
+
+  // Increment and decrement make this less clean:
+  // If either increment or decrement then:
+  //  1. generate the expression
+  //  2. APPEND TO PARENT post-expressions
+  //  3. return [];
+  if (node.isPostfix && parent) {
+    parent.postfix.push(block);
+    // Simply return the left-hand
+    return node.operands.slice(0, 1).map(mapSyntax(parent)).reduce(mergeBlock, []);
+  }
+
+  // Map the operator last
+  block.push({
+    kind: opcodeFromOperator(node)
+  });
+
+  return block;
+};
+
+export const generateTernary = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = node.operands.slice(0, 1)
+    .map(mapper)
+    .reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcodeFromOperator(node),
+    valueType: generateValueType(node)
+  });
+  block.push.apply(block, node.operands.slice(1, 2).map(mapper).reduce(mergeBlock, []));
+  block.push({
+    kind: opcodeFromOperator({ operator: { value: ':' } })
+  });
+  block.push.apply(block, node.operands.slice(-1).map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: opcode.End });
+
   return block;
 }
+
+export const generateAssignment = (node, parent) => {
+  const subParent = { postfix: [] };
+  const block = node.operands.slice(1)
+    .map(mapSyntax(subParent))
+    .reduce(mergeBlock, []);
+
+  block.push(setInScope(node.operands[0]));
+
+  return subParent.postfix.reduce(mergeBlock, block);
+};
+
+const generateFunctionCall = (node, parent) => {
+  const block = node.arguments.map(mapSyntax(parent))
+    .reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcode.Call,
+    params: [node.functionIndex]
+  });
+
+  return block;
+}
+
+// probably should be called "generateBranch" and be more generic
+// like handling ternary for example. A lot of shared logic here & ternary
+const generateIf = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
+
+  block.push({
+    kind: opcode.If,
+    // if-then-else blocks have no return value and the Wasm spec requires us to
+    // provide a literal byte '0x40' for "empty block" in these cases
+    params: [0x40]
+  });
+
+  // after the expression is on the stack and opcode is following it we can write the
+  // implicit 'then' block
+  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
+
+  // fllowed by the optional 'else'
+  if (node.else.length) {
+    block.push({ kind: opcode.Else });
+    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
+  }
+
+  block.push({ kind: opcode.End });
+  return block;
+}
+
+const syntaxMap = {
+  [Syntax.FunctionCall]: generateFunctionCall,
+  // Unary
+  [Syntax.Constant]: getConstOpcode,
+  [Syntax.BinaryExpression]: generateBinaryExpression,
+  [Syntax.TernaryExpression]: generateTernary,
+  [Syntax.IfThenElse]: generateIf,
+  [Syntax.Identifier]: getInScope,
+  [Syntax.ReturnStatement]: generateReturn,
+  // Binary
+  [Syntax.Declaration]: generateDeclaration,
+  [Syntax.Assignment]: generateAssignment
+};
+
+export const mapSyntax = curry((parent, operand) => {
+  const mapping = syntaxMap[operand.Type];
+  if (!mapping) {
+    const value = (operand.id || operand.value) || (operand.operator && operand.operator.value);
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
+  }
+  return mapping(operand, parent);
+});
+
+export const generateExpression = (node, parent) => {
+  const block = [node].map(mapSyntax(parent)).reduce(mergeBlock, []);
+  return block;
+}
+
+export const generateCode = func => {
+  const block = {
+    code: [],
+    locals: func.paramList.map(generateValueType)
+  };
+
+  // NOTE: Declarations have a side-effect of changing the local count
+  //       This is why mapSyntax takes a parent argument
+  block.code = func.body.map(mapSyntax(block)).reduce(mergeBlock, []);
+
+  return block;
+};
 

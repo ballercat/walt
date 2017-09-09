@@ -1,25 +1,40 @@
-import _Tokenizer from './Tokenizer';
-import _TokenStream from './TokenStream';
-import _Stream from './Stream';
-import _keyword from './keyword';
-import _punctuator from './punctuator';
-import _identifier from './identifier';
-import _type from './type';
-import _constant from './constant';
-import Parser from './Parser';
+import statement from './statement';
+import Context from './context';
 
-export const tokenParsers = [
-  _keyword, _constant, _punctuator, _type, _identifier
-];
+class Parser {
+  constructor(stream, context = new Context({
+    body: [],
+    diAssoc: 'right',
+    stream: stream,
+    token: stream.next(),
+    globalSymbols: {},
+    localSymbols: {},
+    globals: [],
+    functions: [],
+    filename: 'unknown.walt'
+  })) {
+    this.context = context;
+  }
+  // Get the ast
+  parse() {
+    const ctx = this.context;
+    // No code, no problem, empty ast equals
+    // (module) ; the most basic wasm module
+    if (!ctx.stream || !ctx.stream.length) {
+      return {};
+    }
 
-export const Tokenizer = _Tokenizer;
-export const Stream = _Stream;
-export const type = _type;
-export const keyword = _keyword;
-export const constant = _constant;
-export const punctuator = _punctuator;
-export const identifier = _identifier;
-export const TokenStream = _TokenStream;
+    const node = ctx.Program;
+
+    while (ctx.stream.peek()) {
+      const child = statement(ctx);
+      if (child)
+        node.body.push(child);
+    }
+
+    return node;
+  }
+}
 
 export default Parser;
 

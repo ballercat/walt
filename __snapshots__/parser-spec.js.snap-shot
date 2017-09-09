@@ -1,28 +1,6 @@
 exports['the most basic of modules in wasm 1'] = {}
 
 exports['compiles globals 1'] = {
-  "start": {
-    "line": 1,
-    "col": 0
-  },
-  "range": [
-    {
-      "line": 1,
-      "col": 0
-    }
-  ],
-  "Types": [],
-  "Code": [],
-  "Exports": [],
-  "Imports": [],
-  "Globals": [
-    {
-      "mutable": 0,
-      "type": 127,
-      "init": 42
-    }
-  ],
-  "Functions": [],
   "body": [
     {
       "start": {
@@ -71,29 +49,10 @@ exports['compiles globals 1'] = {
         "col": 23
       }
     }
-  ]
-}
-
-exports['compiles exports 1'] = {
-  "start": {
-    "line": 1,
-    "col": 0
-  },
-  "range": [
-    {
-      "line": 1,
-      "col": 0
-    }
   ],
   "Types": [],
   "Code": [],
-  "Exports": [
-    {
-      "index": 0,
-      "kind": 3,
-      "field": "answer"
-    }
-  ],
+  "Exports": [],
   "Imports": [],
   "Globals": [
     {
@@ -102,7 +61,10 @@ exports['compiles exports 1'] = {
       "init": 42
     }
   ],
-  "Functions": [],
+  "Functions": []
+}
+
+exports['compiles exports 1'] = {
   "body": [
     {
       "start": {
@@ -172,6 +134,24 @@ exports['compiles exports 1'] = {
         "col": 30
       }
     }
-  ]
+  ],
+  "Types": [],
+  "Code": [],
+  "Exports": [
+    {
+      "index": 0,
+      "kind": 3,
+      "field": "answer"
+    }
+  ],
+  "Imports": [],
+  "Globals": [
+    {
+      "mutable": 0,
+      "type": 127,
+      "init": 42
+    }
+  ],
+  "Functions": []
 }
 

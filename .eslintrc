@@ -10,6 +10,10 @@
     "WebAssembly": true
   },
 
+  "parser": "babel-eslint",
+  "plugins": [
+    "flowtype"
+  ],
   "parserOptions": {
     "sourceType": "module",
     "ecmaFeatures": {
@@ -133,7 +137,7 @@
 
     ////////// Stylistic Issues //////////
 
-    "brace-style": 1,               // enforce one true brace style (off by default)
+    "brace-style": 0,               // enforce one true brace style (off by default)
     "camelcase": 1,                 // require camel case names
     "comma-spacing": 1,             // enforce spacing before and after comma
     "comma-style": 1,               // enforce one true comma style (off by default)

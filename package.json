@@ -4,10 +4,12 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/ava/cli.js",
-    "test:units": "npm test",
+    "test": "nyc ava",
+    "tdd": "ava",
+    "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
-    "build": "node_modules/rollup/bin/rollup -c rollup.config.js"
+    "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
+    "flow": "flow"
   },
   "repository": {
     "type": "git",
@@ -31,12 +33,19 @@
   },
   "devDependencies": {
     "ava": "^0.19.1",
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^7.2.3",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.5.2",
     "babel-preset-es2015": "^6.24.1",
+    "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
+    "coveralls": "^2.13.1",
+    "eslint-plugin-flowtype": "^2.35.1",
+    "flow-bin": "^0.54.0",
+    "nyc": "^11.1.0",
     "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^8.0.2",
