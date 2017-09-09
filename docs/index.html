@@ -10,7 +10,7 @@
       --primary--light: #f7efbb;
       --secondary: #8cf2b1;
       --secondary--light: #c1f8d5;
-      --black: #000;
+      --black: #333333;
       --white: #fff;
     }
 
@@ -35,6 +35,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
+    }
+    .Header::after {
+      content: '';
+      position: absolute;
+      background: var(--black);
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50vh;
+      z-index: -1;
     }
 
     .Header-title {
@@ -42,21 +53,25 @@
       color: var(--secondary);
     }
 
-    .Header-compile {
+    .Main-compile {
       margin-right: 5rem;
       -webkit-appearance: none;
       appearance: none;
       padding: .5rem 1.5rem;
       border: solid 1px;
-      color: var(--primary);
-      background-color: var(--white);
+      width: 100%;
+      font-size: 1.5rem;
+      color: var(--white);
+      border-color: var(--primary);
+      background-color: var(--secondary);
       transition: color .5s ease-in-out, background-color .5s ease-in-out;
     }
 
-    .Header-compile:focus,
-    .Header-compile:hover {
-      color: var(--white);
-      background-color: var(--primary);
+    .Main-compile:focus,
+    .Main-compile:hover {
+      color: var(--secondary);
+      background-color: var(--white);
+      border-color: var(--primary);
     }
 
     .Header-container {
@@ -64,29 +79,24 @@
     }
 
     .Main {
-      display: grid;
       height: calc(100vh - 5rem);
-      /* prettier-ignore */
-      grid-template-areas: "left-container left-container left-container right-container right-container" "left-container left-container left-container right-container right-container" "left-container left-container left-container right-container right-container" "left-container left-container left-container right-container right-container" "left-container left-container left-container right-container right-container";
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
     }
 
-    .Main-leftContainer {
-      grid-area: left-container;
-    }
 
     .Main-editor,
     .Main-binary {
       height: 100%;
     }
 
+    .Main-leftContainer,
     .Main-rightContainer {
-      grid-area: right-container;
+      height: 50vh;
+      width: 40vw;
     }
 
-    .Main-footer {
-      grid-area: footer;
-      position: relative;
-    }
     /* Overrides */
 
     .ace_scroller.ace_scroller {
@@ -110,6 +120,37 @@
   </script>
 
   <script type="text/babel">
+    class EchoConsole extends React.Component {
+      constructor() {
+        super();
+        this.state = {
+          logs: []
+        }
+      }
+      componentDidMount() {
+        const oldConsole = {};
+        const selectMethods = [ 'log', 'dir', 'warn', 'error', 'info'];
+        Object.keys(console).filter(method => selectMethods.includes(method)).forEach(method => {
+          oldConsole[method] = console[method].bind(console);
+          console[method] = (...args) => {
+            oldConsole[method].apply(null, args);
+            this.setState(state => ({
+              logs: [...state.logs, {
+                level: method,
+                content: JSON.stringify(args)
+              }]
+            }))
+          }
+        });
+        
+      }
+      render() {
+        return (
+          <code className="Console"><pre>{this.state.logs.map(log => `${log.level}: ${log.content} \n`)}</pre></code>
+        )
+      }
+    }
+
     class Explorer extends React.Component { 
       componentDidMount() { 
         window.init && init();
@@ -118,22 +159,27 @@
         return ([
           <header className="Header" key="header">
             <h1 className="Header-title">Walt Explorer</h1>
-            <button id="compile" className="Header-compile">Compile</button>
-          </header>,
-          <main className="Main" key="main">
-            <div className="Main-leftContainer">
-              <div className="Main-editor" id="editor">
+            </header>,
+            <main className="Main" key="main">
+              <div className="Main-leftContainer">
+                <div className="Main-editor" id="editor">
 {`const x: i32 = 2;
-export function echo(): i32 {
-  const x: i32 = 42;
-  return x;
+  export function echo(): i32 {
+    const x: i32 = 42;
+    return x;
 }`}
               </div>
+            </div>
+            <div className="Main-btnContainer">
+              <button id="compile" className="Main-compile">Compile</button>
             </div>
             <div className="Main-rightContainer">
               <div className="Main-binary" id="binary" />
             </div>
-          </main>
+          </main>,
+          <footer className="Footer">
+            <EchoConsole />
+          </footer>
         ]);
       }
     }
