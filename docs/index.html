@@ -1,156 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Walt Explorer</title>
-    <style type="text/css">
-       :root {
-        --primary: #EFDF6B;
-        --primary--light: #f7efbb;
-        --secondary: #8cf2b1;
-        --secondary--light: #c1f8d5;
-        --black: #000;
-        --white: #fff;
-      }
-  
-      html,
-      body {
-        box-sizing: border-box;
-        font-family: sans-serif;
-        height: 100%;
-        width: 100%;
-      }
-  
-      *,
-      *:before,
-      *:after {
-        margin: 0;
-        padding: 0;
-        box-sizing: inherit;
-      }
-  
-      .Header {
-        height: 5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-  
-      .Header-title {
-        margin-left: 5rem;
-        color: var(--secondary);
-      }
-  
-      .Header-compile {
-        margin-right: 5rem;
-        -webkit-appearance: none;
-        appearance: none;
-        padding: .5rem 1.5rem;
-        border: solid 1px;
-        color: var(--primary);
-        background-color: var(--white);
-        transition: color .5s ease-in-out, background-color .5s ease-in-out;
-      }
-  
-      .Header-compile:focus,
-      .Header-compile:hover {
-        color: var(--white);
-        background-color: var(--primary);
-      }
-  
-      .Header-container {
-        margin: 0 5rem;
-      }
-  
-      .Main {
-        display: grid;
-        height: calc(100vh - 5rem);
-        /* prettier-ignore */
-        grid-template-areas: "left-container left-container left-container right-container right-container"
-                             "left-container left-container left-container right-container right-container"
-                             "left-container left-container left-container right-container right-container"
-                             "left-container left-container left-container right-container right-container"
-                             "left-container left-container left-container right-container right-container"
-                             "footer         footer         footer         footer          footer"
-                             "footer         footer         footer         footer          footer";
-      }
-  
-      .Main-leftContainer {
-        grid-area: left-container;
-      }
-      .Main-editor,
-      .Main-binary {
-        height: 100%;
-      }
-      .Main-rightContainer {
-        grid-area: right-container;
-      }
-      .Main-footer {
-        grid-area: footer;
-        position: relative;
-      }
-  
-      /* Overrides */
-      .ace_scroller.ace_scroller {
-        overflow: auto;
-      }
-      .console-log-div {
-        position: absolute;
-        width: calc(100% - 20px);
-      }
-    </style>
-  </head>
-  <body>
-    <div id="app">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walt Explorer</title>
+  <style type="text/css">
+     :root {
+      --primary: #EFDF6B;
+      --primary--light: #f7efbb;
+      --secondary: #8cf2b1;
+      --secondary--light: #c1f8d5;
+      --black: #000;
+      --white: #fff;
+    }
+
+    html,
+    body {
+      box-sizing: border-box;
+      font-family: sans-serif;
+      height: 100%;
+      width: 100%;
+    }
+
+    *,
+    *:before,
+    *:after {
+      margin: 0;
+      padding: 0;
+      box-sizing: inherit;
+    }
+
+    .Header {
+      height: 5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .Header-title {
+      margin-left: 5rem;
+      color: var(--secondary);
+    }
+
+    .Header-compile {
+      margin-right: 5rem;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: .5rem 1.5rem;
+      border: solid 1px;
+      color: var(--primary);
+      background-color: var(--white);
+      transition: color .5s ease-in-out, background-color .5s ease-in-out;
+    }
+
+    .Header-compile:focus,
+    .Header-compile:hover {
+      color: var(--white);
+      background-color: var(--primary);
+    }
+
+    .Header-container {
+      margin: 0 5rem;
+    }
+
+    .Main {
+      display: grid;
+      height: calc(100vh - 5rem);
+      /* prettier-ignore */
+      grid-template-areas: "left-container left-container left-container right-container right-container"
+                           "left-container left-container left-container right-container right-container"
+                           "left-container left-container left-container right-container right-container"
+                           "left-container left-container left-container right-container right-container"
+                           "left-container left-container left-container right-container right-container"
+                           "footer         footer         footer         footer          footer"
+                           "footer         footer         footer         footer          footer";
+    }
+
+    .Main-leftContainer {
+      grid-area: left-container;
+    }
+    .Main-editor,
+    .Main-binary {
+      height: 100%;
+    }
+    .Main-rightContainer {
+      grid-area: right-container;
+    }
+    .Main-footer {
+      grid-area: footer;
+      position: relative;
+    }
+
+    /* Overrides */
+    .ace_scroller.ace_scroller {
+      overflow: auto;
+    }
+    .console-log-div {
+      position: absolute;
+      width: calc(100% - 20px);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="Header">
+    <h1 class="Header-title">Walt Explorer</h1>
+    <button id="compile" class="Header-compile">Compile</button>
+  </header>
+  <main class="Main">
+    <div class="Main-leftContainer">
+      <div class="Main-editor" id="editor">const x: i32 = 2;
+export function echo(): i32 {
+  const x: i32 = 42;
+  return x;
+}</div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.8/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="https://rawgit.com/bahmutov/console-log-div/master/console-log-div.js"></script>
-    <script src="dist/walt.js" type="text/javascript"></script>
-    
-    <script src="https://unpkg.com/react@16.0.0-rc.2/umd/react.production.min.js"
-      crossorigin="anonymous"></script>
-      <script src="https://unpkg.com/react-dom@16.0.0-rc.2/umd/react-dom.production.min.js"
-      crossorigin="anonymous"></script>
-      <script src="https://unpkg.com/babel-standalone@6.24.2/babel.min.js"
-      charset="utf-8"></script>
-    <script type="module">
-      import init from '/dist/explorer.js';
-      window.init = init;
-    </script>
-      
-    <script type="text/babel">
-      class MyApp extends React.Component {
-        componentDidMount() {
-          window.init ? init() : () => {}
-        }
-        render() {
-          return ([
-            <header className="Header" key="header">
-              <h1 className="Header-title">Walt Explorer</h1>
-              <button id="compile" className="Header-compile">Compile</button>
-            </header>,
-            <main className="Main" key="main">
-              <div className="Main-leftContainer">
-                <div className="Main-editor" id="editor">{`const x: i32 = 2;
-            export function echo(): i32 {
-            const x: i32 = 42;
-            return x;
-            }`}</div>
-              </div>
-              <div className="Main-rightContainer">
-                <div className="Main-binary" id="binary"></div>
-              </div>
-              <div className="Main-footer">
-                <fieldset id="console-log-div"></fieldset>
-              </div>
-            </main>
-          ]);
-        }
-      }
-      ReactDOM.render(
-        <MyApp/>,
-        document.getElementById('app')
-      )
-    </script>
-  </body>
+    <div class="Main-rightContainer">
+      <div class="Main-binary" id="binary"></div>
+    </div>
+    <div class="Main-footer">
+      <fieldset id="console-log-div"></fieldset>
+    </div>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.8/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://rawgit.com/bahmutov/console-log-div/master/console-log-div.js"></script>
+  <script src="dist/walt.js" type="text/javascript"></script>
+  <script src="dist/explorer.js" type="text/javascript"></script>
+</body>
+
 </html>
