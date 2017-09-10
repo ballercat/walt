@@ -38,7 +38,7 @@ const forLoop = (ctx: Context): Node => {
   }
   ctx.expect(['}']);
 
-  return ctx.endNode(node, Syntax.ForLoop);
+  return ctx.endNode(node, Syntax.Loop);
 }
 
 export default forLoop;

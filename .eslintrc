@@ -29,7 +29,7 @@
     "no-console": 1,              // disallow use of console (off by default in the node environment)
     "no-constant-condition": 0,   // disallow use of constant expressions in conditions
     "no-control-regex": 0,        // disallow control characters in regular expressions
-    "no-debugger": 1,             // disallow use of debugger
+    "no-debugger": 2,             // disallow use of debugger
     "no-dupe-keys": 0,            // disallow duplicate keys when creating object literals
     "no-empty": 0,                // disallow empty statements
     "no-empty-class": 0,          // disallow the use of empty character classes in regular expressions

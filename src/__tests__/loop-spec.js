@@ -17,7 +17,7 @@ test('for loop', t =>
   `).then(outputIs(t, -41, 42))
 );
 
-test.only('while loop', t =>
+test('while loop', t =>
   compileAndRun(`
   export function test(x: i32): i32 {
     let y: i32 = 0;

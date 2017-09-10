@@ -3823,7 +3823,7 @@ const forLoop = ctx => {
   }
   ctx.expect(['}']);
 
-  return ctx.endNode(node, Syntax_1.ForLoop);
+  return ctx.endNode(node, Syntax_1.Loop);
 };
 
 //     
