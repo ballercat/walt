@@ -1,7 +1,7 @@
 // @flow
 import Syntax from '../Syntax';
 import Context, { findTypeIndex } from './context';
-import type { Typed, TypeNode } from './node';
+import type { Typed, TypeNode } from '../flow/types';
 import { generateType } from './generator';
 
 const param = (ctx: Context): Typed | null => {
@@ -44,7 +44,8 @@ const type = (ctx: Context): TypeNode => {
     ctx.Program.Types.push(generateType(node));
   }
 
-  return ctx.endNode(node, Syntax.Typedef);
+  ctx.endNode(node, Syntax.Typedef);
+  return node;
 }
 
 export default type;

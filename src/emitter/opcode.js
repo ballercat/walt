@@ -239,6 +239,10 @@ export const opcodeFromOperator = ({ type, operator: { value } }) => {
       return def[type + 'GtS'] || def[type + 'Gt'];
     case '<':
       return def[type + 'LtS'] || def[type + 'Lt'];
+    case '<=':
+      return def[type + 'LeS'] || def[type + 'Le'];
+    case '>=':
+      return def[type + 'GeS'] || def[type + 'Ge'];
     case '?':
       return def.If;
     case ':':

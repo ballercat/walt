@@ -1,24 +1,31 @@
+//@flow
+import type { Token } from '../flow/types';
+
 class TokenStream {
-  constructor(tokens = []) {
+  length: number;
+  tokens: Token[];
+  pos: number;
+
+  constructor(tokens: Token[] = []) {
     this.length = tokens.length;
     this.tokens = tokens;
     this.pos = 0;
   }
 
-  next() {
+  next(): Token {
     return this.tokens[this.pos++];
   }
 
-  peek() {
+  peek(): Token {
     return this.tokens[this.pos];
   }
 
-  seek(relative) {
+  seek(relative: number): Token {
     this.pos = relative;
     return this.tokens[this.pos];
   }
 
-  last() {
+  last(): Token {
     return this.tokens[this.length - 1];
   }
 }

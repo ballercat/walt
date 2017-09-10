@@ -23,7 +23,6 @@ Object {
   "Types": Array [],
   "body": Array [
     Object {
-      "Type": "Export",
       "decl": Object {
         "Type": "Declaration",
         "const": true,
@@ -71,17 +70,9 @@ Object {
         },
         "type": "i32",
       },
-      "end": Object {
-        "col": 30,
-        "line": 1,
-      },
       "range": Array [
         Object {
           "col": 0,
-          "line": 1,
-        },
-        Object {
-          "col": 30,
           "line": 1,
         },
       ],

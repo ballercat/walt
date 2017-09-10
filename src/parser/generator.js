@@ -129,7 +129,7 @@ export const generateDeclaration = (node, parent) => {
   if (node.init) {
     node.init.type = node.type;
     block = [...block, ...generateExpression(node.init)];
-    block.push({ kind: opcode.SetLocal, params: [parent.locals.length] });
+    block.push({ kind: opcode.SetLocal, params: [node.localIndex] });
   }
   parent.locals.push(generateValueType(node));
   return block;
@@ -233,6 +233,39 @@ const generateIf = (node, parent) => {
   return block;
 }
 
+export const generateLoop = (node, parent) => {
+  const block = [];
+  const mapper = mapSyntax(parent);
+  const reverse = {
+    '>': '<',
+    '<': '>',
+    '>=': '<=',
+    '<=': '>=',
+    '==': '!=',
+    '!=': '=='
+  };
+
+  const condition = node.params.slice(1, 2);
+  condition[0].operator.value = reverse[condition[0].operator.value];
+  const expression = node.params.slice(2, 3);
+
+  block.push({ kind: opcode.Block, params: [0x40] });
+  block.push({ kind: opcode.Loop, params: [0x40] });
+
+  block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: opcode.BrIf, params: [1] });
+
+  block.push.apply(block, node.body.map(mapper).reduce(mergeBlock, []));
+
+  block.push.apply(block, expression.map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: opcode.Br, params: [0] });
+
+  block.push({ kind: opcode.End });
+  block.push({ kind: opcode.End });
+
+  return block;
+}
+
 const syntaxMap = {
   [Syntax.FunctionCall]: generateFunctionCall,
   // Unary
@@ -245,7 +278,9 @@ const syntaxMap = {
   // Binary
   [Syntax.Declaration]: generateDeclaration,
   [Syntax.Assignment]: generateAssignment,
-  [Syntax.Import]: generateImport
+  [Syntax.Import]: generateImport,
+  // Loops
+  [Syntax.Loop]: generateLoop
 };
 
 export const mapSyntax = curry((parent, operand) => {

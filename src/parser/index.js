@@ -1,20 +1,24 @@
+//@flow
 import statement from './statement';
 import Context from './context';
+import TokenStream from '../utils/token-stream';
 
 class Parser {
-  constructor(stream, context = new Context({
-    body: [],
-    diAssoc: 'right',
-    stream: stream,
-    token: stream.next(),
-    globalSymbols: {},
-    localSymbols: {},
-    globals: [],
-    functions: [],
-    filename: 'unknown.walt'
-  })) {
-    this.context = context;
+  context: Context;
+
+  constructor(tokens: TokenStream, lines: string[] = []) {
+    this.context = new Context({
+      body: [],
+      diAssoc: 'right',
+      stream: tokens,
+      token: tokens.next(),
+      lines,
+      globals: [],
+      functions: [],
+      filename: 'unknown.walt'
+    });
   }
+
   // Get the ast
   parse() {
     const ctx = this.context;

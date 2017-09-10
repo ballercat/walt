@@ -1,8 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`syntaxError generates an accurate error string 1`] = `
-Array [
-  "SyntaxError: . Test Error",
-  "    at test (test.walt:24:42)",
-]
+"SyntaxError: 
+let x: i32 = someUnknownToken;
+[31m             ^^^^^^^^^^^^^^^^^[39m unknown token
+Test Error
+  at test (test.walt:1:13)"
 `;

@@ -6,18 +6,7 @@ import {
   generateType,
   generateImport
 } from './generator';
-
-import type { TypeNode } from './node';
-
-export type Field = {
-  id: string,
-  global?: number,
-  typeIndex?: number,
-  functionIndex?: number
-};
-export type Import = {
-  fields: Field[]
-};
+import type { Field, Import, TypeNode } from '../flow/types';
 
 const field = (ctx: Context): Field => {
   const f: Field = {
@@ -71,7 +60,7 @@ const fieldList = (ctx: Context): Field[] => {
 }
 
 const _import = (ctx: Context): Import => {
-  const node = ctx.startNode();
+  const node: Import = (ctx.startNode(): any);
   ctx.eat(['import']);
 
   if (!ctx.eat(['{']))
@@ -89,7 +78,8 @@ const _import = (ctx: Context): Import => {
     generateImport(node)
   );
 
-  return ctx.endNode(node, Syntax.Import);
+  ctx.endNode(node, Syntax.Import);
+  return node;
 };
 
 export default _import;

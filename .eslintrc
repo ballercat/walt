@@ -26,10 +26,10 @@
 
     "no-comma-dangle": 0,         // disallow trailing commas in object literals
     "no-cond-assign": 0,          // disallow assignment in conditional expressions
-    "no-console": 0,              // disallow use of console (off by default in the node environment)
+    "no-console": 1,              // disallow use of console (off by default in the node environment)
     "no-constant-condition": 0,   // disallow use of constant expressions in conditions
     "no-control-regex": 0,        // disallow control characters in regular expressions
-    "no-debugger": 0,             // disallow use of debugger
+    "no-debugger": 1,             // disallow use of debugger
     "no-dupe-keys": 0,            // disallow duplicate keys when creating object literals
     "no-empty": 0,                // disallow empty statements
     "no-empty-class": 0,          // disallow the use of empty character classes in regular expressions
@@ -139,7 +139,7 @@
 
     "brace-style": 0,               // enforce one true brace style (off by default)
     "camelcase": 1,                 // require camel case names
-    "comma-spacing": 1,             // enforce spacing before and after comma
+    "comma-spacing": 0,             // enforce spacing before and after comma
     "comma-style": 1,               // enforce one true comma style (off by default)
     "consistent-this": 1,           // enforces consistent naming when capturing the current execution context (off by default)
     "eol-last": 1,                  // enforce newline at the end of file, with no multiple empty lines

@@ -7,6 +7,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
 import flow from 'rollup-plugin-flow';
+import builtins from 'rollup-plugin-node-builtins';
 
 const PROD = process.env.NODE_ENV === 'production';
 
@@ -16,16 +17,16 @@ export default {
   format: 'umd',
   moduleName: 'Walt',
   plugins: [
+    builtins(),
     flow(),
     eslint(),
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
-    resolve(),
-    commonjs(),
     babel({
       babelrc: false,
       "presets": [
+        "flow",
         [
           "env", {
             "modules": false,
@@ -38,7 +39,9 @@ export default {
         "external-helpers",
         "transform-object-rest-spread"
       ]
-}),
+    }),
+    resolve(),
+    commonjs(),
     (PROD && uglify({}, minify))
   ],
 };

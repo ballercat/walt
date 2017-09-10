@@ -1,50 +1,32 @@
-/**
- * Base Character stream class
- *
- * @author  Arthur Buldauskas <arthurbuldauskas@gmail.com>
- */
-class Stream {
-  /**
-   * @constructor
-   *
-   * @param {String} input Input to read
-   * @throws
-   */
-  constructor(input) {
-    if (input == null || typeof input != 'string')
-      this.die(`Invalid input stream in Stream constructor. Expected String,
-                instead recieved ${JSON.stringify(input)}`);
+// @flow
 
+// Base Character stream class
+class Stream {
+  input: string;
+  pos: number;
+  line: number;
+  col: number;
+  lines: string[];
+
+  constructor(input: string = '') {
     this.pos = this.line = this.col = 0;
     this.input = input;
+    this.lines = input.split('\n');
     this.newLine();
   }
 
-  /**
-   * Stop parsing and throw a fatal error
-   *
-   * @param {String} reason
-   * @throws
-   */
-  die(reason) {
+  // Stop parsing and throw a fatal error
+  die(reason: string) {
     throw new Error(reason);
   }
 
-  /**
-   * Peek at a character at current position
-   *
-   * @return {String} Character
-   */
-  peek() {
+  // Peek at a character at current position
+  peek(): string {
     return this.input.charAt(this.pos);
   }
 
-  /**
-   * Advance to next character in stream
-   *
-   * @return {String} Character
-   */
-  next() {
+  // Advance to next character in stream
+  next(): string {
     const char = this.input.charAt(this.pos++);
 
     if (Stream.eol(char))
@@ -55,50 +37,27 @@ class Stream {
     return char;
   }
 
-  /**
-   * Begin a new line
-   */
-  newLine() {
+  // Begin a new line
+  newLine(): void {
     this.line++;
     this.col = 0;
   }
 
-  /**
-   * Is the character an end of line
-   *
-   * @param {String} char Character
-   *
-   * @return {Boolean}
-   * @static
-   */
-  static eol(char) {
+  // Is the character an end of line
+  static eol(char: string): bool {
     return char === '\n';
   }
 
-  /**
-   * Is the character an end of file
-   *
-   * @param {String} char Character
-   *
-   * @return {Boolean}
-   * @static
-   */
-  static eof(char) {
+  // Is the character an end of file
+  static eof(char: string): bool {
     return char === '';
   }
 
-  /**
-   * Is the charater a whitespace
-   *
-   * @param {String} char Character
-   *
-   * @return {Boolean}
-   * @static
-   */
-  static whitespace(char) {
+  // Is the charater a whitespace
+  static whitespace(char: string): bool {
     return char === "\n" || char === ' ' || char === "\t" || char === "\v" || char === "\r" || char === "\f";
   }
 }
 
-module.exports = Stream;
+export default Stream;
 
