@@ -38,10 +38,10 @@ Here is what an example of a `.walt` module which exports a recursive fibonacci 
 export function fibonacci(n: i32): i32 {
   if (n == 0)
     return 0;
-    
+
   if (n == 1)
     return 1;
-    
+
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 ```
@@ -79,16 +79,18 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [x] ~Declarations~
   * [x] ~BinaryExpressions~
   * [x] ~Local Scope & Global Scope~
-  * [ ] Compile warnings/errors - partial support
-  * [ ] Branches - if/then/else, switch, loops (WIP)
-  * [ ] Function imports
+  * [x] ~Compile time warnings and errors~
+  * [x] ~while loops~
+  * [x] ~for loops~
+  * [ ] switch/case
+  * [x] Function imports
   * [ ] Memory
   * [ ] Custom _Object_ Types
 * Emiter - WIP
   * [x] ~Exports~
   * [x] ~Functions~
-  * [ ] Types - partial support(opaque function types), wasm built-ins(only i32/f32 for now)
-  * [ ] Branches
+  * [x] ~Types - wasm built ins(i32/f32)~
+  * [x] ~Types - custom function type imports~
   * [x] ~Arithmetic~
   * [x] ~Globals, Locals~
 * [ ] Support 100% of native Wasm functions
@@ -135,6 +137,40 @@ import { log: Log } from 'console';
 type Log = (i32) => void
 ```
 :unicorn: **Arror Functions**. _Might be implemented._
+
+### Function imports and pointers
+
+It is possible to import custom functions and use wasm functions as callbacks.
+
+```javascript
+import { log: Log } from 'env';
+import { setTimeout: Later } from 'env';
+
+type Log = (i32) => void;
+type Later = (Function, i32) => void;
+
+function echo(): void {
+  log(42);
+}
+
+export function echoLater(x: i32): void {
+  setTimeout(echo, 200);
+}
+```
+
+* Compiling the above example will require a `WebAssembly.Table` import to be provided in the imports object.
+
+Keep in mind that the `Function` parameter is encoded into a `i32` table index. This means that the `setTimeout` function
+must be a wrapper which can get the _real_ wasm function pointer from table object. Like so:
+
+```javascript
+{
+  setTimeout: (tableIndex, timeout) => {
+    const pointer = tableInstance.get(tableIndex);
+    setTimeout(pointer, timeout);
+  }
+}
+```
 
 ### Module
 
