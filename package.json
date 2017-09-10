@@ -26,7 +26,6 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "dependencies": {
-    "chalk": "^2.1.0",
     "curry": "^1.2.0",
     "invariant": "^2.2.2",
     "ramda": "^0.23.0",

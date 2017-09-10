@@ -1,5 +1,4 @@
 import type { Token } from '../flow/types';
-import chalk from 'chalk';
 
 const generateErrorString = (
   msg:string,
@@ -12,7 +11,7 @@ const generateErrorString = (
   const { line, col } = token.start;
   const { col: end } = token.end;
 
-  const highlight = chalk.red(new Array(end - col + 1).join('^').padStart(end, ' '));
+  const highlight = new Array(end - col + 1).join('^').padStart(end, ' ');
   return (
 `
 ${Line}
