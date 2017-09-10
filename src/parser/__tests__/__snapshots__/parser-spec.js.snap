@@ -1,0 +1,164 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`compiles exports 1`] = `
+Object {
+  "Code": Array [],
+  "Element": Array [],
+  "Exports": Array [
+    Object {
+      "field": "answer",
+      "index": 0,
+      "kind": 3,
+    },
+  ],
+  "Functions": Array [],
+  "Globals": Array [
+    Object {
+      "init": 42,
+      "mutable": 0,
+      "type": 127,
+    },
+  ],
+  "Imports": Array [],
+  "Types": Array [],
+  "body": Array [
+    Object {
+      "Type": "Export",
+      "decl": Object {
+        "Type": "Declaration",
+        "const": true,
+        "end": Object {
+          "col": 30,
+          "line": 1,
+        },
+        "globalIndex": 0,
+        "id": "answer",
+        "init": Object {
+          "Type": "Constant",
+          "end": Object {
+            "col": 29,
+            "line": 1,
+          },
+          "range": Array [
+            Object {
+              "col": 27,
+              "line": 1,
+            },
+            Object {
+              "col": 29,
+              "line": 1,
+            },
+          ],
+          "start": Object {
+            "col": 27,
+            "line": 1,
+          },
+          "value": "42",
+        },
+        "range": Array [
+          Object {
+            "col": 7,
+            "line": 1,
+          },
+          Object {
+            "col": 30,
+            "line": 1,
+          },
+        ],
+        "start": Object {
+          "col": 7,
+          "line": 1,
+        },
+        "type": "i32",
+      },
+      "end": Object {
+        "col": 30,
+        "line": 1,
+      },
+      "range": Array [
+        Object {
+          "col": 0,
+          "line": 1,
+        },
+        Object {
+          "col": 30,
+          "line": 1,
+        },
+      ],
+      "start": Object {
+        "col": 0,
+        "line": 1,
+      },
+    },
+  ],
+}
+`;
+
+exports[`compiles globals 1`] = `
+Object {
+  "Code": Array [],
+  "Element": Array [],
+  "Exports": Array [],
+  "Functions": Array [],
+  "Globals": Array [
+    Object {
+      "init": 42,
+      "mutable": 0,
+      "type": 127,
+    },
+  ],
+  "Imports": Array [],
+  "Types": Array [],
+  "body": Array [
+    Object {
+      "Type": "Declaration",
+      "const": true,
+      "end": Object {
+        "col": 23,
+        "line": 1,
+      },
+      "globalIndex": 0,
+      "id": "answer",
+      "init": Object {
+        "Type": "Constant",
+        "end": Object {
+          "col": 22,
+          "line": 1,
+        },
+        "range": Array [
+          Object {
+            "col": 20,
+            "line": 1,
+          },
+          Object {
+            "col": 22,
+            "line": 1,
+          },
+        ],
+        "start": Object {
+          "col": 20,
+          "line": 1,
+        },
+        "value": "42",
+      },
+      "range": Array [
+        Object {
+          "col": 0,
+          "line": 1,
+        },
+        Object {
+          "col": 23,
+          "line": 1,
+        },
+      ],
+      "start": Object {
+        "col": 0,
+        "line": 1,
+      },
+      "type": "i32",
+    },
+  ],
+}
+`;
+
+exports[`the most basic of modules in wasm 1`] = `Object {}`;

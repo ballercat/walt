@@ -189,6 +189,7 @@ var token = createCommonjsModule(function (module) {
 const Syntax = {
   Keyword: 'Keyword',
   Export: 'Export',
+  Import: 'Import',
   Statement: 'Statement',
   IfThenElse: 'IfThenElse',
   UnaryExpression: 'UnaryExpression',
@@ -206,12 +207,13 @@ const Syntax = {
   Program: 'Program',
   Assignment: 'Assignment',
   Param: 'Param',
+  Typedef: 'Typedef',
   ReturnStatement: 'ReturnStatement'
 };
 
 var Syntax_1 = Syntax;
 
-const supported = ['+', '++', '-', '--', '=', '==', '!=', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ';', '>', '<', '?'];
+const supported = ['+', '++', '-', '--', '=', '==', '=>', '!=', '%', '/', '^', '&', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', ';', '>', '<', '?'];
 
 const trie = new trie$1(supported);
 var index = token(trie.fsearch, Syntax_1.Punctuator, supported);
@@ -245,18 +247,41 @@ var index$1 = createCommonjsModule(function (module) {
   module.exports = token(root, Syntax_1.Constant);
 });
 
-var index$2 = createCommonjsModule(function (module) {
-  const parse = char => {
-    if (!index(char) && !index$1(char)) return parse;
-    return null;
-  };
+const quoteOK = quoteCheck => char => quoteCheck;
+const nextFails = () => null;
 
-  module.exports = token(parse, Syntax_1.Identifier);
-});
+const endsInSingleQuote = char => {
+  if (char === '\\') return quoteOK(endsInSingleQuote);
+  if (char === '\'') return nextFails;
+
+  return endsInSingleQuote;
+};
+
+const endsInDoubleQuote = char => {
+  if (char === '\\') return quoteOK(endsInDoubleQuote);
+  if (char === '"') return nextFails;
+
+  return endsInDoubleQuote;
+};
+
+const maybeQuote = char => {
+  if (char === '\'') return endsInSingleQuote;
+  if (char === '"') return endsInDoubleQuote;
+
+  return null;
+};
+
+const stringParser = token(maybeQuote, Syntax_1.StringLiteral);
+
+const parse = char => {
+  if (!stringParser(char) && !index(char) && !index$1(char)) return parse;
+  return null;
+};
+const tokenParser = token(parse, Syntax_1.Identifier);
 
 const supported$1 = [
 // EcmaScript
-'break', 'if', 'else', 'import', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'void', 'while',
+'break', 'if', 'else', 'import', 'from', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'while',
 
 // walt replacement, matching s-expression syntax
 'function',
@@ -273,14 +298,14 @@ const supported$1 = [
 
 const trie$3 = new trie$1(supported$1);
 const root = trie$3.fsearch;
-var index$3 = token(root, Syntax_1.Keyword, supported$1);
+var index$2 = token(root, Syntax_1.Keyword, supported$1);
 
-const supported$2 = ['i32', 'i64', 'f32', 'f64', 'anyfunc'];
+const supported$2 = ['i32', 'i64', 'f32', 'f64', 'Function', 'void'];
 const trie$4 = new trie$1(supported$2);
-var index$4 = token(trie$4.fsearch, Syntax_1.Type, supported$2);
+var index$3 = token(trie$4.fsearch, Syntax_1.Type, supported$2);
 
 class Tokenizer {
-  constructor(stream$$1, parsers = [index, index$1, index$2, index$3, index$4]) {
+  constructor(stream$$1, parsers = [index, index$1, tokenParser, index$2, stringParser, index$3]) {
     if (!(stream$$1 instanceof stream)) this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream$$1)}`);
     this.stream = stream$$1;
@@ -372,7 +397,7 @@ class Tokenizer {
   }
 }
 
-var index$5 = createCommonjsModule(function (module) {
+var index$4 = createCommonjsModule(function (module) {
   /* eslint-env es6 */
   /**
    * WASM types
@@ -503,17 +528,17 @@ var index$5 = createCommonjsModule(function (module) {
   };
 });
 
-var index_1 = index$5.i32;
-var index_2 = index$5.i64;
-var index_3 = index$5.f32;
-var index_4 = index$5.f64;
-var index_9 = index$5.u8;
-var index_12 = index$5.u32;
-var index_14 = index$5.set;
-var index_16 = index$5.sizeof;
+var index_1 = index$4.i32;
+var index_2 = index$4.i64;
+var index_3 = index$4.f32;
+var index_4 = index$4.f64;
+var index_9 = index$4.u8;
+var index_12 = index$4.u32;
+var index_14 = index$4.set;
+var index_16 = index$4.sizeof;
 
 const EXTERN_FUNCTION = 0;
-
+const EXTERN_TABLE = 1;
 
 const EXTERN_GLOBAL = 3;
 
@@ -933,6 +958,7 @@ const getType = str => {
     case 'f64':
       return F64;
     case 'i32':
+    case 'Function':
     default:
       return I32;
   }
@@ -976,6 +1002,20 @@ const generateExport = decl => {
   return _export;
 };
 
+const generateImport = node => {
+  const module = node.module;
+  return node.fields.map(({ id, nativeType, typeIndex, global, kind }) => {
+    kind = kind || nativeType && EXTERN_GLOBAL || EXTERN_FUNCTION;
+    return {
+      module,
+      field: id,
+      global,
+      kind,
+      typeIndex
+    };
+  });
+};
+
 const generateValueType = node => {
   const value = {
     mutable: node.const ? 0 : 1,
@@ -1006,11 +1046,12 @@ const generateInit = node => {
 
 const generateType = node => {
   const type = { params: [], result: null };
-  if (node.result !== 'void') {
+  if (node.result && node.result !== 'void') {
     type.result = getType(node.result);
   }
 
-  type.params = node.paramList.map(p => getType(p.type));
+  type.params = node.params.map(p => getType(p.type));
+  type.id = node.id;
 
   return type;
 };
@@ -1142,7 +1183,8 @@ const syntaxMap = {
   [Syntax_1.ReturnStatement]: generateReturn,
   // Binary
   [Syntax_1.Declaration]: generateDeclaration,
-  [Syntax_1.Assignment]: generateAssignment
+  [Syntax_1.Assignment]: generateAssignment,
+  [Syntax_1.Import]: generateImport
 };
 
 const mapSyntax = curry_1$1((parent, operand) => {
@@ -1159,10 +1201,14 @@ const generateExpression = (node, parent) => {
   return block;
 };
 
+const generateElement = functionIndex => {
+  return { functionIndex };
+};
+
 const generateCode = func => {
   const block = {
     code: [],
-    locals: func.paramList.map(generateValueType)
+    locals: []
   };
 
   // NOTE: Declarations have a side-effect of changing the local count
@@ -1172,9 +1218,20 @@ const generateCode = func => {
   return block;
 };
 
+//      
 const generateErrorString = (msg, error, line, col, filename, func) => {
-  return `${error} ${msg}
+  return `${error}. ${msg}
     at ${func} (${filename}:${line}:${col})`;
+};
+
+const findTypeIndex = (node, Types) => {
+  return Types.findIndex(t => {
+    const paramsMatch = t.params.reduce((a, v, i) => node.params[i] && a && v === getType(node.params[i].type), true);
+
+    const resultMatch = t.result == node.result || t.result === getType(node.result.type);
+
+    return paramsMatch && resultMatch;
+  });
 };
 
 /**
@@ -1185,6 +1242,7 @@ const generateErrorString = (msg, error, line, col, filename, func) => {
  * is passed around between each one to generate the desired tree
  */
 class Context {
+
   constructor(options = {
     body: [],
     diAssoc: 'right',
@@ -1204,6 +1262,7 @@ class Context {
     this.Program.Exports = [];
     this.Program.Imports = [];
     this.Program.Globals = [];
+    this.Program.Element = [];
     this.Program.Functions = [];
   }
 
@@ -1218,8 +1277,7 @@ class Context {
   }
 
   unexpected(token) {
-    return this.syntaxError('Unexpected token', `Token   : ${this.token.type}
-        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`);
+    return this.syntaxError(`Expected: ${Array.isArray(token) ? token.join(' | ') : token}`, `Unexpected token ${this.token.type}`);
   }
 
   unknown({ value }) {
@@ -1272,6 +1330,23 @@ class Context {
       range: node.range.concat(token.end)
     });
   }
+
+  writeFunctionPointer(functionIndex) {
+    if (!this.Program.Element.length) {
+      this.Program.Imports.push.apply(this.Program.Imports, generateImport({
+        module: 'env',
+        fields: [{
+          id: 'table',
+          kind: EXTERN_TABLE
+        }]
+      }));
+    }
+
+    const exists = this.Program.Element.find(n => n.functionIndex === functionIndex);
+    if (exists == null) {
+      this.Program.Element.push(generateElement(functionIndex));
+    }
+  }
 }
 
 var _extends = Object.assign || function (target) {
@@ -1288,6 +1363,7 @@ var _extends = Object.assign || function (target) {
   return target;
 };
 
+//      
 function binary(ctx, opts) {
   const node = Object.assign(ctx.startNode(opts.operands[0]), opts);
 
@@ -1335,7 +1411,7 @@ const operator = (ctx, options) => {
   }
 };
 
-const constant$2 = ctx => {
+const constant$1 = ctx => {
   const node = ctx.startNode();
   node.value = ctx.token.value;
   return ctx.endNode(node, Syntax_1.Constant);
@@ -1391,11 +1467,23 @@ const maybeIdentifier = ctx => {
   const node = ctx.startNode();
   const localIndex = ctx.func.locals.findIndex(l => l.id === ctx.token.value);
   const globalIndex = ctx.globals.findIndex(g => g.id === ctx.token.value);
+  const functionIndex = ctx.functions.findIndex(f => f.id === ctx.token.value);
   const isFuncitonCall = ctx.stream.peek().value === '(';
 
-  // if function call then encode it as such
-  if (isFuncitonCall) return functionCall(ctx);
+  // Function pointer
+  if (!isFuncitonCall && localIndex < 0 && globalIndex < 0 && functionIndex > -1) {
+    // Save the element
+    ctx.writeFunctionPointer(functionIndex);
+    // Encode a function pointer as a i32.const representing the function index
+    const tableIndex = ctx.Program.Element.findIndex(e => e.functionIndex === functionIndex);
+    node.value = tableIndex;
+    return ctx.endNode(node, Syntax_1.Constant);
+  } else if (isFuncitonCall) {
+    // if function call then encode it as such
+    return functionCall(ctx);
+  }
 
+  // Not a function call or pointer, look-up variables
   if (localIndex !== -1) {
     node.localIndex = localIndex;
     node.target = ctx.func.locals[localIndex];
@@ -1452,7 +1540,7 @@ const expression = (ctx, type = 'i32', inGroup = false, associativity = 'right')
   ctx.diAssoc = associativity;
 
   while (ctx.token && ctx.token.value !== ';' && ctx.token.value !== ',') {
-    if (ctx.token.type === Syntax_1.Constant) operands.push(constant$2(ctx));else if (ctx.token.type === Syntax_1.Identifier) operands.push(maybeIdentifier(ctx));else if (ctx.token.type === Syntax_1.Punctuator) {
+    if (ctx.token.type === Syntax_1.Constant) operands.push(constant$1(ctx));else if (ctx.token.type === Syntax_1.Identifier) operands.push(maybeIdentifier(ctx));else if (ctx.token.type === Syntax_1.Punctuator) {
       const op = Object.assign({
         precedence: precedence[ctx.token.value]
       }, ctx.token);
@@ -1530,14 +1618,6 @@ const declaration = ctx => {
 
 const last$1 = list => list[list.length - 1];
 
-const findTypeIndex = (node, Types) => {
-  return Types.findIndex(t => {
-    const paramsMatch = t.params.reduce((a, v, i) => node.paramList[i] && a && v === getType(node.paramList[i].type), true);
-
-    return paramsMatch && t.result === getType(node.result.type);
-  });
-};
-
 const paramList = ctx => {
   const paramList = [];
   ctx.expect(['(']);
@@ -1551,6 +1631,7 @@ const param = ctx => {
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   ctx.expect([':']);
   node.type = ctx.expect(null, Syntax_1.Type).value;
+  node.isParam = true;
   ctx.eat([',']);
   return ctx.endNode(node, Syntax_1.Param);
 };
@@ -1562,10 +1643,11 @@ const maybeFunctionDeclaration = ctx => {
   ctx.func = node;
   node.func = true;
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
-  node.paramList = paramList(ctx);
-  node.locals = [...node.paramList];
+  node.params = paramList(ctx);
+  node.locals = [...node.params];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax_1.Type).value;
+  node.result = node.result === 'void' ? null : node.result;
 
   // NOTE: We need to write function into Program BEFORE
   // we parse the body as the body may refer to the function
@@ -1593,12 +1675,12 @@ const maybeFunctionDeclaration = ctx => {
 
   // Sanity check the return statement
   const ret = last$1(node.body);
-  if (ret) {
+  if (ret && node.type) {
     if (node.type === 'void' && ret.Type === Syntax_1.ReturnStatement) throw ctx.syntaxError('Unexpected return value in a function with result : void');
     if (node.type !== 'void' && ret.Type !== Syntax_1.ReturnStatement) throw ctx.syntaxError('Expected a return value in a function with result : ' + node.result);
-  } else if (node.result) {
-    throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
-  }
+  } else if (node.result) {}
+  // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
+
 
   // generate the code block for the emiter
   ctx.Program.Code.push(generateCode(node));
@@ -1626,6 +1708,119 @@ const _export = ctx => {
   return node;
 };
 
+//      
+const field = ctx => {
+  const f = {
+    id: ctx.expect(null, Syntax_1.Identifier).value
+  };
+
+  ctx.expect([':']);
+  const typeString = ctx.token.value;
+  if (ctx.eat(null, Syntax_1.Type)) {
+    // native type, aka GLOBAL export
+    f.global = getType(typeString);
+  } else if (ctx.eat(null, Syntax_1.Identifier)) {
+    // now we need to find a typeIndex, if we don't find one we create one
+    // with the idea that a type will be filled in later. if one is not we
+    // will throw a SyntaxError when we attempt to emit the binary
+
+    f.typeIndex = ctx.Program.Types.findIndex(({ id }) => id === typeString);
+    if (f.typeIndex === -1) {
+      f.typeIndex = ctx.Program.Types.length;
+      ctx.Program.Types.push({
+        id: typeString,
+        params: [],
+        // When we DO define a type for it later, patch the dummy type
+        hoist: node => {
+          ctx.Program.Types[f.typeIndex] = generateType(node);
+        }
+      });
+    }
+
+    // attach to a type index
+    f.functionIndex = ctx.Program.Functions.length;
+    ctx.Program.Functions.push(null);
+    ctx.functions.push(f);
+  }
+
+  return f;
+};
+
+const fieldList = ctx => {
+  const fields = [];
+  while (ctx.token.value !== '}') {
+    const f = field(ctx);
+    if (f) {
+      fields.push(f);
+      ctx.eat([',']);
+    }
+  }
+  ctx.expect(['}']);
+
+  return fields;
+};
+
+const _import = ctx => {
+  const node = ctx.startNode();
+  ctx.eat(['import']);
+
+  if (!ctx.eat(['{'])) throw ctx.syntaxError('expected {');
+
+  node.fields = fieldList(ctx);
+  ctx.expect(['from']);
+
+  node.module = ctx.expect(null, Syntax_1.StringLiteral).value;
+  // NOTE: string literals contain the starting and ending quote char
+  node.module = node.module.substring(1, node.module.length - 1);
+
+  ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport(node));
+
+  return ctx.endNode(node, Syntax_1.Import);
+};
+
+//      
+const param$1 = ctx => {
+  const type = ctx.expect(null, Syntax_1.Type).value;
+  if (type === 'void') return null;
+  return { type };
+};
+
+const params = ctx => {
+  const list = [];
+  let type;
+  ctx.expect(['(']);
+  while (ctx.token && ctx.token.value !== ')') {
+    type = param$1(ctx);
+    if (type) list.push(type);
+    ctx.eat([',']);
+  }
+  ctx.expect([')']);
+
+  return list;
+};
+
+const type$1 = ctx => {
+  const node = ctx.startNode();
+
+  ctx.eat(['type']);
+
+  node.id = ctx.expect(null, Syntax_1.Identifier).value;
+  ctx.expect(['=']);
+  node.params = params(ctx);
+  ctx.expect(['=>']);
+  node.result = param$1(ctx);
+
+  // At this point we may have found a type which needs to hoist
+  const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
+  if (needsHoisting) {
+    needsHoisting.hoist(node);
+  } else {
+    ctx.Program.Types.push(generateType(node));
+  }
+
+  return ctx.endNode(node, Syntax_1.Typedef);
+};
+
 const returnStatement = ctx => {
   const node = ctx.startNode();
   if (!ctx.func) throw ctx.syntaxError('Return statement is only valid inside a function');
@@ -1639,6 +1834,7 @@ const returnStatement = ctx => {
   return ctx.endNode(node, Syntax_1.ReturnStatement);
 };
 
+//      
 const ifThenElse = ctx => {
   const node = _extends({}, ctx.startNode(ctx.token), {
     then: [],
@@ -1688,6 +1884,10 @@ const keyword$1 = ctx => {
       return maybeFunctionDeclaration(ctx);
     case 'export':
       return _export(ctx);
+    case 'import':
+      return _import(ctx);
+    case 'type':
+      return type$1(ctx);
     case 'if':
       return ifThenElse(ctx);
     case 'return':
@@ -1701,6 +1901,7 @@ const keyword$1 = ctx => {
 // through out the right-hand side of the expression
 function maybeAssignment(ctx) {
   const target = maybeIdentifier(ctx);
+  if (target.Type === Syntax_1.FunctionCall) return target;
 
   const nextValue = ctx.stream.peek().value;
   const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
@@ -1916,7 +2117,7 @@ class OutputStream {
   debug(begin = 0, end) {
     let pc = 0;
     return this.data.slice(begin, end).map(({ type, value, debug }) => {
-      const pcString = pc.toString().padEnd(this.data.length.toString().length + 1);
+      const pcString = pc.toString(16).padStart(8, '0').padEnd(this.data.length.toString().length + 1);
       let valueString;
       if (Array.isArray(value)) valueString = value.map(v => v.toString(16)).join().padStart(12);else valueString = value.toString(16).padStart(12);
       const out = `${pcString}: ${valueString} ; ${debug}`;
@@ -1976,7 +2177,7 @@ const writer = ({
 const emit$1 = entries => {
   const payload = new OutputStream().push(varuint32, entries.length, 'entry count');
 
-  entries.forEach(({ module, field, kind, global }) => {
+  entries.forEach(({ module, field, kind, global, typeIndex }) => {
     emitString(payload, module, 'module');
     emitString(payload, field, 'field');
 
@@ -1986,6 +2187,20 @@ const emit$1 = entries => {
           payload.push(index_9, kind, 'Global');
           payload.push(index_9, global, getTypeString(global));
           payload.push(index_9, 0, 'immutable');
+          break;
+        }
+      case EXTERN_FUNCTION:
+        {
+          payload.push(index_9, kind, 'Function');
+          payload.push(varuint32, typeIndex, 'type index');
+          break;
+        }
+      case EXTERN_TABLE:
+        {
+          payload.push(index_9, kind, 'Table');
+          payload.push(index_9, ANYFUNC, 'function table types');
+          payload.push(varint1, 0, 'has max value');
+          payload.push(varuint32, 0, 'iniital table size');
           break;
         }
     }
@@ -2048,10 +2263,30 @@ const emit$3 = globals => {
 
 // Emits function section. For function code emiter look into code.js
 const emit$4 = functions => {
+  functions = functions.filter(func => func !== null);
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, 'count');
 
   functions.forEach(index => stream.push(varuint32, index, 'type index'));
+
+  return stream;
+};
+
+//      
+const emitElement = stream => ({ functionIndex }, index) => {
+  stream.push(varuint32, 0, 'table index');
+  stream.push(index_9, def.i32Const.code, 'offset');
+  stream.push(varuint32, index, '');
+  stream.push(index_9, def.End.code, 'end');
+  stream.push(varuint32, 1, 'number of elements');
+  stream.push(varuint32, functionIndex, 'function index');
+};
+
+const emit$5 = elements => {
+  const stream = new OutputStream();
+  stream.push(varuint32, elements.length, 'count');
+
+  elements.forEach(emitElement(stream));
 
   return stream;
 };
@@ -2064,10 +2299,12 @@ const emitType = (stream, { params, result }) => {
   if (result) {
     stream.push(varint1, 1, 'result count');
     stream.push(varint7, result, `result type ${getTypeString(result)}`);
+  } else {
+    stream.push(varint1, 0, 'result count');
   }
 };
 
-const emit$5 = types => {
+const emit$6 = types => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, 'count');
 
@@ -2078,8 +2315,10 @@ const emit$5 = types => {
 
 // TODO
 const emitLocal = (stream, local) => {
-  stream.push(varuint32, 1, 'number of locals of following type');
-  stream.push(varint7, local.type, `${getTypeString(local.type)}`);
+  if (local.isParam == null) {
+    stream.push(varuint32, 1, 'number of locals of following type');
+    stream.push(varint7, local.type, `${getTypeString(local.type)}`);
+  }
 };
 
 const emitFunctionBody = (stream, { locals, code }) => {
@@ -2129,7 +2368,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
   stream.push(index_9, def.End.code, 'end');
 };
 
-const emit$6 = functions => {
+const emit$7 = functions => {
   // do stuff with ast
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, 'function count');
@@ -2146,24 +2385,25 @@ const SECTION_FUNCTION = 3; // Function declarations
 const SECTION_GLOBAL = 6; // Global declarations
 const SECTION_EXPORT = 7; // Exports
  // Start function declaration
- // Elements section
+const SECTION_ELEMENT = 9; // Elements section
 const SECTION_CODE = 10; // Function bodies (code)
  // Data segments
 
 var section = {
-  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: emit$5 }),
+  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: emit$6 }),
   function: writer({ type: SECTION_FUNCTION, label: 'Functions', emitter: emit$4 }),
   imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: emit$1 }),
   exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: emit$2 }),
   globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: emit$3 }),
-  code: writer({ type: SECTION_CODE, label: 'Code', emitter: emit$6 })
+  element: writer({ type: SECTION_ELEMENT, label: 'Element', emitter: emit$5 }),
+  code: writer({ type: SECTION_CODE, label: 'Code', emitter: emit$7 })
 };
 
 function emit(ast = {}) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  return stream.write(write()).write(section.type(ast)).write(section.function(ast)).write(section.imports(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.code(ast));
+  return stream.write(write()).write(section.type(ast)).write(section.imports(ast)).write(section.function(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.element(ast)).write(section.code(ast));
 }
 
 // Used for deugging purposes

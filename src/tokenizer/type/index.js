@@ -7,7 +7,8 @@ const supported = [
   'i64',
   'f32',
   'f64',
-  'anyfunc'
+  'Function',
+  'void'
 ];
 const trie = new Trie(supported);
 module.exports = token(trie.fsearch, Syntax.Type, supported);

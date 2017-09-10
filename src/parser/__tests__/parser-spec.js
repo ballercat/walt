@@ -1,5 +1,4 @@
 import test from 'ava';
-import snapshot from 'snap-shot';
 import Parser from '..';
 import { I32 } from '../../emitter/value_type';
 import { EXTERN_GLOBAL } from '../../emitter/external_kind';
@@ -24,17 +23,17 @@ const prepare = string =>
 test('the most basic of modules in wasm', t => {
   const result = new Parser(prepare('')).parse();
   // Empty ast, empty module
-  snapshot(result);
+  t.snapshot(result);
 });
 
 test('compiles globals', t => {
   const result = new Parser(prepare('const answer: i32 = 42;')).parse();
-  snapshot(result);
+  t.snapshot(result);
 });
 
 test('compiles exports', t => {
   const result = new Parser(prepare('export const answer: i32 = 42;')).parse();
-  snapshot(result);
+  t.snapshot(result);
 });
 
 

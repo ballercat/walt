@@ -4,21 +4,11 @@ import {
   generateCode,
   getType
 } from './generator';
+import { findTypeIndex } from './context';
 import statement from './statement';
 import declaration from './declaration';
 
 const last = list => list[list.length - 1];
-
-const findTypeIndex = (node, Types) => {
-  return Types.findIndex(t => {
-    const paramsMatch = t.params.reduce(
-      (a, v, i) => node.paramList[i] && a && v === getType(node.paramList[i].type),
-      true
-    );
-
-    return paramsMatch && t.result === getType(node.result.type);
-  });
-};
 
 const paramList = (ctx) => {
   const paramList = [];
@@ -34,6 +24,7 @@ const param = (ctx) => {
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([':']);
   node.type = ctx.expect(null, Syntax.Type).value;
+  node.isParam = true;
   ctx.eat([',']);
   return ctx.endNode(node, Syntax.Param);
 }
@@ -46,10 +37,11 @@ const maybeFunctionDeclaration = (ctx) => {
   ctx.func = node;
   node.func = true;
   node.id = ctx.expect(null, Syntax.Identifier).value;
-  node.paramList = paramList(ctx);
-  node.locals = [...node.paramList];
+  node.params = paramList(ctx);
+  node.locals = [...node.params];
   ctx.expect([':']);
   node.result = ctx.expect(null, Syntax.Type).value;
+  node.result = node.result === 'void' ? null : node.result;
 
   // NOTE: We need to write function into Program BEFORE
   // we parse the body as the body may refer to the function
@@ -78,15 +70,14 @@ const maybeFunctionDeclaration = (ctx) => {
 
   // Sanity check the return statement
   const ret = last(node.body);
-  if (ret) {
+  if (ret && node.type) {
     if(node.type === 'void' && ret.Type === Syntax.ReturnStatement)
       throw ctx.syntaxError('Unexpected return value in a function with result : void');
     if(node.type !== 'void' && ret.Type !== Syntax.ReturnStatement)
       throw ctx.syntaxError('Expected a return value in a function with result : ' + node.result);
   } else if (node.result){
-    throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
+    // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }
-
 
   // generate the code block for the emiter
   ctx.Program.Code.push(generateCode(node));

@@ -10,6 +10,7 @@ export const getType = str => {
     case 'f32': return F32;
     case 'f64': return F64;
     case 'i32':
+    case 'Function':
     default: return I32;
   }
 };
@@ -55,6 +56,20 @@ export const generateExport = decl => {
   return _export;
 };
 
+export const generateImport = node => {
+  const module = node.module;
+  return node.fields.map(({ id, nativeType, typeIndex, global, kind }) => {
+    kind = kind || ((nativeType && EXTERN_GLOBAL) || EXTERN_FUNCTION);
+    return {
+      module,
+      field: id,
+      global,
+      kind,
+      typeIndex
+    };
+  });
+}
+
 export const generateValueType = node => {
   const value = {
     mutable: node.const ? 0 : 1,
@@ -85,11 +100,12 @@ export const generateInit = node => {
 
 export const generateType = node => {
   const type = { params: [], result: null };
-  if (node.result !== 'void') {
+  if (node.result && node.result !== 'void') {
     type.result = getType(node.result);
   }
 
-  type.params = node.paramList.map(p => getType(p.type));
+  type.params = node.params.map(p => getType(p.type));
+  type.id = node.id;
 
   return type;
 }
@@ -228,7 +244,8 @@ const syntaxMap = {
   [Syntax.ReturnStatement]: generateReturn,
   // Binary
   [Syntax.Declaration]: generateDeclaration,
-  [Syntax.Assignment]: generateAssignment
+  [Syntax.Assignment]: generateAssignment,
+  [Syntax.Import]: generateImport
 };
 
 export const mapSyntax = curry((parent, operand) => {
@@ -245,10 +262,14 @@ export const generateExpression = (node, parent) => {
   return block;
 }
 
+export const generateElement = (functionIndex) => {
+  return { functionIndex };
+}
+
 export const generateCode = func => {
   const block = {
     code: [],
-    locals: func.paramList.map(generateValueType)
+    locals: []
   };
 
   // NOTE: Declarations have a side-effect of changing the local count

@@ -1,6 +1,31 @@
-const generateErrorString = (msg, error, line, col, filename, func) => {
-  return `${error} ${msg}
+// @flow
+import { getType, generateImport, generateElement } from './generator';
+import { EXTERN_TABLE } from '../emitter/external_kind';
+import type { Node, TypeNode } from './node';
+
+const generateErrorString = (
+  msg:string,
+  error: string,
+  line:number,
+  col: number,
+  filename: string,
+  func: string
+) => {
+  return `${error}. ${msg}
     at ${func} (${filename}:${line}:${col})`;
+}
+
+export const findTypeIndex = (node: TypeNode, Types: TypeNode[]): number => {
+  return Types.findIndex(t => {
+    const paramsMatch = t.params.reduce(
+      (a, v, i) => node.params[i] && a && v === getType(node.params[i].type),
+      true
+    );
+
+    const resultMatch = t.result == node.result || t.result === getType(node.result.type);
+
+    return paramsMatch && resultMatch;
+  });
 }
 
 /**
@@ -11,6 +36,8 @@ const generateErrorString = (msg, error, line, col, filename, func) => {
  * is passed around between each one to generate the desired tree
  */
 class Context {
+  token: { value: string };
+
   constructor(options = {
     body: [],
     diAssoc: 'right',
@@ -30,10 +57,11 @@ class Context {
     this.Program.Exports = [];
     this.Program.Imports = [];
     this.Program.Globals = [];
+    this.Program.Element = [];
     this.Program.Functions = [];
   }
 
-  syntaxError(msg, error) {
+  syntaxError(msg: string, error: any) {
     const { line, col } = this.token.start;
     return new SyntaxError(
       generateErrorString(
@@ -57,9 +85,8 @@ class Context {
 
   unexpected(token) {
     return this.syntaxError(
-      'Unexpected token',
-       `Token   : ${this.token.type}
-        Expected: ${Array.isArray(token) ? token.join(' | ') : token}`
+      `Expected: ${Array.isArray(token) ? token.join(' | ') : token}`,
+      `Unexpected token ${this.token.type}`
     );
   }
 
@@ -101,7 +128,7 @@ class Context {
     return false;
   }
 
-  startNode(token = this.token) {
+  startNode(token: any = this.token): Node {
     return { start: token.start, range: [token.start] };
   }
 
@@ -114,6 +141,27 @@ class Context {
         end: token.end,
         range: node.range.concat(token.end)
       });
+  }
+
+  writeFunctionPointer(functionIndex: number): void {
+    if (!this.Program.Element.length) {
+      this.Program.Imports.push.apply(
+        this.Program.Imports,
+        generateImport({
+          module: 'env',
+          fields: [{
+            id: 'table',
+            kind: EXTERN_TABLE
+          }]
+        }));
+    }
+
+    const exists = this.Program.Element.find(
+      n => n.functionIndex === functionIndex
+    );
+    if (exists == null) {
+      this.Program.Element.push(generateElement(functionIndex));
+    }
   }
 }
 

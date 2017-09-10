@@ -13,6 +13,8 @@ const emitType = (stream, { params, result }) => {
   if (result) {
     stream.push(varint1, 1, 'result count');
     stream.push(varint7, result, `result type ${getTypeString(result)}`);
+  } else {
+    stream.push(varint1, 0, 'result count');
   }
 }
 

@@ -3,6 +3,7 @@ import exports from './exports';
 import globals from './globals';
 import functions from './functions';
 import writer from './writer';
+import element from './element';
 import types from './types';
 import code from './code';
 import {
@@ -25,6 +26,7 @@ export default {
   imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: imports }),
   exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: exports }),
   globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: globals }),
-  code: writer({ type: SECTION_CODE, label: 'Code', emitter: code })
+  element: writer({ type: SECTION_ELEMENT, label: 'Element', emitter: element }),
+  code: writer({ type: SECTION_CODE, label: 'Code', emitter: code }),
 };
 

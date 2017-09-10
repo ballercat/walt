@@ -8,6 +8,7 @@ const supported = [
   'if',
   'else',
   'import',
+  'from',
   'export',
   'return',
   'switch',
@@ -18,7 +19,6 @@ const supported = [
   'for',
   'continue',
   'do',
-  'void',
   'while',
 
   // walt replacement, matching s-expression syntax

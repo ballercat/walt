@@ -71,7 +71,7 @@ export default class OutputStream {
   debug(begin = 0, end) {
     let pc = 0;
     return this.data.slice(begin, end).map(({ type, value, debug }) => {
-      const pcString = (pc).toString().padEnd((this.data.length).toString().length + 1);
+      const pcString = (pc).toString(16).padStart(8, '0').padEnd((this.data.length).toString().length + 1);
       let valueString;
       if (Array.isArray(value))
         valueString = value.map(v => (v).toString(16)).join().padStart(12);

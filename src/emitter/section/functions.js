@@ -3,6 +3,7 @@ import { varuint32 } from '../numbers';
 import OutputStream from '../../utils/output-stream';
 
 const emit = (functions) => {
+  functions = functions.filter(func => func !== null);
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, 'count');
 

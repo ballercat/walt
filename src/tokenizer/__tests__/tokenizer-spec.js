@@ -1,4 +1,3 @@
-import snapshot from 'snap-shot';
 import Tokenizer from '..';
 import Stream from '../../utils/stream';
 import Syntax from '../../Syntax';
@@ -25,5 +24,5 @@ test('parses a stream into tokens', t => {
   const stream = new Stream(`let x: i32 = 2;`);
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
-  snapshot(result);
+  t.snapshot(result);
 });

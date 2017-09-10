@@ -3,6 +3,7 @@ import punctuator from './punctuator';
 import constant from './constant';
 import identifier from './identifier';
 import keyword from './keyword';
+import string from './string';
 import type from './type';
 
 class Tokenizer {
@@ -13,6 +14,7 @@ class Tokenizer {
       constant,
       identifier,
       keyword,
+      string,
       type
     ]
   ) {

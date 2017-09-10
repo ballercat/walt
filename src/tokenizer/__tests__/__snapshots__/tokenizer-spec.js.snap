@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parses a stream into tokens 1`] = `
+Array [
+  Object {
+    "end": Object {
+      "col": 3,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 0,
+      "line": 1,
+    },
+    "type": "Keyword",
+    "value": "let",
+  },
+  Object {
+    "end": Object {
+      "col": 5,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 4,
+      "line": 1,
+    },
+    "type": "Identifier",
+    "value": "x",
+  },
+  Object {
+    "end": Object {
+      "col": 6,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 5,
+      "line": 1,
+    },
+    "type": "Punctuator",
+    "value": ":",
+  },
+  Object {
+    "end": Object {
+      "col": 10,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 7,
+      "line": 1,
+    },
+    "type": "Type",
+    "value": "i32",
+  },
+  Object {
+    "end": Object {
+      "col": 12,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 11,
+      "line": 1,
+    },
+    "type": "Punctuator",
+    "value": "=",
+  },
+  Object {
+    "end": Object {
+      "col": 14,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 13,
+      "line": 1,
+    },
+    "type": "Constant",
+    "value": "2",
+  },
+  Object {
+    "end": Object {
+      "col": 15,
+      "line": 1,
+    },
+    "start": Object {
+      "col": 14,
+      "line": 1,
+    },
+    "type": "Punctuator",
+    "value": ";",
+  },
+]
+`;

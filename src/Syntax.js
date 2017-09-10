@@ -1,6 +1,7 @@
 const Syntax = {
   Keyword: 'Keyword',
   Export: 'Export',
+  Import: 'Import',
   Statement: 'Statement',
   IfThenElse: 'IfThenElse',
   UnaryExpression: 'UnaryExpression',
@@ -18,6 +19,7 @@ const Syntax = {
   Program: 'Program',
   Assignment: 'Assignment',
   Param: 'Param',
+  Typedef: 'Typedef',
   ReturnStatement: 'ReturnStatement'
 }
 

@@ -6,6 +6,8 @@ import expression from './expression';
 // through out the right-hand side of the expression
 function maybeAssignment(ctx) {
   const target = maybeIdentifier(ctx);
+  if (target.Type === Syntax.FunctionCall)
+    return target;
 
   const nextValue = ctx.stream.peek().value;
   const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';

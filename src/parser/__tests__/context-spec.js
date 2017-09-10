@@ -1,5 +1,4 @@
 import test from 'ava';
-import snapshot from 'snap-shot';
 import Context from '../context';
 
 test('syntaxError generates an accurate error string', t => {
@@ -13,6 +12,6 @@ test('syntaxError generates an accurate error string', t => {
   const syntaxError = ctx.syntaxError('Test Error');
   t.is(syntaxError instanceof SyntaxError, true);
   const lines = syntaxError.toString().split('\n');
-  snapshot(lines);
+  t.snapshot(lines);
 });
 

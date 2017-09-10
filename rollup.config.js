@@ -6,6 +6,7 @@ import { minify } from 'uglify-es';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
+import flow from 'rollup-plugin-flow';
 
 const PROD = process.env.NODE_ENV === 'production';
 
@@ -15,6 +16,7 @@ export default {
   format: 'umd',
   moduleName: 'Walt',
   plugins: [
+    flow(),
     eslint(),
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
@@ -31,7 +33,6 @@ export default {
               "chrome": "60.0.0"
             }
           }],
-        "flow"
       ],
       "plugins": [
         "external-helpers",
