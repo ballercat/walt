@@ -35,6 +35,7 @@ const type = (ctx: Context): TypeNode => {
   node.params = params(ctx);
   ctx.expect(['=>']);
   node.result = param(ctx);
+
   // At this point we may have found a type which needs to hoist
   const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
   if (needsHoisting) {

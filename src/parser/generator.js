@@ -206,20 +206,6 @@ const generateFunctionCall = (node, parent) => {
   return block;
 }
 
-const generateIndirectFunctionCall = (node, parent) => {
-  const block = node.arguments
-    .concat(node.params)
-    .map(mapSyntax(parent))
-    .reduce(mergeBlock, []);
-
-  block.push({
-    kind: opcode.CallIndirect,
-    params: [node.typeIndex, { kind: opcode.Nop, params: [] }]
-  });
-
-  return block;
-}
-
 // probably should be called "generateBranch" and be more generic
 // like handling ternary for example. A lot of shared logic here & ternary
 const generateIf = (node, parent) => {
@@ -282,7 +268,6 @@ export const generateLoop = (node, parent) => {
 
 const syntaxMap = {
   [Syntax.FunctionCall]: generateFunctionCall,
-  [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
   [Syntax.Constant]: getConstOpcode,
   [Syntax.BinaryExpression]: generateBinaryExpression,

@@ -23,22 +23,8 @@ const param = (ctx) => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([':']);
-
-  // maybe a custom type
-  const identifier = ctx.token.value;
-  if (ctx.eat(null, Syntax.Identifier)) {
-    // find the type
-    node.typePointer = ctx.Program.Types.find(({ id  }) => id === identifier);
-    if (node.typePointer == null)
-      throw ctx.syntaxError('Undefined Type', identifier);
-
-    node.type = 'i32';
-  } else {
-    node.type = ctx.expect(null, Syntax.Type).value;
-  }
-
+  node.type = ctx.expect(null, Syntax.Type).value;
   node.isParam = true;
-
   ctx.eat([',']);
   return ctx.endNode(node, Syntax.Param);
 }

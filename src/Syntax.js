@@ -15,7 +15,6 @@ const Syntax = {
   Type: 'Type',
   Declaration: 'Declaration',
   FunctionDeclaration: 'FunctionDeclaration',
-  IndirectFunctionCall: 'IndirectFunctionCall',
   FunctionCall: 'FunctionCall',
   Loop: 'Loop',
   Program: 'Program',
