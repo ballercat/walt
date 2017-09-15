@@ -156,6 +156,7 @@ const Syntax = {
   Type: 'Type',
   Declaration: 'Declaration',
   FunctionDeclaration: 'FunctionDeclaration',
+  IndirectFunctionCall: 'IndirectFunctionCall',
   FunctionCall: 'FunctionCall',
   Loop: 'Loop',
   Program: 'Program',
@@ -1105,6 +1106,17 @@ const generateFunctionCall = (node, parent) => {
   return block;
 };
 
+const generateIndirectFunctionCall = (node, parent) => {
+  const block = node.arguments.concat(node.params).map(mapSyntax(parent)).reduce(mergeBlock, []);
+
+  block.push({
+    kind: def.CallIndirect,
+    params: [node.typeIndex, { kind: def.Nop, params: [] }]
+  });
+
+  return block;
+};
+
 // probably should be called "generateBranch" and be more generic
 // like handling ternary for example. A lot of shared logic here & ternary
 const generateIf = (node, parent) => {
@@ -1167,6 +1179,7 @@ const generateLoop = (node, parent) => {
 
 const syntaxMap = {
   [Syntax_1.FunctionCall]: generateFunctionCall,
+  [Syntax_1.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
   [Syntax_1.Constant]: getConstOpcode,
   [Syntax_1.BinaryExpression]: generateBinaryExpression,
@@ -1271,7 +1284,7 @@ var _extends = Object.assign || function (target) {
 //      
 const findTypeIndex = (node, Types) => {
   return Types.findIndex(t => {
-    const paramsMatch = t.params.reduce((a, v, i) => node.params[i] && a && v === getType(node.params[i].type), true);
+    const paramsMatch = t.params.length === node.params.length && t.params.reduce((a, v, i) => node.params[i] && a && v === getType(node.params[i].type), true);
 
     const resultMatch = t.result == node.result || t.result === getType(node.result.type);
 
@@ -1316,8 +1329,7 @@ class Context {
   }
 
   unexpectedValue(value) {
-    return this.syntaxError(`Value   : ${this.token.value}
-      Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
+    return this.syntaxError(`Expected: ${Array.isArray(value) ? value.join('|') : value}`, 'Unexpected value');
   }
 
   unexpected(token) {
@@ -1464,34 +1476,53 @@ const precedence = {
   '<': 5
 };
 
-const argumentList = (ctx, proto) => {
+//      
+const argumentList = (ctx, type) => {
   const list = [];
   // return [];
   ctx.expect(['(']);
-  while (ctx.token.value !== ')') list.push(argument(ctx, proto));
+  while (ctx.token.value !== ')') list.push(argument(ctx, type));
   // ctx.expect([')']);
   return list;
 };
 
-const argument = (ctx, proto) => {
-  const node = expression(ctx, proto.type, true);
+const argument = (ctx, type) => {
+  const node = expression(ctx, type, true);
   ctx.eat([',']);
   return node;
 };
 const functionCall = ctx => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
-  node.functionIndex = ctx.functions.findIndex(({ id }) => id == node.id);
 
-  if (node.functionIndex === -1) throw ctx.syntaxError(`Undefined function ${node.id}`);
+  const maybePointer = ctx.func.locals.find(l => l.id === node.id);
+  const localIndex = ctx.func.locals.findIndex(({ id }) => id === node.id);
+
+  let Type = Syntax_1.FunctionCall;
+
+  if (maybePointer && localIndex > -1) {
+    Type = Syntax_1.IndirectFunctionCall;
+
+    node.params = [ctx.endNode({
+      range: [],
+      localIndex,
+      target: ctx.func.locals[localIndex],
+      type: ctx.func.locals[localIndex].type
+    }, Syntax_1.Identifier)];
+  } else {
+    node.functionIndex = ctx.functions.findIndex(({ id }) => id == node.id);
+
+    if (node.functionIndex === -1) throw ctx.syntaxError(`Undefined function: ${node.id}`);
+  }
 
   const proto = ctx.functions[node.functionIndex];
 
-  node.arguments = argumentList(ctx, proto);
+  node.arguments = argumentList(ctx, proto && proto.type || 'i32');
 
-  return ctx.endNode(node, Syntax_1.FunctionCall);
+  return ctx.endNode(node, Type);
 };
 
+//     
 // Maybe identifier, maybe function call
 const maybeIdentifier = ctx => {
   const node = ctx.startNode();
@@ -1630,7 +1661,7 @@ const generate = (ctx, node) => {
 const declaration = ctx => {
   const node = ctx.startNode();
   node.const = ctx.token.value === 'const';
-  if (!ctx.eat(['const', 'let'])) throw ctx.unexpectedValue(['const', 'let']);
+  if (!ctx.eat(['const', 'let', 'function'])) throw ctx.unexpectedValue(['const', 'let', 'function']);
 
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   ctx.expect([':']);
@@ -1660,8 +1691,21 @@ const param = ctx => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   ctx.expect([':']);
-  node.type = ctx.expect(null, Syntax_1.Type).value;
+
+  // maybe a custom type
+  const identifier = ctx.token.value;
+  if (ctx.eat(null, Syntax_1.Identifier)) {
+    // find the type
+    node.typePointer = ctx.Program.Types.find(({ id }) => id === identifier);
+    if (node.typePointer == null) throw ctx.syntaxError('Undefined Type', identifier);
+
+    node.type = 'i32';
+  } else {
+    node.type = ctx.expect(null, Syntax_1.Type).value;
+  }
+
   node.isParam = true;
+
   ctx.eat([',']);
   return ctx.endNode(node, Syntax_1.Param);
 };
@@ -1840,7 +1884,6 @@ const type$1 = ctx => {
   node.params = params(ctx);
   ctx.expect(['=>']);
   node.result = param$1(ctx);
-
   // At this point we may have found a type which needs to hoist
   const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
   if (needsHoisting) {

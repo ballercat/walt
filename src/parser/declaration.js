@@ -16,8 +16,8 @@ const generate = (ctx, node) => {
 const declaration = (ctx) => {
   const node = ctx.startNode();
   node.const = ctx.token.value === 'const';
-  if (!ctx.eat(['const', 'let']))
-    throw ctx.unexpectedValue(['const', 'let']);
+  if (!ctx.eat(['const', 'let', 'function']))
+    throw ctx.unexpectedValue(['const', 'let', 'function']);
 
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([':']);
