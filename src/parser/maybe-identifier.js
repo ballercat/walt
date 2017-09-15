@@ -1,8 +1,15 @@
+//@flow
 import Syntax from '../Syntax'
 import functionCall from './function-call';
+import Context from './context';
+import type { Node } from '../flow/types';
+
+const functionPointer = (ctx: Context, node: Node): Node => {
+
+}
 
 // Maybe identifier, maybe function call
-const maybeIdentifier = (ctx) => {
+const maybeIdentifier = (ctx: Context): Node => {
   const node = ctx.startNode();
   const localIndex = ctx.func.locals.findIndex(l => l.id === ctx.token.value);
   const globalIndex = ctx.globals.findIndex(g => g.id === ctx.token.value);

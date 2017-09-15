@@ -84,6 +84,8 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [x] ~for loops~
   * [ ] switch/case
   * [x] Function imports
+  * [x] Function pointers
+  * [ ] Arrays
   * [ ] Memory
   * [ ] Custom _Object_ Types
 * Emiter - WIP
@@ -91,6 +93,7 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [x] ~Functions~
   * [x] ~Types - wasm built ins(i32/f32)~
   * [x] ~Types - custom function type imports~
+  * [ ] Memory
   * [x] ~Arithmetic~
   * [x] ~Globals, Locals~
 * [ ] Support 100% of native Wasm functions
