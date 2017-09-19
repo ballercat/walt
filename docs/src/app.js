@@ -1,73 +1,108 @@
-import CodeMirror from 'react-codemirror';
 import React from 'react';
-import 'codemirror/mode/javascript/javascript';
-import 'codemirror/lib/codemirror.css';
+import Editor from './editor';
+import 'semantic-ui-css/semantic.min.css';
+import { Tab, Container } from 'semantic-ui-react';
 import './css/app';
 
-const DEFAULT_EXAMPLE = `const x: i32 = 2;
-  export function echo(): i32 {
-    const x: i32 = 42;
-    return x;
+function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+};
+
+const DEFAULT_EXAMPLE =
+`const x: i32 = 2;
+export function echo(): i32 {
+  const x: i32 = 42;
+  return x;
 }`;
 
-class EchoConsole extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      logs: []
-    }
-  }
-  componentDidMount() {
-    const oldConsole = {};
-    const selectMethods = [ 'log', 'dir', 'warn', 'error', 'info'];
-    Object.keys(console).filter(method => selectMethods.includes(method)).forEach(method => {
-      oldConsole[method] = console[method].bind(console);
-      console[method] = (...args) => {
-        oldConsole[method].apply(null, args);
-        this.setState(state => ({
-          logs: [...state.logs, {
-            level: method,
-            content: JSON.stringify(args)
-          }]
-        }))
-      }
-    });
-
-  }
-  render() {
-    return (
-      <code className="Console"><pre>{this.state.logs.map(log => `${log.level}: ${log.content} \n`)}</pre></code>
-    )
-  }
-}
-//    const wasm = window.Walt.getIR(src)
-//    binary.$blockScrolling = Infinity
-//    binary.setValue(wasm.debug(), -1)
-//    WebAssembly.instantiate(wasm.buffer()).then(result => {
-//      console.log('Module', result.module)
-//      console.log('Instance', result.instance)
-//      const exports = result.instance.exports
-//      console.log(
-//        'Exports',
-//        Object.keys(result.instance.exports).forEach(
-//          k =>
-//            typeof exports[k] === 'function'
-//              ? console.log(`${k} => ${exports[k]()}`)
-//              : console.log(`${k} => ${exports[k]}`),
-//        ),
-//      )
-//    })
-//  })
+const Console = (props) => (
+  <code className="Console">
+    <pre>
+      {props.logs.map(log => `${log} \n`)}
+    </pre>
+  </code>
+)
 
 class Explorer extends React.Component {
   state = {
-    code: DEFAULT_EXAMPLE
+    code: DEFAULT_EXAMPLE,
+    wasm: window.Walt.getIR(DEFAULT_EXAMPLE).debug(),
+    logs: []
   }
+
+  panes = [
+    {
+      menuItem: 'Code',
+      render: () => (
+        <Tab.Pane>
+          <Editor key="code" code={this.state.code} onUpdate={this.handleUpdate} />
+        </Tab.Pane>
+      )
+    },
+    {
+      menuItem: 'WebAssembly',
+      render: () => (
+        <Tab.Pane>
+          <Editor
+            key="wasm"
+            code={this.state.wasm}
+            extraOptions={{ readOnly: true }}
+          />
+        </Tab.Pane>
+      )
+    }
+  ]
+
+  updateWasm = debounce(() => {
+    try {
+      this.intermediateRepresentation = window.Walt.getIR(this.state.code);
+      const wasm = this.intermediateRepresentation.debug();
+      this.setState(
+        { wasm },
+        () => {
+          WebAssembly.instantiate(
+            this.intermediateRepresentation.buffer()
+          ).then(result => {
+            const exports = result.instance.exports;
+            if (exports) {
+              window.exports = exports;
+              const logs = [];
+              Object.keys(exports).forEach(k => {
+                if (typeof exports[k] === 'function') {
+                  logs.push(JSON.stringify(exports[k]()));
+                } else {
+                  logs.push(JSON.stringify(exports[k]));
+                }
+              });
+              this.setState({ logs });
+            }
+          }).catch(e => {
+            this.setState({ logs: [e.toString()] });
+          });
+        }
+      );
+    } catch(e) {
+      this.setState(() => {
+        return { logs: [e.toString()] };
+      });
+    }
+  }, 1000)
+
   handleUpdate = (code) => {
-    this.setState({ code });
+    this.setState({ code }, this.updateWasm);
   }
-  handleCompile = () => {
-  }
+
   render() {
     return (
       <div>
@@ -75,33 +110,12 @@ class Explorer extends React.Component {
           <h1 className="Header-title">Walt Explorer</h1>
         </header>,
         <main className="Main" key="main">
-          <div className="Main-leftContainer">
-            <div className="Main-editor" id="editor">
-              <CodeMirror
-                value={this.state.code}
-                onChange={this.handleUpdate}
-                options={{
-                  lineNumbers: true,
-                  mode: 'javascript'
-                }}
-              />
-            </div>
-          </div>
-          <div className="Main-btnContainer">
-            <button
-              id="compile"
-              className="Main-compile"
-              onClick={this.handleCompile}
-            >
-              Compile
-            </button>
-          </div>
-          <div className="Main-rightContainer">
-            <div className="Main-binary" id="binary" />
-          </div>
+          <Container fluid>
+            <Tab panes={this.panes} />
+          </Container>
         </main>,
         <footer className="Footer">
-          <EchoConsole />
+          <Console logs={this.state.logs} />
         </footer>
       </div>
     );

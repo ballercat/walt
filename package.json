@@ -26,9 +26,11 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "dependencies": {
+    "codemirror": "^5.29.0",
     "curry": "^1.2.0",
     "invariant": "^2.2.2",
     "ramda": "^0.23.0",
+    "react-codemirror": "^1.0.0",
     "wasm-types": "1.0.2"
   },
   "devDependencies": {

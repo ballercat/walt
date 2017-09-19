@@ -6,15 +6,6 @@ $color-secondary--light: #c1f8d5;
 $color-black: #333333;
 $color-white: #fff;
 
-:root {
-  --primary: #EFDF6B;
-  --primary--light: #f7efbb;
-  --secondary: #8cf2b1;
-  --secondary--light: #c1f8d5;
-  --black: #333333;
-  --white: #fff;
-}
-
 html,
 body {
   box-sizing: border-box;
@@ -34,72 +25,66 @@ body {
   .Header {
     height: 5rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
-  }
-  .Header::after {
-    content: '';
-    position: absolute;
-    background: $color-black;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50vh;
-    z-index: -1;
-  }
 
-  .Header-title {
-    margin-left: 5rem;
-    color: $color-secondary;
-  }
+    &::after {
+      content: '';
+      position: absolute;
+      background: $color-black;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10vh;
+      z-index: -1;
+    }
 
-  .Main-compile {
-    margin-right: 5rem;
-    -webkit-appearance: none;
-    appearance: none;
-    padding: .5rem 1.5rem;
-    border: solid 1px;
-    width: 100%;
-    font-size: 1.5rem;
-    color: $color-white;
-    border-color: $color-primary;
-    background-color: $color-secondary;
-    transition: color .5s ease-in-out, background-color .5s ease-in-out;
-  }
+    &-title {
+      margin-left: 5rem;
+      color: $color-secondary;
+    }
 
-  .Main-compile:focus,
-  .Main-compile:hover {
-    color: $color-secondary;
-    background-color: $color-white;
-    border-color: $color-primary;
-  }
-
-  .Header-container {
-    margin: 0 5rem;
+    &-container {
+      margin: 0 5rem;
+    }
   }
 
   .Main {
-    height: calc(100vh - 15rem);
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
 
+    &-compile {
+      margin-right: 5rem;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: .5rem 1.5rem;
+      border: solid 1px;
+      width: 100%;
+      font-size: 1.5rem;
+      color: $color-white;
+      border-color: $color-primary;
+      background-color: $color-secondary;
+      transition: color .5s ease-in-out, background-color .5s ease-in-out;
+    }
 
-  .Main-editor,
-  .Main-binary {
-    height: 100%;
-  }
+    &-compile:focus,
+    &-compile:hover {
+      color: $color-secondary;
+      background-color: $color-white;
+      border-color: $color-primary;
+    }
 
-  .Main-leftContainer,
-  .Main-rightContainer {
-    height: 50vh;
-    width: 40vw;
+    &-editor,
+    &-binary {
+      height: 100%;
+    }
+
+    &-leftContainer,
+    &-rightContainer {
+      height: 50vh;
+      width: 40vw;
+    }
   }
 
   .Footer {
-    max-height: 10rem;
     overflow: scroll;
     background-color: $color-secondary--light;
     padding: 1rem;

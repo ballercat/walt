@@ -37,7 +37,7 @@ module.exports = {
         loaders: ['style-loader', 'css-loader']
       },
       {
-        test: /\.png$/,
+        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
         loader: "url-loader",
         query: { mimetype: "image/png" }
       }
