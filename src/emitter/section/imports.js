@@ -5,7 +5,8 @@ import { getTypeString, ANYFUNC } from '../value_type';
 import {
   EXTERN_GLOBAL,
   EXTERN_FUNCTION,
-  EXTERN_TABLE
+  EXTERN_TABLE,
+  EXTERN_MEMORY
 } from '../external_kind';
 import { emitString } from '../string';
 import writer from './writer';
@@ -34,6 +35,12 @@ const emit = entries => {
         payload.push(u8, ANYFUNC, 'function table types');
         payload.push(varint1, 0, 'has max value');
         payload.push(varuint32, 0, 'iniital table size');
+        break;
+      }
+      case EXTERN_MEMORY: {
+        payload.push(u8, kind, 'Memory');
+        payload.push(varint1, 0, 'has no max');
+        payload.push(varuint32, 1, 'iniital memory size(PAGES)');
         break;
       }
     }

@@ -1,7 +1,7 @@
 //@flow
-import statement from './statement';
-import Context from './context';
-import TokenStream from '../utils/token-stream';
+import statement from "./statement";
+import Context from "./context";
+import TokenStream from "../utils/token-stream";
 
 class Parser {
   context: Context;
@@ -9,13 +9,13 @@ class Parser {
   constructor(tokens: TokenStream, lines: string[] = []) {
     this.context = new Context({
       body: [],
-      diAssoc: 'right',
+      diAssoc: "right",
       stream: tokens,
       token: tokens.next(),
       lines,
       globals: [],
       functions: [],
-      filename: 'unknown.walt'
+      filename: "unknown.walt"
     });
   }
 
@@ -32,8 +32,7 @@ class Parser {
 
     while (ctx.stream.peek()) {
       const child = statement(ctx);
-      if (child)
-        node.body.push(child);
+      if (child) node.body.push(child);
     }
 
     return node;
@@ -41,4 +40,3 @@ class Parser {
 }
 
 export default Parser;
-

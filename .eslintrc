@@ -93,7 +93,7 @@
     "no-script-url": 0,         // disallow use of javascript: urls.
     "no-self-compare": 0,       // disallow comparisons where both sides are exactly the same (off by default)
     "no-sequences": 0,          // disallow use of comma operator
-    "no-unused-expressions": 0, // disallow usage of expressions in statement position
+    "no-unused-expressions": 1, // disallow usage of expressions in statement position
     "no-void": 0,               // disallow use of void operator (off by default)
     "no-warning-comments": 0,   // disallow usage of configurable warning terms in comments, e.g. TODO or FIXME (off by default)
     "no-with": 0,               // disallow use of the with statement
@@ -115,13 +115,13 @@
     "no-catch-shadow": 0,             // disallow the catch clause parameter name being the same as a variable in the outer scope (off by default in the node environment)
     "no-delete-var": 0,               // disallow deletion of variables
     "no-label-var": 0,                // disallow labels that share a name with a variable
-    "no-shadow": 0,                   // disallow declaration of variables already declared in the outer scope
+    "no-shadow": 1,                   // disallow declaration of variables already declared in the outer scope
     "no-shadow-restricted-names": 0,  // disallow shadowing of names such as arguments
     "no-undef": 1,                    // disallow use of undeclared variables unless mentioned in a /*global */ block
     "no-undef-init": 0,               // disallow use of undefined when initializing variables
     "no-undefined": 0,                // disallow use of undefined variable (off by default)
-    "no-unused-vars": 0,              // disallow declaration of variables that are not used in the code
-    "no-use-before-define": 0,        // disallow use of variables before they are defined
+    "no-unused-vars": 1,              // disallow declaration of variables that are not used in the code
+    "no-use-before-define": 1,        // disallow use of variables before they are defined
 
 
     ////////// Node.js //////////

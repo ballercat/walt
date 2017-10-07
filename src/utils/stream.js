@@ -8,10 +8,10 @@ class Stream {
   col: number;
   lines: string[];
 
-  constructor(input: string = '') {
+  constructor(input: string = "") {
     this.pos = this.line = this.col = 0;
     this.input = input;
-    this.lines = input.split('\n');
+    this.lines = input.split("\n");
     this.newLine();
   }
 
@@ -29,10 +29,8 @@ class Stream {
   next(): string {
     const char = this.input.charAt(this.pos++);
 
-    if (Stream.eol(char))
-      this.newLine();
-    else
-      this.col++;
+    if (Stream.eol(char)) this.newLine();
+    else this.col++;
 
     return char;
   }
@@ -44,20 +42,26 @@ class Stream {
   }
 
   // Is the character an end of line
-  static eol(char: string): bool {
-    return char === '\n';
+  static eol(char: string): boolean {
+    return char === "\n";
   }
 
   // Is the character an end of file
-  static eof(char: string): bool {
-    return char === '';
+  static eof(char: string): boolean {
+    return char === "";
   }
 
   // Is the charater a whitespace
-  static whitespace(char: string): bool {
-    return char === "\n" || char === ' ' || char === "\t" || char === "\v" || char === "\r" || char === "\f";
+  static whitespace(char: string): boolean {
+    return (
+      char === "\n" ||
+      char === " " ||
+      char === "\t" ||
+      char === "\v" ||
+      char === "\r" ||
+      char === "\f"
+    );
   }
 }
 
 export default Stream;
-

@@ -1,13 +1,13 @@
-import Tokenizer from '..';
-import Stream from '../../utils/stream';
-import Syntax from '../../Syntax';
-import test from 'ava';
+import Tokenizer from "..";
+import Stream from "../../utils/stream";
+import Syntax from "../../Syntax";
+import test from "ava";
 
-test('next reads tokens, ignoring whitespace', t => {
-  const tokenizer = new Tokenizer(new Stream('     global'));
+test("next reads tokens, ignoring whitespace", t => {
+  const tokenizer = new Tokenizer(new Stream("     global"));
   t.deepEqual(tokenizer.next(), {
     type: Syntax.Keyword,
-    value: 'global',
+    value: "global",
     end: {
       col: 11,
       line: 1
@@ -19,9 +19,19 @@ test('next reads tokens, ignoring whitespace', t => {
   });
 });
 
-
-test('parses a stream into tokens', t => {
+test("parses a stream into tokens", t => {
   const stream = new Stream(`let x: i32 = 2;`);
+  const tokenizer = new Tokenizer(stream);
+  const result = tokenizer.parse();
+  t.snapshot(result);
+});
+
+test("ignores whitespace at the end of file", t => {
+  const stream = new Stream(`
+  function test(): i32 {
+    return 2 + 2;
+  }
+  `);
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
   t.snapshot(result);

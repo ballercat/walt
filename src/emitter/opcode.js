@@ -219,7 +219,7 @@ opcode(f32, i64, ___, 0, 0xbf, 'f32Reinterpreti64', "f64.reinterpret/i64");
 /**
  * Return opcode mapping to the operator. Signed result is always prefered
  */
-export const opcodeFromOperator = ({ type, operator: { value } }) => {
+export const opcodeFromOperator = ({ type, value }) => {
   switch(value) {
     case '+':
       return def[type + 'Add'];
@@ -247,6 +247,8 @@ export const opcodeFromOperator = ({ type, operator: { value } }) => {
       return def.If;
     case ':':
       return def.Else;
+    case '[':
+      return def[type + 'Load'];
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   };

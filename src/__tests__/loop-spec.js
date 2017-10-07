@@ -1,10 +1,12 @@
-import test from 'ava';
-import compile from '..';
+import test from "ava";
+import compile from "..";
 
-const compileAndRun = (src, importsObj = {}) => WebAssembly.instantiate(compile(src), importsObj);
-const outputIs = (t, value, input) => result => t.is(result.instance.exports.test(input), value);
+const compileAndRun = (src, importsObj = {}) =>
+  WebAssembly.instantiate(compile(src), importsObj);
+const outputIs = (t, value, input) => result =>
+  t.is(result.instance.exports.test(input), value);
 
-test('for loop', t =>
+test("for loop", t =>
   compileAndRun(`
   export function test(x: i32): i32 {
     let y: i32 = 0;
@@ -14,10 +16,9 @@ test('for loop', t =>
     }
     return i;
   }
-  `).then(outputIs(t, -41, 42))
-);
+  `).then(outputIs(t, -41, 42)));
 
-test('while loop', t =>
+test("while loop", t =>
   compileAndRun(`
   export function test(x: i32): i32 {
     let y: i32 = 0;
@@ -28,6 +29,4 @@ test('while loop', t =>
     }
     return i;
   }
-  `).then(outputIs(t, -42, 42))
-);
-
+  `).then(outputIs(t, -42, 42)));

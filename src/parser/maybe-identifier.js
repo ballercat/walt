@@ -1,47 +1,40 @@
 //@flow
-import Syntax from '../Syntax'
-import functionCall from './function-call';
-import Context from './context';
-import type { Node } from '../flow/types';
-
-const functionPointer = (ctx: Context, node: Node): Node => {
-
-}
+import Syntax from "../Syntax";
+import Context from "./context";
+import meta from "./metadata";
+import { writeFunctionPointer } from "./implicit-imports";
+import type { Node } from "../flow/types";
+import {
+  findLocalIndex,
+  findGlobalIndex,
+  findFunctionIndex
+} from "./introspection";
 
 // Maybe identifier, maybe function call
 const maybeIdentifier = (ctx: Context): Node => {
   const node = ctx.startNode();
-  const localIndex = ctx.func.locals.findIndex(l => l.id === ctx.token.value);
-  const globalIndex = ctx.globals.findIndex(g => g.id === ctx.token.value);
-  const functionIndex = ctx.functions.findIndex(f => f.id === ctx.token.value);
-  const isFuncitonCall = ctx.stream.peek().value === '(';
+  const localIndex = findLocalIndex(ctx, ctx.token);
+  const globalIndex = findGlobalIndex(ctx, ctx.token);
+  const functionIndex = findFunctionIndex(ctx, ctx.token);
 
-  // Function pointer
-  if (!isFuncitonCall && localIndex < 0 && globalIndex < 0 && functionIndex > -1) {
-    // Save the element
-    ctx.writeFunctionPointer(functionIndex);
-    // Encode a function pointer as a i32.const representing the function index
-    const tableIndex = ctx.Program.Element.findIndex(e => e.functionIndex === functionIndex);
-    node.value = tableIndex;
-    return ctx.endNode(node, Syntax.Constant);
-  } else if (isFuncitonCall) {
-    // if function call then encode it as such
-    return functionCall(ctx);
-  }
-
+  let Type = Syntax.Identifier;
   // Not a function call or pointer, look-up variables
   if (localIndex !== -1) {
-    node.localIndex = localIndex;
-    node.target = ctx.func.locals[localIndex];
-    node.type = node.target.type;
+    node.type = ctx.func.locals[localIndex].type;
+    node.meta.push(meta.localIndex(localIndex));
   } else if (globalIndex !== -1) {
-    node.globalIndex = globalIndex;
-    node.target = ctx.globals[node.globalIndex];
-    node.type = node.target.type;
+    node.type = ctx.globals[globalIndex].type;
+    node.meta.push(meta.globalIndex(globalIndex));
+  } else if (functionIndex !== -1 && ctx.stream.peek().value !== "(") {
+    node.type = "i32";
+    Type = Syntax.FunctionPointer;
+    node.meta.push(meta.tableIndex(writeFunctionPointer(ctx, functionIndex)));
+  } else if (functionIndex == -1) {
+    throw ctx.syntaxError(`Undefined variable name ${ctx.token.value}`);
   }
 
-  ctx.diAssoc = 'left';
-  return ctx.endNode(node, Syntax.Identifier);
-}
+  ctx.diAssoc = "left";
+  return ctx.endNode(node, Type);
+};
 
 export default maybeIdentifier;

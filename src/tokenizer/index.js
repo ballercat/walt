@@ -1,22 +1,15 @@
-import Stream from '../utils/stream';
-import punctuator from './punctuator';
-import constant from './constant';
-import identifier from './identifier';
-import keyword from './keyword';
-import string from './string';
-import type from './type';
+import Stream from "../utils/stream";
+import punctuator from "./punctuator";
+import constant from "./constant";
+import identifier from "./identifier";
+import keyword from "./keyword";
+import string from "./string";
+import type from "./type";
 
 class Tokenizer {
   constructor(
     stream,
-    parsers = [
-      punctuator,
-      constant,
-      identifier,
-      keyword,
-      string,
-      type
-    ]
+    parsers = [punctuator, constant, identifier, keyword, string, type]
   ) {
     if (!(stream instanceof Stream))
       this.die(`Tokenizer expected instance of Stream in constructor.
@@ -33,7 +26,7 @@ class Tokenizer {
    * @return {Object} token
    */
   next() {
-    let value = '';
+    let value = "";
     this.seekNonWhitespace();
     let char;
     let matchers = this.parsers;
@@ -56,6 +49,9 @@ class Tokenizer {
       nextMatchers.length > 0
     );
 
+    // If we fell off the end then bail out
+    if (Stream.eof(value)) return null;
+
     const token = this.token(value, matchers);
     token.start = start;
     token.end = {
@@ -68,12 +64,10 @@ class Tokenizer {
   }
 
   match(char, parsers) {
-    if (char == null)
-      return parsers;
+    if (char == null) return parsers;
 
     return parsers.map(parse => parse(char)).filter(p => p);
   }
-
 
   /**
    * Match a particular non-whitespace value to a token
@@ -81,16 +75,14 @@ class Tokenizer {
    * @param {String} value Value to match
    * @return {Object} token
    */
-  token(value, parsers, token = { type: 'unknown', value }) {
+  token(value, parsers, token = { type: "unknown", value }) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
-      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
-      if (parsers.length > 1)
-        parsers = parsers.filter(parser => parser.strict);
+      parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
+      if (parsers.length > 1) parsers = parsers.filter(parser => parser.strict);
     }
 
-    if (parsers.length === 1)
-      token.type = parsers[0].type;
+    if (parsers.length === 1) token.type = parsers[0].type;
 
     return token;
   }
@@ -99,12 +91,12 @@ class Tokenizer {
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
   seekNonWhitespace() {
-    while (Stream.whitespace(this.stream.peek())) this.stream.next();
+    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))
+      this.stream.next();
   }
 
   parse() {
-    while (!Stream.eof(this.stream.peek()))
-      this.next();
+    while (!Stream.eof(this.stream.peek())) this.next();
 
     return this.tokens;
   }
@@ -121,4 +113,3 @@ class Tokenizer {
 }
 
 export default Tokenizer;
-

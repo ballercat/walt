@@ -1,8 +1,11 @@
-import Tokenizer from './tokenizer';
-import Parser from './parser';
-import Stream from './utils/stream';
-import TokenStream from './utils/token-stream';
-import emit from './emitter';
+import Tokenizer from "./tokenizer";
+import Parser from "./parser";
+import Stream from "./utils/stream";
+import TokenStream from "./utils/token-stream";
+import emit from "./emitter";
+import _debug from "./utils/debug";
+
+export const debug = _debug;
 
 // Used for deugging purposes
 export const getAst = source => {
@@ -24,7 +27,6 @@ export const getIR = source => {
 const compile = source => {
   const wasm = getIR(source);
   return wasm.buffer();
-}
+};
 
 export default compile;
-

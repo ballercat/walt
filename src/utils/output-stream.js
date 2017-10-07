@@ -1,5 +1,5 @@
-import invariant from 'invariant';
-import { sizeof, set, u8 } from 'wasm-types';
+import invariant from "invariant";
+import { sizeof, set, u8 } from "wasm-types";
 
 // Used to output raw binary, holds values and types in a large array 'stream'
 export default class OutputStream {
@@ -11,13 +11,13 @@ export default class OutputStream {
     this.size = 0;
   }
 
-  push(type, value, debug = '') {
+  push(type, value, debug = "") {
     let size = 0;
-    switch(type) {
-      case 'varuint7':
-      case 'varuint32':
-      case 'varint7':
-      case 'varint1': {
+    switch (type) {
+      case "varuint7":
+      case "varuint32":
+      case "varint7":
+      case "varint1": {
         // Encode all of the LEB128 aka 'var*' types
         value = this.encode(value);
         size = value.length;
@@ -30,7 +30,7 @@ export default class OutputStream {
       }
     }
 
-    this.data.push({type, value, debug});
+    this.data.push({ type, value, debug });
     this.size += size;
 
     return this;
@@ -38,7 +38,7 @@ export default class OutputStream {
 
   encode(value) {
     const encoding = [];
-    while(true) {
+    while (true) {
       const i = value & 127;
       value = value >>> 7;
       if (value === 0) {
@@ -57,30 +57,15 @@ export default class OutputStream {
     const buffer = new ArrayBuffer(this.size);
     const view = new DataView(buffer);
     let pc = 0;
-    this.data.forEach(({type, value}) => {
+    this.data.forEach(({ type, value }) => {
       if (Array.isArray(value)) {
-        value.forEach((v, i) => set(u8, pc++, view, v));
+        value.forEach(v => set(u8, pc++, view, v));
       } else {
         set(type, pc, view, value);
         pc += sizeof[type];
       }
     });
     return buffer;
-  }
-
-  debug(begin = 0, end) {
-    let pc = 0;
-    return this.data.slice(begin, end).map(({ type, value, debug }) => {
-      const pcString = (pc).toString(16).padStart(8, '0').padEnd((this.data.length).toString().length + 1);
-      let valueString;
-      if (Array.isArray(value))
-        valueString = value.map(v => (v).toString(16)).join().padStart(12);
-      else
-        valueString = (value).toString(16).padStart(12);
-      const out = `${pcString}: ${valueString} ; ${debug}`;
-      pc += sizeof[type] || value.length;
-      return out;
-    }).join('\n') + "\n ============ fin =============";
   }
 
   // Writes source OutputStream into the current buffer
@@ -93,4 +78,3 @@ export default class OutputStream {
     return this;
   }
 }
-

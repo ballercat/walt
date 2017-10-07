@@ -1,24 +1,21 @@
 // @flow
-import Syntax from '../Syntax';
-import Context from './context';
-import {
-  getType,
-  generateType,
-  generateImport
-} from './generator';
-import type { Field, Import, TypeNode } from '../flow/types';
+import Syntax from "../Syntax";
+import Context from "./context";
+import { getType, generateType, generateImport } from "./generator";
+import type { Field, Import, TypeNode } from "../flow/types";
+import { make, FUNCTION_INDEX } from "./metadata";
 
 const field = (ctx: Context): Field => {
   const f: Field = {
     id: ctx.expect(null, Syntax.Identifier).value
   };
 
-  ctx.expect([':']);
+  ctx.expect([":"]);
   const typeString: string = ctx.token.value;
   if (ctx.eat(null, Syntax.Type)) {
     // native type, aka GLOBAL export
     f.global = getType(typeString);
-  } else if(ctx.eat(null, Syntax.Identifier)) {
+  } else if (ctx.eat(null, Syntax.Identifier)) {
     // now we need to find a typeIndex, if we don't find one we create one
     // with the idea that a type will be filled in later. if one is not we
     // will throw a SyntaxError when we attempt to emit the binary
@@ -31,56 +28,62 @@ const field = (ctx: Context): Field => {
         params: [],
         // When we DO define a type for it later, patch the dummy type
         hoist: (node: TypeNode) => {
-          ctx.Program.Types[f.typeIndex] = generateType(node)
+          ctx.Program.Types[f.typeIndex] = generateType(node);
         }
       });
     }
 
     // attach to a type index
-    f.functionIndex = ctx.Program.Functions.length;
+    const functionIndex = ctx.Program.Functions.length;
+    f.meta = [
+      make(
+        {
+          functionIndex
+        },
+        FUNCTION_INDEX
+      )
+    ];
+
+    f.functionIndex = functionIndex;
+
     ctx.Program.Functions.push(null);
     ctx.functions.push(f);
   }
 
   return f;
-}
+};
 
 const fieldList = (ctx: Context): Field[] => {
   const fields: Field[] = [];
-  while(ctx.token.value !== '}') {
+  while (ctx.token.value !== "}") {
     const f: Field = field(ctx);
     if (f) {
       fields.push(f);
-      ctx.eat([',']);
+      ctx.eat([","]);
     }
   }
-  ctx.expect(['}']);
+  ctx.expect(["}"]);
 
   return fields;
-}
+};
 
 const _import = (ctx: Context): Import => {
   const node: Import = (ctx.startNode(): any);
-  ctx.eat(['import']);
+  ctx.eat(["import"]);
 
-  if (!ctx.eat(['{']))
-    throw ctx.syntaxError('expected {');
+  if (!ctx.eat(["{"])) throw ctx.syntaxError("expected {");
 
   node.fields = fieldList(ctx);
-  ctx.expect(['from']);
+  ctx.expect(["from"]);
 
   node.module = ctx.expect(null, Syntax.StringLiteral).value;
   // NOTE: string literals contain the starting and ending quote char
   node.module = node.module.substring(1, node.module.length - 1);
 
-  ctx.Program.Imports.push.apply(
-    ctx.Program.Imports,
-    generateImport(node)
-  );
+  ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport(node));
 
   ctx.endNode(node, Syntax.Import);
   return node;
 };
 
 export default _import;
-
