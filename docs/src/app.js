@@ -1,7 +1,7 @@
 import React from "react";
 import Editor from "./editor";
 import "semantic-ui-css/semantic.min.css";
-import { Container, Header, Image, Segment } from "semantic-ui-react";
+import { Header, Image, Segment } from "semantic-ui-react";
 import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
@@ -103,7 +103,7 @@ class Explorer extends React.Component {
           onRun={this.handleRun}
           onSelect={this.handleSelectExample}
         />
-        <Segment loading={this.state.compiling}>
+        <Segment className="Main" loading={this.state.compiling}>
           {(test => {
             switch (test) {
               case "code":

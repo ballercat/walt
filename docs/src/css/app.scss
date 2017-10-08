@@ -13,7 +13,6 @@ body {
   height: 100%;
   width: 100%;
 }
-
 *,
   *:before,
   *:after {
@@ -37,6 +36,7 @@ body {
 
   .Main {
     display: flex;
+    height: 80vh;
 
     &-compile {
       margin-right: 5rem;
@@ -77,3 +77,7 @@ body {
     padding: 1rem;
   }
 
+  .CodeMirror {
+    height: 100%;
+    width: 100%;
+  }
