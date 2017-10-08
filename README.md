@@ -2,7 +2,13 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/ballercat/walt/issues)
 [![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
 
-# WAlt
+<p align="center">
+  <img src="walt.png" width="117" height="74"><br><br>
+  <b>Walt</b> |
+  <i>Alternative Syntax for WebAssembly</i> |
+  <a href="https://ballercat.github.io/walt/">Demo</a>
+</p>
+
 :zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
 
 Highlights:

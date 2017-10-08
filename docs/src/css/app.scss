@@ -1,9 +1,9 @@
 
 $color-primary: #EFDF6B;
 $color-primary--light: #f7efbb;
-$color-secondary: #8cf2b1;
+$color-secondary: #FF9933;
 $color-secondary--light: #c1f8d5;
-$color-black: #333333;
+$color-black: #343530;
 $color-white: #fff;
 
 html,
@@ -22,30 +22,17 @@ body {
     box-sizing: inherit;
   }
 
+  .App {
+    padding: 1rem;
+  }
+
   .Header {
     height: 5rem;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      background: $color-black;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 10vh;
-      z-index: -1;
-    }
-
-    &-title {
-      margin-left: 5rem;
-      color: $color-secondary;
-    }
-
-    &-container {
-      margin: 0 5rem;
-    }
+    padding: 0.5rem;
   }
 
   .Main {

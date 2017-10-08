@@ -1,123 +1,174 @@
 import React from "react";
 import Editor from "./editor";
 import "semantic-ui-css/semantic.min.css";
-import { Tab, Container } from "semantic-ui-react";
+import {
+  Menu,
+  Container,
+  Header,
+  Image,
+  Dropdown,
+  Segment,
+  Loader,
+  Dimmer
+} from "semantic-ui-react";
 import "./css/app";
+import examples from "./examples";
+
+const exampleList = Object.keys(examples).map(key => {
+  return {
+    key,
+    value: key,
+    text: key
+  };
+});
 
 const Walt = window.Walt;
 
 function debounce(func, wait, immediate) {
   var timeout;
   return function() {
-    var context = this,
-      args = arguments;
-    var later = function() {
+    const args = arguments;
+    const later = () => {
       timeout = null;
-      if (!immediate) func.apply(context, args);
+      if (!immediate) func.apply(this, args);
     };
-    var callNow = immediate && !timeout;
+    const callNow = immediate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
+    if (callNow) func.apply(this, args);
   };
 }
 
-const DEFAULT_EXAMPLE = `const x: i32 = 2;
-export function echo(): i32 {
-  const x: i32 = 42;
-  return x;
-}`;
-
-const Console = props => (
-  <code className="Console">
-    <pre>{props.logs.map(log => `${log} \n`)}</pre>
-  </code>
-);
-
 class Explorer extends React.Component {
   state = {
-    code: DEFAULT_EXAMPLE,
-    wasm: Walt.debug(Walt.getIR(DEFAULT_EXAMPLE)),
-    logs: []
+    code: examples.Default.code,
+    js: examples.Default.js,
+    wasm: Walt.debug(Walt.getIR(examples.Default.code)),
+    compiling: false,
+    logs: [],
+    activeItem: "code"
   };
-
-  panes = [
-    {
-      menuItem: "Code",
-      render: () => (
-        <Tab.Pane>
-          <Editor
-            key="code"
-            code={this.state.code}
-            onUpdate={this.handleUpdate}
-          />
-        </Tab.Pane>
-      )
-    },
-    {
-      menuItem: "WebAssembly",
-      render: () => (
-        <Tab.Pane>
-          <Editor
-            key="wasm"
-            code={this.state.wasm}
-            extraOptions={{ readOnly: true }}
-          />
-        </Tab.Pane>
-      )
-    }
-  ];
 
   updateWasm = debounce(() => {
     try {
       this.intermediateRepresentation = window.Walt.getIR(this.state.code);
       const wasm = Walt.debug(this.intermediateRepresentation);
-      this.setState({ wasm }, () => {
-        WebAssembly.instantiate(this.intermediateRepresentation.buffer())
-          .then(result => {
-            const exports = result.instance.exports;
-            if (exports) {
-              window.exports = exports;
-              const logs = [];
-              Object.keys(exports).forEach(k => {
-                if (typeof exports[k] === "function") {
-                  logs.push(JSON.stringify(exports[k]()));
-                } else {
-                  logs.push(JSON.stringify(exports[k]));
-                }
-              });
-              this.setState({ logs });
-            }
-          })
+      this.setState({ wasm, compiling: true }, () => {
+        const compiler = eval(`(${this.state.js})`);
+        Promise.resolve(compiler(this.intermediateRepresentation.buffer()))
+          .then(() =>
+            setTimeout(() => this.setState(() => ({ compiling: false })), 100)
+          )
           .catch(e => {
-            this.setState({ logs: [e.toString()] });
+            this.setState({ compiling: false });
+            setTimeout(() => {
+              throw e;
+            });
           });
       });
     } catch (e) {
-      this.setState(() => {
-        return { logs: [e.toString()] };
+      setTimeout(() => {
+        throw e;
       });
     }
   }, 1000);
 
+  updateJS = js => {
+    this.setState({ js });
+  };
+
   handleUpdate = code => {
-    this.setState({ code }, this.updateWasm);
+    this.setState({ code });
+  };
+
+  handleMenuClick = (e, { name: activeItem }) => {
+    this.setState({ activeItem });
+  };
+
+  handleSelectExample = (e, { value }) => {
+    const { js, code } = examples[value];
+    setTimeout(
+      () =>
+        this.setState({
+          js,
+          code
+        }),
+      200
+    );
   };
 
   render() {
+    const { activeItem } = this.state;
     return (
-      <div>
-        <header className="Header" key="header">
-          <h1 className="Header-title">Walt Explorer</h1>
-        </header>,
-        <main className="Main" key="main">
-          <Container fluid>
-            <Tab panes={this.panes} />
-          </Container>
-        </main>,
-        <footer className="Footer">
-          <Console logs={this.state.logs} />
-        </footer>
+      <div className="App">
+        <header className="Header">
+          <Header as="h1">
+            <Image shape="circular" src="dist/walt.png" />
+          </Header>
+        </header>
+        <Menu>
+          <Menu.Item
+            name="code"
+            active={activeItem === "code"}
+            onClick={this.handleMenuClick}
+          />
+          <Menu.Item
+            name="JS"
+            active={activeItem === "JS"}
+            onClick={this.handleMenuClick}
+          />
+          <Menu.Item
+            name="WASM"
+            active={activeItem === "WASM"}
+            onClick={this.handleMenuClick}
+          />
+          <Menu.Item
+            color="green"
+            active={activeItem === "&#9658;"}
+            name="&#9658;"
+            onClick={this.updateWasm}
+          />
+          <Menu.Menu position="right">
+            <Menu.Item>
+              <Dropdown
+                placeholder="Example"
+                selection
+                options={exampleList}
+                onChange={this.handleSelectExample}
+              />
+            </Menu.Item>
+          </Menu.Menu>
+        </Menu>
+        <Segment loading={this.state.compiling}>
+          {(test => {
+            switch (test) {
+              case "code":
+                return (
+                  <Editor
+                    key="code"
+                    code={this.state.code}
+                    onUpdate={this.handleUpdate}
+                  />
+                );
+              case "JS":
+                return (
+                  <Editor
+                    key="js"
+                    code={this.state.js}
+                    onUpdate={this.updateJS}
+                  />
+                );
+              case "WASM":
+                return (
+                  <Editor
+                    key="wasm"
+                    code={this.state.wasm}
+                    extraOptions={{ readOnly: true }}
+                  />
+                );
+            }
+          })(activeItem)}
+        </Segment>
       </div>
     );
   }
