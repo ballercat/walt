@@ -1,16 +1,8 @@
 import React from "react";
 import Editor from "./editor";
 import "semantic-ui-css/semantic.min.css";
-import {
-  Menu,
-  Container,
-  Header,
-  Image,
-  Dropdown,
-  Segment,
-  Loader,
-  Dimmer
-} from "semantic-ui-react";
+import { Container, Header, Image, Segment } from "semantic-ui-react";
+import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
 
@@ -18,7 +10,7 @@ const exampleList = Object.keys(examples).map(key => {
   return {
     key,
     value: key,
-    text: key
+    text: examples[key].label
   };
 });
 
@@ -49,23 +41,28 @@ class Explorer extends React.Component {
     activeItem: "code"
   };
 
-  updateWasm = debounce(() => {
+  compileAndRun = () => {
+    const compiler = eval(`(${this.state.js})`);
+    const buffer = this.intermediateRepresentation.buffer();
+    Promise.resolve(compiler(buffer))
+      .then(() =>
+        requestAnimationFrame(() => this.setState({ compiling: false }))
+      )
+      .catch(e => {
+        this.setState({ compiling: false });
+        setTimeout(() => {
+          throw e;
+        });
+      });
+  };
+
+  handleRun = debounce(() => {
     try {
       this.intermediateRepresentation = window.Walt.getIR(this.state.code);
       const wasm = Walt.debug(this.intermediateRepresentation);
-      this.setState({ wasm, compiling: true }, () => {
-        const compiler = eval(`(${this.state.js})`);
-        Promise.resolve(compiler(this.intermediateRepresentation.buffer()))
-          .then(() =>
-            setTimeout(() => this.setState(() => ({ compiling: false })), 100)
-          )
-          .catch(e => {
-            this.setState({ compiling: false });
-            setTimeout(() => {
-              throw e;
-            });
-          });
-      });
+      this.setState({ wasm, compiling: true }, () =>
+        requestAnimationFrame(this.compileAndRun)
+      );
     } catch (e) {
       setTimeout(() => {
         throw e;
@@ -87,14 +84,8 @@ class Explorer extends React.Component {
 
   handleSelectExample = (e, { value }) => {
     const { js, code } = examples[value];
-    setTimeout(
-      () =>
-        this.setState({
-          js,
-          code
-        }),
-      200
-    );
+    this.setState({ compiling: true });
+    requestAnimationFrame(() => this.setState({ code, js, compiling: false }));
   };
 
   render() {
@@ -106,39 +97,12 @@ class Explorer extends React.Component {
             <Image shape="circular" src="dist/walt.png" />
           </Header>
         </header>
-        <Menu>
-          <Menu.Item
-            name="code"
-            active={activeItem === "code"}
-            onClick={this.handleMenuClick}
-          />
-          <Menu.Item
-            name="JS"
-            active={activeItem === "JS"}
-            onClick={this.handleMenuClick}
-          />
-          <Menu.Item
-            name="WASM"
-            active={activeItem === "WASM"}
-            onClick={this.handleMenuClick}
-          />
-          <Menu.Item
-            color="green"
-            active={activeItem === "&#9658;"}
-            name="&#9658;"
-            onClick={this.updateWasm}
-          />
-          <Menu.Menu position="right">
-            <Menu.Item>
-              <Dropdown
-                placeholder="Example"
-                selection
-                options={exampleList}
-                onChange={this.handleSelectExample}
-              />
-            </Menu.Item>
-          </Menu.Menu>
-        </Menu>
+        <MenuBar
+          examples={exampleList}
+          onMenuClick={this.handleMenuClick}
+          onRun={this.handleRun}
+          onSelect={this.handleSelectExample}
+        />
         <Segment loading={this.state.compiling}>
           {(test => {
             switch (test) {

@@ -1,31 +1,35 @@
-import CodeMirror from 'react-codemirror';
-import PropTypes from 'prop-types';
-import React from 'react';
-import 'codemirror/mode/javascript/javascript';
-import 'codemirror/lib/codemirror.css';
+import CodeMirror from "react-codemirror2";
+import PropTypes from "prop-types";
+import React from "react";
+import "codemirror/mode/javascript/javascript";
+import "codemirror/lib/codemirror.css";
 
-const Editor = ({ extraOptions, ...props }) => (
-  <CodeMirror
-    value={props.code}
-    onChange={props.onUpdate}
-    options={{
-      lineNumbers: true,
-      mode: 'javascript',
-      ...extraOptions
-    }}
-  />
-);
+class Editor extends React.PureComponent {
+  static propTypes = {
+    code: PropTypes.string,
+    onUpdate: PropTypes.func,
+    extraOptions: PropTypes.object
+  };
 
-Editor.propTypes = {
-  code: PropTypes.string,
-  onUpdate: PropTypes.func,
-  extraOptions: PropTypes.object
-};
+  static defaultProps = {
+    onUpdate() {},
+    extraOptions: {}
+  };
 
-Editor.defaultProps = {
-  onUpdate() {},
-  extraOptions: {}
-};
+  render() {
+    const { extraOptions, ...props } = this.props;
+    return (
+      <CodeMirror
+        value={props.code}
+        onChange={(editor, meta, value) => props.onUpdate(value)}
+        options={{
+          lineNumbers: true,
+          mode: "javascript",
+          ...extraOptions
+        }}
+      />
+    );
+  }
+}
 
 export default Editor;
-
