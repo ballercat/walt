@@ -46,6 +46,8 @@ class Explorer extends React.Component {
     const buffer = this.intermediateRepresentation.buffer();
     Promise.resolve(compiler(buffer))
       .then(() =>
+        // without this raf the spinner will not likely render as everything is
+        // going to smush into a one long frame in expensive wasm calls :(
         requestAnimationFrame(() => this.setState({ compiling: false }))
       )
       .catch(e => {
@@ -57,17 +59,22 @@ class Explorer extends React.Component {
   };
 
   handleRun = debounce(() => {
-    try {
-      this.intermediateRepresentation = window.Walt.getIR(this.state.code);
-      const wasm = Walt.debug(this.intermediateRepresentation);
-      this.setState({ wasm, compiling: true }, () =>
-        requestAnimationFrame(this.compileAndRun)
-      );
-    } catch (e) {
-      setTimeout(() => {
-        throw e;
+    this.setState({ compiling: true }, () => {
+      // raf after callback because we want to allow the UI to indicate (with a
+      // spinner) that we are compiling things.
+      requestAnimationFrame(() => {
+        try {
+          this.intermediateRepresentation = window.Walt.getIR(this.state.code);
+          const wasm = Walt.debug(this.intermediateRepresentation);
+          this.setState({ wasm }, this.compileAndRun);
+        } catch (e) {
+          this.setState({ compiling: false });
+          setTimeout(() => {
+            throw e;
+          });
+        }
       });
-    }
+    });
   }, 1000);
 
   updateJS = js => {

@@ -11,9 +11,9 @@ const label = "Fibonacci (console)";
 function compile(buffer) {
   return WebAssembly.instantiate(buffer).then(result => {
     const fib = result.instance.exports.fibonacci;
-    const results = [...Array(11).keys()].map(fib);
-    console.log(`Fibonacci results 0 - 10`);
-    console.log(results);
+    [...Array(41).keys()].forEach(v => {
+      console.log(`Fibonacci for ${v} - ${fib(v)}`);
+    });
   });
 }
 
