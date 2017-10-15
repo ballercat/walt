@@ -1,6 +1,5 @@
-import opcode from './opcode';
-import { u32 } from 'wasm-types';
-import OutputStream from '../utils/output-stream';
+import { u32 } from "wasm-types";
+import OutputStream from "../utils/output-stream";
 
 // TODO these should be configure-able/not defined here
 export const VERSION = 0x1;

@@ -68,7 +68,7 @@
     "source": [
       "src/**/*.js"
     ],
-    "concurrency": 5,
+    "concurrency": 10,
     "failFast": true,
     "failWithoutAssertions": false,
     "tap": false,

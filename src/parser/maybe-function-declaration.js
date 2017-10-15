@@ -1,19 +1,11 @@
 import Syntax from "../Syntax";
-import { generateType, generateCode, getType } from "./generator";
+import { generateType, generateCode } from "./generator";
 import { findTypeIndex } from "./introspection";
 import statement from "./statement";
 import declaration from "./declaration";
 import { make, FUNCTION_INDEX } from "./metadata";
 
 const last = list => list[list.length - 1];
-
-const paramList = ctx => {
-  const paramList = [];
-  ctx.expect(["("]);
-  while (ctx.token.value !== ")") paramList.push(param(ctx));
-  ctx.expect([")"]);
-  return paramList;
-};
 
 const param = ctx => {
   const node = ctx.startNode();
@@ -37,6 +29,16 @@ const param = ctx => {
 
   ctx.eat([","]);
   return ctx.endNode(node, Syntax.Param);
+};
+
+const paramList = ctx => {
+  const list = [];
+  ctx.expect(["("]);
+  while (ctx.token.value !== ")") {
+    list.push(param(ctx));
+  }
+  ctx.expect([")"]);
+  return list;
 };
 
 const maybeFunctionDeclaration = ctx => {

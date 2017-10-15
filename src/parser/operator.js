@@ -11,7 +11,7 @@ function binary(ctx: Context, op: Token, params: Node[]) {
   node.value = op.value;
   node.params = params;
   // FIXME: type of the binary expression should be more accurate
-  node.type = params[0].type || "i32";
+  node.type = params[0] ? params[0].type || "i32" : "void";
 
   ctx.diAssoc = "left";
   let Type = Syntax.BinaryExpression;
@@ -20,6 +20,8 @@ function binary(ctx: Context, op: Token, params: Node[]) {
     ctx.diAssoc = "right";
   } else if (node.value === "[") {
     Type = Syntax.ArraySubscript;
+  } else if (node.value === ":") {
+    Type = Syntax.Pair;
   }
 
   return ctx.endNode(node, Type);
@@ -48,6 +50,12 @@ function unary(ctx: Context, op: Token, params: Node[]) {
   node.value = op.value;
 
   return ctx.endNode(node, Syntax.UnaryExpression);
+}
+
+function objectLiteral(ctx: Context, op: Token, params: Node[]): Node {
+  const node = ctx.startNode(op);
+  node.params = params;
+  return ctx.endNode(node, Syntax.ObjectLiteral);
 }
 
 const ternary = (ctx: Context, op: Token, params: Node[]) => {
@@ -88,9 +96,11 @@ const operator = (ctx: Context, op: Token, operands: Node[]) => {
     case "--":
       return unary(ctx, op, operands.splice(-1));
     case "?":
-      return ternary(ctx, op, operands.splice(-3));
+      return ternary(ctx, op, operands.splice(-2));
     case ",":
       return sequence(ctx, op, operands.slice(-2));
+    case "{":
+      return objectLiteral(ctx, op, operands.splice(-1));
     default:
       if (op.type === Syntax.FunctionCall)
         return functionCall(ctx, op, operands);

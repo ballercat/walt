@@ -1,5 +1,5 @@
 //@flow
-import type { Token } from '../flow/types';
+import type { Token } from "../flow/types";
 
 class TokenStream {
   length: number;
@@ -20,15 +20,9 @@ class TokenStream {
     return this.tokens[this.pos];
   }
 
-  seek(relative: number): Token {
-    this.pos = relative;
-    return this.tokens[this.pos];
-  }
-
   last(): Token {
     return this.tokens[this.length - 1];
   }
 }
 
 export default TokenStream;
-

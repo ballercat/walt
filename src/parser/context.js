@@ -1,25 +1,7 @@
 // @flow
-import { getType } from "./generator";
 import TokenStream from "../utils/token-stream";
 import generateErrorString from "../utils/generate-error";
 import type { Token, Node } from "../flow/types";
-
-export const findTypeIndex = (node: Node, Types: Node[]): number => {
-  return Types.findIndex(t => {
-    const paramsMatch =
-      t.params.length === node.params.length &&
-      t.params.reduce(
-        (a, v, i) => node.params[i] && a && v === getType(node.params[i].type),
-        true
-      );
-
-    const resultMatch =
-      t.result == node.result ||
-      (node.result && t.result === getType(node.result.type));
-
-    return paramsMatch && resultMatch;
-  });
-};
 
 /**
  * Context is used to parse tokens into an AST and IR used by the generator.
@@ -47,6 +29,7 @@ class Context {
   body: Node[];
   filename: string;
   func: Node;
+  object: Node;
   Program: any;
   lines: string[];
   functionImports: Node[];

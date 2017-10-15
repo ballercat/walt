@@ -1,7 +1,7 @@
 //@flow
 import Syntax from "../Syntax";
 import Context from "./context";
-import expression, { predicate } from "./expression";
+import expression from "./expression";
 import statement from "./statement";
 import type { Node } from "../flow/types";
 

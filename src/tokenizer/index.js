@@ -4,12 +4,21 @@ import constant from "./constant";
 import identifier from "./identifier";
 import keyword from "./keyword";
 import string from "./string";
+import comments from "./comments";
 import type from "./type";
 
 class Tokenizer {
   constructor(
     stream,
-    parsers = [punctuator, constant, identifier, keyword, string, type]
+    parsers = [
+      punctuator,
+      constant,
+      identifier,
+      keyword,
+      string,
+      type,
+      comments
+    ]
   ) {
     if (!(stream instanceof Stream))
       this.die(`Tokenizer expected instance of Stream in constructor.
@@ -30,6 +39,7 @@ class Tokenizer {
     this.seekNonWhitespace();
     let char;
     let matchers = this.parsers;
+    let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
       line: this.stream.line,
@@ -41,13 +51,9 @@ class Tokenizer {
       matchers = this.match(char, matchers);
       value += char;
       this.stream.next();
-      nextMatchers = this.match(this.stream.peek(), matchers);
-    } while (
-      !Stream.eol(this.stream.peek()) &&
-      !Stream.eof(this.stream.peek()) &&
-      !Stream.whitespace(this.stream.peek()) &&
-      nextMatchers.length > 0
-    );
+      next = this.stream.peek();
+      nextMatchers = this.match(next, matchers);
+    } while (!Stream.eol(next) && !Stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) return null;
@@ -58,7 +64,8 @@ class Tokenizer {
       line: this.stream.line,
       col: this.stream.col
     };
-    this.tokens.push(token);
+    // Comments are ignored for now
+    if (token.type !== comments.type) this.tokens.push(token);
 
     return this.tokens[this.pos++];
   }

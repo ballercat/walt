@@ -2,6 +2,7 @@
 import { EXTERN_GLOBAL, EXTERN_FUNCTION } from "../emitter/external_kind";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
 import opcode, { opcodeFromOperator } from "../emitter/opcode";
+import walkNode from "../utils/walk-node";
 import Syntax from "../Syntax";
 import invariant from "invariant";
 import curry from "curry";
@@ -85,6 +86,20 @@ export const generateExport = node => {
   }
 
   invariant(false, "Unknown Export");
+};
+
+export const generateMemory = node => {
+  const memory = { max: 0, initial: 0 };
+
+  walkNode({
+    [Syntax.Pair]: ({ params }) => {
+      // This could procude garbage values but that is a fault of the source code
+      const [{ value: key }, { value }] = params;
+      memory[key] = parseInt(value);
+    }
+  })(node);
+
+  return memory;
 };
 
 export const generateImport = node => {
@@ -228,33 +243,48 @@ export const generateBinaryExpression = (node, parent) => {
 };
 
 export const generateTernary = (node, parent) => {
+  // TernaryExpression has a simple param layout of 2(TWO) total parameters.
+  // It's a single param for the boolean check followed by
+  // another param which is a Pair Node containing the 2(TWO) param results of
+  // true and false branches.
+  // The whole thing is encoded as an implicitly retunred if/then/else block.
   const mapper = mapSyntax(parent);
+  const resultPair = node.params[1];
+
+  // Truthy check
   const block = node.params
     .slice(0, 1)
     .map(mapper)
     .reduce(mergeBlock, []);
 
+  // If Opcode
   block.push({
     kind: opcodeFromOperator(node),
     valueType: generateValueType(node)
   });
+
+  // Map the true branch
   block.push.apply(
     block,
-    node.params
-      .slice(1, 2)
+    resultPair.params
+      .slice(0, 1)
       .map(mapper)
       .reduce(mergeBlock, [])
   );
   block.push({
     kind: opcodeFromOperator({ value: ":" })
   });
+
+  // Map the false branch
   block.push.apply(
     block,
-    node.params
+    resultPair.params
       .slice(-1)
       .map(mapper)
       .reduce(mergeBlock, [])
   );
+
+  // Wrap up the node
   block.push({ kind: opcode.End });
 
   return block;

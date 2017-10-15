@@ -169,6 +169,8 @@ const Syntax = {
   Typedef: "Typedef",
   ReturnStatement: "ReturnStatement",
   Sequence: "Sequence",
+  ObjectLiteral: "ObjectLiteral",
+  Pair: "Pair",
 
   // Semantic Nodes
   FunctionIndex: "FunctionIndex",
@@ -241,7 +243,8 @@ const maybeQuote = char => {
 const stringParser = token(maybeQuote, Syntax_1.StringLiteral);
 
 const parse = char => {
-  if (!stringParser(char) && !index(char) && !index$1(char)) return parse;
+  // Don't allow these
+  if (!stringParser(char) && !index(char) && !index$1(char) && char !== " ") return parse;
   return null;
 };
 const tokenParser = token(parse, Syntax_1.Identifier);
@@ -254,7 +257,7 @@ const supported$1 = [
 "function",
 
 // s-expression
-"global", "module", "memory", "table", "type",
+"global", "module", "table", "type",
 
 // specials/asserts
 "invoke", "assert", "assert_return",
@@ -267,12 +270,26 @@ const trie$3 = new trie$1(supported$1);
 const root = trie$3.fsearch;
 var index$2 = token(root, Syntax_1.Keyword, supported$1);
 
-const supported$2 = ['i32', 'i64', 'f32', 'f64', 'Function', 'void'];
+const everything = () => everything;
+
+const slash = char => {
+  if (char === "/") return everything;
+};
+
+const maybeComment = char => {
+  if (char === "/") return slash;
+
+  return null;
+};
+
+const commentParser = token(maybeComment, Syntax_1.Comment);
+
+const supported$2 = ["i32", "i64", "f32", "f64", "Function", "Memory", "void"];
 const trie$4 = new trie$1(supported$2);
 var index$3 = token(trie$4.fsearch, Syntax_1.Type, supported$2);
 
 class Tokenizer {
-  constructor(stream, parsers = [index, index$1, tokenParser, index$2, stringParser, index$3]) {
+  constructor(stream, parsers = [index, index$1, tokenParser, index$2, stringParser, index$3, commentParser]) {
     if (!(stream instanceof Stream)) this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
     this.stream = stream;
@@ -291,6 +308,7 @@ class Tokenizer {
     this.seekNonWhitespace();
     let char;
     let matchers = this.parsers;
+    let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
       line: this.stream.line,
@@ -302,8 +320,9 @@ class Tokenizer {
       matchers = this.match(char, matchers);
       value += char;
       this.stream.next();
-      nextMatchers = this.match(this.stream.peek(), matchers);
-    } while (!Stream.eol(this.stream.peek()) && !Stream.eof(this.stream.peek()) && !Stream.whitespace(this.stream.peek()) && nextMatchers.length > 0);
+      next = this.stream.peek();
+      nextMatchers = this.match(next, matchers);
+    } while (!Stream.eol(next) && !Stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) return null;
@@ -314,7 +333,8 @@ class Tokenizer {
       line: this.stream.line,
       col: this.stream.col
     };
-    this.tokens.push(token);
+    // Comments are ignored for now
+    if (token.type !== commentParser.type) this.tokens.push(token);
 
     return this.tokens[this.pos++];
   }
@@ -512,6 +532,14 @@ const EXTERN_TABLE = 1;
 const EXTERN_MEMORY = 2;
 const EXTERN_GLOBAL = 3;
 
+const I32 = 0x7F;
+const I64 = 0x7E;
+const F32 = 0x7D;
+const F64 = 0x7C;
+const ANYFUNC = 0x70;
+const FUNC = 0x60;
+
+
 const getTypeString = type => {
   switch (type) {
     case I32:
@@ -530,13 +558,6 @@ const getTypeString = type => {
       return '?';
   }
 };
-
-const I32 = 0x7F;
-const I64 = 0x7E;
-const F32 = 0x7D;
-const F64 = 0x7C;
-const ANYFUNC = 0x70;
-const FUNC = 0x60;
 
 /**
  * Ported from https://github.com/WebAssembly/wabt/blob/master/src/opcode.def
@@ -792,6 +813,35 @@ const opcodeFromOperator = ({ type, value }) => {
       throw new Error(`No mapping from operator to opcode ${value}`);
   }
 };
+
+//      
+
+
+// Dead simple AST walker, takes a visitor object and calls all methods for
+// appropriate node Types.
+function walker(visitor) {
+  const impl = node => {
+    if (node == null) {
+      return;
+    }
+
+    const paramCount = node.params.length;
+
+    if ("*" in visitor && typeof visitor["*"] === "function") {
+      visitor["*"](node);
+    }
+
+    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+      visitor[node.Type](node);
+    }
+
+    for (let i = 0; i < paramCount; i++) {
+      impl(node.params[i]);
+    }
+  };
+
+  return impl;
+}
 
 /**
  * Copyright 2013-2015, Facebook, Inc.
@@ -1103,6 +1153,20 @@ const generateExport = node => {
   invariant_1(false, "Unknown Export");
 };
 
+const generateMemory = node => {
+  const memory = { max: 0, initial: 0 };
+
+  walker({
+    [Syntax_1.Pair]: ({ params }) => {
+      // This could procude garbage values but that is a fault of the source code
+      const [{ value: key }, { value }] = params;
+      memory[key] = parseInt(value);
+    }
+  })(node);
+
+  return memory;
+};
+
 const generateImport = node => {
   const module = node.module;
   return node.fields.map(({ id, nativeType, typeIndex, global, kind }) => {
@@ -1235,18 +1299,33 @@ const generateBinaryExpression = (node, parent) => {
 };
 
 const generateTernary = (node, parent) => {
+  // TernaryExpression has a simple param layout of 2(TWO) total parameters.
+  // It's a single param for the boolean check followed by
+  // another param which is a Pair Node containing the 2(TWO) param results of
+  // true and false branches.
+  // The whole thing is encoded as an implicitly retunred if/then/else block.
   const mapper = mapSyntax(parent);
+  const resultPair = node.params[1];
+
+  // Truthy check
   const block = node.params.slice(0, 1).map(mapper).reduce(mergeBlock, []);
 
+  // If Opcode
   block.push({
     kind: opcodeFromOperator(node),
     valueType: generateValueType(node)
   });
-  block.push.apply(block, node.params.slice(1, 2).map(mapper).reduce(mergeBlock, []));
+
+  // Map the true branch
+  block.push.apply(block, resultPair.params.slice(0, 1).map(mapper).reduce(mergeBlock, []));
   block.push({
     kind: opcodeFromOperator({ value: ":" })
   });
-  block.push.apply(block, node.params.slice(-1).map(mapper).reduce(mergeBlock, []));
+
+  // Map the false branch
+  block.push.apply(block, resultPair.params.slice(-1).map(mapper).reduce(mergeBlock, []));
+
+  // Wrap up the node
   block.push({ kind: def.End });
 
   return block;
@@ -1443,11 +1522,6 @@ class TokenStream {
     return this.tokens[this.pos];
   }
 
-  seek(relative) {
-    this.pos = relative;
-    return this.tokens[this.pos];
-  }
-
   last() {
     return this.tokens[this.length - 1];
   }
@@ -1480,8 +1554,6 @@ var _extends = Object.assign || function (target) {
 };
 
 //      
-
-
 /**
  * Context is used to parse tokens into an AST and IR used by the generator.
  * Originally the parser was a giant class and the context was the 'this' pointer.
@@ -1591,14 +1663,6 @@ class Context {
 }
 
 //      
-const memoryImport = generateImport({
-  module: "env",
-  fields: [{
-    id: "memory",
-    kind: EXTERN_MEMORY
-  }]
-});
-
 const writeFunctionPointer = (ctx, functionIndex) => {
   if (!ctx.Program.Element.length) {
     ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport({
@@ -1613,37 +1677,10 @@ const writeFunctionPointer = (ctx, functionIndex) => {
   const exists = ctx.Program.Element.findIndex(n => n.functionIndex === functionIndex);
   if (exists < 0) {
     ctx.Program.Element.push(generateElement(functionIndex));
-    return ctx.Program.Element.length - 1;
+    return Boolean(ctx.Program.Element.length - 1);
   }
 
   return exists;
-};
-
-const importMemory = ctx => {
-  if (!ctx.Program.Imports.find(({ kind }) => kind === EXTERN_MEMORY)) {
-    ctx.Program.Imports.push.apply(ctx.Program.Imports, memoryImport);
-
-    const newNode = ctx.makeNode({
-      id: "new",
-      params: [{ type: "i32", isParam: true }],
-      result: "i32",
-      // ctx.Program.Types.length
-      typeIndex: 1,
-      meta: [make({ functionIndex: ctx.functionImports.length }, FUNCTION_INDEX)]
-    }, Syntax_1.FunctionDeclaration);
-
-    ctx.Program.Types.push(generateType(newNode));
-    ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport({
-      module: "env",
-      fields: [{
-        id: "new",
-        kind: EXTERN_FUNCTION,
-        typeIndex: newNode.typeIndex
-      }]
-    }));
-    ctx.Program.Functions.push(null);
-    ctx.functionImports.push(newNode);
-  }
 };
 
 //      
@@ -1679,7 +1716,7 @@ const functionCall = (ctx, op, operands) => {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 
 const PRECEDENCE_PARAMS = -99;
-const PRECEDENCE_COMMA = -1;
+const PRECEDENCE_COMMA = -2;
 const PRECEDENCE_ADDITION = 0;
 const PRECEDENCE_SUBTRACTION = 0;
 const PRECEDENCE_MULTIPLY = 1;
@@ -1688,6 +1725,7 @@ const PRECEDENCE_INCREMENT = 2;
 
 
 const PRECEDENCE_FUNCTION_CALL = 19;
+const PRECEDENCE_KEY_VALUE_PAIR = -1;
 
 const precedence = {
   "(": PRECEDENCE_PARAMS,
@@ -1706,11 +1744,12 @@ const precedence = {
   ":": 4,
   "?": 4,
   ">": 5,
-  "<": 5
+  "<": 5,
+  ":": PRECEDENCE_KEY_VALUE_PAIR
 };
 
 //      
-const findTypeIndex$1 = (node, ctx) => {
+const findTypeIndex = (node, ctx) => {
   return ctx.Program.Types.findIndex(t => {
     const paramsMatch = t.params.length === node.params.length && t.params.reduce((a, v, i) => node.params[i] && a && v === getType(node.params[i].type), true);
 
@@ -1766,7 +1805,7 @@ function binary(ctx, op, params) {
   node.value = op.value;
   node.params = params;
   // FIXME: type of the binary expression should be more accurate
-  node.type = params[0].type || "i32";
+  node.type = params[0] ? params[0].type || "i32" : "void";
 
   ctx.diAssoc = "left";
   let Type = Syntax_1.BinaryExpression;
@@ -1775,6 +1814,8 @@ function binary(ctx, op, params) {
     ctx.diAssoc = "right";
   } else if (node.value === "[") {
     Type = Syntax_1.ArraySubscript;
+  } else if (node.value === ":") {
+    Type = Syntax_1.Pair;
   }
 
   return ctx.endNode(node, Type);
@@ -1797,6 +1838,12 @@ function unary(ctx, op, params) {
   node.value = op.value;
 
   return ctx.endNode(node, Syntax_1.UnaryExpression);
+}
+
+function objectLiteral(ctx, op, params) {
+  const node = ctx.startNode(op);
+  node.params = params;
+  return ctx.endNode(node, Syntax_1.ObjectLiteral);
 }
 
 const ternary = (ctx, op, params) => {
@@ -1837,9 +1884,11 @@ const operator = (ctx, op, operands) => {
     case "--":
       return unary(ctx, op, operands.splice(-1));
     case "?":
-      return ternary(ctx, op, operands.splice(-3));
+      return ternary(ctx, op, operands.splice(-2));
     case ",":
       return sequence(ctx, op, operands.slice(-2));
+    case "{":
+      return objectLiteral(ctx, op, operands.splice(-1));
     default:
       if (op.type === Syntax_1.FunctionCall) return functionCall(ctx, op, operands);
       return binary(ctx, op, operands.splice(-2));
@@ -1853,6 +1902,14 @@ const constant$1 = ctx => {
   node.value = value;
   return ctx.endNode(node, Syntax_1.Constant);
 };
+
+//     
+// Note: string literal does not increment the token.
+function stringLiteral(ctx) {
+  const node = ctx.startNode();
+  node.value = ctx.token.value.substring(1, ctx.token.value.length - 1);
+  return ctx.endNode(node, Syntax_1.StringLiteral);
+}
 
 //     
 // Maybe identifier, maybe function call
@@ -1890,6 +1947,8 @@ const valueIs = v => o => o.value === v;
 const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
+const isBlockStart = valueIs("{");
+
 const predicate = (token, depth) => token.value !== ";" && depth > 0;
 
 // Shunting yard
@@ -1901,6 +1960,7 @@ const expression = (ctx, type = "i32", check = predicate) => {
   // should exit the expression.
   let depth = 1;
   let eatFunctionCall = false;
+  let inTernary = false;
 
   const consume = () => operands.push(operator(ctx, operators.pop(), operands));
 
@@ -1927,6 +1987,9 @@ const expression = (ctx, type = "i32", check = predicate) => {
     } else if (ctx.token.type === Syntax_1.Identifier) {
       eatFunctionCall = true;
       operands.push(maybeIdentifier(ctx));
+    } else if (ctx.token.type === Syntax_1.StringLiteral) {
+      eatFunctionCall = false;
+      operands.push(stringLiteral(ctx));
     } else if (ctx.token.type === Syntax_1.Punctuator) {
       switch (ctx.token.value) {
         case "(":
@@ -1947,6 +2010,9 @@ const expression = (ctx, type = "i32", check = predicate) => {
             if (expr) operands.push(expr);
             return false;
           } else {
+            if (ctx.token.value === "?") {
+              inTernary = true;
+            }
             operators.push(ctx.token);
           }
           break;
@@ -1958,9 +2024,6 @@ const expression = (ctx, type = "i32", check = predicate) => {
           depth--;
           eatUntil(isLSqrBracket);
           consume();
-          break;
-        case ":":
-          eatUntil(isTStart);
           break;
         case ")":
           {
@@ -1976,8 +2039,25 @@ const expression = (ctx, type = "i32", check = predicate) => {
 
             break;
           }
+        case "{":
+          depth++;
+          operators.push(ctx.token);
+          break;
+        case "}":
+          depth--;
+          if (depth < 1) {
+            return false;
+          }
+          eatUntil(isBlockStart);
+          consume();
+          break;
         default:
           {
+            if (ctx.token.value === ":" && inTernary) {
+              eatUntil(isTStart);
+              inTernary = false;
+              break;
+            }
             flushOperators(getPrecedence(ctx.token), ctx.token.value);
             operators.push(ctx.token);
           }
@@ -2001,48 +2081,18 @@ const expression = (ctx, type = "i32", check = predicate) => {
 //      
 const generate = (ctx, node) => {
   if (!ctx.func) {
-    node.globalIndex = ctx.Program.Globals.length;
-    ctx.Program.Globals.push(generateInit(node));
-    ctx.globals.push(node);
+    if (node.type === "Memory") {
+      node.params = [node.init];
+      ctx.Program.Memory.push(generateMemory(node));
+    } else {
+      node.globalIndex = ctx.Program.Globals.length;
+      ctx.Program.Globals.push(generateInit(node));
+      ctx.globals.push(node);
+    }
   } else {
     node.localIndex = ctx.func.locals.length;
     ctx.func.locals.push(node);
   }
-};
-
-const arrayDeclaration = (node, ctx) => {
-  ctx.expect(["]"]);
-  ctx.expect(["="]);
-
-  importMemory(ctx);
-
-  // FIXME: This should be pretty easy to parse with a simple expression
-  if (ctx.eat(["new"], Syntax_1.Keyword)) {
-    const init = ctx.startNode();
-    ctx.expect(["Array"]);
-    ctx.expect(["("]);
-    node.size = parseInt(ctx.expect(null, Syntax_1.Constant).value);
-    ctx.expect([")"]);
-
-    init.id = "new";
-    init.params = [ctx.makeNode({
-      params: [],
-      meta: [],
-      range: [],
-      value: node.size * 4,
-      type: "i32"
-    }, Syntax_1.Constant)];
-
-    init.meta = [metadata.funcIndex({
-      functionIndex: ctx.functionImports.findIndex(({ id }) => id === "new")
-    })];
-
-    node.init = ctx.endNode(init, Syntax_1.FunctionCall);
-  }
-
-  generate(ctx, node);
-
-  return ctx.endNode(node, Syntax_1.ArrayDeclaration);
 };
 
 const declaration = ctx => {
@@ -2054,9 +2104,6 @@ const declaration = ctx => {
   ctx.expect([":"]);
 
   node.type = ctx.expect(null, Syntax_1.Type).value;
-  if (ctx.eat(["["])) {
-    return arrayDeclaration(node, ctx);
-  }
 
   if (ctx.eat(["="])) node.init = expression(ctx, node.type);
 
@@ -2068,14 +2115,6 @@ const declaration = ctx => {
 };
 
 const last$1 = list => list[list.length - 1];
-
-const paramList = ctx => {
-  const paramList = [];
-  ctx.expect(["("]);
-  while (ctx.token.value !== ")") paramList.push(param(ctx));
-  ctx.expect([")"]);
-  return paramList;
-};
 
 const param = ctx => {
   const node = ctx.startNode();
@@ -2100,6 +2139,16 @@ const param = ctx => {
   return ctx.endNode(node, Syntax_1.Param);
 };
 
+const paramList = ctx => {
+  const list = [];
+  ctx.expect(["("]);
+  while (ctx.token.value !== ")") {
+    list.push(param(ctx));
+  }
+  ctx.expect([")"]);
+  return list;
+};
+
 const maybeFunctionDeclaration = ctx => {
   const node = ctx.startNode();
   if (!ctx.eat(["function"])) return declaration(ctx);
@@ -2117,7 +2166,7 @@ const maybeFunctionDeclaration = ctx => {
   // we parse the body as the body may refer to the function
   // itself recursively
   // Either re-use an existing type or write a new one
-  const typeIndex = findTypeIndex$1(node, ctx);
+  const typeIndex = findTypeIndex(node, ctx);
   if (typeIndex !== -1) {
     node.typeIndex = typeIndex;
   } else {
@@ -2188,7 +2237,11 @@ const field = ctx => {
   const typeString = ctx.token.value;
   if (ctx.eat(null, Syntax_1.Type)) {
     // native type, aka GLOBAL export
-    f.global = getType(typeString);
+    if (typeString === "Memory") {
+      f.kind = EXTERN_MEMORY;
+    } else {
+      f.global = getType(typeString);
+    }
   } else if (ctx.eat(null, Syntax_1.Identifier)) {
     // now we need to find a typeIndex, if we don't find one we create one
     // with the idea that a type will be filled in later. if one is not we
@@ -2258,20 +2311,20 @@ const _import = ctx => {
 //      
 const param$1 = ctx => {
   const type = ctx.expect(null, Syntax_1.Type).value;
-  if (type === 'void') return null;
+  if (type === "void") return null;
   return { type };
 };
 
 const params = ctx => {
   const list = [];
   let type;
-  ctx.expect(['(']);
-  while (ctx.token && ctx.token.value !== ')') {
+  ctx.expect(["("]);
+  while (ctx.token && ctx.token.value !== ")") {
     type = param$1(ctx);
     if (type) list.push(type);
-    ctx.eat([',']);
+    ctx.eat([","]);
   }
-  ctx.expect([')']);
+  ctx.expect([")"]);
 
   return list;
 };
@@ -2279,12 +2332,12 @@ const params = ctx => {
 const type$1 = ctx => {
   const node = ctx.startNode();
 
-  ctx.eat(['type']);
+  ctx.eat(["type"]);
 
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
-  ctx.expect(['=']);
+  ctx.expect(["="]);
   node.params = params(ctx);
-  ctx.expect(['=>']);
+  ctx.expect(["=>"]);
   node.result = param$1(ctx);
   // At this point we may have found a type which needs to hoist
   const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
@@ -2294,8 +2347,7 @@ const type$1 = ctx => {
     ctx.Program.Types.push(generateType(node));
   }
 
-  ctx.endNode(node, Syntax_1.Typedef);
-  return node;
+  return ctx.endNode(node, Syntax_1.Typedef);
 };
 
 //     
@@ -2628,57 +2680,40 @@ function emitString(stream, string, debug = 'string length') {
   return stream;
 }
 
-const writer = ({
-  type,
-  label,
-  emitter
-}) => ast => {
-  const field = ast[label];
-  if (!field || !field.length) return null;
-
-  const stream = new OutputStream().push(index_9, type, label + ' section');
-  const entries = emitter(field);
-
-  stream.push(varuint32, entries.size, 'size');
-  stream.write(entries);
-
-  return stream;
-};
-
 const emit$1 = entries => {
-  const payload = new OutputStream().push(varuint32, entries.length, 'entry count');
+  const payload = new OutputStream().push(varuint32, entries.length, "entry count");
 
   entries.forEach(({ module, field, kind, global, typeIndex }) => {
-    emitString(payload, module, 'module');
-    emitString(payload, field, 'field');
+    emitString(payload, module, "module");
+    emitString(payload, field, "field");
 
     switch (kind) {
       case EXTERN_GLOBAL:
         {
-          payload.push(index_9, kind, 'Global');
+          payload.push(index_9, kind, "Global");
           payload.push(index_9, global, getTypeString(global));
-          payload.push(index_9, 0, 'immutable');
+          payload.push(index_9, 0, "immutable");
           break;
         }
       case EXTERN_FUNCTION:
         {
-          payload.push(index_9, kind, 'Function');
-          payload.push(varuint32, typeIndex, 'type index');
+          payload.push(index_9, kind, "Function");
+          payload.push(varuint32, typeIndex, "type index");
           break;
         }
       case EXTERN_TABLE:
         {
-          payload.push(index_9, kind, 'Table');
-          payload.push(index_9, ANYFUNC, 'function table types');
-          payload.push(varint1, 0, 'has max value');
-          payload.push(varuint32, 0, 'iniital table size');
+          payload.push(index_9, kind, "Table");
+          payload.push(index_9, ANYFUNC, "function table types");
+          payload.push(varint1, 0, "has max value");
+          payload.push(varuint32, 0, "iniital table size");
           break;
         }
       case EXTERN_MEMORY:
         {
-          payload.push(index_9, kind, 'Memory');
-          payload.push(varint1, 0, 'has no max');
-          payload.push(varuint32, 1, 'iniital memory size(PAGES)');
+          payload.push(index_9, kind, "Memory");
+          payload.push(varint1, 0, "has no max");
+          payload.push(varuint32, 1, "iniital memory size(PAGES)");
           break;
         }
     }
@@ -2750,19 +2785,32 @@ const emit$4 = functions => {
   return stream;
 };
 
+const writer = ({ type, label, emiter }) => ast => {
+  const field = ast[label];
+  if (!field || !field.length) return null;
+
+  const stream = new OutputStream().push(index_9, type, label + " section");
+  const entries = emiter(field);
+
+  stream.push(varuint32, entries.size, "size");
+  stream.write(entries);
+
+  return stream;
+};
+
 //      
 const emitElement = stream => ({ functionIndex }, index) => {
-  stream.push(varuint32, 0, 'table index');
-  stream.push(index_9, def.i32Const.code, 'offset');
-  stream.push(varuint32, index, '');
-  stream.push(index_9, def.End.code, 'end');
-  stream.push(varuint32, 1, 'number of elements');
-  stream.push(varuint32, functionIndex, 'function index');
+  stream.push(varuint32, 0, "table index");
+  stream.push(index_9, def.i32Const.code, "offset");
+  stream.push(varuint32, index, "");
+  stream.push(index_9, def.End.code, "end");
+  stream.push(varuint32, 1, "number of elements");
+  stream.push(varuint32, functionIndex, "function index");
 };
 
 const emit$5 = elements => {
   const stream = new OutputStream();
-  stream.push(varuint32, elements.length, 'count');
+  stream.push(varuint32, elements.length, "count");
 
   elements.forEach(emitElement(stream));
 
@@ -2771,20 +2819,20 @@ const emit$5 = elements => {
 
 const emitType = (stream, { params, result }) => {
   // as of wasm 1.0 spec types are only of from === func
-  stream.push(varint7, FUNC, 'func type');
-  stream.push(varuint32, params.length, 'parameter count');
-  params.forEach(type => stream.push(varint7, type, 'param'));
+  stream.push(varint7, FUNC, "func type");
+  stream.push(varuint32, params.length, "parameter count");
+  params.forEach(type => stream.push(varint7, type, "param"));
   if (result) {
-    stream.push(varint1, 1, 'result count');
+    stream.push(varint1, 1, "result count");
     stream.push(varint7, result, `result type ${getTypeString(result)}`);
   } else {
-    stream.push(varint1, 0, 'result count');
+    stream.push(varint1, 0, "result count");
   }
 };
 
 const emit$6 = types => {
   const stream = new OutputStream();
-  stream.push(varuint32, types.length, 'count');
+  stream.push(varuint32, types.length, "count");
 
   types.forEach(type => emitType(stream, type));
 
@@ -2856,11 +2904,28 @@ const emit$7 = functions => {
   return stream;
 };
 
+// Emits function section. For function code emiter look into code.js
+const emitEntry = (payload, entry) => {
+  payload.push(varint1, entry.max ? 1 : 0, "has no max");
+  payload.push(varuint32, entry.initial, "initial memory size(PAGES)");
+  if (entry.max) {
+    payload.push(varuint32, entry.max, "max memory size(PAGES)");
+  }
+};
+
+const emit$8 = memories => {
+  const stream = new OutputStream();
+  stream.push(varuint32, memories.length, "count");
+  memories.forEach(entry => emitEntry(stream, entry));
+
+  return stream;
+};
+
 const SECTION_TYPE = 1;
 const SECTION_IMPORT = 2;
 const SECTION_FUNCTION = 3;
 
-
+const SECTION_MEMORY = 5;
 const SECTION_GLOBAL = 6;
 const SECTION_EXPORT = 7;
 
@@ -2868,20 +2933,29 @@ const SECTION_ELEMENT = 9;
 const SECTION_CODE = 10;
 
 var section = {
-  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: emit$6 }),
-  function: writer({ type: SECTION_FUNCTION, label: 'Functions', emitter: emit$4 }),
-  imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: emit$1 }),
-  exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: emit$2 }),
-  globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: emit$3 }),
-  element: writer({ type: SECTION_ELEMENT, label: 'Element', emitter: emit$5 }),
-  code: writer({ type: SECTION_CODE, label: 'Code', emitter: emit$7 })
+  type: writer({ type: SECTION_TYPE, label: "Types", emiter: emit$6 }),
+  imports: writer({ type: SECTION_IMPORT, label: "Imports", emiter: emit$1 }),
+  function: writer({
+    type: SECTION_FUNCTION,
+    label: "Functions",
+    emiter: emit$4
+  }),
+  memory: writer({ type: SECTION_MEMORY, label: "Memory", emiter: emit$8 }),
+  exports: writer({ type: SECTION_EXPORT, label: "Exports", emiter: emit$2 }),
+  globals: writer({ type: SECTION_GLOBAL, label: "Globals", emiter: emit$3 }),
+  element: writer({
+    type: SECTION_ELEMENT,
+    label: "Element",
+    emiter: emit$5
+  }),
+  code: writer({ type: SECTION_CODE, label: "Code", emiter: emit$7 })
 };
 
 function emit(ast = {}) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  return stream.write(write()).write(section.type(ast)).write(section.imports(ast)).write(section.function(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.element(ast)).write(section.code(ast));
+  return stream.write(write()).write(section.type(ast)).write(section.imports(ast)).write(section.function(ast)).write(section.memory(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.element(ast)).write(section.code(ast));
 }
 
 const _debug = (stream, begin = 0, end) => {
@@ -2916,6 +2990,7 @@ const getIR = source => {
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
+  debugger;
   const wasm = getIR(source);
   return wasm.buffer();
 };

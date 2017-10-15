@@ -1,8 +1,8 @@
-import { u8, i32, i64, f32, f64 } from "wasm-types";
-import { varuint32, varint7, varint1 } from "../numbers";
+import { u8, i32, f32, f64 } from "wasm-types";
+import { varuint32, varint7 } from "../numbers";
 import { getTypeString } from "../value_type";
 import OutputStream from "../../utils/output-stream";
-import opcode, { opcodeMap } from "../opcode";
+import opcode from "../opcode";
 
 // TODO
 const emitLocal = (stream, local) => {

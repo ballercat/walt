@@ -1,11 +1,12 @@
-import imports from './imports';
-import exports from './exports';
-import globals from './globals';
-import functions from './functions';
-import writer from './writer';
-import element from './element';
-import types from './types';
-import code from './code';
+import imports from "./imports";
+import exports from "./exports";
+import globals from "./globals";
+import functions from "./functions";
+import writer from "./writer";
+import element from "./element";
+import types from "./types";
+import code from "./code";
+import memory from "./memory";
 import {
   SECTION_TYPE,
   SECTION_IMPORT,
@@ -18,15 +19,23 @@ import {
   SECTION_ELEMENT,
   SECTION_CODE,
   SECTION_DATA
-} from './codes';
+} from "./codes";
 
 export default {
-  type: writer({ type: SECTION_TYPE, label: 'Types', emitter: types }),
-  function: writer({ type: SECTION_FUNCTION, label: 'Functions', emitter: functions }),
-  imports: writer({ type: SECTION_IMPORT, label: 'Imports', emitter: imports }),
-  exports: writer({ type: SECTION_EXPORT, label: 'Exports', emitter: exports }),
-  globals: writer({ type: SECTION_GLOBAL, label: 'Globals', emitter: globals }),
-  element: writer({ type: SECTION_ELEMENT, label: 'Element', emitter: element }),
-  code: writer({ type: SECTION_CODE, label: 'Code', emitter: code }),
+  type: writer({ type: SECTION_TYPE, label: "Types", emiter: types }),
+  imports: writer({ type: SECTION_IMPORT, label: "Imports", emiter: imports }),
+  function: writer({
+    type: SECTION_FUNCTION,
+    label: "Functions",
+    emiter: functions
+  }),
+  memory: writer({ type: SECTION_MEMORY, label: "Memory", emiter: memory }),
+  exports: writer({ type: SECTION_EXPORT, label: "Exports", emiter: exports }),
+  globals: writer({ type: SECTION_GLOBAL, label: "Globals", emiter: globals }),
+  element: writer({
+    type: SECTION_ELEMENT,
+    label: "Element",
+    emiter: element
+  }),
+  code: writer({ type: SECTION_CODE, label: "Code", emiter: code })
 };
-

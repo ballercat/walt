@@ -36,3 +36,24 @@ test("ignores whitespace at the end of file", t => {
   const result = tokenizer.parse();
   t.snapshot(result);
 });
+
+test("ignores comments", t => {
+  const stream = new Stream(`
+  // comment
+  2`);
+  const tokenizer = new Tokenizer(stream);
+  const result = tokenizer.parse();
+  t.snapshot(result);
+});
+
+test("parses basic strings", t => {
+  const stream = new Stream(`'this is a string' "and so is this"`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("parsers strings within strings", t => {
+  const stream = new Stream(`"here is a string with a 'substring'"`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});

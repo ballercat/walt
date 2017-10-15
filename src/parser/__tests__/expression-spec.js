@@ -1,6 +1,7 @@
 import test from "ava";
 import expression from "../expression";
 import { mockContext } from "../../utils/mocks";
+import printNode from "../../utils/print-node";
 
 test("array: offset is constant", t => {
   const ctx = mockContext("b[1] + 5");
@@ -70,6 +71,12 @@ test("function parameters", t => {
       meta: []
     }
   ];
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("object literal", t => {
+  const ctx = mockContext("{ 'one': 1 + 1 * 3, 'two': 2 }");
   const node = expression(ctx);
   t.snapshot(node);
 });

@@ -1,3 +1,11 @@
+export const I32 = 0x7F;
+export const I64 = 0x7E;
+export const F32 = 0x7D;
+export const F64 = 0x7C;
+export const ANYFUNC = 0x70;
+export const FUNC = 0x60;
+export const BLOCK_TYPE = 0x40;
+
 export const getTypeString = (type) => {
   switch(type) {
     case I32:
@@ -16,12 +24,4 @@ export const getTypeString = (type) => {
       return '?'
   }
 };
-
-export const I32 = 0x7F;
-export const I64 = 0x7E;
-export const F32 = 0x7D;
-export const F64 = 0x7C;
-export const ANYFUNC = 0x70;
-export const FUNC = 0x60;
-export const BLOCK_TYPE = 0x40;
 

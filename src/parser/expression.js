@@ -3,6 +3,7 @@ import Syntax from "../Syntax";
 import Context from "./context";
 import operator from "./operator";
 import constant from "./constant";
+import stringLiteral from "./string-literal";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
@@ -21,6 +22,7 @@ const isRSqrBracket = valueIs("]");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isTEnd = valueIs(":");
+const isBlockStart = valueIs("{");
 
 export const predicate = (token: Token, depth: number): boolean =>
   token.value !== ";" && depth > 0;
@@ -38,6 +40,7 @@ const expression = (
   // should exit the expression.
   let depth: number = 1;
   let eatFunctionCall = false;
+  let inTernary = false;
 
   const consume = () => operands.push(operator(ctx, operators.pop(), operands));
 
@@ -69,6 +72,9 @@ const expression = (
     } else if (ctx.token.type === Syntax.Identifier) {
       eatFunctionCall = true;
       operands.push(maybeIdentifier(ctx));
+    } else if (ctx.token.type === Syntax.StringLiteral) {
+      eatFunctionCall = false;
+      operands.push(stringLiteral(ctx));
     } else if (ctx.token.type === Syntax.Punctuator) {
       switch (ctx.token.value) {
         case "(":
@@ -90,6 +96,9 @@ const expression = (
             if (expr) operands.push(expr);
             return false;
           } else {
+            if (ctx.token.value === "?") {
+              inTernary = true;
+            }
             operators.push(ctx.token);
           }
           break;
@@ -101,9 +110,6 @@ const expression = (
           depth--;
           eatUntil(isLSqrBracket);
           consume();
-          break;
-        case ":":
-          eatUntil(isTStart);
           break;
         case ")": {
           depth--;
@@ -119,7 +125,24 @@ const expression = (
 
           break;
         }
+        case "{":
+          depth++;
+          operators.push(ctx.token);
+          break;
+        case "}":
+          depth--;
+          if (depth < 1) {
+            return false;
+          }
+          eatUntil(isBlockStart);
+          consume();
+          break;
         default: {
+          if (ctx.token.value === ":" && inTernary) {
+            eatUntil(isTStart);
+            inTernary = false;
+            break;
+          }
           flushOperators(getPrecedence(ctx.token), ctx.token.value);
           operators.push(ctx.token);
         }

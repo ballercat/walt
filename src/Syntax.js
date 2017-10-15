@@ -28,6 +28,8 @@ const Syntax = {
   Typedef: "Typedef",
   ReturnStatement: "ReturnStatement",
   Sequence: "Sequence",
+  ObjectLiteral: "ObjectLiteral",
+  Pair: "Pair",
 
   // Semantic Nodes
   FunctionIndex: "FunctionIndex",

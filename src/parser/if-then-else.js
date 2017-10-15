@@ -2,7 +2,7 @@
 import Syntax from "../Syntax";
 import Context from "./context";
 import statement from "./statement";
-import expression, { predicate } from "./expression";
+import expression from "./expression";
 
 const ifThenElse = (ctx: Context) => {
   const node = {

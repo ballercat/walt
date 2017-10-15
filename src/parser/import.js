@@ -2,7 +2,8 @@
 import Syntax from "../Syntax";
 import Context from "./context";
 import { getType, generateType, generateImport } from "./generator";
-import type { Field, Import, TypeNode } from "../flow/types";
+import type { Field, Import, Node } from "../flow/types";
+import { EXTERN_MEMORY } from "../emitter/external_kind";
 import { make, FUNCTION_INDEX } from "./metadata";
 
 const field = (ctx: Context): Field => {
@@ -14,7 +15,11 @@ const field = (ctx: Context): Field => {
   const typeString: string = ctx.token.value;
   if (ctx.eat(null, Syntax.Type)) {
     // native type, aka GLOBAL export
-    f.global = getType(typeString);
+    if (typeString === "Memory") {
+      f.kind = EXTERN_MEMORY;
+    } else {
+      f.global = getType(typeString);
+    }
   } else if (ctx.eat(null, Syntax.Identifier)) {
     // now we need to find a typeIndex, if we don't find one we create one
     // with the idea that a type will be filled in later. if one is not we
@@ -27,7 +32,7 @@ const field = (ctx: Context): Field => {
         id: typeString,
         params: [],
         // When we DO define a type for it later, patch the dummy type
-        hoist: (node: TypeNode) => {
+        hoist: (node: Node) => {
           ctx.Program.Types[f.typeIndex] = generateType(node);
         }
       });
