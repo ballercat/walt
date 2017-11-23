@@ -61,6 +61,7 @@ const expression = (
       getAssociativty(previous) === "left"
     ) {
       if (value === "," && previous.type === Syntax.FunctionCall) break;
+      // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
   };
@@ -75,6 +76,9 @@ const expression = (
     } else if (ctx.token.type === Syntax.StringLiteral) {
       eatFunctionCall = false;
       operands.push(stringLiteral(ctx));
+    } else if (ctx.token.type === Syntax.Type) {
+      eatFunctionCall = false;
+      operands.push(ctx.makeNode({ value: ctx.token.value }, Syntax.Type));
     } else if (ctx.token.type === Syntax.Punctuator) {
       switch (ctx.token.value) {
         case "(":

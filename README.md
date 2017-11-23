@@ -91,15 +91,15 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [ ] switch/case
   * [x] Function imports
   * [x] Function pointers
-  * [ ] Arrays
-  * [ ] Memory
-  * [ ] Custom _Object_ Types
+  * [x] Arrays
+  * [x] Memory
+  * [x] Custom _Object_ Types
 * Emiter - WIP
   * [x] ~Exports~
   * [x] ~Functions~
   * [x] ~Types - wasm built ins(i32/f32)~
   * [x] ~Types - custom function type imports~
-  * [ ] Memory
+  * [x] Memory
   * [x] ~Arithmetic~
   * [x] ~Globals, Locals~
 * [ ] Support 100% of native Wasm functions
@@ -120,7 +120,7 @@ Initial release of WAlt has very few keywords.
 * `i32`, `i64`, `f32`, `f64` - Built in types
 * `void` - is a custom label used to indicate functions which return nothing (because it's easy to parse). It's compiled out of the final binary.
 * `module` - reserved for :unicorn: future features
-* `memory` - reserved for :unicorn: future memory declarations and operations
+* `memory`, 'Memory' - reserved for :unicorn: future memory declarations and operations
 
 All s-expression-syntax words are reserved and can be written directly into `.walt` scripts.
 
@@ -134,7 +134,8 @@ WAlt splits its syntax into statements and expressions(like JavaScript).
 
 ### Comments
 
-WAlt will support C99 style comments `//` and `/* */` blocks. _Not yet implemented_
+WAlt will support C99 style comments. Inline comments are supported currently ('//') but not comment blocks
+(`/* */`).
 
 ### Functions
 
@@ -179,6 +180,61 @@ must be a wrapper which can get the _real_ wasm function pointer from table obje
     setTimeout(pointer, timeout);
   }
 }
+```
+
+### Arrays, Object, Memory
+
+Simple rules about objects and arrays.
+
+* Both arrays and objects are stored in the heap, NOT on the stack
+* WAlt has no built in memory functions like `new` or `delete`
+* There is no _special_ syntax for pointers, regular 32-bit address integers are used
+* Every object and array must be initialized with an address.
+* Every custom object must have a corresponding type definition
+* Object Type definitions are _not_ present in any way in the final binary output. They are used as compiler hints.
+* `type` keyword is used to create a new user-type. Types can be object or function types.
+* Dynamic keys are not allow/will not work.
+* _Except_ for arrays, which currently have no out-of-bounds checks.
+* Arrays of custom types are _not yet_ supported
+* WAlt **does not implicitly import Memory**, memory must be manually imported OR declared before any memory operations can be used.
+
+Mainly these makes it easier to write a compiler for WAlt. Interop between JavaScript and WAlt becomes
+simpler as well and the "syntax sugar" is kept to a minimum on top of the existing WebAssembly functionality.
+
+Before using arrays or objects memory must be declared
+```javascript
+const memory: Memory = { 'initial': 0 };
+```
+
+Array example:
+
+```javascript
+// Unlike objects arrays do not require custom types and can be declared in-place
+const intArr: i32[] = 0;
+
+// There are no static array sizes and they can be read/written to at any index
+intArr[0] = 2;
+// Keep in mind that out-of-bounds memory access will result in a runtime error
+intArr[255] = 10;
+```
+
+Object example:
+
+```javascript
+// Object types are js-like objects with key value pairs of object properties
+// and corresponding built-in basic types (i32, f32, i64, f64)
+type FooType = { 'foo': i32 };
+
+// Objects must be initialized with an address
+// NOTE: WAlt runtime will _not_ perform any safety checks on this address
+const foo: FooType = 0;
+
+// Property lookups are performed as string subscripts
+foo['foo'] = 200;
+
+// Because objects are compiled down to a single integer address, they can be freely
+// passed around to other functions or put into other objects
+someOtherFunction(foo); // (i32) => void
 ```
 
 ### Module

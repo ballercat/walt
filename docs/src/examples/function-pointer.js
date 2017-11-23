@@ -1,17 +1,4 @@
-const code = `import { setTimeout: Later } from 'env';
-import { log: Log } from 'env';
-
-type Log = (i32) => void;
-type Later = (Function, i32) => void;
-
-function echo(): void {
-  log(42);
-}
-
-export function test(): void {
-  setTimeout(echo, 5);
-}
-`;
+import code from "./walt/function-pointer";
 
 const label = "Function Pointer (console)";
 
@@ -33,6 +20,8 @@ function compile(buffer) {
     }
   }).then(result => result.instance.exports.test());
 }
+
+console.log(code);
 
 const example = {
   code,

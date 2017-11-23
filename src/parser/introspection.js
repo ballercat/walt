@@ -1,6 +1,6 @@
 // @flow
 import Context from "./context";
-import { getType } from "./generator";
+import { getType } from "../generator/utils";
 import Syntax from "../Syntax";
 import precedence from "./precedence";
 import type { Token, Node } from "../flow/types";
@@ -38,6 +38,7 @@ const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
 export const findLocalIndex = findFieldIndex(["func", "locals"]);
 export const findGlobalIndex = findFieldIndex(["globals"]);
 export const findFunctionIndex = findFieldIndex(["functions"]);
+export const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
 // FIXME: do all of this inline here
 // FIXME: add a symbol for function call

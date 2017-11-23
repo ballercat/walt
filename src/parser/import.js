@@ -1,8 +1,10 @@
 // @flow
 import Syntax from "../Syntax";
 import Context from "./context";
-import { getType, generateType, generateImport } from "./generator";
-import type { Field, Import, Node } from "../flow/types";
+import { getType } from "../generator/utils";
+import generateType from "../generator/type";
+import generateImport from "../generator/import";
+import type { Field, Import, NodeType } from "../flow/types";
 import { EXTERN_MEMORY } from "../emitter/external_kind";
 import { make, FUNCTION_INDEX } from "./metadata";
 
@@ -32,7 +34,7 @@ const field = (ctx: Context): Field => {
         id: typeString,
         params: [],
         // When we DO define a type for it later, patch the dummy type
-        hoist: (node: Node) => {
+        hoist: (node: NodeType) => {
           ctx.Program.Types[f.typeIndex] = generateType(node);
         }
       });

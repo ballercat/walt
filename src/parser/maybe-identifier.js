@@ -7,7 +7,8 @@ import type { Node } from "../flow/types";
 import {
   findLocalIndex,
   findGlobalIndex,
-  findFunctionIndex
+  findFunctionIndex,
+  findUserTypeIndex
 } from "./introspection";
 
 // Maybe identifier, maybe function call
@@ -16,6 +17,7 @@ const maybeIdentifier = (ctx: Context): Node => {
   const localIndex = findLocalIndex(ctx, ctx.token);
   const globalIndex = findGlobalIndex(ctx, ctx.token);
   const functionIndex = findFunctionIndex(ctx, ctx.token);
+  const userTypeIndex = findUserTypeIndex(ctx, ctx.token);
 
   let Type = Syntax.Identifier;
   // Not a function call or pointer, look-up variables
@@ -29,6 +31,9 @@ const maybeIdentifier = (ctx: Context): Node => {
     node.type = "i32";
     Type = Syntax.FunctionPointer;
     node.meta.push(meta.tableIndex(writeFunctionPointer(ctx, functionIndex)));
+  } else if (userTypeIndex !== -1 && ctx.stream.peek().value !== "(") {
+    node.type = "i32";
+    Type = Syntax.Type;
   } else if (functionIndex == -1) {
     throw ctx.syntaxError(`Undefined variable name ${ctx.token.value}`);
   }

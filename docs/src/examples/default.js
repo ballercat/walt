@@ -1,8 +1,4 @@
-const code = `const x: i32 = 2;
-export function echo(): i32 {
-  const x: i32 = 42;
-  return x;
-}`;
+import code from "./walt/default";
 
 const label = "Simple (console)";
 

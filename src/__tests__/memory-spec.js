@@ -12,7 +12,7 @@ test("memory can be defined", t => {
   const memory: Memory = { 'initial': 2 };
 
   export function test(): i32 {
-    let x: i32 = 0;
+    let x: i32[] = 0;
     let y: i32 = 5;
     x[0] = 21;
     x[y] = 2;

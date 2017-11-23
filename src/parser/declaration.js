@@ -1,38 +1,58 @@
 // @flow
 import Syntax from "../Syntax";
-import { generateInit, generateMemory } from "./generator";
+import generateInit from "../generator/initializer";
+import generateMemory from "../generator/memory";
 import expression from "./expression";
 import Context from "./context";
-import type { Node } from "../flow/types";
+import metadata from "./metadata";
+import type { NodeType } from "../flow/types";
+import { findUserTypeIndex } from "./introspection";
 
 const generate = (ctx, node) => {
   if (!ctx.func) {
     if (node.type === "Memory") {
-      node.params = [node.init];
       ctx.Program.Memory.push(generateMemory(node));
     } else {
-      node.globalIndex = ctx.Program.Globals.length;
+      node.meta.push(metadata.globalIndex(ctx.Program.Globals.length));
       ctx.Program.Globals.push(generateInit(node));
       ctx.globals.push(node);
     }
   } else {
-    node.localIndex = ctx.func.locals.length;
+    node.meta.push(metadata.localIndex(ctx.func.locals.length));
     ctx.func.locals.push(node);
   }
 };
 
-const declaration = (ctx: Context): Node => {
+const declaration = (ctx: Context): NodeType => {
   const node = ctx.startNode();
-  node.const = ctx.token.value === "const";
+
+  if (ctx.token.value === "const") {
+    node.meta.push(metadata.constant());
+  }
+
   if (!ctx.eat(["const", "let", "function"]))
     throw ctx.unexpectedValue(["const", "let", "function"]);
 
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
 
-  node.type = ctx.expect(null, Syntax.Type).value;
+  const userTypeIndex = findUserTypeIndex(ctx, ctx.token);
+  if (userTypeIndex !== -1) {
+    node.type = "i32";
+    node.meta.push(metadata.userType(ctx.userTypes[userTypeIndex]));
+    // Eat the identifier for the user defined type
+    ctx.eat(null, Syntax.Identifier);
+  } else {
+    node.type = ctx.expect(null, Syntax.Type).value;
+  }
 
-  if (ctx.eat(["="])) node.init = expression(ctx, node.type);
+  if (ctx.eat(["["]) && ctx.eat(["]"])) {
+    node.meta.push(metadata.array());
+  }
+
+  if (ctx.eat(["="])) {
+    node.params.push(expression(ctx, node.type));
+  }
 
   if (node.const && !node.init)
     throw ctx.syntaxError("Constant value must be initialized");

@@ -1,16 +1,16 @@
-import { u8, f32, f64 } from 'wasm-types';
-import { I32, F64, F32, getTypeString } from '../value_type';
-import { varuint32 } from '../numbers';
-import { emitString } from '../string';
-import opcode from '../opcode';
-import OutputStream from '../../utils/output-stream';
+import { u8, f32, f64 } from "wasm-types";
+import { I32, F64, F32, getTypeString } from "../value_type";
+import { varuint32 } from "../numbers";
+import { emitString } from "../string";
+import opcode from "../opcode";
+import OutputStream from "../../utils/output-stream";
 
 const encode = (payload, { type, init, mutable }) => {
   payload.push(u8, type, getTypeString(type));
-  payload.push(u8, mutable, 'mutable');
+  payload.push(u8, mutable, "mutable");
   if (!Array.isArray(init)) {
     // Encode the constant
-    switch(type) {
+    switch (type) {
       case I32:
         payload.push(u8, opcode.i32Const.code, opcode.i32Const.text);
         payload.push(varuint32, init, `value (${init})`);
@@ -21,7 +21,7 @@ const encode = (payload, { type, init, mutable }) => {
         break;
       case F64:
         payload.push(u8, opcode.f64Const.code, opcode.f64Const.text);
-        payload.push(f64, init, `value (${init})`);
+        payload.push(f64, 42.6, `value (${init})`);
         break;
     }
   } else {
@@ -31,12 +31,12 @@ const encode = (payload, { type, init, mutable }) => {
       params.forEach(p => payload.push(varuint32, p, `value (${p})`));
     });
   }
-  payload.push(u8, opcode.End.code, 'end');
+  payload.push(u8, opcode.End.code, "end");
 };
 
-const emit = (globals) => {
+const emit = globals => {
   const payload = new OutputStream();
-  payload.push(varuint32, globals.length, 'count');
+  payload.push(varuint32, globals.length, "count");
 
   globals.forEach(g => encode(payload, g));
 
@@ -44,5 +44,3 @@ const emit = (globals) => {
 };
 
 export default emit;
-
-

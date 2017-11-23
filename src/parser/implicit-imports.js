@@ -1,7 +1,8 @@
 // @flow
 import Context from "./context";
 import { EXTERN_TABLE } from "../emitter/external_kind";
-import { generateImport, generateElement } from "./generator";
+import generateElement from "../generator/element";
+import generateImport from "../generator/import";
 
 export const writeFunctionPointer = (
   ctx: Context,

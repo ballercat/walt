@@ -5,14 +5,17 @@ import printNode from "../../utils/print-node";
 
 test("array: offset is constant", t => {
   const ctx = mockContext("b[1] + 5");
-  ctx.globals = [{ id: "b", type: "i32" }];
+  ctx.globals = [{ id: "b", type: "i32", meta: [{ type: "type/array" }] }];
   const node = expression(ctx);
   t.snapshot(node);
 });
 
 test("array: offset is compound expression", t => {
   const ctx = mockContext("a + b[1 + 1] * 5");
-  ctx.globals = [{ id: "b", type: "i32" }, { id: "a", type: "i32" }];
+  ctx.globals = [
+    { id: "b", type: "i32", meta: [{ type: "type/array" }] },
+    { id: "a", type: "i32" }
+  ];
   const node = expression(ctx);
   t.snapshot(node);
 });
@@ -77,6 +80,12 @@ test("function parameters", t => {
 
 test("object literal", t => {
   const ctx = mockContext("{ 'one': 1 + 1 * 3, 'two': 2 }");
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("type definition", t => {
+  const ctx = mockContext("{ 'foo': i32, 'bar': i32 }");
   const node = expression(ctx);
   t.snapshot(node);
 });

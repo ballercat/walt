@@ -3,11 +3,11 @@ import Syntax from "../Syntax";
 import Context from "./context";
 import metadata from "./metadata";
 import functionCall from "./function-call";
-import { getAssociativty } from "./introspection";
-import type { Token, Node } from "../flow/types";
+import { getMetaType, patchStringSubscript } from "./array-subscript";
+import type { Token, NodeType } from "../flow/types";
 
-function binary(ctx: Context, op: Token, params: Node[]) {
-  const node: Node = ctx.startNode(params[0]);
+function binary(ctx: Context, op: Token, params: NodeType[]) {
+  const node: NodeType = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = params;
   // FIXME: type of the binary expression should be more accurate
@@ -20,6 +20,11 @@ function binary(ctx: Context, op: Token, params: Node[]) {
     ctx.diAssoc = "right";
   } else if (node.value === "[") {
     Type = Syntax.ArraySubscript;
+    node.params = patchStringSubscript(
+      ctx,
+      getMetaType(ctx, params[0]),
+      node.params
+    );
   } else if (node.value === ":") {
     Type = Syntax.Pair;
   }
@@ -27,7 +32,7 @@ function binary(ctx: Context, op: Token, params: Node[]) {
   return ctx.endNode(node, Type);
 }
 
-function unary(ctx: Context, op: Token, params: Node[]) {
+function unary(ctx: Context, op: Token, params: NodeType[]) {
   // Since WebAssembly has no 'native' support for incr/decr _opcode_ it's much simpler to
   // convert this unary to a binary expression by throwing in an extra operand of 1
   if (op.value === "--" || op.value === "++") {
@@ -52,13 +57,13 @@ function unary(ctx: Context, op: Token, params: Node[]) {
   return ctx.endNode(node, Syntax.UnaryExpression);
 }
 
-function objectLiteral(ctx: Context, op: Token, params: Node[]): Node {
+function objectLiteral(ctx: Context, op: Token, params: NodeType[]): NodeType {
   const node = ctx.startNode(op);
   node.params = params;
   return ctx.endNode(node, Syntax.ObjectLiteral);
 }
 
-const ternary = (ctx: Context, op: Token, params: Node[]) => {
+const ternary = (ctx: Context, op: Token, params: NodeType[]) => {
   const node = ctx.startNode(params[0]);
   node.params = params;
   node.value = op.value;
@@ -67,7 +72,7 @@ const ternary = (ctx: Context, op: Token, params: Node[]) => {
   return ctx.endNode(node, Syntax.TernaryExpression);
 };
 
-const flattenSequence = (sequence: Node[]): Node[] => {
+const flattenSequence = (sequence: NodeType[]): NodeType[] => {
   return sequence.reduce((memo, node) => {
     if (node.Type === Syntax.Sequence) {
       memo.push.apply(memo, flattenSequence(node.params));
@@ -81,7 +86,7 @@ const flattenSequence = (sequence: Node[]): Node[] => {
 
 // Sequence is a list of comma separated nodes. It's a slighlty special operator
 // in that it unrolls any other sequences into it's own params
-const sequence = (ctx: Context, op: Token, params: Node[]) => {
+const sequence = (ctx: Context, op: Token, params: NodeType[]) => {
   const node = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = flattenSequence(params);
@@ -90,7 +95,7 @@ const sequence = (ctx: Context, op: Token, params: Node[]) => {
 };
 
 // Abstraction for handling operations
-const operator = (ctx: Context, op: Token, operands: Node[]) => {
+const operator = (ctx: Context, op: Token, operands: NodeType[]) => {
   switch (op.value) {
     case "++":
     case "--":

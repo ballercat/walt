@@ -527,44 +527,13 @@ var index_12 = index$4.u32;
 var index_14 = index$4.set;
 var index_16 = index$4.sizeof;
 
-const EXTERN_FUNCTION = 0;
-const EXTERN_TABLE = 1;
-const EXTERN_MEMORY = 2;
-const EXTERN_GLOBAL = 3;
-
-const I32 = 0x7F;
-const I64 = 0x7E;
-const F32 = 0x7D;
-const F64 = 0x7C;
-const ANYFUNC = 0x70;
-const FUNC = 0x60;
-
-
-const getTypeString = type => {
-  switch (type) {
-    case I32:
-      return 'i32';
-    case I64:
-      return 'i64';
-    case F32:
-      return 'f32';
-    case F64:
-      return 'f64';
-    case FUNC:
-      return 'func';
-    case ANYFUNC:
-      return 'anyfunc';
-    default:
-      return '?';
-  }
-};
-
+//      
 /**
  * Ported from https://github.com/WebAssembly/wabt/blob/master/src/opcode.def
  */
 const def = {};
 const opcodeMap = [];
-const textMap = [];
+const textMap = {};
 const ___ = null;
 
 /**
@@ -598,299 +567,224 @@ const opcode = (result, first, second, size, code, name, text) => {
   return definition;
 };
 
-opcode(___, ___, ___, 0, 0x00, 'Unreachable', "unreachable");
-opcode(___, ___, ___, 0, 0x01, 'Nop', "nop");
-opcode(___, ___, ___, 0, 0x02, 'Block', "block");
-opcode(___, ___, ___, 0, 0x03, 'Loop', "loop");
-opcode(___, ___, ___, 0, 0x04, 'If', "if");
-opcode(___, ___, ___, 0, 0x05, 'Else', "else");
-opcode(___, ___, ___, 0, 0x06, 'Try', "try");
-opcode(___, ___, ___, 0, 0x07, 'Catch', "catch");
-opcode(___, ___, ___, 0, 0x08, 'Throw', "throw");
-opcode(___, ___, ___, 0, 0x09, 'Rethrow', "rethrow");
-opcode(___, ___, ___, 0, 0x0a, 'CatchAll', "catch_all");
-opcode(___, ___, ___, 0, 0x0b, 'End', "end");
-opcode(___, ___, ___, 0, 0x0c, 'Br', "br");
-opcode(___, ___, ___, 0, 0x0d, 'BrIf', "br_if");
-opcode(___, ___, ___, 0, 0x0e, 'BrTable', "br_table");
-opcode(___, ___, ___, 0, 0x0f, 'Return', "return");
-opcode(___, ___, ___, 0, 0x10, 'Call', "call");
-opcode(___, ___, ___, 0, 0x11, 'CallIndirect', "call_indirect");
-opcode(___, ___, ___, 0, 0x1a, 'Drop', "drop");
-opcode(___, ___, ___, 0, 0x1b, 'Select', "select");
-opcode(___, ___, ___, 0, 0x20, 'GetLocal', "get_local");
-opcode(___, ___, ___, 0, 0x21, 'SetLocal', "set_local");
-opcode(___, ___, ___, 0, 0x22, 'TeeLocal', "tee_local");
-opcode(___, ___, ___, 0, 0x23, 'GetGlobal', "get_global");
-opcode(___, ___, ___, 0, 0x24, 'SetGlobal', "set_global");
-opcode(index_1, index_1, ___, 4, 0x28, 'i32Load', "i32.load");
-opcode(index_2, index_1, ___, 8, 0x29, 'i64Load', "i64.load");
-opcode(index_3, index_1, ___, 4, 0x2a, 'f32Load', "f32.load");
-opcode(index_3, index_1, ___, 8, 0x2b, 'f32Load', "f64.load");
-opcode(index_1, index_1, ___, 1, 0x2c, 'i32Load8S', "i32.load8_s");
-opcode(index_1, index_1, ___, 1, 0x2d, 'i32Load8U', "i32.load8_u");
-opcode(index_1, index_1, ___, 2, 0x2e, 'i32Load16S', "i32.load16_s");
-opcode(index_1, index_1, ___, 2, 0x2f, 'i32Load16U', "i32.load16_u");
-opcode(index_2, index_1, ___, 1, 0x30, 'i64Load8S', "i64.load8_s");
-opcode(index_2, index_1, ___, 1, 0x31, 'i64Load8U', "i64.load8_u");
-opcode(index_2, index_1, ___, 2, 0x32, 'i64Load16S', "i64.load16_s");
-opcode(index_2, index_1, ___, 2, 0x33, 'i64Load16U', "i64.load16_u");
-opcode(index_2, index_1, ___, 4, 0x34, 'i64Load32S', "i64.load32_s");
-opcode(index_2, index_1, ___, 4, 0x35, 'i64Load32U', "i64.load32_u");
-opcode(___, index_1, index_1, 4, 0x36, 'i32Store', "i32.store");
-opcode(___, index_1, index_2, 8, 0x37, 'i64Store', "i64.store");
-opcode(___, index_1, index_3, 4, 0x38, 'f32Store', "f32.store");
-opcode(___, index_1, index_3, 8, 0x39, 'f32Store', "f64.store");
-opcode(___, index_1, index_1, 1, 0x3a, 'i32Store8', "i32.store8");
-opcode(___, index_1, index_1, 2, 0x3b, 'i32Store16', "i32.store16");
-opcode(___, index_1, index_2, 1, 0x3c, 'i64Store8', "i64.store8");
-opcode(___, index_1, index_2, 2, 0x3d, 'i64Store16', "i64.store16");
-opcode(___, index_1, index_2, 4, 0x3e, 'i64Store32', "i64.store32");
-opcode(index_1, ___, ___, 0, 0x3f, 'CurrentMemory', "current_memory");
-opcode(index_1, index_1, ___, 0, 0x40, 'GrowMemory', "grow_memory");
-opcode(index_1, ___, ___, 0, 0x41, 'i32Const', "i32.const");
-opcode(index_2, ___, ___, 0, 0x42, 'i64Const', "i64.const");
-opcode(index_3, ___, ___, 0, 0x43, 'f32Const', "f32.const");
-opcode(index_3, ___, ___, 0, 0x44, 'f64Const', "f64.const");
-opcode(index_1, index_1, ___, 0, 0x45, 'i32Eqz', "i32.eqz");
-opcode(index_1, index_1, index_1, 0, 0x46, 'i32Eq', "i32.eq");
-opcode(index_1, index_1, index_1, 0, 0x47, 'i32Ne', "i32.ne");
-opcode(index_1, index_1, index_1, 0, 0x48, 'i32LtS', "i32.lt_s");
-opcode(index_1, index_1, index_1, 0, 0x49, 'i32LtU', "i32.lt_u");
-opcode(index_1, index_1, index_1, 0, 0x4a, 'i32GtS', "i32.gt_s");
-opcode(index_1, index_1, index_1, 0, 0x4b, 'i32GtU', "i32.gt_u");
-opcode(index_1, index_1, index_1, 0, 0x4c, 'i32LeS', "i32.le_s");
-opcode(index_1, index_1, index_1, 0, 0x4d, 'i32LeU', "i32.le_u");
-opcode(index_1, index_1, index_1, 0, 0x4e, 'i32GeS', "i32.ge_s");
-opcode(index_1, index_1, index_1, 0, 0x4f, 'i32GeU', "i32.ge_u");
-opcode(index_1, index_2, ___, 0, 0x50, 'i64Eqz', "i64.eqz");
-opcode(index_1, index_2, index_2, 0, 0x51, 'i64Eq', "i64.eq");
-opcode(index_1, index_2, index_2, 0, 0x52, 'i64Ne', "i64.ne");
-opcode(index_1, index_2, index_2, 0, 0x53, 'i64LtS', "i64.lt_s");
-opcode(index_1, index_2, index_2, 0, 0x54, 'i64LtU', "i64.lt_u");
-opcode(index_1, index_2, index_2, 0, 0x55, 'i64GtS', "i64.gt_s");
-opcode(index_1, index_2, index_2, 0, 0x56, 'i64GtU', "i64.gt_u");
-opcode(index_1, index_2, index_2, 0, 0x57, 'i64LeS', "i64.le_s");
-opcode(index_1, index_2, index_2, 0, 0x58, 'i64LeU', "i64.le_u");
-opcode(index_1, index_2, index_2, 0, 0x59, 'i64GeS', "i64.ge_s");
-opcode(index_1, index_2, index_2, 0, 0x5a, 'i64GeU', "i64.ge_u");
-opcode(index_1, index_3, index_3, 0, 0x5b, 'f32Eq', "f32.eq");
-opcode(index_1, index_3, index_3, 0, 0x5c, 'f32Ne', "f32.ne");
-opcode(index_1, index_3, index_3, 0, 0x5d, 'f32Lt', "f32.lt");
-opcode(index_1, index_3, index_3, 0, 0x5e, 'f32Gt', "f32.gt");
-opcode(index_1, index_3, index_3, 0, 0x5f, 'f32Le', "f32.le");
-opcode(index_1, index_3, index_3, 0, 0x60, 'f32Ge', "f32.ge");
-opcode(index_1, index_3, index_3, 0, 0x61, 'f32Eq', "f64.eq");
-opcode(index_1, index_3, index_3, 0, 0x62, 'f32Ne', "f64.ne");
-opcode(index_1, index_3, index_3, 0, 0x63, 'f32Lt', "f64.lt");
-opcode(index_1, index_3, index_3, 0, 0x64, 'f32Gt', "f64.gt");
-opcode(index_1, index_3, index_3, 0, 0x65, 'f32Le', "f64.le");
-opcode(index_1, index_3, index_3, 0, 0x66, 'f32Ge', "f64.ge");
-opcode(index_1, index_1, ___, 0, 0x67, 'i32Clz', "i32.clz");
-opcode(index_1, index_1, ___, 0, 0x68, 'i32Ctz', "i32.ctz");
-opcode(index_1, index_1, ___, 0, 0x69, 'i32Popcnt', "i32.popcnt");
-opcode(index_1, index_1, index_1, 0, 0x6a, 'i32Add', "i32.add");
-opcode(index_1, index_1, index_1, 0, 0x6b, 'i32Sub', "i32.sub");
-opcode(index_1, index_1, index_1, 0, 0x6c, 'i32Mul', "i32.mul");
-opcode(index_1, index_1, index_1, 0, 0x6d, 'i32DivS', "i32.div_s");
-opcode(index_1, index_1, index_1, 0, 0x6e, 'i32DivU', "i32.div_u");
-opcode(index_1, index_1, index_1, 0, 0x6f, 'i32RemS', "i32.rem_s");
-opcode(index_1, index_1, index_1, 0, 0x70, 'i32RemU', "i32.rem_u");
-opcode(index_1, index_1, index_1, 0, 0x71, 'i32And', "i32.and");
-opcode(index_1, index_1, index_1, 0, 0x72, 'i32Or', "i32.or");
-opcode(index_1, index_1, index_1, 0, 0x73, 'i32Xor', "i32.xor");
-opcode(index_1, index_1, index_1, 0, 0x74, 'i32Shl', "i32.shl");
-opcode(index_1, index_1, index_1, 0, 0x75, 'i32ShrS', "i32.shr_s");
-opcode(index_1, index_1, index_1, 0, 0x76, 'i32ShrU', "i32.shr_u");
-opcode(index_1, index_1, index_1, 0, 0x77, 'i32Rotl', "i32.rotl");
-opcode(index_1, index_1, index_1, 0, 0x78, 'i32Rotr', "i32.rotr");
-opcode(index_2, index_2, ___, 0, 0x79, 'i64Clz', "i64.clz");
-opcode(index_2, index_2, ___, 0, 0x7a, 'i64Ctz', "i64.ctz");
-opcode(index_2, index_2, ___, 0, 0x7b, 'i64Popcnt', "i64.popcnt");
-opcode(index_2, index_2, index_2, 0, 0x7c, 'i64Add', "i64.add");
-opcode(index_2, index_2, index_2, 0, 0x7d, 'i64Sub', "i64.sub");
-opcode(index_2, index_2, index_2, 0, 0x7e, 'i64Mul', "i64.mul");
-opcode(index_2, index_2, index_2, 0, 0x7f, 'i64DivS', "i64.div_s");
-opcode(index_2, index_2, index_2, 0, 0x80, 'i64DivU', "i64.div_u");
-opcode(index_2, index_2, index_2, 0, 0x81, 'i64RemS', "i64.rem_s");
-opcode(index_2, index_2, index_2, 0, 0x82, 'i64RemU', "i64.rem_u");
-opcode(index_2, index_2, index_2, 0, 0x83, 'i64And', "i64.and");
-opcode(index_2, index_2, index_2, 0, 0x84, 'i64Or', "i64.or");
-opcode(index_2, index_2, index_2, 0, 0x85, 'i64Xor', "i64.xor");
-opcode(index_2, index_2, index_2, 0, 0x86, 'i64Shl', "i64.shl");
-opcode(index_2, index_2, index_2, 0, 0x87, 'i64ShrS', "i64.shr_s");
-opcode(index_2, index_2, index_2, 0, 0x88, 'i64ShrU', "i64.shr_u");
-opcode(index_2, index_2, index_2, 0, 0x89, 'i64Rotl', "i64.rotl");
-opcode(index_2, index_2, index_2, 0, 0x8a, 'i64Rotr', "i64.rotr");
-opcode(index_3, index_3, index_3, 0, 0x8b, 'f32Abs', "f32.abs");
-opcode(index_3, index_3, index_3, 0, 0x8c, 'f32Neg', "f32.neg");
-opcode(index_3, index_3, index_3, 0, 0x8d, 'f32Ceil', "f32.ceil");
-opcode(index_3, index_3, index_3, 0, 0x8e, 'f32Floor', "f32.floor");
-opcode(index_3, index_3, index_3, 0, 0x8f, 'f32Trunc', "f32.trunc");
-opcode(index_3, index_3, index_3, 0, 0x90, 'f32Nearest', "f32.nearest");
-opcode(index_3, index_3, index_3, 0, 0x91, 'f32Sqrt', "f32.sqrt");
-opcode(index_3, index_3, index_3, 0, 0x92, 'f32Add', "f32.add");
-opcode(index_3, index_3, index_3, 0, 0x93, 'f32Sub', "f32.sub");
-opcode(index_3, index_3, index_3, 0, 0x94, 'f32Mul', "f32.mul");
-opcode(index_3, index_3, index_3, 0, 0x95, 'f32Div', "f32.div");
-opcode(index_3, index_3, index_3, 0, 0x96, 'f32Min', "f32.min");
-opcode(index_3, index_3, index_3, 0, 0x97, 'f32Max', "f32.max");
-opcode(index_3, index_3, index_3, 0, 0x98, 'f32Copysign', "f32.copysign");
-opcode(index_3, index_3, index_3, 0, 0x99, 'f32Abs', "f64.abs");
-opcode(index_3, index_3, index_3, 0, 0x9a, 'f32Neg', "f64.neg");
-opcode(index_3, index_3, index_3, 0, 0x9b, 'f32Ceil', "f64.ceil");
-opcode(index_3, index_3, index_3, 0, 0x9c, 'f32Floor', "f64.floor");
-opcode(index_3, index_3, index_3, 0, 0x9d, 'f32Trunc', "f64.trunc");
-opcode(index_3, index_3, index_3, 0, 0x9e, 'f32Nearest', "f64.nearest");
-opcode(index_3, index_3, index_3, 0, 0x9f, 'f32Sqrt', "f64.sqrt");
-opcode(index_3, index_3, index_3, 0, 0xa0, 'f32Add', "f64.add");
-opcode(index_3, index_3, index_3, 0, 0xa1, 'f32Sub', "f64.sub");
-opcode(index_3, index_3, index_3, 0, 0xa2, 'f32Mul', "f64.mul");
-opcode(index_3, index_3, index_3, 0, 0xa3, 'f32Div', "f64.div");
-opcode(index_3, index_3, index_3, 0, 0xa4, 'f32Min', "f64.min");
-opcode(index_3, index_3, index_3, 0, 0xa5, 'f32Max', "f64.max");
-opcode(index_3, index_3, index_3, 0, 0xa6, 'f32Copysign', "f64.copysign");
-opcode(index_1, index_2, ___, 0, 0xa7, 'i32Wrapi64', "i32.wrap/i64");
-opcode(index_1, index_3, ___, 0, 0xa8, 'i32TruncSf32', "i32.trunc_s/f32");
-opcode(index_1, index_3, ___, 0, 0xa9, 'i32TruncUf32', "i32.trunc_u/f32");
-opcode(index_1, index_3, ___, 0, 0xaa, 'i32TruncSf32', "i32.trunc_s/f64");
-opcode(index_1, index_3, ___, 0, 0xab, 'i32TruncUf32', "i32.trunc_u/f64");
-opcode(index_2, index_1, ___, 0, 0xac, 'i64ExtendSi32', "i64.extend_s/i32");
-opcode(index_2, index_1, ___, 0, 0xad, 'i64ExtendUi32', "i64.extend_u/i32");
-opcode(index_2, index_3, ___, 0, 0xae, 'i64TruncSf32', "i64.trunc_s/f32");
-opcode(index_2, index_3, ___, 0, 0xaf, 'i64TruncUf32', "i64.trunc_u/f32");
-opcode(index_2, index_3, ___, 0, 0xb0, 'i64TruncSf32', "i64.trunc_s/f64");
-opcode(index_2, index_3, ___, 0, 0xb1, 'i64TruncUf32', "i64.trunc_u/f64");
-opcode(index_3, index_1, ___, 0, 0xb2, 'f32ConvertSi32', "f32.convert_s/i32");
-opcode(index_3, index_1, ___, 0, 0xb3, 'f32ConvertUi32', "f32.convert_u/i32");
-opcode(index_3, index_2, ___, 0, 0xb4, 'f32ConvertSi64', "f32.convert_s/i64");
-opcode(index_3, index_2, ___, 0, 0xb5, 'f32ConvertUi64', "f32.convert_u/i64");
-opcode(index_3, index_3, ___, 0, 0xb6, 'f32Demotef32', "f32.demote/f64");
-opcode(index_3, index_1, ___, 0, 0xb7, 'f32ConvertSi32', "f64.convert_s/i32");
-opcode(index_3, index_1, ___, 0, 0xb8, 'f32ConvertUi32', "f64.convert_u/i32");
-opcode(index_3, index_2, ___, 0, 0xb9, 'f32ConvertSi64', "f64.convert_s/i64");
-opcode(index_3, index_2, ___, 0, 0xba, 'f32ConvertUi64', "f64.convert_u/i64");
-opcode(index_3, index_3, ___, 0, 0xbb, 'f32Promotef32', "f64.promote/f32");
-opcode(index_1, index_3, ___, 0, 0xbc, 'i32Reinterpretf32', "i32.reinterpret/f32");
-opcode(index_2, index_3, ___, 0, 0xbd, 'i64Reinterpretf32', "i64.reinterpret/f64");
-opcode(index_3, index_1, ___, 0, 0xbe, 'f32Reinterpreti32', "f32.reinterpret/i32");
-opcode(index_3, index_2, ___, 0, 0xbf, 'f32Reinterpreti64', "f64.reinterpret/i64");
+opcode(___, ___, ___, 0, 0x00, "Unreachable", "unreachable");
+opcode(___, ___, ___, 0, 0x01, "Nop", "nop");
+opcode(___, ___, ___, 0, 0x02, "Block", "block");
+opcode(___, ___, ___, 0, 0x03, "Loop", "loop");
+opcode(___, ___, ___, 0, 0x04, "If", "if");
+opcode(___, ___, ___, 0, 0x05, "Else", "else");
+opcode(___, ___, ___, 0, 0x06, "Try", "try");
+opcode(___, ___, ___, 0, 0x07, "Catch", "catch");
+opcode(___, ___, ___, 0, 0x08, "Throw", "throw");
+opcode(___, ___, ___, 0, 0x09, "Rethrow", "rethrow");
+opcode(___, ___, ___, 0, 0x0a, "CatchAll", "catch_all");
+opcode(___, ___, ___, 0, 0x0b, "End", "end");
+opcode(___, ___, ___, 0, 0x0c, "Br", "br");
+opcode(___, ___, ___, 0, 0x0d, "BrIf", "br_if");
+opcode(___, ___, ___, 0, 0x0e, "BrTable", "br_table");
+opcode(___, ___, ___, 0, 0x0f, "Return", "return");
+opcode(___, ___, ___, 0, 0x10, "Call", "call");
+opcode(___, ___, ___, 0, 0x11, "CallIndirect", "call_indirect");
+opcode(___, ___, ___, 0, 0x1a, "Drop", "drop");
+opcode(___, ___, ___, 0, 0x1b, "Select", "select");
+opcode(___, ___, ___, 0, 0x20, "GetLocal", "get_local");
+opcode(___, ___, ___, 0, 0x21, "SetLocal", "set_local");
+opcode(___, ___, ___, 0, 0x22, "TeeLocal", "tee_local");
+opcode(___, ___, ___, 0, 0x23, "GetGlobal", "get_global");
+opcode(___, ___, ___, 0, 0x24, "SetGlobal", "set_global");
+opcode(index_1, index_1, ___, 4, 0x28, "i32Load", "i32.load");
+opcode(index_2, index_1, ___, 8, 0x29, "i64Load", "i64.load");
+opcode(index_3, index_1, ___, 4, 0x2a, "f32Load", "f32.load");
+opcode(index_3, index_1, ___, 8, 0x2b, "f32Load", "f64.load");
+opcode(index_1, index_1, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
+opcode(index_1, index_1, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
+opcode(index_1, index_1, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
+opcode(index_1, index_1, ___, 2, 0x2f, "i32Load16U", "i32.load16_u");
+opcode(index_2, index_1, ___, 1, 0x30, "i64Load8S", "i64.load8_s");
+opcode(index_2, index_1, ___, 1, 0x31, "i64Load8U", "i64.load8_u");
+opcode(index_2, index_1, ___, 2, 0x32, "i64Load16S", "i64.load16_s");
+opcode(index_2, index_1, ___, 2, 0x33, "i64Load16U", "i64.load16_u");
+opcode(index_2, index_1, ___, 4, 0x34, "i64Load32S", "i64.load32_s");
+opcode(index_2, index_1, ___, 4, 0x35, "i64Load32U", "i64.load32_u");
+opcode(___, index_1, index_1, 4, 0x36, "i32Store", "i32.store");
+opcode(___, index_1, index_2, 8, 0x37, "i64Store", "i64.store");
+opcode(___, index_1, index_3, 4, 0x38, "f32Store", "f32.store");
+opcode(___, index_1, index_3, 8, 0x39, "f32Store", "f64.store");
+opcode(___, index_1, index_1, 1, 0x3a, "i32Store8", "i32.store8");
+opcode(___, index_1, index_1, 2, 0x3b, "i32Store16", "i32.store16");
+opcode(___, index_1, index_2, 1, 0x3c, "i64Store8", "i64.store8");
+opcode(___, index_1, index_2, 2, 0x3d, "i64Store16", "i64.store16");
+opcode(___, index_1, index_2, 4, 0x3e, "i64Store32", "i64.store32");
+opcode(index_1, ___, ___, 0, 0x3f, "CurrentMemory", "current_memory");
+opcode(index_1, index_1, ___, 0, 0x40, "GrowMemory", "grow_memory");
+opcode(index_1, ___, ___, 0, 0x41, "i32Const", "i32.const");
+opcode(index_2, ___, ___, 0, 0x42, "i64Const", "i64.const");
+opcode(index_3, ___, ___, 0, 0x43, "f32Const", "f32.const");
+opcode(index_3, ___, ___, 0, 0x44, "f64Const", "f64.const");
+opcode(index_1, index_1, ___, 0, 0x45, "i32Eqz", "i32.eqz");
+opcode(index_1, index_1, index_1, 0, 0x46, "i32Eq", "i32.eq");
+opcode(index_1, index_1, index_1, 0, 0x47, "i32Ne", "i32.ne");
+opcode(index_1, index_1, index_1, 0, 0x48, "i32LtS", "i32.lt_s");
+opcode(index_1, index_1, index_1, 0, 0x49, "i32LtU", "i32.lt_u");
+opcode(index_1, index_1, index_1, 0, 0x4a, "i32GtS", "i32.gt_s");
+opcode(index_1, index_1, index_1, 0, 0x4b, "i32GtU", "i32.gt_u");
+opcode(index_1, index_1, index_1, 0, 0x4c, "i32LeS", "i32.le_s");
+opcode(index_1, index_1, index_1, 0, 0x4d, "i32LeU", "i32.le_u");
+opcode(index_1, index_1, index_1, 0, 0x4e, "i32GeS", "i32.ge_s");
+opcode(index_1, index_1, index_1, 0, 0x4f, "i32GeU", "i32.ge_u");
+opcode(index_1, index_2, ___, 0, 0x50, "i64Eqz", "i64.eqz");
+opcode(index_1, index_2, index_2, 0, 0x51, "i64Eq", "i64.eq");
+opcode(index_1, index_2, index_2, 0, 0x52, "i64Ne", "i64.ne");
+opcode(index_1, index_2, index_2, 0, 0x53, "i64LtS", "i64.lt_s");
+opcode(index_1, index_2, index_2, 0, 0x54, "i64LtU", "i64.lt_u");
+opcode(index_1, index_2, index_2, 0, 0x55, "i64GtS", "i64.gt_s");
+opcode(index_1, index_2, index_2, 0, 0x56, "i64GtU", "i64.gt_u");
+opcode(index_1, index_2, index_2, 0, 0x57, "i64LeS", "i64.le_s");
+opcode(index_1, index_2, index_2, 0, 0x58, "i64LeU", "i64.le_u");
+opcode(index_1, index_2, index_2, 0, 0x59, "i64GeS", "i64.ge_s");
+opcode(index_1, index_2, index_2, 0, 0x5a, "i64GeU", "i64.ge_u");
+opcode(index_1, index_3, index_3, 0, 0x5b, "f32Eq", "f32.eq");
+opcode(index_1, index_3, index_3, 0, 0x5c, "f32Ne", "f32.ne");
+opcode(index_1, index_3, index_3, 0, 0x5d, "f32Lt", "f32.lt");
+opcode(index_1, index_3, index_3, 0, 0x5e, "f32Gt", "f32.gt");
+opcode(index_1, index_3, index_3, 0, 0x5f, "f32Le", "f32.le");
+opcode(index_1, index_3, index_3, 0, 0x60, "f32Ge", "f32.ge");
+opcode(index_1, index_3, index_3, 0, 0x61, "f32Eq", "f64.eq");
+opcode(index_1, index_3, index_3, 0, 0x62, "f32Ne", "f64.ne");
+opcode(index_1, index_3, index_3, 0, 0x63, "f32Lt", "f64.lt");
+opcode(index_1, index_3, index_3, 0, 0x64, "f32Gt", "f64.gt");
+opcode(index_1, index_3, index_3, 0, 0x65, "f32Le", "f64.le");
+opcode(index_1, index_3, index_3, 0, 0x66, "f32Ge", "f64.ge");
+opcode(index_1, index_1, ___, 0, 0x67, "i32Clz", "i32.clz");
+opcode(index_1, index_1, ___, 0, 0x68, "i32Ctz", "i32.ctz");
+opcode(index_1, index_1, ___, 0, 0x69, "i32Popcnt", "i32.popcnt");
+opcode(index_1, index_1, index_1, 0, 0x6a, "i32Add", "i32.add");
+opcode(index_1, index_1, index_1, 0, 0x6b, "i32Sub", "i32.sub");
+opcode(index_1, index_1, index_1, 0, 0x6c, "i32Mul", "i32.mul");
+opcode(index_1, index_1, index_1, 0, 0x6d, "i32DivS", "i32.div_s");
+opcode(index_1, index_1, index_1, 0, 0x6e, "i32DivU", "i32.div_u");
+opcode(index_1, index_1, index_1, 0, 0x6f, "i32RemS", "i32.rem_s");
+opcode(index_1, index_1, index_1, 0, 0x70, "i32RemU", "i32.rem_u");
+opcode(index_1, index_1, index_1, 0, 0x71, "i32And", "i32.and");
+opcode(index_1, index_1, index_1, 0, 0x72, "i32Or", "i32.or");
+opcode(index_1, index_1, index_1, 0, 0x73, "i32Xor", "i32.xor");
+opcode(index_1, index_1, index_1, 0, 0x74, "i32Shl", "i32.shl");
+opcode(index_1, index_1, index_1, 0, 0x75, "i32ShrS", "i32.shr_s");
+opcode(index_1, index_1, index_1, 0, 0x76, "i32ShrU", "i32.shr_u");
+opcode(index_1, index_1, index_1, 0, 0x77, "i32Rotl", "i32.rotl");
+opcode(index_1, index_1, index_1, 0, 0x78, "i32Rotr", "i32.rotr");
+opcode(index_2, index_2, ___, 0, 0x79, "i64Clz", "i64.clz");
+opcode(index_2, index_2, ___, 0, 0x7a, "i64Ctz", "i64.ctz");
+opcode(index_2, index_2, ___, 0, 0x7b, "i64Popcnt", "i64.popcnt");
+opcode(index_2, index_2, index_2, 0, 0x7c, "i64Add", "i64.add");
+opcode(index_2, index_2, index_2, 0, 0x7d, "i64Sub", "i64.sub");
+opcode(index_2, index_2, index_2, 0, 0x7e, "i64Mul", "i64.mul");
+opcode(index_2, index_2, index_2, 0, 0x7f, "i64DivS", "i64.div_s");
+opcode(index_2, index_2, index_2, 0, 0x80, "i64DivU", "i64.div_u");
+opcode(index_2, index_2, index_2, 0, 0x81, "i64RemS", "i64.rem_s");
+opcode(index_2, index_2, index_2, 0, 0x82, "i64RemU", "i64.rem_u");
+opcode(index_2, index_2, index_2, 0, 0x83, "i64And", "i64.and");
+opcode(index_2, index_2, index_2, 0, 0x84, "i64Or", "i64.or");
+opcode(index_2, index_2, index_2, 0, 0x85, "i64Xor", "i64.xor");
+opcode(index_2, index_2, index_2, 0, 0x86, "i64Shl", "i64.shl");
+opcode(index_2, index_2, index_2, 0, 0x87, "i64ShrS", "i64.shr_s");
+opcode(index_2, index_2, index_2, 0, 0x88, "i64ShrU", "i64.shr_u");
+opcode(index_2, index_2, index_2, 0, 0x89, "i64Rotl", "i64.rotl");
+opcode(index_2, index_2, index_2, 0, 0x8a, "i64Rotr", "i64.rotr");
+opcode(index_3, index_3, index_3, 0, 0x8b, "f32Abs", "f32.abs");
+opcode(index_3, index_3, index_3, 0, 0x8c, "f32Neg", "f32.neg");
+opcode(index_3, index_3, index_3, 0, 0x8d, "f32Ceil", "f32.ceil");
+opcode(index_3, index_3, index_3, 0, 0x8e, "f32Floor", "f32.floor");
+opcode(index_3, index_3, index_3, 0, 0x8f, "f32Trunc", "f32.trunc");
+opcode(index_3, index_3, index_3, 0, 0x90, "f32Nearest", "f32.nearest");
+opcode(index_3, index_3, index_3, 0, 0x91, "f32Sqrt", "f32.sqrt");
+opcode(index_3, index_3, index_3, 0, 0x92, "f32Add", "f32.add");
+opcode(index_3, index_3, index_3, 0, 0x93, "f32Sub", "f32.sub");
+opcode(index_3, index_3, index_3, 0, 0x94, "f32Mul", "f32.mul");
+opcode(index_3, index_3, index_3, 0, 0x95, "f32Div", "f32.div");
+opcode(index_3, index_3, index_3, 0, 0x96, "f32Min", "f32.min");
+opcode(index_3, index_3, index_3, 0, 0x97, "f32Max", "f32.max");
+opcode(index_3, index_3, index_3, 0, 0x98, "f32Copysign", "f32.copysign");
+opcode(index_3, index_3, index_3, 0, 0x99, "f32Abs", "f64.abs");
+opcode(index_3, index_3, index_3, 0, 0x9a, "f32Neg", "f64.neg");
+opcode(index_3, index_3, index_3, 0, 0x9b, "f32Ceil", "f64.ceil");
+opcode(index_3, index_3, index_3, 0, 0x9c, "f32Floor", "f64.floor");
+opcode(index_3, index_3, index_3, 0, 0x9d, "f32Trunc", "f64.trunc");
+opcode(index_3, index_3, index_3, 0, 0x9e, "f32Nearest", "f64.nearest");
+opcode(index_3, index_3, index_3, 0, 0x9f, "f32Sqrt", "f64.sqrt");
+opcode(index_3, index_3, index_3, 0, 0xa0, "f32Add", "f64.add");
+opcode(index_3, index_3, index_3, 0, 0xa1, "f32Sub", "f64.sub");
+opcode(index_3, index_3, index_3, 0, 0xa2, "f32Mul", "f64.mul");
+opcode(index_3, index_3, index_3, 0, 0xa3, "f32Div", "f64.div");
+opcode(index_3, index_3, index_3, 0, 0xa4, "f32Min", "f64.min");
+opcode(index_3, index_3, index_3, 0, 0xa5, "f32Max", "f64.max");
+opcode(index_3, index_3, index_3, 0, 0xa6, "f32Copysign", "f64.copysign");
+opcode(index_1, index_2, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
+opcode(index_1, index_3, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
+opcode(index_1, index_3, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");
+opcode(index_1, index_3, ___, 0, 0xaa, "i32TruncSf32", "i32.trunc_s/f64");
+opcode(index_1, index_3, ___, 0, 0xab, "i32TruncUf32", "i32.trunc_u/f64");
+opcode(index_2, index_1, ___, 0, 0xac, "i64ExtendSi32", "i64.extend_s/i32");
+opcode(index_2, index_1, ___, 0, 0xad, "i64ExtendUi32", "i64.extend_u/i32");
+opcode(index_2, index_3, ___, 0, 0xae, "i64TruncSf32", "i64.trunc_s/f32");
+opcode(index_2, index_3, ___, 0, 0xaf, "i64TruncUf32", "i64.trunc_u/f32");
+opcode(index_2, index_3, ___, 0, 0xb0, "i64TruncSf32", "i64.trunc_s/f64");
+opcode(index_2, index_3, ___, 0, 0xb1, "i64TruncUf32", "i64.trunc_u/f64");
+opcode(index_3, index_1, ___, 0, 0xb2, "f32ConvertSi32", "f32.convert_s/i32");
+opcode(index_3, index_1, ___, 0, 0xb3, "f32ConvertUi32", "f32.convert_u/i32");
+opcode(index_3, index_2, ___, 0, 0xb4, "f32ConvertSi64", "f32.convert_s/i64");
+opcode(index_3, index_2, ___, 0, 0xb5, "f32ConvertUi64", "f32.convert_u/i64");
+opcode(index_3, index_3, ___, 0, 0xb6, "f32Demotef32", "f32.demote/f64");
+opcode(index_3, index_1, ___, 0, 0xb7, "f32ConvertSi32", "f64.convert_s/i32");
+opcode(index_3, index_1, ___, 0, 0xb8, "f32ConvertUi32", "f64.convert_u/i32");
+opcode(index_3, index_2, ___, 0, 0xb9, "f32ConvertSi64", "f64.convert_s/i64");
+opcode(index_3, index_2, ___, 0, 0xba, "f32ConvertUi64", "f64.convert_u/i64");
+opcode(index_3, index_3, ___, 0, 0xbb, "f32Promotef32", "f64.promote/f32");
+opcode(index_1, index_3, ___, 0, 0xbc, "i32Reinterpretf32", "i32.reinterpret/f32");
+opcode(index_2, index_3, ___, 0, 0xbd, "i64Reinterpretf32", "i64.reinterpret/f64");
+opcode(index_3, index_1, ___, 0, 0xbe, "f32Reinterpreti32", "f32.reinterpret/i32");
+opcode(index_3, index_2, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
 
 /**
  * Return opcode mapping to the operator. Signed result is always prefered
  */
-const opcodeFromOperator = ({ type, value }) => {
+const opcodeFromOperator = ({
+  type,
+  value
+}) => {
   switch (value) {
-    case '+':
-      return def[type + 'Add'];
-    case '-':
-      return def[type + 'Sub'];
-    case '*':
-      return def[type + 'Mul'];
-    case '/':
-      return def[type + 'DivS'] || def[type + 'Div'];
-    case '%':
-      return def[type + 'RemS'] || def[type + 'RemU'];
-    case '==':
-      return def[type + 'Eq'];
-    case '!=':
-      return def[type + 'Ne'];
-    case '>':
-      return def[type + 'GtS'] || def[type + 'Gt'];
-    case '<':
-      return def[type + 'LtS'] || def[type + 'Lt'];
-    case '<=':
-      return def[type + 'LeS'] || def[type + 'Le'];
-    case '>=':
-      return def[type + 'GeS'] || def[type + 'Ge'];
-    case '?':
+    case "+":
+      return def[type + "Add"];
+    case "-":
+      return def[type + "Sub"];
+    case "*":
+      return def[type + "Mul"];
+    case "/":
+      return def[type + "DivS"] || def[type + "Div"];
+    case "%":
+      return def[type + "RemS"] || def[type + "RemU"];
+    case "==":
+      return def[type + "Eq"];
+    case "!=":
+      return def[type + "Ne"];
+    case ">":
+      return def[type + "GtS"] || def[type + "Gt"];
+    case "<":
+      return def[type + "LtS"] || def[type + "Lt"];
+    case "<=":
+      return def[type + "LeS"] || def[type + "Le"];
+    case ">=":
+      return def[type + "GeS"] || def[type + "Ge"];
+    case "?":
       return def.If;
-    case ':':
+    case ":":
       return def.Else;
-    case '[':
-      return def[type + 'Load'];
+    case "[":
+      return def[type + "Load"];
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   }
 };
-
-//      
-
-
-// Dead simple AST walker, takes a visitor object and calls all methods for
-// appropriate node Types.
-function walker(visitor) {
-  const impl = node => {
-    if (node == null) {
-      return;
-    }
-
-    const paramCount = node.params.length;
-
-    if ("*" in visitor && typeof visitor["*"] === "function") {
-      visitor["*"](node);
-    }
-
-    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-      visitor[node.Type](node);
-    }
-
-    for (let i = 0; i < paramCount; i++) {
-      impl(node.params[i]);
-    }
-  };
-
-  return impl;
-}
-
-/**
- * Copyright 2013-2015, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var NODE_ENV = undefined;
-
-var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (NODE_ENV !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-};
-
-var invariant_1 = invariant;
 
 var slice = Array.prototype.slice;
 var toArray = function (a) {
@@ -1025,14 +919,96 @@ curry.adapt = function (fn) {
 
 var curry_1$1 = curry;
 
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
+var NODE_ENV = undefined;
+
+var invariant = function (condition, format, a, b, c, d, e, f) {
+  if (NODE_ENV !== 'production') {
+    if (format === undefined) {
+      throw new Error('invariant requires an error message argument');
+    }
+  }
+
+  if (!condition) {
+    var error;
+    if (format === undefined) {
+      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
+    } else {
+      var args = [a, b, c, d, e, f];
+      var argIndex = 0;
+      error = new Error(format.replace(/%s/g, function () {
+        return args[argIndex++];
+      }));
+      error.name = 'Invariant Violation';
+    }
+
+    error.framesToPop = 1; // we don't care about invariant's own frame
+    throw error;
+  }
+};
+
+var invariant_1 = invariant;
+
+const I32 = 0x7F;
+const I64 = 0x7E;
+const F32 = 0x7D;
+const F64 = 0x7C;
+const ANYFUNC = 0x70;
+const FUNC = 0x60;
+
+
+const getTypeString = type => {
+  switch (type) {
+    case I32:
+      return 'i32';
+    case I64:
+      return 'i64';
+    case F32:
+      return 'f32';
+    case F64:
+      return 'f64';
+    case FUNC:
+      return 'func';
+    case ANYFUNC:
+      return 'anyfunc';
+    default:
+      return '?';
+  }
+};
+
 //      
 
-
+// All of the metadata options are used like redux actions
+// this is intentional but only for the purposes of a common
+// flexible api.
 const FUNCTION_INDEX = "function/index";
 const POSTFIX = "operator/postfix";
 const LOCAL_INDEX = "local/index";
 const GLOBAL_INDEX = "global/index";
 const TABLE_INDEX = "table/index";
+const TYPE_CONST = "type/const";
+const TYPE_ARRAY = "type/array";
+const TYPE_USER = "type/user";
+const TYPE_OBJECT = "type/object";
 
 const make = (payload, type) => ({
   type,
@@ -1040,7 +1016,8 @@ const make = (payload, type) => ({
 });
 
 const get = (type, node) => {
-  return node.meta.find(({ type: _type }) => _type === type) || null;
+  invariant_1(node.meta, `Attemptend to access Metadata but it was undefined in node ${JSON.stringify(node)}`);
+  return node ? node.meta.find(({ type: _type }) => _type === type) || null : null;
 };
 
 const funcIndex = payload => ({
@@ -1068,6 +1045,19 @@ const postfix = payload => ({
   type: POSTFIX
 });
 
+const userType = payload => ({
+  payload,
+  type: TYPE_USER
+});
+
+const objectType = payload => ({
+  payload,
+  type: TYPE_OBJECT
+});
+
+const array = () => ({ payload: true, type: TYPE_ARRAY });
+const constant$1 = () => ({ payload: true, type: TYPE_CONST });
+
 const metadata = {
   make,
   get,
@@ -1075,14 +1065,54 @@ const metadata = {
   funcIndex,
   localIndex,
   globalIndex,
+  userType,
   tableIndex,
+  array,
+  constant: constant$1,
   POSTFIX,
   LOCAL_INDEX,
   FUNCTION_INDEX,
-  TABLE_INDEX
+  TABLE_INDEX,
+  TYPE_ARRAY,
+  TYPE_CONST,
+  TYPE_USER,
+  TYPE_OBJECT
 };
 
-// This thing is getting pretty large, should break this file up
+//      
+const scopeOperation = curry_1$1((op, node) => {
+  const local = get(LOCAL_INDEX, node);
+  const _global = get(GLOBAL_INDEX, node);
+  const index = local || _global;
+
+  invariant_1(index, `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(op)} node: ${JSON.stringify(node, null, 2)}`);
+
+  const kind = local ? op + "Local" : op + "Global";
+  const params = [Number(index.payload)];
+
+  return { kind: def[kind], params };
+});
+
+const getConstOpcode = node => {
+  const nodeType = node.type || "i32";
+  //invariant(
+  //  !!node.type,
+  //  `Undefined Node type cannot generate const-opcode: ${JSON.stringify(
+  //    node,
+  //    null,
+  //    2
+  //  )}`
+  //);
+
+  const kind = def[nodeType + "Const"];
+  const params = [Number(node.value)];
+
+  return {
+    kind,
+    params
+  };
+};
+
 // clean this up
 const getType = str => {
   switch (str) {
@@ -1096,103 +1126,20 @@ const getType = str => {
       return I32;
   }
 };
-
-let syntaxMap = {};
-
-const scopeOperation = curry_1$1((op, node) => {
-  const local = get(LOCAL_INDEX, node);
-  const _global = get(GLOBAL_INDEX, node);
-  const index = local || _global;
-  const kind = local ? op + "Local" : op + "Global";
-  return { kind: def[kind], params: [index.payload] };
-});
-
-const getConstOpcode = node => ({
-  kind: def[node.type + "Const"] || def.i32Const,
-  params: [node.value]
-});
-
-const setInScope = scopeOperation("Set");
-const getInScope = scopeOperation("Get");
-const mergeBlock = (block, v) => {
-  // some node types are a sequence of opcodes:
-  // nested expressions for example
-  if (Array.isArray(v)) block = [...block, ...v];else block.push(v);
-  return block;
-};
-
-const mapSyntax = curry_1$1((parent, operand) => {
-  const mapping = syntaxMap[operand.Type];
-  if (!mapping) {
-    const value = operand.id || operand.value || operand.operator && operand.operator.value;
-    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
-  }
-  return mapping(operand, parent);
-});
-
-const generateExport = node => {
-  const _export = {};
-  if (node && node.init) {
-    return {
-      index: node.globalIndex,
-      kind: EXTERN_GLOBAL,
-      field: node.id
-    };
-  }
-
-  if (node && node.func) {
-    return {
-      get index() {
-        return get(FUNCTION_INDEX, node).payload.functionIndex;
-      },
-      kind: EXTERN_FUNCTION,
-      field: node.id
-    };
-  }
-
-  invariant_1(false, "Unknown Export");
-};
-
-const generateMemory = node => {
-  const memory = { max: 0, initial: 0 };
-
-  walker({
-    [Syntax_1.Pair]: ({ params }) => {
-      // This could procude garbage values but that is a fault of the source code
-      const [{ value: key }, { value }] = params;
-      memory[key] = parseInt(value);
-    }
-  })(node);
-
-  return memory;
-};
-
-const generateImport = node => {
-  const module = node.module;
-  return node.fields.map(({ id, nativeType, typeIndex, global, kind }) => {
-    kind = kind || nativeType && EXTERN_GLOBAL || EXTERN_FUNCTION;
-    return {
-      module,
-      field: id,
-      global,
-      kind,
-      typeIndex
-    };
-  });
-};
-
 const generateValueType = node => {
   const value = {
-    mutable: node.const ? 0 : 1,
+    mutable: get(TYPE_CONST, node) ? 0 : 1,
     type: getType(node.type)
   };
   return value;
 };
+const setInScope = scopeOperation("Set");
+const getInScope = scopeOperation("Get");
 
 const generateInit = node => {
   const _global = generateValueType(node);
 
-  const { Type, value } = node.init;
+  const { Type, value } = node.params[0];
   if (Type === Syntax_1.Constant) {
     switch (_global.type) {
       case F32:
@@ -1209,298 +1156,47 @@ const generateInit = node => {
   return _global;
 };
 
-const generateType = node => {
-  const type = { params: [], result: null };
-  if (node.result && node.result !== "void") {
-    type.result = getType(node.result);
-  }
+//      
 
-  type.params = node.params.map(p => getType(p.type));
-  type.id = node.id;
 
-  return type;
-};
+// Dead simple AST walker, takes a visitor object and calls all methods for
+// appropriate node Types.
+function walker(visitor) {
+  const impl = node => {
+    if (node == null) {
+      return;
+    }
 
-const generateReturn = node => {
-  const parent = { postfix: [] };
-  // Postfix in return statement should be a no-op UNLESS it's editing globals
-  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  block.push({ kind: def.Return });
-  if (parent.postfix.length) {
-    // do we have postfix operations?
-    // are they editing globals?
-    // TODO: do things to globals
-  }
+    const paramCount = node.params.length;
 
-  return block;
-};
+    if ("*" in visitor && typeof visitor["*"] === "function") {
+      visitor["*"](node);
+    }
 
-const generateDeclaration = (node, parent) => {
-  let block = [];
-  if (node.init) {
-    node.init.type = node.type;
-    block = [...block, ...generateExpression(node.init)];
-    block.push({ kind: def.SetLocal, params: [node.localIndex] });
-  }
-  parent.locals.push(generateValueType(node));
-  return block;
-};
+    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+      visitor[node.Type](node);
+    }
 
-const generateArrayDeclaration = (node, parent) => {
-  const block = [];
-  if (node.init) {
-    block.push.apply(block, generateExpression(node.init));
-    block.push({ kind: def.SetLocal, params: [node.localIndex] });
-  }
-  parent.locals.push(generateValueType(node));
-  return block;
-};
-
-const generateArraySubscript = (node, parent) => {
-  const block = [...node.params.map(mapSyntax(parent)).reduce(mergeBlock, []), { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }, { kind: def.i32Add, params: [] }];
-
-  // The last piece is the WASM opcode. Either load or store
-  block.push({
-    kind: def[node.type + "Load"],
-    params: [
-    // Alignment
-    // TODO: make this extendible
-    2,
-    // Memory. Always 0 in the WASM MVP
-    0]
-  });
-
-  return block;
-};
-
-/**
- * Transform a binary expression node into a list of opcodes
- */
-const generateBinaryExpression = (node, parent) => {
-  // Map operands first
-  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  // Increment and decrement make this less clean:
-  // If either increment or decrement then:
-  //  1. generate the expression
-  //  2. APPEND TO PARENT post-expressions
-  //  3. return [];
-  if (node.isPostfix && parent) {
-    parent.postfix.push(block);
-    // Simply return the left-hand
-    return node.params.slice(0, 1).map(mapSyntax(parent)).reduce(mergeBlock, []);
-  }
-
-  // Map the operator last
-  block.push({
-    kind: opcodeFromOperator(node)
-  });
-
-  return block;
-};
-
-const generateTernary = (node, parent) => {
-  // TernaryExpression has a simple param layout of 2(TWO) total parameters.
-  // It's a single param for the boolean check followed by
-  // another param which is a Pair Node containing the 2(TWO) param results of
-  // true and false branches.
-  // The whole thing is encoded as an implicitly retunred if/then/else block.
-  const mapper = mapSyntax(parent);
-  const resultPair = node.params[1];
-
-  // Truthy check
-  const block = node.params.slice(0, 1).map(mapper).reduce(mergeBlock, []);
-
-  // If Opcode
-  block.push({
-    kind: opcodeFromOperator(node),
-    valueType: generateValueType(node)
-  });
-
-  // Map the true branch
-  block.push.apply(block, resultPair.params.slice(0, 1).map(mapper).reduce(mergeBlock, []));
-  block.push({
-    kind: opcodeFromOperator({ value: ":" })
-  });
-
-  // Map the false branch
-  block.push.apply(block, resultPair.params.slice(-1).map(mapper).reduce(mergeBlock, []));
-
-  // Wrap up the node
-  block.push({ kind: def.End });
-
-  return block;
-};
-
-const generateAssignment = (node, parent) => {
-  const subParent = { postfix: [] };
-  const block = node.params.slice(1).map(mapSyntax(subParent)).reduce(mergeBlock, []);
-
-  block.push(setInScope(node.params[0]));
-
-  return subParent.postfix.reduce(mergeBlock, block);
-};
-
-const generateFunctionCall = (node, parent) => {
-  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-
-  block.push({
-    kind: def.Call,
-    params: [get(FUNCTION_INDEX, node).payload.functionIndex]
-  });
-
-  return block;
-};
-
-const generateIndirectFunctionCall = (node, parent) => {
-  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-
-  block.push({
-    kind: def.CallIndirect,
-    params: [node.typeIndex, { kind: def.Nop, params: [] }]
-  });
-
-  return block;
-};
-
-const generateFunctionPointer = node => {
-  return {
-    kind: def.i32Const,
-    params: [get(TABLE_INDEX, node).payload]
-  };
-};
-
-// probably should be called "generateBranch" and be more generic
-// like handling ternary for example. A lot of shared logic here & ternary
-const generateIf = (node, parent) => {
-  const mapper = mapSyntax(parent);
-  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
-
-  block.push({
-    kind: def.If,
-    // if-then-else blocks have no return value and the Wasm spec requires us to
-    // provide a literal byte '0x40' for "empty block" in these cases
-    params: [0x40]
-  });
-
-  // after the expression is on the stack and opcode is following it we can write the
-  // implicit 'then' block
-  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
-
-  // fllowed by the optional 'else'
-  if (node.else.length) {
-    block.push({ kind: def.Else });
-    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
-  }
-
-  block.push({ kind: def.End });
-  return block;
-};
-
-const generateLoop = (node, parent) => {
-  const block = [];
-  const mapper = mapSyntax(parent);
-  const reverse = {
-    ">": "<",
-    "<": ">",
-    ">=": "<=",
-    "<=": ">=",
-    "==": "!=",
-    "!=": "=="
+    for (let i = 0; i < paramCount; i++) {
+      impl(node.params[i]);
+    }
   };
 
-  const condition = node.params.slice(1, 2);
-  condition[0].value = reverse[condition[0].value];
-  const expression = node.params.slice(2, 3);
+  return impl;
+}
 
-  block.push({ kind: def.Block, params: [0x40] });
-  block.push({ kind: def.Loop, params: [0x40] });
+const generateMemory = node => {
+  const memory = { max: 0, initial: 0 };
 
-  block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
-  block.push({ kind: def.BrIf, params: [1] });
+  walker({
+    [Syntax_1.Pair]: ({ params }) => {
+      // This could procude garbage values but that is a fault of the source code
+      const [{ value: key }, { value }] = params;
+      memory[key] = parseInt(value);
+    }
+  })(node);
 
-  block.push.apply(block, node.body.map(mapper).reduce(mergeBlock, []));
-
-  block.push.apply(block, expression.map(mapper).reduce(mergeBlock, []));
-  block.push({ kind: def.Br, params: [0] });
-
-  block.push({ kind: def.End });
-  block.push({ kind: def.End });
-
-  return block;
-};
-
-const generateSequence = (node, parent) => {
-  return node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-};
-
-const generateMemoryAssignment = (node, parent) => {
-  const block = [...node.params[0].params.map(mapSyntax(parent)).reduce(mergeBlock, []),
-  // FIXME: 4 needs to be configurable
-  { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }, { kind: def.i32Add, params: [] }];
-
-  block.push.apply(block, node.params.slice(1).map(mapSyntax(parent)).reduce(mergeBlock, []));
-
-  // The last piece is the WASM opcode. Either load or store
-  block.push({
-    kind: def[node.type + "Store"],
-    params: [
-    // Alignment
-    // TODO: make this extendible
-    2,
-    // Memory. Always 0 in the WASM MVP
-    0]
-  });
-
-  return block;
-};
-
-syntaxMap = {
-  [Syntax_1.FunctionCall]: generateFunctionCall,
-  [Syntax_1.IndirectFunctionCall]: generateIndirectFunctionCall,
-  // Unary
-  [Syntax_1.Constant]: getConstOpcode,
-  [Syntax_1.BinaryExpression]: generateBinaryExpression,
-  [Syntax_1.TernaryExpression]: generateTernary,
-  [Syntax_1.IfThenElse]: generateIf,
-  [Syntax_1.Identifier]: getInScope,
-  [Syntax_1.FunctionIdentifier]: getInScope,
-  [Syntax_1.FunctionPointer]: generateFunctionPointer,
-  [Syntax_1.ReturnStatement]: generateReturn,
-  // Binary
-  [Syntax_1.Declaration]: generateDeclaration,
-  [Syntax_1.ArrayDeclaration]: generateArrayDeclaration,
-  [Syntax_1.ArraySubscript]: generateArraySubscript,
-  [Syntax_1.Assignment]: generateAssignment,
-  // Memory
-  [Syntax_1.MemoryAssignment]: generateMemoryAssignment,
-  // Imports
-  [Syntax_1.Import]: generateImport,
-  // Loops
-  [Syntax_1.Loop]: generateLoop,
-  // Comma separated lists
-  [Syntax_1.Sequence]: generateSequence
-};
-
-const generateExpression = (node, parent) => {
-  const block = [node].map(mapSyntax(parent)).reduce(mergeBlock, []);
-  return block;
-};
-
-const generateElement = functionIndex => {
-  return { functionIndex };
-};
-
-const generateCode = func => {
-  const block = {
-    code: [],
-    locals: []
-  };
-
-  // NOTE: Declarations have a side-effect of changing the local count
-  //       This is why mapSyntax takes a parent argument
-  block.code = func.body.map(mapSyntax(block)).reduce(mergeBlock, []);
-
-  return block;
+  return memory;
 };
 
 //     
@@ -1572,7 +1268,8 @@ class Context {
       functions: [],
       lines: [],
       functionImports: [],
-      functionImportsLength: 0
+      functionImportsLength: 0,
+      userTypes: []
     }, options));
 
     this.Program = {
@@ -1661,6 +1358,29 @@ class Context {
     return this.endNode(_extends({}, this.startNode(), node), syntax);
   }
 }
+
+const EXTERN_FUNCTION = 0;
+const EXTERN_TABLE = 1;
+const EXTERN_MEMORY = 2;
+const EXTERN_GLOBAL = 3;
+
+const generateElement = functionIndex => {
+  return { functionIndex };
+};
+
+const generateImport = node => {
+  const module = node.module;
+  return node.fields.map(({ id, nativeType, typeIndex, global, kind }) => {
+    kind = kind || nativeType && EXTERN_GLOBAL || EXTERN_FUNCTION;
+    return {
+      module,
+      field: id,
+      global,
+      kind,
+      typeIndex
+    };
+  });
+};
 
 //      
 const writeFunctionPointer = (ctx, functionIndex) => {
@@ -1775,6 +1495,7 @@ const findFieldIndex = fields => (ctx, token) => {
 const findLocalIndex = findFieldIndex(["func", "locals"]);
 const findGlobalIndex = findFieldIndex(["globals"]);
 const findFunctionIndex = findFieldIndex(["functions"]);
+const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
 // FIXME: do all of this inline here
 // FIXME: add a symbol for function call
@@ -1800,6 +1521,52 @@ const getAssociativty = token => {
 };
 
 //      
+const getMetaType = (ctx, token) => {
+  const localIndex$$1 = findLocalIndex(ctx, token);
+  const globalIndex$$1 = findGlobalIndex(ctx, token);
+
+  // Set the target variable
+  let targetNode = null;
+  if (localIndex$$1 > -1) {
+    targetNode = ctx.func.locals[localIndex$$1];
+  } else {
+    targetNode = ctx.globals[globalIndex$$1];
+  }
+
+  // Don't allow unknown variables
+  if (targetNode == null) {
+    throw ctx.syntaxError(`Undefined variable ${token.value}`);
+  }
+
+  // Get the meta-type of our target, it should be either an array or a user-defined
+  // object type. These types are indexable.
+  const metaType = metadata.get(TYPE_USER, targetNode) || metadata.get(TYPE_ARRAY, targetNode);
+
+  // Don't allow non-indexable variables with subscripts
+  if (metaType == null) {
+    throw ctx.syntaxError(`Array subscript on a non-array variable ${token.value}`);
+  }
+
+  return metaType;
+};
+
+// This is shared logic across different memory-store/load operations
+//
+// Generator is expecting an integer offset for the offset node and we are going to
+// enforce this contract here.
+const patchStringSubscript = (ctx, metaType, params) => {
+  if (metaType.type === TYPE_USER && params[1].Type === Syntax_1.StringLiteral) {
+    const metaObject = metadata.get(TYPE_OBJECT, metaType.payload);
+    invariant_1(metaObject, `Undefined object properties`);
+    const { payload: byteOffsetsByKey } = metaObject;
+    const { value: key } = params[1];
+    const absoluteByteOffset = byteOffsetsByKey[key];
+    return [params[0], ctx.makeNode({ value: absoluteByteOffset }, Syntax_1.Constant)];
+  }
+  return params;
+};
+
+//      
 function binary(ctx, op, params) {
   const node = ctx.startNode(params[0]);
   node.value = op.value;
@@ -1814,6 +1581,7 @@ function binary(ctx, op, params) {
     ctx.diAssoc = "right";
   } else if (node.value === "[") {
     Type = Syntax_1.ArraySubscript;
+    node.params = patchStringSubscript(ctx, getMetaType(ctx, params[0]), node.params);
   } else if (node.value === ":") {
     Type = Syntax_1.Pair;
   }
@@ -1895,7 +1663,7 @@ const operator = (ctx, op, operands) => {
   }
 };
 
-const constant$1 = ctx => {
+const constant$2 = ctx => {
   const node = ctx.startNode();
   const value = ctx.token.value;
   if (value.toString().indexOf(".") !== -1) node.type = "f32";else node.type = "i32";
@@ -1918,6 +1686,7 @@ const maybeIdentifier = ctx => {
   const localIndex$$1 = findLocalIndex(ctx, ctx.token);
   const globalIndex$$1 = findGlobalIndex(ctx, ctx.token);
   const functionIndex = findFunctionIndex(ctx, ctx.token);
+  const userTypeIndex = findUserTypeIndex(ctx, ctx.token);
 
   let Type = Syntax_1.Identifier;
   // Not a function call or pointer, look-up variables
@@ -1931,6 +1700,9 @@ const maybeIdentifier = ctx => {
     node.type = "i32";
     Type = Syntax_1.FunctionPointer;
     node.meta.push(metadata.tableIndex(writeFunctionPointer(ctx, functionIndex)));
+  } else if (userTypeIndex !== -1 && ctx.stream.peek().value !== "(") {
+    node.type = "i32";
+    Type = Syntax_1.Type;
   } else if (functionIndex == -1) {
     throw ctx.syntaxError(`Undefined variable name ${ctx.token.value}`);
   }
@@ -1976,6 +1748,7 @@ const expression = (ctx, type = "i32", check = predicate) => {
     let previous = null;
     while ((previous = last(operators)) && previous.Type !== Syntax_1.Sequence && getPrecedence(previous) >= precedence && getAssociativty(previous) === "left") {
       if (value === "," && previous.type === Syntax_1.FunctionCall) break;
+      // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
   };
@@ -1983,13 +1756,16 @@ const expression = (ctx, type = "i32", check = predicate) => {
   const process = () => {
     if (ctx.token.type === Syntax_1.Constant) {
       eatFunctionCall = false;
-      operands.push(constant$1(ctx));
+      operands.push(constant$2(ctx));
     } else if (ctx.token.type === Syntax_1.Identifier) {
       eatFunctionCall = true;
       operands.push(maybeIdentifier(ctx));
     } else if (ctx.token.type === Syntax_1.StringLiteral) {
       eatFunctionCall = false;
       operands.push(stringLiteral(ctx));
+    } else if (ctx.token.type === Syntax_1.Type) {
+      eatFunctionCall = false;
+      operands.push(ctx.makeNode({ value: ctx.token.value }, Syntax_1.Type));
     } else if (ctx.token.type === Syntax_1.Punctuator) {
       switch (ctx.token.value) {
         case "(":
@@ -2082,36 +1858,446 @@ const expression = (ctx, type = "i32", check = predicate) => {
 const generate = (ctx, node) => {
   if (!ctx.func) {
     if (node.type === "Memory") {
-      node.params = [node.init];
       ctx.Program.Memory.push(generateMemory(node));
     } else {
-      node.globalIndex = ctx.Program.Globals.length;
+      node.meta.push(metadata.globalIndex(ctx.Program.Globals.length));
       ctx.Program.Globals.push(generateInit(node));
       ctx.globals.push(node);
     }
   } else {
-    node.localIndex = ctx.func.locals.length;
+    node.meta.push(metadata.localIndex(ctx.func.locals.length));
     ctx.func.locals.push(node);
   }
 };
 
 const declaration = ctx => {
   const node = ctx.startNode();
-  node.const = ctx.token.value === "const";
+
+  if (ctx.token.value === "const") {
+    node.meta.push(metadata.constant());
+  }
+
   if (!ctx.eat(["const", "let", "function"])) throw ctx.unexpectedValue(["const", "let", "function"]);
 
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   ctx.expect([":"]);
 
-  node.type = ctx.expect(null, Syntax_1.Type).value;
+  const userTypeIndex = findUserTypeIndex(ctx, ctx.token);
+  if (userTypeIndex !== -1) {
+    node.type = "i32";
+    node.meta.push(metadata.userType(ctx.userTypes[userTypeIndex]));
+    // Eat the identifier for the user defined type
+    ctx.eat(null, Syntax_1.Identifier);
+  } else {
+    node.type = ctx.expect(null, Syntax_1.Type).value;
+  }
 
-  if (ctx.eat(["="])) node.init = expression(ctx, node.type);
+  if (ctx.eat(["["]) && ctx.eat(["]"])) {
+    node.meta.push(metadata.array());
+  }
+
+  if (ctx.eat(["="])) {
+    node.params.push(expression(ctx, node.type));
+  }
 
   if (node.const && !node.init) throw ctx.syntaxError("Constant value must be initialized");
 
   generate(ctx, node);
 
   return ctx.endNode(node, Syntax_1.Declaration);
+};
+
+//     
+/**
+ * Generate an Intermediate version for a WebAssembly function type
+ **/
+// clean this up
+const getType$1 = str => {
+  switch (str) {
+    case "f32":
+      return F32;
+    case "f64":
+      return F64;
+    case "i64":
+      return I64;
+    case "i32":
+    case "Function":
+    default:
+      return I32;
+  }
+};
+
+const generateImplicitFunctionType = ({
+  params,
+  id,
+  result
+}) => {
+  return {
+    params: params.map(({ type }) => getType$1(type)),
+    result: result && result !== "void" ? getType$1(result) : null,
+    id
+  };
+};
+
+function generateType(node) {
+  invariant_1(typeof node.id === "string", `Generator: A type must have a valid string identifier, node: ${JSON.stringify(node)}`);
+
+  const typeExpression = node.params[0];
+  invariant_1(typeExpression && typeExpression.Type === Syntax_1.BinaryExpression, `Generator: A function type must be of for (<type>, ...) => <type> node: ${JSON.stringify(node)}`);
+
+  // Collect the function params and result by walking the tree of nodes
+  const params = [];
+  let result = null;
+  const left = typeExpression.params[0];
+  const right = typeExpression.params[1];
+
+  // if we do not have a right node, then we do not have any params for this function
+  // type, so we an just skip this.
+  if (right != null) {
+    walker({
+      [Syntax_1.Type]: ({ value: typeValue }) => params.push(getType$1(typeValue))
+    })(left);
+  }
+
+  walker({
+    [Syntax_1.Type]: ({ value: typeValue }) => {
+      result = typeValue !== "void" ? getType$1(typeValue) : null;
+    }
+  })(right || left);
+
+  return {
+    id: node.id,
+    params,
+    result
+  };
+}
+
+//     
+
+
+const mergeBlock = (block, v) => {
+  // some node types are a sequence of opcodes:
+  // nested expressions for example
+  if (Array.isArray(v)) {
+    block = [...block, ...v];
+  } else {
+    block.push(v);
+  }
+  return block;
+};
+
+//     
+const generateFunctionCall = (node, parent) => {
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+  const metaFunctionIndex = get(FUNCTION_INDEX, node);
+  invariant_1(metaFunctionIndex, `Undefined function index for node: ${JSON.stringify(node)}`);
+
+  block.push({
+    kind: def.Call,
+    params: [metaFunctionIndex.payload.functionIndex]
+  });
+
+  return block;
+};
+
+const generateIndirectFunctionCall = (node, parent) => {
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+
+  block.push({
+    kind: def.CallIndirect,
+    params: [node.typeIndex, { kind: def.Nop, params: [] }]
+  });
+
+  return block;
+};
+
+/**
+ * Transform a binary expression node into a list of opcodes
+ */
+const generateBinaryExpression = (node, parent) => {
+  // Map operands first
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+  // Increment and decrement make this less clean:
+  // If either increment or decrement then:
+  //  1. generate the expression
+  //  2. APPEND TO PARENT post-expressions
+  //  3. return [];
+  if (node.isPostfix && parent) {
+    parent.postfix.push(block);
+    // Simply return the left-hand
+    return node.params.slice(0, 1).map(mapSyntax(parent)).reduce(mergeBlock, []);
+  }
+
+  // Map the operator last
+  block.push({
+    kind: opcodeFromOperator(node)
+  });
+
+  return block;
+};
+
+const generateTernary = (node, parent) => {
+  // TernaryExpression has a simple param layout of 2(TWO) total parameters.
+  // It's a single param for the boolean check followed by
+  // another param which is a Pair Node containing the 2(TWO) param results of
+  // true and false branches.
+  // The whole thing is encoded as an implicitly retunred if/then/else block.
+  const mapper = mapSyntax(parent);
+  const resultPair = node.params[1];
+
+  // Truthy check
+  const block = node.params.slice(0, 1).map(mapper).reduce(mergeBlock, []);
+
+  // If Opcode
+  block.push({
+    kind: opcodeFromOperator(node),
+    valueType: generateValueType(node)
+  });
+
+  // Map the true branch
+  block.push.apply(block, resultPair.params.slice(0, 1).map(mapper).reduce(mergeBlock, []));
+  block.push({
+    kind: opcodeFromOperator({ value: ":" })
+  });
+
+  // Map the false branch
+  block.push.apply(block, resultPair.params.slice(-1).map(mapper).reduce(mergeBlock, []));
+
+  // Wrap up the node
+  block.push({ kind: def.End });
+
+  return block;
+};
+
+//     
+// probably should be called "generateBranch" and be more generic
+// like handling ternary for example. A lot of shared logic here & ternary
+const generateIf = (node, parent) => {
+  const mapper = mapSyntax(parent);
+  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
+
+  block.push({
+    kind: def.If,
+    // if-then-else blocks have no return value and the Wasm spec requires us to
+    // provide a literal byte '0x40' for "empty block" in these cases
+    params: [0x40]
+  });
+
+  // after the expression is on the stack and opcode is following it we can write the
+  // implicit 'then' block
+  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
+
+  // fllowed by the optional 'else'
+  if (node.else.length) {
+    block.push({ kind: def.Else });
+    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
+  }
+
+  block.push({ kind: def.End });
+  return block;
+};
+
+//     
+const generateFunctionPointer = node => {
+  const metaTableIndex = get(TABLE_INDEX, node);
+  invariant_1(metaTableIndex, `Cannot generate function pointer for node: ${JSON.stringify(node)}`);
+  return {
+    kind: def.i32Const,
+    params: [metaTableIndex.payload]
+  };
+};
+
+const generateReturn = node => {
+  const parent = { postfix: [] };
+  // Postfix in return statement should be a no-op UNLESS it's editing globals
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+  block.push({ kind: def.Return });
+  if (parent.postfix.length) {
+    // do we have postfix operations?
+    // are they editing globals?
+    // TODO: do things to globals
+  }
+
+  return block;
+};
+
+//     
+const generateExpression = (node, parent) => {
+  const block = [node].map(mapSyntax(parent)).reduce(mergeBlock, []);
+  return block;
+};
+
+const generateDeclaration = (node, parent) => {
+  let block = [];
+  const init = node.params[0];
+  if (init) {
+    init.type = node.type;
+    block.push.apply(block, generateExpression(init));
+    block.push({
+      kind: def.SetLocal,
+      params: [get(LOCAL_INDEX, node).payload]
+    });
+  }
+  parent.locals.push(generateValueType(node));
+  return block;
+};
+
+const generateArrayDeclaration = (node, parent) => {
+  const block = [];
+  if (node.init) {
+    block.push.apply(block, generateExpression(node.init));
+    block.push({ kind: def.SetLocal, params: [node.localIndex] });
+  }
+  parent.locals.push(generateValueType(node));
+  return block;
+};
+
+//     
+const generateArraySubscript = (node, parent) => {
+  const block = [...node.params.map(mapSyntax(parent)).reduce(mergeBlock, []), { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }, { kind: def.i32Add, params: [] }];
+
+  // The last piece is the WASM opcode. Either load or store
+  const nodeType = node.type || "i32";
+
+  block.push({
+    kind: def[nodeType + "Load"],
+    params: [
+    // Alignment
+    // TODO: make this extendible
+    2,
+    // Memory. Always 0 in the WASM MVP
+    0]
+  });
+
+  return block;
+};
+
+const generateAssignment = node => {
+  const subParent = { postfix: [] };
+  const block = node.params.slice(1).map(mapSyntax(subParent)).reduce(mergeBlock, []);
+
+  block.push(setInScope(node.params[0]));
+
+  return subParent.postfix.reduce(mergeBlock, block);
+};
+
+const generateMemoryAssignment = (node, parent) => {
+  const block = [...node.params[0].params.map(mapSyntax(parent)).reduce(mergeBlock, []),
+  // FIXME: 4 needs to be configurable
+  { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }, { kind: def.i32Add, params: [] }];
+
+  block.push.apply(block, node.params.slice(1).map(mapSyntax(parent)).reduce(mergeBlock, []));
+
+  // The last piece is the WASM opcode. Either load or store
+  block.push({
+    kind: def[node.type + "Store"],
+    params: [
+    // Alignment
+    // TODO: make this extendible
+    2,
+    // Memory. Always 0 in the WASM MVP
+    0]
+  });
+
+  return block;
+};
+
+const generateLoop = (node, parent) => {
+  const block = [];
+  const mapper = mapSyntax(parent);
+  const reverse = {
+    ">": "<",
+    "<": ">",
+    ">=": "<=",
+    "<=": ">=",
+    "==": "!=",
+    "!=": "=="
+  };
+
+  const condition = node.params.slice(1, 2);
+  condition[0].value = reverse[condition[0].value];
+  const expression = node.params.slice(2, 3);
+
+  block.push({ kind: def.Block, params: [0x40] });
+  block.push({ kind: def.Loop, params: [0x40] });
+
+  block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: def.BrIf, params: [1] });
+
+  block.push.apply(block, node.body.map(mapper).reduce(mergeBlock, []));
+
+  block.push.apply(block, expression.map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: def.Br, params: [0] });
+
+  block.push({ kind: def.End });
+  block.push({ kind: def.End });
+
+  return block;
+};
+
+const generateSequence = (node, parent) => {
+  return node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+};
+
+//     
+const syntaxMap = {
+  [Syntax_1.FunctionCall]: generateFunctionCall,
+  [Syntax_1.IndirectFunctionCall]: generateIndirectFunctionCall,
+  // Unary
+  [Syntax_1.Constant]: getConstOpcode,
+  [Syntax_1.BinaryExpression]: generateBinaryExpression,
+  [Syntax_1.TernaryExpression]: generateTernary,
+  [Syntax_1.IfThenElse]: generateIf,
+  [Syntax_1.Identifier]: getInScope,
+  [Syntax_1.FunctionIdentifier]: getInScope,
+  [Syntax_1.FunctionPointer]: generateFunctionPointer,
+  [Syntax_1.ReturnStatement]: generateReturn,
+  // Binary
+  [Syntax_1.Declaration]: generateDeclaration,
+  [Syntax_1.ArrayDeclaration]: generateArrayDeclaration,
+  [Syntax_1.ArraySubscript]: generateArraySubscript,
+  [Syntax_1.Assignment]: generateAssignment,
+  // Memory
+  [Syntax_1.MemoryAssignment]: generateMemoryAssignment,
+  // Imports
+  [Syntax_1.Import]: generateImport,
+  // Loops
+  [Syntax_1.Loop]: generateLoop,
+  // Comma separated lists
+  [Syntax_1.Sequence]: generateSequence
+};
+
+const mapSyntax = curry_1$1((parent, operand) => {
+  const mapping = syntaxMap[operand.Type];
+  if (!mapping) {
+    const value = operand.id || operand.value || operand.operator && operand.operator.value;
+    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
+  }
+
+  try {
+    return mapping(operand, parent);
+  } catch (e) {
+    invariant_1(null, `Failed ${operand.Type} mapping. Operator ${JSON.stringify(operand, null, 2)}` + "\n" + `Error thrown ${e}`);
+  }
+});
+
+//      
+const generateCode = func => {
+  invariant_1(func.body, `Cannot generate code for function without body`);
+
+  const block = {
+    code: [],
+    locals: []
+  };
+
+  // NOTE: Declarations have a side-effect of changing the local count
+  //       This is why mapSyntax takes a parent argument
+  const mappedSyntax = func.body.map(mapSyntax(block));
+  if (mappedSyntax) {
+    block.code = mappedSyntax.reduce(mergeBlock, []);
+  }
+
+  return block;
 };
 
 const last$1 = list => list[list.length - 1];
@@ -2172,7 +2358,7 @@ const maybeFunctionDeclaration = ctx => {
   } else {
     // attach to a type index
     node.typeIndex = ctx.Program.Types.length;
-    ctx.Program.Types.push(generateType(node));
+    ctx.Program.Types.push(generateImplicitFunctionType(node));
   }
 
   node.meta = [make({
@@ -2210,13 +2396,35 @@ const maybeFunctionDeclaration = ctx => {
   return ctx.endNode(node, Syntax_1.FunctionDeclaration);
 };
 
+const generateExport = node => {
+  if (node && !node.func && node.params.length) {
+    return {
+      index: get(GLOBAL_INDEX, node).payload,
+      kind: EXTERN_GLOBAL,
+      field: node.id
+    };
+  }
+
+  if (node && node.func) {
+    return {
+      get index() {
+        return get(FUNCTION_INDEX, node).payload.functionIndex;
+      },
+      kind: EXTERN_FUNCTION,
+      field: node.id
+    };
+  }
+
+  invariant_1(false, "Unknown Export");
+};
+
 const _export = ctx => {
   const node = ctx.startNode();
-  ctx.eat(['export']);
+  ctx.eat(["export"]);
 
   const decl = maybeFunctionDeclaration(ctx);
   if (!decl.func) {
-    if (!decl.init) throw ctx.syntaxError('Exports must have a value');
+    if (decl.params.length === 0) throw ctx.syntaxError("Exports must have a value");
   }
 
   ctx.Program.Exports.push(generateExport(decl));
@@ -2309,46 +2517,75 @@ const _import = ctx => {
 };
 
 //      
-const param$1 = ctx => {
-  const type = ctx.expect(null, Syntax_1.Type).value;
-  if (type === "void") return null;
-  return { type };
-};
+// A scenario where the type declared needs to be hoisted exists during imports.
+// We may want to import a function with a specific type, but we cannot declare
+// the type inline(at least not currently). Once we do find the appropriate type
+// here we _hoist_ it in the binary output by placing it literally before the
+// binary imports inside our Program.
+const hoistTypeMaybe = (ctx, node) => {
+  // At this point we may have found a type which needs to hoist
+  const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
 
-const params = ctx => {
-  const list = [];
-  let type;
-  ctx.expect(["("]);
-  while (ctx.token && ctx.token.value !== ")") {
-    type = param$1(ctx);
-    if (type) list.push(type);
-    ctx.eat([","]);
+  if (needsHoisting) {
+    needsHoisting.hoist(node);
   }
-  ctx.expect([")"]);
 
-  return list;
+  if (get(TYPE_OBJECT, node) == null) {
+    ctx.Program.Types.push(generateType(node));
+  }
 };
 
-const type$1 = ctx => {
-  const node = ctx.startNode();
+const getByteOffsetsByKey = objectLiteralNode => {
+  const offsetsByKey = {};
+  let absoluteByteOffset = 0;
+  walker({
+    [Syntax_1.Pair]: keyTypePair => {
+      const { value: key } = keyTypePair.params[0];
+      const { value: typeString } = keyTypePair.params[1];
+      invariant_1(offsetsByKey[key] == null, `Duplicate key ${key} not allowed in object type`);
 
+      offsetsByKey[key] = absoluteByteOffset;
+      switch (typeString) {
+        case "i32":
+        case "f32":
+          absoluteByteOffset += 4;
+          break;
+        case "i64":
+        case "f64":
+          absoluteByteOffset += 8;
+          break;
+        default:
+          absoluteByteOffset += 4;
+      }
+    }
+  })(objectLiteralNode);
+
+  return offsetsByKey;
+};
+
+function typeParser(ctx) {
+  const node = ctx.startNode();
   ctx.eat(["type"]);
 
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   ctx.expect(["="]);
-  node.params = params(ctx);
-  ctx.expect(["=>"]);
-  node.result = param$1(ctx);
-  // At this point we may have found a type which needs to hoist
-  const needsHoisting = ctx.Program.Types.find(({ id, hoist }) => id === node.id && hoist);
-  if (needsHoisting) {
-    needsHoisting.hoist(node);
-  } else {
-    ctx.Program.Types.push(generateType(node));
+
+  // Quick way to figure out if we are looking at an object to follow or a function definition.
+  const isObjectType = ctx.token.value === "{";
+
+  // All typedefs should be valid expressions
+  node.params = [expression(ctx)];
+
+  if (isObjectType) {
+    const offsetsByKey = getByteOffsetsByKey(node.params[0]);
+    node.meta.push(objectType(offsetsByKey));
+    ctx.userTypes.push(node);
   }
 
+  hoistTypeMaybe(ctx, node);
+
   return ctx.endNode(node, Syntax_1.Typedef);
-};
+}
 
 //     
 const paramList$1 = ctx => {
@@ -2476,7 +2713,7 @@ const keyword$1 = ctx => {
     case 'import':
       return _import(ctx);
     case 'type':
-      return type$1(ctx);
+      return typeParser(ctx);
     case 'if':
       return ifThenElse(ctx);
     case 'for':
@@ -2491,29 +2728,40 @@ const keyword$1 = ctx => {
 };
 
 //      
-// Parse the expression and set the appropriate Type for the egenerator
+// Parse the expression and set the appropriate Type for the generator
 const memoryStore = ctx => {
+  const metaType = getMetaType(ctx, ctx.token);
+
+  // Parse the assignment
   const node = expression(ctx, "i32");
+
+  // Now, if we have a variable of a user-defined type as our target we need to
+  // _fix_ the offset to be an appropriate node before the generator is involved.
+
+  const subscript = node.params[0];
+  subscript.params = patchStringSubscript(ctx, metaType, subscript.params);
+
   return ctx.endNode(node, Syntax_1.MemoryAssignment);
 };
 
+//     
 // It is easier to parse assignment this way as we need to maintain a valid type
 // through out the right-hand side of the expression
 function maybeAssignment(ctx) {
   const nextValue = ctx.stream.peek().value;
-  if (nextValue === '[') return memoryStore(ctx);
+  if (nextValue === "[") return memoryStore(ctx);
 
   const target = maybeIdentifier(ctx);
   if (target.Type === Syntax_1.FunctionCall) return target;
 
   const params = [];
 
-  const operator = nextValue === '=' || nextValue === '--' || nextValue === '++';
+  const operator = nextValue === "=" || nextValue === "--" || nextValue === "++";
 
   if (operator) {
-    if (nextValue === '=') {
+    if (nextValue === "=") {
       ctx.eat(null, Syntax_1.Identifier);
-      ctx.eat(['=']);
+      ctx.eat(["="]);
     }
     const node = ctx.startNode();
     // Push the reference to the local/global
@@ -2738,7 +2986,7 @@ const emit$2 = exports => {
 
 const encode = (payload, { type, init, mutable }) => {
   payload.push(index_9, type, getTypeString(type));
-  payload.push(index_9, mutable, 'mutable');
+  payload.push(index_9, mutable, "mutable");
   if (!Array.isArray(init)) {
     // Encode the constant
     switch (type) {
@@ -2752,7 +3000,7 @@ const encode = (payload, { type, init, mutable }) => {
         break;
       case F64:
         payload.push(index_9, def.f64Const.code, def.f64Const.text);
-        payload.push(index_4, init, `value (${init})`);
+        payload.push(index_4, 42.6, `value (${init})`);
         break;
     }
   } else {
@@ -2762,12 +3010,12 @@ const encode = (payload, { type, init, mutable }) => {
       params.forEach(p => payload.push(varuint32, p, `value (${p})`));
     });
   }
-  payload.push(index_9, def.End.code, 'end');
+  payload.push(index_9, def.End.code, "end");
 };
 
 const emit$3 = globals => {
   const payload = new OutputStream();
-  payload.push(varuint32, globals.length, 'count');
+  payload.push(varuint32, globals.length, "count");
 
   globals.forEach(g => encode(payload, g));
 
@@ -2963,7 +3211,7 @@ const _debug = (stream, begin = 0, end) => {
   return stream.data.slice(begin, end).map(({ type, value, debug }) => {
     const pcString = pc.toString(16).padStart(8, "0").padEnd(stream.data.length.toString().length + 1);
     let valueString;
-    if (Array.isArray(value)) valueString = value.map(v => v.toString(16)).join().padStart(12);else valueString = value.toString(16).padStart(12);
+    if (Array.isArray(value)) valueString = value.map(v => v.toString(16)).join().padStart(16);else valueString = value.toString(16).padStart(16);
     const out = `${pcString}: ${valueString} ; ${debug}`;
     pc += index_16[type] || value.length;
     return out;
@@ -2990,7 +3238,6 @@ const getIR = source => {
 
 // Compiles a raw binary wasm buffer
 const compile = source => {
-  debugger;
   const wasm = getIR(source);
   return wasm.buffer();
 };

@@ -28,8 +28,9 @@ class Context {
   diAssoc: string;
   body: Node[];
   filename: string;
-  func: Node;
+  func: Node & { locals: Node[] };
   object: Node;
+  userTypes: Node[];
   Program: any;
   lines: string[];
   functionImports: Node[];
@@ -44,6 +45,7 @@ class Context {
       lines: [],
       functionImports: [],
       functionImportsLength: 0,
+      userTypes: [],
       ...options
     });
 

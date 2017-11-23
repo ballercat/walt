@@ -1,15 +1,15 @@
-import Syntax from '../Syntax';
-import { generateExport } from './generator';
-import maybeFunctionDeclaration from './maybe-function-declaration';
+import Syntax from "../Syntax";
+import generateExport from "../generator/export";
+import maybeFunctionDeclaration from "./maybe-function-declaration";
 
-const _export = (ctx) => {
+const _export = ctx => {
   const node = ctx.startNode();
-  ctx.eat(['export']);
+  ctx.eat(["export"]);
 
   const decl = maybeFunctionDeclaration(ctx);
-  if(!decl.func) {
-    if(!decl.init)
-      throw ctx.syntaxError('Exports must have a value');
+  if (!decl.func) {
+    if (decl.params.length === 0)
+      throw ctx.syntaxError("Exports must have a value");
   }
 
   ctx.Program.Exports.push(generateExport(decl));
@@ -18,7 +18,6 @@ const _export = (ctx) => {
   ctx.endNode(node, Syntax.Export);
 
   return node;
-}
+};
 
 export default _export;
-

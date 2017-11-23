@@ -15,8 +15,8 @@ const _debug = (stream, begin = 0, end) => {
           valueString = value
             .map(v => v.toString(16))
             .join()
-            .padStart(12);
-        else valueString = value.toString(16).padStart(12);
+            .padStart(16);
+        else valueString = value.toString(16).padStart(16);
         const out = `${pcString}: ${valueString} ; ${debug}`;
         pc += sizeof[type] || value.length;
         return out;

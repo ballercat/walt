@@ -12,6 +12,7 @@ export type Token = {
   type: string,
   value: string
 };
+export type TokenType = Token;
 
 export type OperatorToken = Token & {
   precedence: number,
@@ -20,10 +21,11 @@ export type OperatorToken = Token & {
 };
 
 export type Metadata = { type: string, payload: any };
+export type MetadataType = Metadata;
 
 // Nodes
 export type Typed = { id?: string, type: string };
-export type Node = {
+export type NodeType = {
   range: Marker[],
   Type: string,
   id?: string,
@@ -32,9 +34,11 @@ export type Node = {
   size?: number,
   result?: Typed | null,
   meta: Metadata[],
-  params: Node[],
-  body?: Node[]
+  params: NodeType[],
+  body?: NodeType[]
 };
+
+export type Node = NodeType;
 
 export type Field = {
   id: string,

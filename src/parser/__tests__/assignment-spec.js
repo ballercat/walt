@@ -7,7 +7,8 @@ test("array assignment", t => {
   ctx.func = {
     locals: [
       {
-        id: "x"
+        id: "x",
+        meta: [{ type: "type/array", payload: true }]
       }
     ]
   };

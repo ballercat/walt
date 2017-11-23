@@ -1,20 +1,20 @@
-const path = require('path');
+const path = require("path");
 
 module.exports = {
-  context: __dirname + '/src',
+  context: __dirname + "/src",
 
-  devtool: 'source-map',
+  devtool: "source-map",
 
   entry: {
-    javascript: './index.js',
+    javascript: "./index.js"
   },
 
   output: {
-    filename: 'dist/explorer.js'
+    filename: "dist/explorer.js"
   },
 
   resolve: {
-    extensions: ['.js', '.jsx', '.json', '.scss', '.css']
+    extensions: [".js", ".jsx", ".json", ".scss", ".css", ".walt"]
   },
 
   module: {
@@ -22,19 +22,23 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loaders: ['babel-loader']
+        loaders: ["babel-loader"]
       },
       {
         test: /\.html$/,
-        loader: 'file-loader?name=[name].[ext]',
+        loader: "file-loader?name=[name].[ext]"
+      },
+      {
+        test: /\.walt$/,
+        loader: "raw-loader"
       },
       {
         test: /\.scss$/,
-        loaders: ['style-loader', 'css-loader', 'sass-loader']
+        loaders: ["style-loader", "css-loader", "sass-loader"]
       },
       {
         test: /\.css$/,
-        loaders: ['style-loader', 'css-loader']
+        loaders: ["style-loader", "css-loader"]
       },
       {
         test: /\.(png|woff|woff2|eot|ttf|svg)$/,
@@ -44,4 +48,3 @@ module.exports = {
     ]
   }
 };
-

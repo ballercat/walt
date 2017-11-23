@@ -1,5 +1,6 @@
 import Syntax from "../Syntax";
-import { generateType, generateCode } from "./generator";
+import { generateImplicitFunctionType } from "../generator/type";
+import generateCode from "../generator";
 import { findTypeIndex } from "./introspection";
 import statement from "./statement";
 import declaration from "./declaration";
@@ -64,7 +65,7 @@ const maybeFunctionDeclaration = ctx => {
   } else {
     // attach to a type index
     node.typeIndex = ctx.Program.Types.length;
-    ctx.Program.Types.push(generateType(node));
+    ctx.Program.Types.push(generateImplicitFunctionType(node));
   }
 
   node.meta = [
