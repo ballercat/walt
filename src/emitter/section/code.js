@@ -1,5 +1,5 @@
 import { u8, i32, f32, f64 } from "wasm-types";
-import { varuint32, varint7 } from "../numbers";
+import { varint32, varuint32, varint7 } from "../numbers";
 import { getTypeString } from "../value_type";
 import OutputStream from "../../utils/output-stream";
 import opcode from "../opcode";
@@ -28,22 +28,35 @@ const emitFunctionBody = (stream, { locals, code }) => {
     // map over all params, if any and encode each one
     (params || []).forEach(p => {
       let type = varuint32;
-      // either encode unsigned 32 bit values or floats
-      switch (kind.result) {
-        case u8:
-          type = u8;
-          break;
-        case f64:
-          type = f64;
-          break;
-        case f32:
-          type = f32;
-          break;
-        case i32:
-        default:
-          type = varuint32;
+      let stringType = "i32.literal";
+
+      // Memory opcode?
+      if (kind.code >= 0x28 && kind.code <= 0x3e) {
+        type = varuint32;
+        stringType = "memory_immediate";
+      } else {
+        // either encode unsigned 32 bit values or floats
+        switch (kind.result) {
+          case u8:
+            type = u8;
+            break;
+          case f64:
+            type = f64;
+            stringType = "f64.literal";
+            break;
+          case f32:
+            type = f32;
+            stringType = "f32.literal";
+            break;
+          case i32:
+            type = varint32;
+            stringType = "i32.literal";
+            break;
+          default:
+            type = varuint32;
+        }
       }
-      body.push(type, p, " ");
+      body.push(type, p, `${stringType}`);
     });
   });
 

@@ -1,6 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import { getType } from "../generator/utils";
 import generateType from "../generator/type";
 import generateImport from "../generator/import";

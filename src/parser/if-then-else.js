@@ -1,6 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
 

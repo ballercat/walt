@@ -8,10 +8,18 @@ test("array assignment", t => {
     locals: [
       {
         id: "x",
+        type: "i32",
         meta: [{ type: "type/array", payload: true }]
       }
     ]
   };
+  const node = assignment(ctx);
+  t.snapshot(node);
+});
+
+test("increment or decrement and assign", t => {
+  const ctx = mockContext("x += 2 + 2;");
+  ctx.globals = [{ id: "x", type: "i32", meta: [] }];
   const node = assignment(ctx);
   t.snapshot(node);
 });

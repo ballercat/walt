@@ -1,8 +1,8 @@
 //@flow
 import Syntax from "../Syntax";
-import Context from "./context";
 import expression from "./expression";
 import statement from "./statement";
+import type Context from "./context";
 import type { Node } from "../flow/types";
 
 const paramList = (ctx: Context): Node[] => {
@@ -29,15 +29,23 @@ const forLoop = (ctx: Context): Node => {
 
   ctx.expect(["{"]);
 
-  node.body = [];
+  const body = [];
   let stmt = null;
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
-    if (stmt) node.body.push(stmt);
+    if (stmt) {
+      body.push(stmt);
+    }
   }
   ctx.expect(["}"]);
 
-  return ctx.endNode(node, Syntax.Loop);
+  return ctx.endNode(
+    {
+      ...node,
+      body
+    },
+    Syntax.Loop
+  );
 };
 
 export default forLoop;

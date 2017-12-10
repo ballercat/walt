@@ -1,11 +1,14 @@
 import test from "ava";
 import expression from "../expression";
+import { TYPE_USER, TYPE_ARRAY } from "../metadata";
 import { mockContext } from "../../utils/mocks";
 import printNode from "../../utils/print-node";
 
 test("array: offset is constant", t => {
   const ctx = mockContext("b[1] + 5");
-  ctx.globals = [{ id: "b", type: "i32", meta: [{ type: "type/array" }] }];
+  ctx.globals = [
+    { id: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] }
+  ];
   const node = expression(ctx);
   t.snapshot(node);
 });
@@ -13,7 +16,7 @@ test("array: offset is constant", t => {
 test("array: offset is compound expression", t => {
   const ctx = mockContext("a + b[1 + 1] * 5");
   ctx.globals = [
-    { id: "b", type: "i32", meta: [{ type: "type/array" }] },
+    { id: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
     { id: "a", type: "i32" }
   ];
   const node = expression(ctx);
@@ -55,6 +58,7 @@ test("function calls in expressions", t => {
   ctx.functions = [
     {
       id: "test",
+      result: "i32",
       meta: []
     }
   ];
@@ -86,6 +90,28 @@ test("object literal", t => {
 
 test("type definition", t => {
   const ctx = mockContext("{ 'foo': i32, 'bar': i32 }");
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("array subscript inside a return statement", t => {
+  const ctx = mockContext("return x[0] + x[1];");
+  ctx.func = {
+    locals: [
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] }
+    ]
+  };
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("array subscripts on float variables", t => {
+  const ctx = mockContext("x[0] + 5;");
+  ctx.func = {
+    locals: [
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] }
+    ]
+  };
   const node = expression(ctx);
   t.snapshot(node);
 });

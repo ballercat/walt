@@ -3,8 +3,8 @@ import Syntax from "../Syntax";
 import generateInit from "../generator/initializer";
 import generateMemory from "../generator/memory";
 import expression from "./expression";
-import Context from "./context";
 import metadata from "./metadata";
+import type Context from "./context";
 import type { NodeType } from "../flow/types";
 import { findUserTypeIndex } from "./introspection";
 
@@ -47,7 +47,8 @@ const declaration = (ctx: Context): NodeType => {
   }
 
   if (ctx.eat(["["]) && ctx.eat(["]"])) {
-    node.meta.push(metadata.array());
+    node.meta.push(metadata.array(node.type));
+    node.type = "i32";
   }
 
   if (ctx.eat(["="])) {

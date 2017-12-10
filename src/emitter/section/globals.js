@@ -1,6 +1,6 @@
 import { u8, f32, f64 } from "wasm-types";
 import { I32, F64, F32, getTypeString } from "../value_type";
-import { varuint32 } from "../numbers";
+import { varuint32, varint32 } from "../numbers";
 import { emitString } from "../string";
 import opcode from "../opcode";
 import OutputStream from "../../utils/output-stream";
@@ -13,7 +13,7 @@ const encode = (payload, { type, init, mutable }) => {
     switch (type) {
       case I32:
         payload.push(u8, opcode.i32Const.code, opcode.i32Const.text);
-        payload.push(varuint32, init, `value (${init})`);
+        payload.push(varint32, init, `value (${init})`);
         break;
       case F32:
         payload.push(u8, opcode.f32Const.code, opcode.f32Const.text);

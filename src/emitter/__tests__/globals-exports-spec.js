@@ -1,24 +1,20 @@
-import test from 'ava';
-import { u8, get } from 'wasm-types';
-import { I32 } from '../value_type';
-import { EXTERN_GLOBAL } from '../external_kind';
-import opcode from '../opcode';
-import emit from '..';
+import test from "ava";
+import { u8, get } from "wasm-types";
+import { I32 } from "../value_type";
+import { EXTERN_GLOBAL } from "../external_kind";
+import opcode from "../opcode";
+import emit from "..";
 
 // TODO:
 // the only way we can test output of globals is by exporting them
 // should build in some assert() into the binary :)
 const meaningOfLife = 42;
 const ast = {
-  Exports: [
-    { kind: EXTERN_GLOBAL, field: 'meaningOfLife', index: 0 }
-  ],
-  Globals: [
-    { mutable: 0, type: I32, init: meaningOfLife }
-  ]
+  Exports: [{ kind: EXTERN_GLOBAL, field: "meaningOfLife", index: 0 }],
+  Globals: [{ mutable: 0, type: I32, init: meaningOfLife }]
 };
 
-test('compiles globals accurately', t => {
+test("compiles globals accurately", t => {
   const stream = emit(ast);
   return WebAssembly.instantiate(
     stream.buffer()
@@ -28,7 +24,7 @@ test('compiles globals accurately', t => {
   });
 });
 
-test('encodes correct values', t => {
+test("encodes correct values", t => {
   const stream = emit(ast);
   return WebAssembly.instantiate(
     stream.buffer()
@@ -38,4 +34,3 @@ test('encodes correct values', t => {
     t.is(instance.exports.meaningOfLife, meaningOfLife);
   });
 });
-

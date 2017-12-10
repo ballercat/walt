@@ -30,6 +30,11 @@ const Syntax = {
   Sequence: "Sequence",
   ObjectLiteral: "ObjectLiteral",
   Pair: "Pair",
+  TypeCast: "TypeCast",
+  UnaryExpression: "UnaryExpression",
+  Break: "Break",
+
+  Noop: "Noop",
 
   // Semantic Nodes
   FunctionIndex: "FunctionIndex",

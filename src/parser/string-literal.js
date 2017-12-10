@@ -1,6 +1,6 @@
 //@flow
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import type { Node } from "../flow/types";
 
 // Note: string literal does not increment the token.

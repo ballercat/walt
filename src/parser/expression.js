@@ -1,12 +1,13 @@
 // @flow
 import Syntax from "../Syntax";
-import Context from "./context";
 import operator from "./operator";
 import constant from "./constant";
 import stringLiteral from "./string-literal";
+import builtInType from "./builtin-type";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
+import type Context from "./context";
 import type { Node, Token } from "../flow/types";
 
 export type Predicate = (Token, number) => boolean;
@@ -17,11 +18,8 @@ const last = (list: any[]): any => list[list.length - 1];
 const valueIs = (v: string) => (o: Token): boolean => o.value === v;
 
 const isLBracket = valueIs("(");
-const isRBracket = valueIs(")");
-const isRSqrBracket = valueIs("]");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
-const isTEnd = valueIs(":");
 const isBlockStart = valueIs("{");
 
 export const predicate = (token: Token, depth: number): boolean =>
@@ -78,7 +76,11 @@ const expression = (
       operands.push(stringLiteral(ctx));
     } else if (ctx.token.type === Syntax.Type) {
       eatFunctionCall = false;
-      operands.push(ctx.makeNode({ value: ctx.token.value }, Syntax.Type));
+      operands.push(builtInType(ctx));
+    } else if (ctx.token.type === Syntax.UnaryExpression) {
+      eatFunctionCall = false;
+      flushOperators(getPrecedence(ctx.token), ctx.token.value);
+      operators.push(ctx.token);
     } else if (ctx.token.type === Syntax.Punctuator) {
       switch (ctx.token.value) {
         case "(":
@@ -147,6 +149,7 @@ const expression = (
             inTernary = false;
             break;
           }
+
           flushOperators(getPrecedence(ctx.token), ctx.token.value);
           operators.push(ctx.token);
         }

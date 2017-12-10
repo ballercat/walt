@@ -45,10 +45,10 @@ class Explorer extends React.Component {
     const compiler = eval(`(${this.state.js})`);
     const buffer = this.intermediateRepresentation.buffer();
     Promise.resolve(compiler(buffer))
-      .then(() =>
+      .then(cancel =>
         // without this raf the spinner will not likely render as everything is
         // going to smush into a one long frame in expensive wasm calls :(
-        requestAnimationFrame(() => this.setState({ compiling: false }))
+        requestAnimationFrame(() => this.setState({ compiling: false, cancel }))
       )
       .catch(e => {
         this.setState({ compiling: false });
@@ -76,6 +76,13 @@ class Explorer extends React.Component {
       });
     });
   }, 1000);
+
+  handleStop = () => {
+    this.state.cancel();
+    this.setState({
+      cancel: null
+    });
+  };
 
   updateJS = js => {
     this.setState({ js });
@@ -109,6 +116,8 @@ class Explorer extends React.Component {
           onMenuClick={this.handleMenuClick}
           onRun={this.handleRun}
           onSelect={this.handleSelectExample}
+          onStop={this.handleStop}
+          cancellable={this.state.cancel != null}
         />
         <Segment className="Main" loading={this.state.compiling}>
           {(test => {
@@ -136,6 +145,12 @@ class Explorer extends React.Component {
                     code={this.state.wasm}
                     extraOptions={{ readOnly: true }}
                   />
+                );
+              case "Canvas":
+                return (
+                  <div>
+                    <canvas id="canvas" width="500" height="400" />
+                  </div>
                 );
             }
           })(activeItem)}

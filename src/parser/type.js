@@ -1,12 +1,18 @@
 // @flow
 import invariant from "invariant";
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import expression from "./expression";
 import walkNode from "../utils/walk-node";
 import generateType from "../generator/type";
 import type { NodeType } from "../flow/types";
-import { get, objectType, TYPE_OBJECT } from "./metadata";
+import {
+  get,
+  objectSize,
+  objectType,
+  objectKeyTypes,
+  TYPE_OBJECT
+} from "./metadata";
 
 // A scenario where the type declared needs to be hoisted exists during imports.
 // We may want to import a function with a specific type, but we cannot declare
@@ -28,11 +34,12 @@ export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
   }
 };
 
-export const getByteOffsetsByKey = (
+export const getByteOffsetsAndSize = (
   objectLiteralNode: NodeType
-): { [string]: number } => {
+): [{ [string]: number }, number] => {
   const offsetsByKey = {};
-  let absoluteByteOffset = 0;
+  const keyTypeMap = {};
+  let size = 0;
   walkNode({
     [Syntax.Pair]: keyTypePair => {
       const { value: key } = keyTypePair.params[0];
@@ -42,23 +49,24 @@ export const getByteOffsetsByKey = (
         `Duplicate key ${key} not allowed in object type`
       );
 
-      offsetsByKey[key] = absoluteByteOffset;
+      keyTypeMap[key] = typeString;
+      offsetsByKey[key] = size;
       switch (typeString) {
         case "i32":
         case "f32":
-          absoluteByteOffset += 4;
+          size += 4;
           break;
         case "i64":
         case "f64":
-          absoluteByteOffset += 8;
+          size += 8;
           break;
         default:
-          absoluteByteOffset += 4;
+          size += 4;
       }
     }
   })(objectLiteralNode);
 
-  return offsetsByKey;
+  return [offsetsByKey, size, keyTypeMap];
 };
 
 export default function typeParser(ctx: Context): NodeType {
@@ -75,8 +83,12 @@ export default function typeParser(ctx: Context): NodeType {
   node.params = [expression(ctx)];
 
   if (isObjectType) {
-    const offsetsByKey = getByteOffsetsByKey(node.params[0]);
+    const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
+      node.params[0]
+    );
     node.meta.push(objectType(offsetsByKey));
+    node.meta.push(objectSize(totalSize));
+    node.meta.push(objectKeyTypes(keyTypeMap));
     ctx.userTypes.push(node);
   }
 

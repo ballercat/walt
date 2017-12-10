@@ -106,6 +106,7 @@ const maybeFunctionDeclaration = ctx => {
   }
 
   // generate the code block for the emiter
+  //
   ctx.Program.Code.push(generateCode(node));
 
   ctx.expect(["}"]);

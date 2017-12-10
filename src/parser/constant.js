@@ -1,12 +1,10 @@
+// @flow
+import type Context from "./context";
 import Syntax from "../Syntax";
 
-const constant = ctx => {
+export default function parseConstant(ctx: Context) {
   const node = ctx.startNode();
   const value = ctx.token.value;
-  if (value.toString().indexOf(".") !== -1) node.type = "f32";
-  else node.type = "i32";
-  node.value = value;
-  return ctx.endNode(node, Syntax.Constant);
-};
-
-export default constant;
+  const type = value.toString().indexOf(".") !== -1 ? "f32" : "i32";
+  return ctx.endNode({ ...node, type, value }, Syntax.Constant);
+}

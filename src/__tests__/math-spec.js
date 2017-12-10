@@ -40,38 +40,20 @@ test("remainder", t =>
 //   compileAndRun('export function test(): i32 { return 2 ** 2; }').then(outputIs(t, 1))
 // );
 
-test("prefix increment", t =>
-  compileAndRun(
-    "export function test(): i32 { let x: i32 = 2; return ++x; }"
-  ).then(outputIs(t, 3)));
-
-test("prefix decrement", t =>
-  compileAndRun(
-    "export function test(): i32 { let x: i32 = 2; return --x; }"
-  ).then(outputIs(t, 1)));
-
-test.skip("postfix increment", t =>
+test("decrement", t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 2;
-    return x++;
-  }`).then(outputIs(t, 2))
-);
+    x -= 1;
+    return x;
+  }`).then(outputIs(t, 1)));
 
-test.skip("postfix decrement", t =>
-  compileAndRun(`
-  export function test(): i32 {
-    let x: i32 = 2;
-    return x--;
-  }`).then(outputIs(t, 2))
-);
-
-test("postfix increment, statement", t =>
+test("increment", t =>
   compileAndRun(`
   export function test(): i32 {
     let y: i32 = 2;
-    y++;
-    return 0 + y;
+    y+=1;
+    return y;
  }`).then(outputIs(t, 3)));
 
 // Unary negation is not supported. Workaround: "return 0 - x;"

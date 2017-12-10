@@ -21,8 +21,6 @@ function compile(buffer) {
   }).then(result => result.instance.exports.test());
 }
 
-console.log(code);
-
 const example = {
   code,
   label,

@@ -1,5 +1,5 @@
 // @flow
-import TokenStream from "../utils/token-stream";
+import type TokenStream from "../utils/token-stream";
 import generateErrorString from "../utils/generate-error";
 import type { Token, Node } from "../flow/types";
 

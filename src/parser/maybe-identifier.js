@@ -1,8 +1,8 @@
 //@flow
 import Syntax from "../Syntax";
-import Context from "./context";
 import meta from "./metadata";
 import { writeFunctionPointer } from "./implicit-imports";
+import type Context from "./context";
 import type { Node } from "../flow/types";
 import {
   findLocalIndex,

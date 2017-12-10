@@ -1,8 +1,8 @@
 // @flow
+import invariant from "invariant";
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import type { Token, Node } from "../flow/types";
-import { writeFunctionPointer } from "./implicit-imports";
 
 const functionCall = (ctx: Context, op: Token, operands: Node[]) => {
   const node = ctx.startNode(op);
@@ -19,17 +19,21 @@ const functionCall = (ctx: Context, op: Token, operands: Node[]) => {
   );
 
   let Type = Syntax.FunctionCall;
+  let func = null;
 
   if (maybePointer && localIndex > -1) {
     Type = Syntax.IndirectFunctionCall;
-    const functionIndex = identifier.meta[0].payload;
+    func = ctx.functions[identifier.meta[0].payload];
     node.params.push(identifier);
   } else {
-    const func = ctx.functions.find(({ id }) => id == identifier.value);
+    func = ctx.functions.find(({ id }) => id == identifier.value);
     if (!func) throw ctx.syntaxError(`Undefined function: ${identifier.value}`);
 
     node.meta.push({ ...func.meta[0] });
   }
+
+  invariant(func, `Undefined function ${identifier.value}`);
+  node.type = func.result;
 
   return ctx.endNode(node, Type);
 };

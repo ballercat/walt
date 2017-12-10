@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0]
+
+### Added
+
+- sizeof
+- typecasts `(1 : f32), (0.5 : i32)` etc.
+- top-level typecasts for expressions
+- type promotions in math expressions
+- type safety and warnings in binary expressions
+- Canvas example
+- Increment/decrement and assign +=/-=
+- basic support for the break keyword
+- node mapper
+
+### Changed
+
+- Cleaned up type parser
+- Debug type literal info
+
+### Removed
+
+- Unary ++/--
+
+### Fixed
+
+- Array indexing into user types and arrays of buit-ins
+- Many incorrectly name type conversion opcodes
+- Loop condition code
+- Cleaned up tons of build warnings
+- Tests, false positive tests.
+- Coverage improvements
+- Corrected float memory load encodings
+
 ## [0.1.0]
 
 ### Added
@@ -44,7 +77,7 @@
 ### Misc
 
 * A lot o f cleanup
-* Coverag e improvements
+* Coverage improvements
 * Improved expression parser
 
 ## [0.0.1]

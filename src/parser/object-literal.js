@@ -1,6 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
-import Context from "./context";
+import type Context from "./context";
 import expression from "./expression";
 import type { Node } from "../flow/types";
 
@@ -28,7 +28,6 @@ const fieldList = (ctx: Context): Node[] => {
 
 const objectLiteral = (ctx: Context): Node => {
   const node = ctx.startNode();
-  let depth = 1;
   ctx.expect(["{"]);
 
   node.params = fieldList(ctx);

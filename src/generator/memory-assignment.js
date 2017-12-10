@@ -1,16 +1,29 @@
 import mapSyntax from "./map-syntax";
-
+import { nodeMetaType } from "../parser/array-subscript";
+import { TYPE_ARRAY } from "../parser/metadata";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
 
 const generateMemoryAssignment = (node, parent) => {
-  const block = [
-    ...node.params[0].params.map(mapSyntax(parent)).reduce(mergeBlock, []),
-    // FIXME: 4 needs to be configurable
-    { kind: opcode.i32Const, params: [4] },
-    { kind: opcode.i32Mul, params: [] },
-    { kind: opcode.i32Add, params: [] }
-  ];
+  const targetNode = node.params[0];
+  const metaType = nodeMetaType(targetNode);
+
+  const block = node.params[0].params
+    .map(mapSyntax(parent))
+    .reduce(mergeBlock, []);
+
+  if (metaType.type === TYPE_ARRAY) {
+    // For array types, the index is multiplied by the contained object size
+    block.push.apply(block, [
+      // TODO: fix this for user-defined types
+      { kind: opcode.i32Const, params: [4] },
+      { kind: opcode.i32Mul, params: [] }
+    ]);
+  }
+
+  // The sequence of opcodes to perfrom a memory load is
+  // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
+  block.push({ kind: opcode.i32Add, params: [] });
 
   block.push.apply(
     block,

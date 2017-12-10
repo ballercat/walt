@@ -1,9 +1,9 @@
 // @flow
-import Context from "./context";
+import type Context from "./context";
 import { getType } from "../generator/utils";
 import Syntax from "../Syntax";
 import precedence from "./precedence";
-import type { Token, Node } from "../flow/types";
+import type { Token, Node, NodeType } from "../flow/types";
 
 export const findTypeIndex = (node: Node, ctx: Context): number => {
   return ctx.Program.Types.findIndex(t => {
@@ -40,9 +40,15 @@ export const findGlobalIndex = findFieldIndex(["globals"]);
 export const findFunctionIndex = findFieldIndex(["functions"]);
 export const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
+export const getTargetNode = (): ?NodeType => {};
+
 // FIXME: do all of this inline here
 // FIXME: add a symbol for function call
 export const getPrecedence = (token: Token): number => {
+  if (token.type === Syntax.UnaryExpression) {
+    return precedence["+"];
+  }
+
   return precedence[token.value];
 };
 export const getAssociativty = (token: Token): "left" | "right" => {
@@ -54,6 +60,8 @@ export const getAssociativty = (token: Token): "left" | "right" => {
     case ":":
       return "left";
     case "=":
+    case "-=":
+    case "+=":
     case "--":
     case "++":
     case "?":

@@ -27,10 +27,10 @@ test("global constant exports", t =>
 test("function exports", t =>
   compileAndRun(`
       export function echo() : i32 {
-        return 42;
+        return 48;
       }
     `).then(result => {
-    t.is(result.instance.exports.echo(), 42);
+    t.is(result.instance.exports.echo(), 48);
   }));
 
 test("function locals", t =>
@@ -59,6 +59,21 @@ test("global reference in function scope", t =>
       return x;
     }
   `).then(result => t.is(result.instance.exports.test(), 42)));
+
+test("compiles large signed consants correctly", t =>
+  compileAndRun(`
+    export function test(): i32 {
+      return 126;
+    }
+  `).then(result => t.is(result.instance.exports.test(), 126)));
+
+test("compiles large signed global consants correctly", t =>
+  compileAndRun(`
+    const x: i32 = 126;
+    export function test(): i32 {
+      return x;
+    }
+  `).then(result => t.is(result.instance.exports.test(), 126)));
 
 test("compiles math", t =>
   compileAndRun(`

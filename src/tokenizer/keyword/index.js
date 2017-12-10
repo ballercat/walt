@@ -1,6 +1,6 @@
-const Trie = require("../../utils/trie");
-const token = require("../token");
-const Syntax = require("../../Syntax");
+import Trie from "../../utils/trie";
+import token from "../token";
+import Syntax from "../../Syntax";
 
 const supported = [
   // EcmaScript
@@ -40,7 +40,7 @@ const supported = [
   "sizeof"
 ];
 
-const nosupport = [
+export const nosupport = [
   "catch",
   "extends",
   "super",
@@ -60,4 +60,5 @@ const nosupport = [
 
 const trie = new Trie(supported);
 const root = trie.fsearch;
-module.exports = token(root, Syntax.Keyword, supported);
+
+export default token(root, Syntax.Keyword, supported);

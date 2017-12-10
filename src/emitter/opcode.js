@@ -1,6 +1,6 @@
 // @flow
-import { i32, i64, f32, f64 } from "wasm-types";
-import type { RawOpcodeType } from "../flow/types";
+import { i32, i64, f32 } from "wasm-types";
+import type { RawOpcodeType } from "../generator/flow/types";
 
 /**
  * Ported from https://github.com/WebAssembly/wabt/blob/master/src/opcode.def
@@ -77,7 +77,7 @@ opcode(___, ___, ___, 0, 0x24, "SetGlobal", "set_global");
 opcode(i32, i32, ___, 4, 0x28, "i32Load", "i32.load");
 opcode(i64, i32, ___, 8, 0x29, "i64Load", "i64.load");
 opcode(f32, i32, ___, 4, 0x2a, "f32Load", "f32.load");
-opcode(f32, i32, ___, 8, 0x2b, "f32Load", "f64.load");
+opcode(f32, i32, ___, 8, 0x2b, "f64Load", "f64.load");
 opcode(i32, i32, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
 opcode(i32, i32, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
 opcode(i32, i32, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
@@ -91,7 +91,7 @@ opcode(i64, i32, ___, 4, 0x35, "i64Load32U", "i64.load32_u");
 opcode(___, i32, i32, 4, 0x36, "i32Store", "i32.store");
 opcode(___, i32, i64, 8, 0x37, "i64Store", "i64.store");
 opcode(___, i32, f32, 4, 0x38, "f32Store", "f32.store");
-opcode(___, i32, f32, 8, 0x39, "f32Store", "f64.store");
+opcode(___, i32, f32, 8, 0x39, "f64Store", "f64.store");
 opcode(___, i32, i32, 1, 0x3a, "i32Store8", "i32.store8");
 opcode(___, i32, i32, 2, 0x3b, "i32Store16", "i32.store16");
 opcode(___, i32, i64, 1, 0x3c, "i64Store8", "i64.store8");
@@ -131,12 +131,12 @@ opcode(i32, f32, f32, 0, 0x5d, "f32Lt", "f32.lt");
 opcode(i32, f32, f32, 0, 0x5e, "f32Gt", "f32.gt");
 opcode(i32, f32, f32, 0, 0x5f, "f32Le", "f32.le");
 opcode(i32, f32, f32, 0, 0x60, "f32Ge", "f32.ge");
-opcode(i32, f32, f32, 0, 0x61, "f32Eq", "f64.eq");
-opcode(i32, f32, f32, 0, 0x62, "f32Ne", "f64.ne");
-opcode(i32, f32, f32, 0, 0x63, "f32Lt", "f64.lt");
-opcode(i32, f32, f32, 0, 0x64, "f32Gt", "f64.gt");
-opcode(i32, f32, f32, 0, 0x65, "f32Le", "f64.le");
-opcode(i32, f32, f32, 0, 0x66, "f32Ge", "f64.ge");
+opcode(i32, f32, f32, 0, 0x61, "f64Eq", "f64.eq");
+opcode(i32, f32, f32, 0, 0x62, "f64Ne", "f64.ne");
+opcode(i32, f32, f32, 0, 0x63, "f64Lt", "f64.lt");
+opcode(i32, f32, f32, 0, 0x64, "f64Gt", "f64.gt");
+opcode(i32, f32, f32, 0, 0x65, "f64Le", "f64.le");
+opcode(i32, f32, f32, 0, 0x66, "f64Ge", "f64.ge");
 opcode(i32, i32, ___, 0, 0x67, "i32Clz", "i32.clz");
 opcode(i32, i32, ___, 0, 0x68, "i32Ctz", "i32.ctz");
 opcode(i32, i32, ___, 0, 0x69, "i32Popcnt", "i32.popcnt");
@@ -194,38 +194,67 @@ opcode(f32, f32, f32, 0, 0x9c, "f32Floor", "f64.floor");
 opcode(f32, f32, f32, 0, 0x9d, "f32Trunc", "f64.trunc");
 opcode(f32, f32, f32, 0, 0x9e, "f32Nearest", "f64.nearest");
 opcode(f32, f32, f32, 0, 0x9f, "f32Sqrt", "f64.sqrt");
-opcode(f32, f32, f32, 0, 0xa0, "f32Add", "f64.add");
-opcode(f32, f32, f32, 0, 0xa1, "f32Sub", "f64.sub");
-opcode(f32, f32, f32, 0, 0xa2, "f32Mul", "f64.mul");
-opcode(f32, f32, f32, 0, 0xa3, "f32Div", "f64.div");
-opcode(f32, f32, f32, 0, 0xa4, "f32Min", "f64.min");
-opcode(f32, f32, f32, 0, 0xa5, "f32Max", "f64.max");
-opcode(f32, f32, f32, 0, 0xa6, "f32Copysign", "f64.copysign");
+opcode(f32, f32, f32, 0, 0xa0, "f64Add", "f64.add");
+opcode(f32, f32, f32, 0, 0xa1, "f64Sub", "f64.sub");
+opcode(f32, f32, f32, 0, 0xa2, "f64Mul", "f64.mul");
+opcode(f32, f32, f32, 0, 0xa3, "f64Div", "f64.div");
+opcode(f32, f32, f32, 0, 0xa4, "f64Min", "f64.min");
+opcode(f32, f32, f32, 0, 0xa5, "f64Max", "f64.max");
+opcode(f32, f32, f32, 0, 0xa6, "f64Copysign", "f64.copysign");
 opcode(i32, i64, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
 opcode(i32, f32, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
 opcode(i32, f32, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");
-opcode(i32, f32, ___, 0, 0xaa, "i32TruncSf32", "i32.trunc_s/f64");
-opcode(i32, f32, ___, 0, 0xab, "i32TruncUf32", "i32.trunc_u/f64");
+opcode(i32, f32, ___, 0, 0xaa, "i32TruncSf64", "i32.trunc_s/f64");
+opcode(i32, f32, ___, 0, 0xab, "i32TruncUf64", "i32.trunc_u/f64");
 opcode(i64, i32, ___, 0, 0xac, "i64ExtendSi32", "i64.extend_s/i32");
 opcode(i64, i32, ___, 0, 0xad, "i64ExtendUi32", "i64.extend_u/i32");
 opcode(i64, f32, ___, 0, 0xae, "i64TruncSf32", "i64.trunc_s/f32");
 opcode(i64, f32, ___, 0, 0xaf, "i64TruncUf32", "i64.trunc_u/f32");
-opcode(i64, f32, ___, 0, 0xb0, "i64TruncSf32", "i64.trunc_s/f64");
-opcode(i64, f32, ___, 0, 0xb1, "i64TruncUf32", "i64.trunc_u/f64");
+opcode(i64, f32, ___, 0, 0xb0, "i64TruncSf64", "i64.trunc_s/f64");
+opcode(i64, f32, ___, 0, 0xb1, "i64TruncUf64", "i64.trunc_u/f64");
 opcode(f32, i32, ___, 0, 0xb2, "f32ConvertSi32", "f32.convert_s/i32");
 opcode(f32, i32, ___, 0, 0xb3, "f32ConvertUi32", "f32.convert_u/i32");
 opcode(f32, i64, ___, 0, 0xb4, "f32ConvertSi64", "f32.convert_s/i64");
 opcode(f32, i64, ___, 0, 0xb5, "f32ConvertUi64", "f32.convert_u/i64");
-opcode(f32, f32, ___, 0, 0xb6, "f32Demotef32", "f32.demote/f64");
-opcode(f32, i32, ___, 0, 0xb7, "f32ConvertSi32", "f64.convert_s/i32");
-opcode(f32, i32, ___, 0, 0xb8, "f32ConvertUi32", "f64.convert_u/i32");
-opcode(f32, i64, ___, 0, 0xb9, "f32ConvertSi64", "f64.convert_s/i64");
-opcode(f32, i64, ___, 0, 0xba, "f32ConvertUi64", "f64.convert_u/i64");
-opcode(f32, f32, ___, 0, 0xbb, "f32Promotef32", "f64.promote/f32");
+opcode(f32, f32, ___, 0, 0xb6, "f32Demotef64", "f32.demote/f64");
+opcode(f32, i32, ___, 0, 0xb7, "f64ConvertSi32", "f64.convert_s/i32");
+opcode(f32, i32, ___, 0, 0xb8, "f64ConvertUi32", "f64.convert_u/i32");
+opcode(f32, i64, ___, 0, 0xb9, "f64ConvertSi64", "f64.convert_s/i64");
+opcode(f32, i64, ___, 0, 0xba, "f64ConvertUi64", "f64.convert_u/i64");
+opcode(f32, f32, ___, 0, 0xbb, "f64Promotef32", "f64.promote/f32");
 opcode(i32, f32, ___, 0, 0xbc, "i32Reinterpretf32", "i32.reinterpret/f32");
-opcode(i64, f32, ___, 0, 0xbd, "i64Reinterpretf32", "i64.reinterpret/f64");
+opcode(i64, f32, ___, 0, 0xbd, "i64Reinterpretf64", "i64.reinterpret/f64");
 opcode(f32, i32, ___, 0, 0xbe, "f32Reinterpreti32", "f32.reinterpret/i32");
 opcode(f32, i64, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
+
+export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
+  const toType = to[0];
+  const fromType = from[0];
+
+  if (to === "i32" && from === "i64") {
+    return def.i32Wrapi64;
+  }
+  if (to === "i64" && from === "i32") {
+    return def.i64ExtendSi32;
+  }
+
+  if (to === "f32" && from === "f64") {
+    return def.f32Demotef64;
+  }
+  if (to === "f64" && from === "f32") {
+    return def.f64Promotef32;
+  }
+
+  if (toType === "f" && fromType === "i") {
+    return def[to + "ConvertS" + from];
+  }
+
+  if (toType === "i" && fromType === "f") {
+    return def[to + "TruncS" + from];
+  }
+
+  throw new Error(`Unknown type conversion ${from} to ${to}`);
+};
 
 /**
  * Return opcode mapping to the operator. Signed result is always prefered
@@ -253,13 +282,13 @@ export const opcodeFromOperator = ({
     case "!=":
       return def[type + "Ne"];
     case ">":
-      return def[type + "GtS"] || def[type + "Gt"];
+      return def[type + "GtU"] || def[type + "Gt"];
     case "<":
-      return def[type + "LtS"] || def[type + "Lt"];
+      return def[type + "LtU"] || def[type + "Lt"];
     case "<=":
-      return def[type + "LeS"] || def[type + "Le"];
+      return def[type + "LeU"] || def[type + "Le"];
     case ">=":
-      return def[type + "GeS"] || def[type + "Ge"];
+      return def[type + "GeU"] || def[type + "Ge"];
     case "?":
       return def.If;
     case ":":

@@ -1,7 +1,7 @@
 //@flow
 import Syntax from "../Syntax";
-import Context from "./context";
-import expression, { predicate } from "./expression";
+import type Context from "./context";
+import expression from "./expression";
 import statement from "./statement";
 import type { Node } from "../flow/types";
 
@@ -10,21 +10,29 @@ const whileLoop = (ctx: Context): Node => {
   ctx.eat(["while"]);
   ctx.expect(["("]);
 
-  node.params = [null, expression(ctx, "i32")];
+  node.params = [ctx.makeNode({}, Syntax.Noop), expression(ctx, "i32")];
 
   ctx.expect([")"]);
   ctx.expect(["{"]);
 
-  node.body = [];
+  const body = [];
   let stmt = null;
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
-    if (stmt) node.body.push(stmt);
+    if (stmt) {
+      body.push(stmt);
+    }
   }
 
   ctx.expect(["}"]);
 
-  return ctx.endNode(node, Syntax.Loop);
+  return ctx.endNode(
+    {
+      ...node,
+      body
+    },
+    Syntax.Loop
+  );
 };
 
 export default whileLoop;

@@ -1,7 +1,7 @@
 //@flow
 import statement from "./statement";
 import Context from "./context";
-import TokenStream from "../utils/token-stream";
+import type TokenStream from "../utils/token-stream";
 
 class Parser {
   context: Context;

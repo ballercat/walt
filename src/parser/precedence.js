@@ -9,6 +9,7 @@ export const PRECEDENCE_MULTIPLY = 1;
 export const PRECEDENCE_DIVIDE = 1;
 export const PRECEDENCE_INCREMENT = 2;
 export const PRECEDENCE_DECREMENT = 2;
+export const PRECEDENCE_ASSIGNMENT = 3;
 
 export const PRECEDENCE_FUNCTION_CALL = 19;
 export const PRECEDENCE_KEY_VALUE_PAIR = -1;
@@ -20,13 +21,13 @@ const precedence = {
   "-": PRECEDENCE_SUBTRACTION,
   "*": PRECEDENCE_MULTIPLY,
   "/": PRECEDENCE_DIVIDE,
-  "++": PRECEDENCE_INCREMENT,
-  "--": 2,
   "==": 2,
   "!=": 2,
-  "=": 3,
-  "-=": 3,
-  "+=": 3,
+  "=": PRECEDENCE_ASSIGNMENT,
+  "-=": PRECEDENCE_ASSIGNMENT,
+  "+=": PRECEDENCE_ASSIGNMENT,
+  "-=": PRECEDENCE_ASSIGNMENT,
+  "+=": PRECEDENCE_ASSIGNMENT,
   ":": 4,
   "?": 4,
   ">": 5,

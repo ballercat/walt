@@ -7,19 +7,23 @@ import generateIf from "./if-then-else";
 import generateFunctionPointer from "./function-pointer";
 import generateReturn from "./return-statement";
 import generateDeclaration from "./declaration";
-import generateArrayDeclaration from "./array-declaration";
 import generateArraySubscript from "./array-subscript";
 import generateAssignment from "./assignment";
 import generateMemoryAssignment from "./memory-assignment";
 import generateImport from "./import";
 import generateLoop from "./loop";
 import generateSequence from "./sequence";
+import generateTypecast from "./typecast";
+import generateBreak from "./break";
+import generateNoop from "./noop";
 
 import Syntax from "../Syntax";
 import { getInScope, getConstOpcode } from "./utils";
 import curry from "curry";
 import invariant from "invariant";
 import type { MapSyntaxType, GeneratorType } from "./flow/types";
+
+import printNode from "../utils/print-node";
 
 export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.FunctionCall]: generateFunctionCall,
@@ -35,7 +39,6 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.ReturnStatement]: generateReturn,
   // Binary
   [Syntax.Declaration]: generateDeclaration,
-  [Syntax.ArrayDeclaration]: generateArrayDeclaration,
   [Syntax.ArraySubscript]: generateArraySubscript,
   [Syntax.Assignment]: generateAssignment,
   // Memory
@@ -44,8 +47,12 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.Import]: generateImport,
   // Loops
   [Syntax.Loop]: generateLoop,
+  [Syntax.Break]: generateBreak,
   // Comma separated lists
-  [Syntax.Sequence]: generateSequence
+  [Syntax.Sequence]: generateSequence,
+  // Typecast
+  [Syntax.TypeCast]: generateTypecast,
+  [Syntax.Noop]: generateNoop
 };
 
 const mapSyntax: MapSyntaxType = curry((parent, operand) => {
@@ -58,20 +65,20 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
     throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
   }
 
-  try {
-    return mapping(operand, parent);
-  } catch (e) {
+  const validate = (block, i) =>
     invariant(
-      null,
-      `Failed ${operand.Type} mapping. Operator ${JSON.stringify(
-        operand,
-        null,
-        2
-      )}` +
-        "\n" +
-        `Error thrown ${e}`
+      block.kind,
+      `Unknown opcode generated in block index %s %s. \nOperand: \n%s`,
+      i,
+      JSON.stringify(block),
+      printNode(operand)
     );
+  const blocks = mapping(operand, parent);
+  if (Array.isArray(blocks)) {
+    blocks.forEach(validate);
   }
+
+  return blocks;
 });
 
 export default mapSyntax;

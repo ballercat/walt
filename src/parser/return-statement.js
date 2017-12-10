@@ -11,7 +11,9 @@ const returnStatement = ctx => {
   // For generator to emit correct consant they must have a correct type
   // in the syntax it's not necessary to define the type since we can infer it here
   if (expr.type && ctx.func.result !== expr.type)
-    throw ctx.syntaxError("Return type mismatch");
+    throw ctx.syntaxError(
+      `Return type mismatch ${expr.type} ${ctx.func.result}`
+    );
   else if (!expr.type && ctx.func.result) expr.type = ctx.func.result;
 
   node.params.push(expr);

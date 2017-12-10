@@ -1,13 +1,21 @@
 // @flow
 import invariant from "invariant";
-import Context from "./context";
 import Syntax from "../Syntax";
-import expression from "./expression";
-import type { TokenType, NodeType, MetadataType } from "../flow/types";
-import metadata, { TYPE_OBJECT, TYPE_ARRAY, TYPE_USER } from "./metadata";
+import metadata, {
+  OBJECT_KEY_TYPES,
+  TYPE_OBJECT,
+  TYPE_ARRAY,
+  TYPE_USER
+} from "./metadata";
 import { findLocalIndex, findGlobalIndex } from "./introspection";
 
-export const getMetaType = (ctx: Context, token: TokenType): MetadataType => {
+import type { TokenType, NodeType, MetadataType } from "../flow/types";
+import type Context from "./context";
+
+export const nodeMetaType = (targetNode: NodeType): ?MetadataType =>
+  metadata.get(TYPE_USER, targetNode) || metadata.get(TYPE_ARRAY, targetNode);
+
+export const getMetaType = (ctx: Context, token: TokenType): ?MetadataType => {
   const localIndex = findLocalIndex(ctx, token);
   const globalIndex = findGlobalIndex(ctx, token);
 
@@ -26,17 +34,7 @@ export const getMetaType = (ctx: Context, token: TokenType): MetadataType => {
 
   // Get the meta-type of our target, it should be either an array or a user-defined
   // object type. These types are indexable.
-  const metaType =
-    metadata.get(TYPE_USER, targetNode) || metadata.get(TYPE_ARRAY, targetNode);
-
-  // Don't allow non-indexable variables with subscripts
-  if (metaType == null) {
-    throw ctx.syntaxError(
-      `Array subscript on a non-array variable ${token.value}`
-    );
-  }
-
-  return metaType;
+  return nodeMetaType(targetNode);
 };
 
 // This is shared logic across different memory-store/load operations
@@ -56,22 +54,29 @@ export const patchStringSubscript = (
     const absoluteByteOffset = byteOffsetsByKey[key];
     return [
       params[0],
-      ctx.makeNode({ value: absoluteByteOffset }, Syntax.Constant)
+      ctx.makeNode({ value: absoluteByteOffset, type: "i32" }, Syntax.Constant)
     ];
   }
   return params;
 };
 
-export default function arraySubscript(ctx: Context): NodeType {
-  const node = ctx.startNode();
-  const metaType = getMetaType(ctx, ctx.token);
+export const subscriptFromNode = (
+  ctx: Context,
+  node: NodeType,
+  metaType: MetadataType
+): NodeType => {
+  if (metaType.type === TYPE_USER) {
+    const objectKeyTypeMap = metadata.get(OBJECT_KEY_TYPES, metaType.payload);
+    if (objectKeyTypeMap) {
+      node.type = objectKeyTypeMap.payload[node.params[1].value];
+    }
+  } else {
+    node.type = metaType.payload;
+  }
 
-  node.id = ctx.expect(null, Syntax.Identifier).value;
-  ctx.expect(["["]);
+  node.params = patchStringSubscript(ctx, metaType, node.params);
 
-  const expr = expression(ctx);
-  expr.params = patchStringSubscript(ctx, metaType, expr.params);
-  node.params.push(expr);
+  node.meta.push(metaType);
 
   return ctx.endNode(node, Syntax.ArraySubscript);
-}
+};

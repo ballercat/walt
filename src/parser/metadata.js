@@ -7,6 +7,7 @@ import invariant from "invariant";
 // flexible api.
 export const FUNCTION_INDEX = "function/index";
 export const POSTFIX = "operator/postfix";
+export const PREFIX = "operator/prefix";
 export const LOCAL_INDEX = "local/index";
 export const GLOBAL_INDEX = "global/index";
 export const TABLE_INDEX = "table/index";
@@ -14,6 +15,9 @@ export const TYPE_CONST = "type/const";
 export const TYPE_ARRAY = "type/array";
 export const TYPE_USER = "type/user";
 export const TYPE_OBJECT = "type/object";
+export const OBJECT_SIZE = "object/size";
+export const TYPE_CAST = "type/cast";
+export const OBJECT_KEY_TYPES = "object/key-types";
 
 export const make = (payload: any, type: string) => ({
   type,
@@ -52,9 +56,14 @@ export const tableIndex = (payload: any): Metadata => ({
   type: TABLE_INDEX
 });
 
-export const postfix = (payload: any): Metadata => ({
-  payload,
+export const postfix = (): Metadata => ({
+  payload: true,
   type: POSTFIX
+});
+
+export const prefix = (): Metadata => ({
+  payload: true,
+  type: PREFIX
 });
 
 export const userType = (payload: any): Metadata => ({
@@ -67,8 +76,26 @@ export const objectType = (payload: any): Metadata => ({
   type: TYPE_OBJECT
 });
 
-export const array = (): Metadata => ({ payload: true, type: TYPE_ARRAY });
+export const objectSize = (payload: any): Metadata => ({
+  payload,
+  type: OBJECT_SIZE
+});
+
+export const array = (payload: any): Metadata => ({
+  payload,
+  type: TYPE_ARRAY
+});
 export const constant = (): Metadata => ({ payload: true, type: TYPE_CONST });
+
+export const typeCast = (payload: { to: string, from: string }) => ({
+  payload,
+  type: TYPE_CAST
+});
+
+export const objectKeyTypes = (payload: { [string]: string }) => ({
+  payload,
+  type: OBJECT_KEY_TYPES
+});
 
 const metadata = {
   make,
@@ -79,6 +106,7 @@ const metadata = {
   globalIndex,
   userType,
   tableIndex,
+  objectSize,
   array,
   constant,
   POSTFIX,
@@ -88,7 +116,8 @@ const metadata = {
   TYPE_ARRAY,
   TYPE_CONST,
   TYPE_USER,
-  TYPE_OBJECT
+  TYPE_OBJECT,
+  OBJECT_SIZE
 };
 
 export default metadata;

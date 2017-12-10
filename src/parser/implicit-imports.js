@@ -1,5 +1,5 @@
 // @flow
-import Context from "./context";
+import type Context from "./context";
 import { EXTERN_TABLE } from "../emitter/external_kind";
 import generateElement from "../generator/element";
 import generateImport from "../generator/import";
