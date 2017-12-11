@@ -241,7 +241,7 @@ someOtherFunction(foo); // (i32) => void
 
 Every WAlt file is compiled into a stand alone module. `module` is a reserved keyword
 
-### Improting WAlt from JavaScript
+### Importing WAlt from JavaScript
 
 With an implemented loader it will be possible to pipe the output to `wasm-loader` allowing for code like this:
 
