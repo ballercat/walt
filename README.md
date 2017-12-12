@@ -141,7 +141,7 @@ WAlt will support C99 style comments. Inline comments are supported currently ('
 
 Everything in WAlt as in WebAssembly must have a Type. Function are no exception to the rule. When a function is declared it's type is hoisted by the compiler behind the scenes. A function type is a list of parameters and a result type.
 
-:unicorn: Currently a custom functon type syntax is not implemented, but is required in order to use custom-function imports.
+:unicorn: Currently a custom function type syntax is not implemented, but is required in order to use custom-function imports.
 ```javascript
 import { log: Log } from 'console';
 type Log = (i32) => void
