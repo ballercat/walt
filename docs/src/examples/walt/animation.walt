@@ -22,7 +22,7 @@ let width: i32 = 0;
 let height: i32 = 0;
 export function onInit(totalParticles: i32): void {
   width = 500;
-  height = 300;
+  height = 400;
   total = totalParticles;
 
   let particle: ParticleType = 0;
