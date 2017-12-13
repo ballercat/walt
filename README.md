@@ -38,7 +38,7 @@ should be able to edit WebAssembly as easily as any other systems programmer.
 Provide a **thin layer** of syntax sugar on top of `.wat` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
 the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a brand new language.
 
-Here is what an example of a `.walt` module which exports a recursive fibonacci function looks like:
+Here is what an example of a `.walt` module which exports a recursive Fibonacci function looks like:
 
 ```js
 export function fibonacci(n: i32): i32 {
@@ -94,7 +94,7 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [x] Arrays
   * [x] Memory
   * [x] Custom _Object_ Types
-* Emiter - WIP
+* Emitter - WIP
   * [x] ~Exports~
   * [x] ~Functions~
   * [x] ~Types - wasm built ins(i32/f32)~
@@ -126,7 +126,7 @@ All s-expression-syntax words are reserved and can be written directly into `.wa
 
 ## Syntax
 
-Initial gramar definition is provided in the `/docs/gramar.md`
+Initial grammar definition is provided in the `/docs/gramar.md`
 
 ### Statements and Expressions
 
@@ -146,7 +146,7 @@ Everything in WAlt as in WebAssembly must have a Type. Function are no exception
 import { log: Log } from 'console';
 type Log = (i32) => void
 ```
-:unicorn: **Arror Functions**. _Might be implemented._
+:unicorn: **Arrow Functions**. _Might be implemented._
 
 ### Function imports and pointers
 
