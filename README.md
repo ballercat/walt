@@ -126,11 +126,11 @@ All s-expression-syntax words are reserved and can be written directly into `.wa
 
 ## Syntax
 
-Initial grammar definition is provided in the `/docs/gramar.md`
+Initial grammar definition is provided in the `/docs/grammar.md`
 
 ### Statements and Expressions
 
-WAlt splits its syntax into statements and expressions(like JavaScript).
+WAlt splits its syntax into statements and expressions (like JavaScript).
 
 ### Comments
 
