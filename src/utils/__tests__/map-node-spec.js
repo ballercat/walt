@@ -21,3 +21,18 @@ test("mapping a node results in a new node", t => {
 
   t.not(node, newNode);
 });
+
+test("wildcards", t => {
+  const node = JSON.parse(mockNodeString);
+
+  const newNode = mapNode({
+    "*": n => ({ ...n })
+  })(node);
+
+  t.not(node, newNode);
+});
+
+test("null nodes", t => {
+  const newNode = mapNode({})(null);
+  t.is(null, newNode);
+});

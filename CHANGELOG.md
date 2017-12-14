@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.1]
+
+### Added
+
+- Unary (-) operator (#6)
+
+### Changed
+
+- Animation demo to use unary(-) and pointers
+
+### Fixed
+
+- Object pointer parsing in Function arguments
+- Animation demo, missing types
+
 ## [0.2.0]
 
 ### Added

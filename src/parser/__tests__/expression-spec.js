@@ -115,3 +115,39 @@ test("array subscripts on float variables", t => {
   const node = expression(ctx);
   t.snapshot(node);
 });
+
+test("unary negation, simple", t => {
+  const ctx = mockContext("-1");
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("unary negation, array subscript", t => {
+  const ctx = mockContext("x[0] = -x[0];");
+  ctx.func = {
+    locals: [
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] }
+    ]
+  };
+  t.snapshot(printNode(expression(ctx)));
+});
+
+test("unary negation, superfluous plus operator", t => {
+  const ctx = mockContext("2 + - 1");
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("unary negation, does not break math", t => {
+  const ctx = mockContext("2 + (2 - 1)");
+  const node = expression(ctx);
+  t.snapshot(node);
+});
+
+test("unary negation, variables in expressions", t => {
+  const ctx = Object.assign(mockContext("-x + 2 * 3"), {
+    globals: [{ id: "x", type: "f32" }]
+  });
+  const node = expression(ctx);
+  t.snapshot(node);
+});

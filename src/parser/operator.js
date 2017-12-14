@@ -2,7 +2,10 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import functionCall from "./function-call";
-import { balanceTypesInMathExpression } from "./patch-typecasts";
+import {
+  patchUnaryExpression,
+  balanceTypesInMathExpression
+} from "./patch-typecasts";
 import { subscriptFromNode, getMetaType } from "./array-subscript";
 import type { Token, NodeType } from "../flow/types";
 
@@ -30,6 +33,25 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
 
   return balanceTypesInMathExpression(ctx.endNode(node, Type));
 }
+
+const unary = (ctx: Context, op: Token, params: NodeType[]) => {
+  const [target] = params;
+  return {
+    ...target,
+    Type: Syntax.BinaryExpression,
+    value: "-",
+    params: [
+      {
+        ...target,
+        value: "0",
+        Type: Syntax.Constant,
+        params: [],
+        meta: []
+      },
+      target
+    ]
+  };
+};
 
 function objectLiteral(ctx: Context, op: Token, params: NodeType[]): NodeType {
   const node = ctx.startNode(op);
@@ -68,7 +90,8 @@ const sequence = (ctx: Context, op: Token, params: NodeType[]) => {
 };
 
 // Abstraction for handling operations
-const operator = (ctx: Context, op: Token, operands: NodeType[]) => {
+const operator = (ctx: Context, operators: Token[], operands: NodeType[]) => {
+  const op = operators.pop();
   switch (op.value) {
     case "?":
       return ternary(ctx, op, operands.splice(-2));
@@ -76,9 +99,12 @@ const operator = (ctx: Context, op: Token, operands: NodeType[]) => {
       return sequence(ctx, op, operands.slice(-2));
     case "{":
       return objectLiteral(ctx, op, operands.splice(-1));
+    case "--":
+      return unary(ctx, op, operands.splice(-1));
     default:
-      if (op.type === Syntax.FunctionCall)
+      if (op.type === Syntax.FunctionCall) {
         return functionCall(ctx, op, operands);
+      }
       return binary(ctx, op, operands.splice(-2));
   }
 };

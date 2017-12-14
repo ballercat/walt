@@ -12,7 +12,7 @@ const returnStatement = ctx => {
   // in the syntax it's not necessary to define the type since we can infer it here
   if (expr.type && ctx.func.result !== expr.type)
     throw ctx.syntaxError(
-      `Return type mismatch ${expr.type} ${ctx.func.result}`
+      `Return type mismatch expected ${ctx.func.result}, got ${expr.type}`
     );
   else if (!expr.type && ctx.func.result) expr.type = ctx.func.result;
 

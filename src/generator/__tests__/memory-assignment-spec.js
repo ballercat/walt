@@ -8,6 +8,17 @@ import {
   OBJECT_KEY_TYPES
 } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
+import printNode from "../../utils/print-node";
+
+test("unary negation, arrays", t => {
+  const ctx = mockContext("x[0] = ((x * 7 % 200) - 100) / 100.0");
+  ctx.func = {
+    locals: [
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] }
+    ]
+  };
+  t.snapshot(parseStatement(ctx));
+});
 
 test("generates correct offsets for arrays", t => {
   const ctx = mockContext(`x[1] = 42;`);
