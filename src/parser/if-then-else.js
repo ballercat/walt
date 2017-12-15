@@ -26,7 +26,12 @@ const ifThenElse = (ctx: Context) => {
 
     ctx.expect(["}"]);
 
-    if (ctx.eat(["else"])) {
+    while (ctx.eat(["else"])) {
+      if (ctx.eat(["if"])) {
+        ctx.expect(["("]);
+        node.expr = expression(ctx, "i32");
+        ctx.expect([")"]);
+      }
       ctx.expect(["{"]);
       while (ctx.token && ctx.token.value !== "}") {
         stmt = statement(ctx);
