@@ -5,7 +5,7 @@ src/
   - index.js --> the "compiler"
   - tokenizer/ --> reads strings returns tokens
   - parser/  --> reads tokens, returns ast
-  - generator/ --> generates IR for emiter
+  - generator/ --> generates IR for emitter
   - emitter/ --> reads ast, returns Web Assembly binary encoding
     - section/ --> contains mini-emitters for wasm binary sections
   - utils/
