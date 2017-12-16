@@ -58,13 +58,29 @@ test("ternary", t =>
 
 test("else if statement", t =>
   compileAndRun(`
-  export function test(x: i32): i32 {
-   if (x == 0) {
-      return 2;
+  export function test(): i32 {
+    let x: i32 = 1;
+    let y: i32 = 0;
+    if (x == 0) {
+      y = 2;
     } else if (x == 1) {
-       return 4;
+      y = 4;
     } else {
-      return 1;
+      y = 1;
     }
-    test(1);
+    return y;
+  }`).then(outputIs(t, 4)));
+
+  test("else if statement no {}", t =>
+  compileAndRun(`
+  export function test(): i32 {
+    let x: i32 = 1;
+    let y: i32 = 0;
+    if (x == 0)
+      y = 2;
+    else if (x == 1)
+      y = 4;
+    else
+      y = 1;
+    return y;
   }`).then(outputIs(t, 4)));

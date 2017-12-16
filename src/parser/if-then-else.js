@@ -4,46 +4,54 @@ import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
 
+// push statement based on then/else branch
+const pushStatement = (node, isThenBranch, stmt) => {
+  if (!stmt) return;
+  if (isThenBranch) return node.then.push(stmt);
+  return node.else.push(stmt);
+}
+
+const doIfExpression = (node, ctx) => {
+  ctx.expect(["("]);
+  node.expr = expression(ctx, "i32");
+  ctx.expect([")"]);
+}
+
+// push statements while taking into consideration having brackets or not
+const doStatement = (node, isThenBranch, ctx) => {
+  // maybe a curly brace or not
+  if (ctx.eat(["{"])) {
+    while (ctx.token && ctx.token.value !== "}") {
+      pushStatement(node, isThenBranch, statement(ctx));
+    }
+    ctx.expect(["}"]);
+  } else {
+    pushStatement(node, isThenBranch, statement(ctx));
+    ctx.expect([";"]);
+  }
+}
+
 const ifThenElse = (ctx: Context) => {
   const node = {
     ...ctx.startNode(ctx.token),
     then: [],
     else: []
   };
+  let isThenBranch = true;
+
   ctx.eat(["if"]);
   // First operand is the expression
-  ctx.expect(["("]);
-  node.expr = expression(ctx, "i32");
-  ctx.expect([")"]);
+  doIfExpression(node, ctx);
+  doStatement(node, isThenBranch, ctx);
 
-  // maybe a curly brace or not
-  if (ctx.eat(["{"])) {
-    let stmt = null;
-    while (ctx.token && ctx.token.value !== "}") {
-      stmt = statement(ctx);
-      if (stmt) node.then.push(stmt);
+  while (ctx.eat(["else"])) {
+    isThenBranch = false;
+    // maybe another if statement
+    if (ctx.eat(["if"])) {
+      isThenBranch = true;
+      doIfExpression(node, ctx);
     }
-
-    ctx.expect(["}"]);
-
-    while (ctx.eat(["else"])) {
-      if (ctx.eat(["if"])) {
-        ctx.expect(["("]);
-        node.expr = expression(ctx, "i32");
-        ctx.expect([")"]);
-      }
-      ctx.expect(["{"]);
-      while (ctx.token && ctx.token.value !== "}") {
-        stmt = statement(ctx);
-        if (stmt) node.else.push(stmt);
-      }
-      ctx.expect(["}"]);
-    }
-  } else {
-    // parse single statements only
-    node.then.push(statement(ctx));
-    ctx.expect([";"]);
-    if (ctx.eat(["else"])) node.else.push(statement(ctx));
+    doStatement(node, isThenBranch, ctx);
   }
 
   return ctx.endNode(node, Syntax.IfThenElse);
