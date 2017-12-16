@@ -14,6 +14,7 @@
   "plugins": [
     "flowtype"
   ],
+
   "parserOptions": {
     "sourceType": "module",
     "ecmaFeatures": {
@@ -21,7 +22,72 @@
     }
   },
 
+  "settings": {
+    "flowtype": {
+      "onlyFilesWithFlowAnnotation": false
+    }
+  },
+
+
   "rules": {
+    ////////// Flow //////////
+
+    "flowtype/boolean-style": [
+      0,
+      "boolean"
+    ],
+    "flowtype/define-flow-type": 0,
+    "flowtype/delimiter-dangle": [
+      0,
+      "never"
+    ],
+    "flowtype/generic-spacing": [
+      0,
+      "never"
+    ],
+    "flowtype/no-primitive-constructor-types": 0,
+    "flowtype/no-types-missing-file-annotation": 0,
+    "flowtype/no-weak-types": 0,
+    "flowtype/object-type-delimiter": [
+      0,
+      "comma"
+    ],
+    "flowtype/require-parameter-type": 0,
+    "flowtype/require-return-type": [
+      0,
+      "always",
+      {
+        "annotateUndefined": "never"
+      }
+    ],
+    "flowtype/require-valid-file-annotation": 0,
+    "flowtype/semi": [
+      0,
+      "always"
+    ],
+    "flowtype/space-after-type-colon": [
+      0,
+      "always"
+    ],
+    "flowtype/space-before-generic-bracket": [
+      0,
+      "never"
+    ],
+    "flowtype/space-before-type-colon": [
+      0,
+      "never"
+    ],
+    "flowtype/type-id-match": [
+      0,
+      "^([A-Z][a-z0-9]+)+Type$"
+    ],
+    "flowtype/union-intersection-spacing": [
+      0,
+      "always"
+    ],
+    "flowtype/use-flow-type": 0,
+    "flowtype/valid-syntax": 0,
+
     ////////// Possible Errors //////////
 
     "comma-dangle": 1,         // disallow trailing commas in object literals
