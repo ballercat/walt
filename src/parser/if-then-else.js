@@ -4,47 +4,48 @@ import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
 
+const doIfExpression = (node, ctx: Context) => {
+  ctx.expect(["("]);
+  node.expr = expression(ctx, "i32");
+  ctx.expect([")"]);
+}
+
+// push statements while taking into consideration having brackets or not
+const doStatement = (ctx: Context) => {
+  const statements = [];
+  // maybe a curly brace or not
+  if (ctx.eat(["{"])) {
+    while (ctx.token && ctx.token.value !== "}") {
+      statements.push(statement(ctx));
+    }
+    ctx.expect(["}"]);
+  } else {
+    statements.push(statement(ctx));
+    ctx.expect([";"]);
+  }
+  return statements.filter(stmt => stmt != null);
+}
+
 const ifThenElse = (ctx: Context) => {
   const node = {
     ...ctx.startNode(ctx.token),
     then: [],
     else: []
   };
+
   ctx.eat(["if"]);
   // First operand is the expression
-  ctx.expect(["("]);
-  node.expr = expression(ctx, "i32");
-  ctx.expect([")"]);
+  doIfExpression(node, ctx);
+  node.then = doStatement(ctx);
 
-  // maybe a curly brace or not
-  if (ctx.eat(["{"])) {
-    let stmt = null;
-    while (ctx.token && ctx.token.value !== "}") {
-      stmt = statement(ctx);
-      if (stmt) {
-node.then.push(stmt);
-}
+  while (ctx.eat(["else"])) {
+    // maybe another if statement
+    if (ctx.eat(["if"])) {
+      doIfExpression(node, ctx);
+      node.then = [...node.then, ...doStatement(ctx)];
+    } else {
+      node.else = [...node.else, ...doStatement(ctx)];
     }
-
-    ctx.expect(["}"]);
-
-    if (ctx.eat(["else"])) {
-      ctx.expect(["{"]);
-      while (ctx.token && ctx.token.value !== "}") {
-        stmt = statement(ctx);
-        if (stmt) {
-node.else.push(stmt);
-}
-      }
-      ctx.expect(["}"]);
-    }
-  } else {
-    // parse single statements only
-    node.then.push(statement(ctx));
-    ctx.expect([";"]);
-    if (ctx.eat(["else"])) {
-node.else.push(statement(ctx));
-}
   }
 
   return ctx.endNode(node, Syntax.IfThenElse);
