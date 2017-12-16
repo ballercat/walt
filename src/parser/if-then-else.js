@@ -4,31 +4,26 @@ import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
 
-// push statement based on then/else branch
-const pushStatement = (node, isThenBranch, stmt) => {
-  if (!stmt) return;
-  if (isThenBranch) return node.then.push(stmt);
-  return node.else.push(stmt);
-}
-
-const doIfExpression = (node, ctx) => {
+const doIfExpression = (node, ctx: Context) => {
   ctx.expect(["("]);
   node.expr = expression(ctx, "i32");
   ctx.expect([")"]);
 }
 
 // push statements while taking into consideration having brackets or not
-const doStatement = (node, isThenBranch, ctx) => {
+const doStatement = (ctx: Context) => {
+  const statements = [];
   // maybe a curly brace or not
   if (ctx.eat(["{"])) {
     while (ctx.token && ctx.token.value !== "}") {
-      pushStatement(node, isThenBranch, statement(ctx));
+      statements.push(statement(ctx));
     }
     ctx.expect(["}"]);
   } else {
-    pushStatement(node, isThenBranch, statement(ctx));
+    statements.push(statement(ctx));
     ctx.expect([";"]);
   }
+  return statements.filter(stmt => stmt != null);
 }
 
 const ifThenElse = (ctx: Context) => {
@@ -37,21 +32,20 @@ const ifThenElse = (ctx: Context) => {
     then: [],
     else: []
   };
-  let isThenBranch = true;
 
   ctx.eat(["if"]);
   // First operand is the expression
   doIfExpression(node, ctx);
-  doStatement(node, isThenBranch, ctx);
+  node.then = doStatement(ctx);
 
   while (ctx.eat(["else"])) {
-    isThenBranch = false;
     // maybe another if statement
     if (ctx.eat(["if"])) {
-      isThenBranch = true;
       doIfExpression(node, ctx);
+      node.then = [...node.then, ...doStatement(ctx)];
+    } else {
+      node.else = [...node.else, ...doStatement(ctx)];
     }
-    doStatement(node, isThenBranch, ctx);
   }
 
   return ctx.endNode(node, Syntax.IfThenElse);
