@@ -1,3 +1,4 @@
+//@flow
 import { u8, i32, f32, f64 } from "wasm-types";
 import { varint32, varuint32, varint7 } from "../numbers";
 import { getTypeString } from "../value_type";
@@ -77,7 +78,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
   stream.push(u8, opcode.End.code, "end");
 };
 
-const emit = functions => {
+const emit = (functions: any[]) => {
   // do stuff with ast
   const stream = new OutputStream();
   stream.push(varuint32, functions.length, "function count");

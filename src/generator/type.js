@@ -1,4 +1,4 @@
-//@flow
+// @flow
 /**
  * Generate an Intermediate version for a WebAssembly function type
  **/
@@ -33,8 +33,8 @@ export const generateImplicitFunctionType = ({
 }: NodeType): IntermediateTypeDefinitionType => {
   return {
     params: params.map(({ type }) => getType(type)),
-    result: result && result !== "void" ? getType(result) : null,
-    id
+    result: result && result !== "void" ? getType(result.type) : null,
+    id: id || ""
   };
 };
 

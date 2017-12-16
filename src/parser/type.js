@@ -36,7 +36,7 @@ export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
 
 export const getByteOffsetsAndSize = (
   objectLiteralNode: NodeType
-): [{ [string]: number }, number] => {
+): [{ [string]: number }, number, { [string]: string }] => {
   const offsetsByKey = {};
   const keyTypeMap = {};
   let size = 0;

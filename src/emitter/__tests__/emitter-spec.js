@@ -8,5 +8,5 @@ test('emiter, emits valid WebAssembly instance', t => {
   ).then(({ module, instance }) => {
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
-  })
+  });
 });

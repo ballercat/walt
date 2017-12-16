@@ -1,3 +1,4 @@
+// @flow
 import type { NodeType } from "../../flow/types";
 
 export type RawOpcodeType = {
@@ -20,9 +21,9 @@ export type IntermediateFunctionType = {
 export type MapSyntaxType = IntermediateFunctionType => NodeType => IntermediateOpcodeType[];
 
 export type IntermediateTypeDefinitionType = {
-  id: number,
+  id: string,
   params: number[],
-  result: number
+  result: ?number
 };
 
 export type GeneratorType = (

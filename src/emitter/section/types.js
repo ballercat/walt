@@ -1,6 +1,8 @@
+// @flow
 import { FUNC, getTypeString } from "../value_type";
 import { varuint32, varint7, varint1 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
+import type { Node } from '../../flow/types';
 
 const emitType = (stream, { params, result }) => {
   // as of wasm 1.0 spec types are only of from === func
@@ -15,7 +17,7 @@ const emitType = (stream, { params, result }) => {
   }
 };
 
-const emit = types => {
+const emit = (types: any[]) => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, "count");
 

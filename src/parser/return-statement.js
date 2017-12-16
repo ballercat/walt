@@ -1,7 +1,9 @@
+// @flow
 import Syntax from "../Syntax";
 import expression from "./expression";
+import Context from './context';
 
-const returnStatement = ctx => {
+const returnStatement = (ctx: Context) => {
   const node = ctx.startNode();
   if (!ctx.func)
     throw ctx.syntaxError("Return statement is only valid inside a function");

@@ -1,3 +1,4 @@
+// @flow
 import token from "../token";
 import punctuator from "../punctuator";
 import constant from "../constant";

@@ -1,4 +1,6 @@
 {
+// "extends": "plugin:flowtype/recommended",
+
   "env": {
     "browser": true,
     "es6": true,
@@ -12,7 +14,7 @@
 
   "parser": "babel-eslint",
   "plugins": [
-    "flowtype"
+    "flowtype-errors"
   ],
   "parserOptions": {
     "sourceType": "module",
@@ -71,7 +73,7 @@
     "no-eval": 0,               // disallow use of eval()
     "no-extend-native": 0,      // disallow adding to native types
     "no-extra-bind": 0,         // disallow unnecessary function binding
-    "no-fallthrough": 0,        // disallow fallthrough of case statements
+    "no-fallthrough": 1,        // disallow fallthrough of case statements
     "no-floating-decimal": 0,   // disallow the use of leading or trailing decimal points in numeric literals (off by default)
     "no-implied-eval": 0,       // disallow use of eval()-like methods
     "no-iterator": 0,           // disallow usage of __iterator__ property
@@ -117,7 +119,7 @@
     "no-label-var": 0,                // disallow labels that share a name with a variable
     "no-shadow": 1,                   // disallow declaration of variables already declared in the outer scope
     "no-shadow-restricted-names": 0,  // disallow shadowing of names such as arguments
-    "no-undef": 1,                    // disallow use of undeclared variables unless mentioned in a /*global */ block
+    "no-undef": 2,                    // disallow use of undeclared variables unless mentioned in a /*global */ block
     "no-undef-init": 0,               // disallow use of undefined when initializing variables
     "no-undefined": 0,                // disallow use of undefined variable (off by default)
     "no-unused-vars": 1,              // disallow declaration of variables that are not used in the code
@@ -156,7 +158,7 @@
     "no-multiple-empty-lines": 0,   // disallow multiple empty lines (off by default)
     "no-nested-ternary": 0,         // disallow nested ternary expressions (off by default)
     "no-new-object": 0,             // disallow use of the Object constructor
-    "no-space-before-semi": 0,      // disallow space before semicolon
+    "semi-spacing": 2,              // disallow space before semicolon
     "no-spaced-func": 0,            // disallow space between function identifier and application
     "no-ternary": 0,                // disallow the use of ternary operators (off by default)
     "no-trailing-spaces": 0,        // disallow trailing whitespace at the end of lines
@@ -167,7 +169,7 @@
     "padded-blocks": 0,             // enforce padding within blocks (off by default)
     "quote-props": 0,               // require quotes around object literal property names (off by default)
     "quotes": 0,                    // specify whether double or single quotes should be used
-    "semi": 0,                      // require or disallow use of semicolons instead of ASI
+    "semi": 2,                      // require or disallow use of semicolons instead of ASI
     "sort-vars": 0,                 // sort variables within the same declaration block (off by default)
     "space-after-function-name": 0, // require a space after function names (off by default)
     "space-after-keywords": 0,      // require a space after certain keywords (off by default)
@@ -194,6 +196,12 @@
     "max-params": 0,      // limits the number of parameters that can be used in the function declaration. (off by default)
     "max-statements": 0,  // specify the maximum number of statement allowed in a function (off by default)
     "no-bitwise": 0,      // disallow use of bitwise operators (off by default)
-    "no-plusplus": 0      // disallow use of unary operators, ++ and -- (off by default)
+    "no-plusplus": 0,     // disallow use of unary operators, ++ and -- (off by default)
+
+
+    ////////// Flow //////////
+
+    "flowtype-errors/show-errors": 2
+
   }
 }

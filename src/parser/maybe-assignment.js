@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import maybeIdentifier from "./maybe-identifier";
 import memoryStore from "./memory-store";

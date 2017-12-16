@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 // Tokens
 export type Marker = {

@@ -1,3 +1,4 @@
+// @flow
 import Syntax from "../Syntax";
 import { generateImplicitFunctionType } from "../generator/type";
 import generateCode from "../generator";
@@ -6,10 +7,11 @@ import statement from "./statement";
 import declaration from "./declaration";
 import { findUserTypeIndex } from "./introspection";
 import metadata, { make, FUNCTION_INDEX } from "./metadata";
+import Context from './context';
 
 const last = list => list[list.length - 1];
 
-const param = ctx => {
+const param = (ctx: Context) => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
@@ -49,7 +51,7 @@ const paramList = ctx => {
   return list;
 };
 
-const maybeFunctionDeclaration = ctx => {
+const maybeFunctionDeclaration = (ctx: Context) => {
   const node = ctx.startNode();
   if (!ctx.eat(["function"])) return declaration(ctx);
 

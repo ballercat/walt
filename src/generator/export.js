@@ -1,8 +1,11 @@
+// @flow
 import { get, GLOBAL_INDEX, FUNCTION_INDEX } from "../parser/metadata";
 import { EXTERN_GLOBAL, EXTERN_FUNCTION } from "../emitter/external_kind";
 import invariant from "invariant";
+import type { Node } from '../flow/types';
+import type { GeneratorType } from './flow/types';
 
-export const generateExport = node => {
+export const generateExport: GeneratorType = node => {
   if (node && !node.func && node.params.length) {
     return {
       index: get(GLOBAL_INDEX, node).payload,

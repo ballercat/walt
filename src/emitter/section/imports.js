@@ -1,3 +1,4 @@
+// @flow
 import OutputStream from "../../utils/output-stream";
 import { u8 } from "wasm-types";
 import { varint1, varuint32 } from "../numbers";
@@ -10,7 +11,7 @@ import {
 } from "../external_kind";
 import { emitString } from "../string";
 
-const emit = entries => {
+const emit = (entries: any[]) => {
   const payload = new OutputStream().push(
     varuint32,
     entries.length,

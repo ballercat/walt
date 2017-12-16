@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import type { NodeType } from "../flow/types";
 
 type WalkerType = (node: NodeType) => NodeType;

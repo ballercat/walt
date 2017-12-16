@@ -1,3 +1,4 @@
+// @flow
 import Stream from "../utils/stream";
 import punctuator from "./punctuator";
 import constant from "./constant";
@@ -8,9 +9,14 @@ import comments from "./comments";
 import type from "./type";
 
 class Tokenizer {
+  stream: Stream;
+  tokens: Array<any>;
+  pos: number;
+  parsers: Array<Function>;
+  
   constructor(
-    stream,
-    parsers = [
+    stream: Stream,
+    parsers: Array<Function> = [
       punctuator,
       constant,
       identifier,
@@ -70,7 +76,7 @@ class Tokenizer {
     return this.tokens[this.pos++];
   }
 
-  match(char, parsers) {
+  match(char: string, parsers: Array<Function>) {
     if (char == null) return parsers;
 
     return parsers.map(parse => parse(char)).filter(p => p);
@@ -80,9 +86,11 @@ class Tokenizer {
    * Match a particular non-whitespace value to a token
    *
    * @param {String} value Value to match
+   * @param {[Function]} parsers A list of parsers to map against
+   * @param {Object} token
    * @return {Object} token
    */
-  token(value, parsers, token = { type: "unknown", value }) {
+  token(value: string, parsers: Array<Function>, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
@@ -114,7 +122,7 @@ class Tokenizer {
    * @param {String} reason
    * @throws
    */
-  die(reason) {
+  die(reason: string) {
     throw new Error(reason);
   }
 }

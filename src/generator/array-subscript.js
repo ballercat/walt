@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import invariant from "invariant";
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";

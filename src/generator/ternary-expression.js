@@ -1,9 +1,12 @@
+// @flow
 import mapSyntax from "./map-syntax";
 import { generateValueType } from "./utils";
 import mergeBlock from "./merge-block";
 import opcode, { opcodeFromOperator } from "../emitter/opcode";
+import type { Node } from '../flow/types';
+import type { GeneratorType } from './flow/types';
 
-const generateTernary = (node, parent) => {
+const generateTernary: GeneratorType = (node, parent) => {
   // TernaryExpression has a simple param layout of 2(TWO) total parameters.
   // It's a single param for the boolean check followed by
   // another param which is a Pair Node containing the 2(TWO) param results of

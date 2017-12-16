@@ -1,3 +1,4 @@
+// @flow
 const Syntax = {
   // Syntax Nodes
   Keyword: "Keyword",
@@ -31,7 +32,6 @@ const Syntax = {
   ObjectLiteral: "ObjectLiteral",
   Pair: "Pair",
   TypeCast: "TypeCast",
-  UnaryExpression: "UnaryExpression",
   Break: "Break",
 
   Noop: "Noop",

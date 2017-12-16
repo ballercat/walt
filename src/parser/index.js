@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import statement from "./statement";
 import Context from "./context";
 import type TokenStream from "../utils/token-stream";

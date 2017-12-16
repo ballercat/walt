@@ -1,3 +1,4 @@
+// @flow
 import { u32 } from "wasm-types";
 import OutputStream from "../utils/output-stream";
 

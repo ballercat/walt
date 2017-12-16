@@ -60,12 +60,9 @@ export const getType = (str: ?string): string => {
 };
 export const generateValueType = (
   node: NodeType
-): { mutable: number, type: string } => {
-  const value = {
-    mutable: get(TYPE_CONST, node) ? 0 : 1,
-    type: getType(node.type)
-  };
-  return value;
-};
+): { mutable: number, type: string } => ({
+  mutable: get(TYPE_CONST, node) ? 0 : 1,
+  type: getType(node.type)
+});
 export const setInScope = scopeOperation("Set");
 export const getInScope = scopeOperation("Get");

@@ -101,7 +101,8 @@ export const balanceTypesInMathExpression = (
         printNode(paramNode)
       );
 
-      if (paramNode.type !== type) {
+      if (paramNode.type !== type && type != null) {
+        // last check is for flow
         return {
           ...paramNode,
           type,

@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import generateFunctionCall from "./function-call";
 import generateIndirectFunctionCall from "./indirect-function-call";
 import generateBinaryExpression from "./binary-expression";

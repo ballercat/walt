@@ -1,3 +1,4 @@
+// @flow
 import declaration from "./declaration";
 import maybeFunctionDeclaration from "./maybe-function-declaration";
 import _export from "./export";
@@ -9,8 +10,9 @@ import whileLoop from "./while-loop";
 import returnStatement from "./return-statement";
 import ifThenElse from "./if-then-else";
 import sizeof from "./sizeof";
+import Context from './context';
 
-const keyword = ctx => {
+const keyword = (ctx: Context) => {
   switch (ctx.token.value) {
     case "let":
     case "const":

@@ -1,9 +1,11 @@
-import generateExpression from "./expression";
-import { generateValueType } from "./utils";
-import opcode from "../emitter/opcode";
-import { get, LOCAL_INDEX } from "../parser/metadata";
+// @flow
+import generateExpression from './expression';
+import { generateValueType } from './utils';
+import opcode from '../emitter/opcode';
+import { get, LOCAL_INDEX } from '../parser/metadata';
+import type { GeneratorType } from './flow/types';
 
-const generateDeclaration = (node, parent) => {
+const generateDeclaration: GeneratorType = (node, parent) => {
   let block = [];
   const init = node.params[0];
   if (init) {

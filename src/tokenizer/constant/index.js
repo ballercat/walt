@@ -1,3 +1,4 @@
+// @flow
 import token from "../token";
 import Syntax from "../../Syntax";
 

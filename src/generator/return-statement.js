@@ -1,8 +1,11 @@
+// @flow
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
+import type { Node } from '../flow/types';
+import type { GeneratorType } from './flow/types';
 
-const generateReturn = node => {
+const generateReturn: GeneratorType = node => {
   const parent = { postfix: [] };
   // Postfix in return statement should be a no-op UNLESS it's editing globals
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);

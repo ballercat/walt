@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import opcode from "../emitter/opcode";
 import type { GeneratorType } from "./flow/types";
 const generateTypecast: GeneratorType = () => {

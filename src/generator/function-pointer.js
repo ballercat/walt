@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import opcode from "../emitter/opcode";
 import { get, TABLE_INDEX } from "../parser/metadata";
 import invariant from "invariant";

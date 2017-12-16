@@ -4,12 +4,14 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
-    "test": "nyc ava",
+    "test": "npm run lint && npm run ava",
+    "ava": "nyc ava",
     "tdd": "ava",
     "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
-    "flow": "flow"
+    "flow": "flow",
+    "lint": "eslint src"
   },
   "repository": {
     "type": "git",
@@ -45,7 +47,8 @@
     "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
     "coveralls": "^2.13.1",
-    "eslint-plugin-flowtype": "^2.35.1",
+    "eslint-plugin-flowtype": "^2.40.1",
+    "eslint-plugin-flowtype-errors": "^3.3.6",
     "flow-bin": "^0.54.0",
     "nyc": "^11.1.0",
     "prettier": "^1.7.0",

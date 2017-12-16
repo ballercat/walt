@@ -1,3 +1,4 @@
+// @flow
 /**
  * A very basic trie with functional,recursive search
  */
@@ -16,7 +17,10 @@ const fsearch = node => {
 };
 
 class Trie {
-  constructor (words) {
+  root: any;
+  fsearch: Function;
+  
+  constructor (words: Array<string>) {
     this.root = {
       char: '',
       children: {},
@@ -27,7 +31,7 @@ class Trie {
     this.fsearch = fsearch(this.root);
   }
 
-  add(word) {
+  add(word: string) {
     let current = this.root;
     let char = word.slice(0, 1);
 

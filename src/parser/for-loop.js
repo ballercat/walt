@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import expression from "./expression";
 import statement from "./statement";

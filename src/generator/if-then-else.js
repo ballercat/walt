@@ -1,8 +1,9 @@
-//@flow
+// @flow
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
 import type { GeneratorType } from "./flow/types";
+import type { Node } from '../flow/types';
 
 // probably should be called "generateBranch" and be more generic
 // like handling ternary for example. A lot of shared logic here & ternary

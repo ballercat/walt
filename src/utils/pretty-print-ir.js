@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import type { IntermediateOpcodeType } from "../generator/flow/types";
 
 export default function prettyPrint(IRList: IntermediateOpcodeType[]): string {

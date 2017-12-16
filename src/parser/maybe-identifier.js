@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import meta from "./metadata";
 import { writeFunctionPointer } from "./implicit-imports";

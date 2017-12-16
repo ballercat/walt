@@ -27,5 +27,5 @@ test('compiles imports accurately', t => {
   ).then(({ module, instance }) => {
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
-  })
+  });
 });

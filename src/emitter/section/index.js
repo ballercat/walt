@@ -1,3 +1,4 @@
+// @flow
 import imports from "./imports";
 import exports from "./exports";
 import globals from "./globals";
