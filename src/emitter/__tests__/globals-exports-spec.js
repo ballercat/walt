@@ -1,8 +1,6 @@
 import test from "ava";
-import { u8, get } from "wasm-types";
 import { I32 } from "../value_type";
 import { EXTERN_GLOBAL } from "../external_kind";
-import opcode from "../opcode";
 import emit from "..";
 
 // TODO:
