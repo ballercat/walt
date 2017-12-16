@@ -24,7 +24,9 @@ export const findTypeIndex = (node: Node, ctx: Context): number => {
 
 const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
   let field: any = fields.reduce((memo, f) => {
-    if (memo) return (memo: Object)[f];
+    if (memo) {
+return (memo: Object)[f];
+}
     return memo;
   }, ctx);
 

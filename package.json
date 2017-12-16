@@ -4,7 +4,7 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
-    "validate": "npm run lint && npm run flow",
+    "validate": "npm run lint",
     "test": "nyc ava",
     "tdd": "ava",
     "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
