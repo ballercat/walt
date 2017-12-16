@@ -24,7 +24,7 @@ function compile(buffer) {
   };
   return WebAssembly.instantiate(buffer, { env }).then(result => {
     const exports = result.instance.exports;
-    exports.onInit(1);
+    exports.onInit(30);
 
     let stopped = false;
     function step() {

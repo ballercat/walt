@@ -1,7 +1,7 @@
-const { isNaN, parseInt } = Number;
-const token = require("../token");
-const Syntax = require("../../Syntax");
+import token from "../token";
+import Syntax from "../../Syntax";
 
+const { isNaN, parseInt } = Number;
 const isNumber = char => !isNaN(parseInt(char));
 const isDot = char => char === ".";
 const number = char => (isNumber(char) ? number : null);
@@ -23,4 +23,5 @@ const root = char => {
 };
 
 // TODO: split constants into literals String vs Numbers with Types
-module.exports = token(root, Syntax.Constant);
+// TODO: figure out what above means??
+export default token(root, Syntax.Constant);

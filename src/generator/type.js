@@ -5,6 +5,7 @@
 import invariant from "invariant";
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
+import printNode from "../utils/print-node";
 import type { NodeType } from "../flow/types";
 import { I32, F32, F64, I64 } from "../emitter/value_type";
 import type { IntermediateTypeDefinitionType } from "./flow/types";
@@ -50,7 +51,7 @@ export default function generateType(
   const typeExpression = node.params[0];
   invariant(
     typeExpression && typeExpression.Type === Syntax.BinaryExpression,
-    `Generator: A function type must be of for (<type>, ...) => <type> node: ${JSON.stringify(
+    `Generator: A function type must be of form (<type>, ...) => <type> node: ${printNode(
       node
     )}`
   );

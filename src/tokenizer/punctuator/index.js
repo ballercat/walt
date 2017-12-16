@@ -1,6 +1,6 @@
-const Trie = require("./../../utils/trie");
-const token = require("../token");
-const Syntax = require("../../Syntax");
+import Trie from "./../../utils/trie";
+import token from "../token";
+import Syntax from "../../Syntax";
 
 const supported = [
   "+",
@@ -37,4 +37,4 @@ const supported = [
 ];
 
 const trie = new Trie(supported);
-module.exports = token(trie.fsearch, Syntax.Punctuator, supported);
+export default token(trie.fsearch, Syntax.Punctuator, supported);

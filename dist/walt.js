@@ -188,14 +188,10 @@ var Syntax_1 = Syntax;
 const supported = ["+", "++", "-", "--", "=", "==", "+=", "-=", "=>", "<=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?"];
 
 const trie = new trie$1(supported);
-var index = token(trie.fsearch, Syntax_1.Punctuator, supported);
+var punctuator = token(trie.fsearch, Syntax_1.Punctuator, supported);
 
-var index$1 = createCommonjsModule(function (module) {
-const { isNaN, parseInt } = Number;
-
-
-
-const isNumber = char => !isNaN(parseInt(char));
+const { isNaN, parseInt: parseInt$1 } = Number;
+const isNumber = char => !isNaN(parseInt$1(char));
 const isDot = char => char === ".";
 const number = char => isNumber(char) ? number : null;
 const numberOrDot = char => {
@@ -216,8 +212,8 @@ const root = char => {
 };
 
 // TODO: split constants into literals String vs Numbers with Types
-module.exports = token(root, Syntax_1.Constant);
-});
+// TODO: figure out what above means??
+var constant = token(root, Syntax_1.Constant);
 
 const quoteOK = quoteCheck => () => quoteCheck;
 const nextFails = () => null;
@@ -247,7 +243,7 @@ const stringParser = token(maybeQuote, Syntax_1.StringLiteral);
 
 const parse = char => {
   // Don't allow these
-  if (!stringParser(char) && !index(char) && !index$1(char) && char !== " ") return parse;
+  if (!stringParser(char) && !punctuator(char) && !constant(char) && char !== " ") return parse;
   return null;
 };
 const tokenParser = token(parse, Syntax_1.Identifier);
@@ -272,9 +268,9 @@ const supported$1 = [
 
 
 const trie$2 = new trie$1(supported$1);
-const root = trie$2.fsearch;
+const root$1 = trie$2.fsearch;
 
-var keyword = token(root, Syntax_1.Keyword, supported$1);
+var keyword = token(root$1, Syntax_1.Keyword, supported$1);
 
 const everything = () => everything;
 
@@ -292,10 +288,10 @@ const commentParser = token(maybeComment, Syntax_1.Comment);
 
 const supported$2 = ["i32", "i64", "f32", "f64", "Function", "Memory", "void"];
 const trie$3 = new trie$1(supported$2);
-var index$2 = token(trie$3.fsearch, Syntax_1.Type, supported$2);
+var type = token(trie$3.fsearch, Syntax_1.Type, supported$2);
 
 class Tokenizer {
-  constructor(stream, parsers = [index, index$1, tokenParser, keyword, stringParser, index$2, commentParser]) {
+  constructor(stream, parsers = [punctuator, constant, tokenParser, keyword, stringParser, type, commentParser]) {
     if (!(stream instanceof Stream)) this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
     this.stream = stream;
@@ -393,7 +389,7 @@ class Tokenizer {
   }
 }
 
-var index$3 = createCommonjsModule(function (module) {
+var index = createCommonjsModule(function (module) {
 /* eslint-env es6 */
 /**
  * WASM types
@@ -524,14 +520,14 @@ module.exports = {
 };
 });
 
-var index_1 = index$3.i32;
-var index_2 = index$3.i64;
-var index_3 = index$3.f32;
-var index_4 = index$3.f64;
-var index_9 = index$3.u8;
-var index_12 = index$3.u32;
-var index_14 = index$3.set;
-var index_16 = index$3.sizeof;
+var index_1 = index.i32;
+var index_2 = index.i64;
+var index_3 = index.f32;
+var index_4 = index.f64;
+var index_9 = index.u8;
+var index_12 = index.u32;
+var index_14 = index.set;
+var index_16 = index.sizeof;
 
 //      
 /**
@@ -1652,6 +1648,20 @@ function binary(ctx, op, params) {
   return balanceTypesInMathExpression(ctx.endNode(node, Type));
 }
 
+const unary = (ctx, op, params) => {
+  const [target] = params;
+  return _extends({}, target, {
+    Type: Syntax_1.BinaryExpression,
+    value: "-",
+    params: [_extends({}, target, {
+      value: "0",
+      Type: Syntax_1.Constant,
+      params: [],
+      meta: []
+    }), target]
+  });
+};
+
 function objectLiteral(ctx, op, params) {
   const node = ctx.startNode(op);
   node.params = params;
@@ -1689,7 +1699,8 @@ const sequence = (ctx, op, params) => {
 };
 
 // Abstraction for handling operations
-const operator = (ctx, op, operands) => {
+const operator = (ctx, operators, operands) => {
+  const op = operators.pop();
   switch (op.value) {
     case "?":
       return ternary(ctx, op, operands.splice(-2));
@@ -1697,8 +1708,12 @@ const operator = (ctx, op, operands) => {
       return sequence(ctx, op, operands.slice(-2));
     case "{":
       return objectLiteral(ctx, op, operands.splice(-1));
+    case "--":
+      return unary(ctx, op, operands.splice(-1));
     default:
-      if (op.type === Syntax_1.FunctionCall) return functionCall(ctx, op, operands);
+      if (op.type === Syntax_1.FunctionCall) {
+        return functionCall(ctx, op, operands);
+      }
       return binary(ctx, op, operands.splice(-2));
   }
 };
@@ -1812,6 +1827,7 @@ const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
+const isPunctuatorAndNotBracket = t => t && t.type === Syntax_1.Punctuator && t.value !== "]" && t.value !== ")";
 
 const predicate = (token, depth) => token.value !== ";" && depth > 0;
 
@@ -1825,8 +1841,9 @@ const expression = (ctx, type = "i32", check = predicate) => {
   let depth = 1;
   let eatFunctionCall = false;
   let inTernary = false;
+  let previousToken = null;
 
-  const consume = () => operands.push(operator(ctx, operators.pop(), operands));
+  const consume = () => operands.push(operator(ctx, operators, operands));
 
   const eatUntil = condition => {
     let prev = last(operators);
@@ -1845,104 +1862,138 @@ const expression = (ctx, type = "i32", check = predicate) => {
     }
   };
 
-  const process = () => {
-    if (ctx.token.type === Syntax_1.Constant) {
-      eatFunctionCall = false;
-      operands.push(parseConstant(ctx));
-    } else if (ctx.token.type === Syntax_1.Identifier) {
-      eatFunctionCall = true;
-      operands.push(maybeIdentifier(ctx));
-    } else if (ctx.token.type === Syntax_1.StringLiteral) {
-      eatFunctionCall = false;
-      operands.push(stringLiteral(ctx));
-    } else if (ctx.token.type === Syntax_1.Type) {
-      eatFunctionCall = false;
-      operands.push(builtInType(ctx));
-    } else if (ctx.token.type === Syntax_1.UnaryExpression) {
-      eatFunctionCall = false;
-      flushOperators(getPrecedence(ctx.token), ctx.token.value);
-      operators.push(ctx.token);
-    } else if (ctx.token.type === Syntax_1.Punctuator) {
-      switch (ctx.token.value) {
-        case "(":
-          depth++;
-          // Function call.
-          // TODO: figure out a cleaner(?) way of doing this, maybe
-          if (eatFunctionCall) {
-            // definetly not immutable
-            last(operands).Type = Syntax_1.FunctionIdentifier;
-            flushOperators(PRECEDENCE_FUNCTION_CALL);
-            // Tokenizer does not generate function call tokens it is our job here
-            // to generate a function call on the fly
-            operators.push(_extends({}, ctx.token, {
-              type: Syntax_1.FunctionCall
-            }));
-            ctx.next();
-            const expr = expression(ctx);
-            if (expr) operands.push(expr);
-            return false;
-          } else {
-            if (ctx.token.value === "?") {
-              inTernary = true;
-            }
-            operators.push(ctx.token);
+  const processPunctuator = () => {
+    switch (ctx.token.value) {
+      case "(":
+        depth++;
+        // Function call.
+        // TODO: figure out a cleaner(?) way of doing this, maybe
+        if (eatFunctionCall) {
+          // definetly not immutable
+          last(operands).Type = Syntax_1.FunctionIdentifier;
+          flushOperators(PRECEDENCE_FUNCTION_CALL);
+          // Tokenizer does not generate function call tokens it is our job here
+          // to generate a function call on the fly
+          operators.push(_extends({}, ctx.token, {
+            type: Syntax_1.FunctionCall
+          }));
+          ctx.next();
+          const expr = expression(ctx);
+          if (expr) {
+            operands.push(expr);
           }
-          break;
-        case "[":
-          depth++;
-          operators.push(ctx.token);
-          break;
-        case "]":
-          depth--;
-          eatUntil(isLSqrBracket);
-          consume();
-          break;
-        case ")":
-          {
-            depth--;
-            if (depth < 1) return false;
-            // If we are not in a group already find the last LBracket,
-            // consume everything until that point
-            eatUntil(isLBracket);
-            const previous = last(operators);
-            if (previous && previous.type === Syntax_1.FunctionCall) consume();else if (depth > 0)
-              // Pop left bracket
-              operators.pop();
-
-            break;
+          return false;
+        } else {
+          if (ctx.token.value === "?") {
+            inTernary = true;
           }
-        case "{":
-          depth++;
           operators.push(ctx.token);
-          break;
-        case "}":
+        }
+        break;
+      case "[":
+        depth++;
+        operators.push(ctx.token);
+        break;
+      case "]":
+        depth--;
+        eatUntil(isLSqrBracket);
+        consume();
+        break;
+      case ")":
+        {
           depth--;
           if (depth < 1) {
             return false;
           }
-          eatUntil(isBlockStart);
-          consume();
+          // If we are not in a group already find the last LBracket,
+          // consume everything until that point
+          eatUntil(isLBracket);
+          const previous = last(operators);
+          if (previous && previous.type === Syntax_1.FunctionCall) {
+            consume();
+          } else if (depth > 0) {
+            // Pop left bracket
+            operators.pop();
+          }
+
           break;
-        default:
-          {
-            if (ctx.token.value === ":" && inTernary) {
-              eatUntil(isTStart);
-              inTernary = false;
-              break;
+        }
+      case "{":
+        depth++;
+        operators.push(ctx.token);
+        break;
+      case "}":
+        depth--;
+        if (depth < 1) {
+          return false;
+        }
+        eatUntil(isBlockStart);
+        consume();
+        break;
+      default:
+        {
+          if (ctx.token.value === ":" && inTernary) {
+            eatUntil(isTStart);
+            inTernary = false;
+            break;
+          }
+
+          const token = (t => {
+            if (t.value === "-" && previousToken == null || t.value === "-" && isPunctuatorAndNotBracket(previousToken)) {
+              return _extends({}, t, {
+                value: "--"
+              });
             }
 
-            flushOperators(getPrecedence(ctx.token), ctx.token.value);
-            operators.push(ctx.token);
-          }
-      }
-      eatFunctionCall = false;
+            return t;
+          })(ctx.token);
+
+          flushOperators(getPrecedence(token), token.value);
+          operators.push(token);
+        }
+    }
+  };
+
+  const process = () => {
+    switch (ctx.token.type) {
+      case Syntax_1.Constant:
+        eatFunctionCall = false;
+        operands.push(parseConstant(ctx));
+        break;
+      case Syntax_1.Identifier:
+        eatFunctionCall = true;
+        operands.push(maybeIdentifier(ctx));
+        break;
+      case Syntax_1.StringLiteral:
+        eatFunctionCall = false;
+        operands.push(stringLiteral(ctx));
+        break;
+      case Syntax_1.Type:
+        eatFunctionCall = false;
+        operands.push(builtInType(ctx));
+        break;
+      case Syntax_1.UnaryExpression:
+        eatFunctionCall = false;
+        flushOperators(getPrecedence(ctx.token), ctx.token.value);
+        operators.push(ctx.token);
+        break;
+      case Syntax_1.Punctuator:
+        const punctuatorResult = processPunctuator();
+        if (punctuatorResult != null) {
+          return punctuatorResult;
+        }
+        eatFunctionCall = false;
+        break;
     }
 
     return true;
   };
 
   while (ctx.token && check(ctx.token, depth)) {
-    if (process()) ctx.next();
+    if (process()) {
+      previousToken = ctx.token;
+      ctx.next();
+    }
   }
 
   while (operators.length) consume();
@@ -2041,7 +2092,7 @@ function generateType(node) {
   invariant_1(typeof node.id === "string", `Generator: A type must have a valid string identifier, node: ${JSON.stringify(node)}`);
 
   const typeExpression = node.params[0];
-  invariant_1(typeExpression && typeExpression.Type === Syntax_1.BinaryExpression, `Generator: A function type must be of for (<type>, ...) => <type> node: ${JSON.stringify(node)}`);
+  invariant_1(typeExpression && typeExpression.Type === Syntax_1.BinaryExpression, `Generator: A function type must be of form (<type>, ...) => <type> node: ${printNode(node)}`);
 
   // Collect the function params and result by walking the tree of nodes
   const params = [];
@@ -2444,12 +2495,19 @@ const param = ctx => {
   ctx.expect([":"]);
 
   // maybe a custom type
-  const identifier = ctx.token.value;
+  const { value } = ctx.token;
   if (ctx.eat(null, Syntax_1.Identifier)) {
     // find the type
-    node.typePointer = ctx.Program.Types.find(({ id }) => id === identifier);
-    if (node.typePointer == null) throw ctx.syntaxError("Undefined Type", identifier);
+    const typePointer = ctx.Program.Types.find(({ id }) => id === value);
+    const userType$$1 = ctx.userTypes[findUserTypeIndex(ctx, { value })];
+    if (userType$$1) {
+      node.meta.push(metadata.userType(userType$$1));
+    }
+    if (typePointer == null && !userType$$1) {
+      throw ctx.syntaxError("Undefined Type", value);
+    }
 
+    node.typePointer = typePointer;
     node.type = "i32";
   } else {
     node.type = ctx.expect(null, Syntax_1.Type).value;
@@ -2480,9 +2538,13 @@ const maybeFunctionDeclaration = ctx => {
   node.id = ctx.expect(null, Syntax_1.Identifier).value;
   node.params = paramList(ctx);
   node.locals = [...node.params];
-  ctx.expect([":"]);
-  node.result = ctx.expect(null, Syntax_1.Type).value;
-  node.result = node.result === "void" ? null : node.result;
+
+  if (ctx.eat([":"])) {
+    node.result = ctx.expect(null, Syntax_1.Type).value;
+    node.result = node.result === "void" ? null : node.result;
+  } else {
+    node.result = null;
+  }
 
   // NOTE: We need to write function into Program BEFORE
   // we parse the body as the body may refer to the function
@@ -2810,7 +2872,7 @@ const returnStatement = ctx => {
 
   // For generator to emit correct consant they must have a correct type
   // in the syntax it's not necessary to define the type since we can infer it here
-  if (expr.type && ctx.func.result !== expr.type) throw ctx.syntaxError(`Return type mismatch ${expr.type} ${ctx.func.result}`);else if (!expr.type && ctx.func.result) expr.type = ctx.func.result;
+  if (expr.type && ctx.func.result !== expr.type) throw ctx.syntaxError(`Return type mismatch expected ${ctx.func.result}, got ${expr.type}`);else if (!expr.type && ctx.func.result) expr.type = ctx.func.result;
 
   node.params.push(expr);
 
@@ -3342,11 +3404,11 @@ const emit$2 = exports => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, 'count');
 
-  exports.forEach(({ field, kind, index }) => {
+  exports.forEach(({ field, kind, index: index$$1 }) => {
     emitString(payload, field, 'field');
 
     payload.push(index_9, kind, 'Global');
-    payload.push(varuint32, index, 'index');
+    payload.push(varuint32, index$$1, 'index');
   });
 
   return payload;
@@ -3415,10 +3477,10 @@ const writer = ({ type, label, emiter }) => ast => {
 };
 
 //      
-const emitElement = stream => ({ functionIndex }, index) => {
+const emitElement = stream => ({ functionIndex }, index$$1) => {
   stream.push(varuint32, 0, "table index");
   stream.push(index_9, def.i32Const.code, "offset");
-  stream.push(varuint32, index, "");
+  stream.push(varuint32, index$$1, "");
   stream.push(index_9, def.End.code, "end");
   stream.push(varuint32, 1, "number of elements");
   stream.push(varuint32, functionIndex, "function index");

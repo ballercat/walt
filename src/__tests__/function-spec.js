@@ -42,6 +42,11 @@ test("undefined function vars", t =>
     }`);
   }));
 
+test("void result type is optional", () =>
+  compileAndRun(`
+  export function test() {
+  }`));
+
 test("function pointers", t => {
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
   return compileAndRun(
@@ -67,3 +72,18 @@ test("function pointers", t => {
     }
   ).then(outputIs(t, 42));
 });
+
+test("pointers as function arguments", t =>
+  compileAndRun(`
+  type Type = { 'a': i32 };
+  const memory: Memory = { 'initial': 1 };
+
+  function addOne(ptr: Type) {
+    ptr['a'] += 1;
+  }
+  export function test(): i32 {
+    let original: Type = 0;
+    original['a'] = 4;
+    addOne(original);
+    return original['a'];
+  }`).then(outputIs(t, 5)));

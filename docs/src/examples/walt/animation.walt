@@ -1,12 +1,13 @@
 import {
   setFillColor: FillType,
   fillRect: FillType,
-  getCanvasWidth: GetSizeTye,
+  getCanvasWidth: GetSizeType,
   getCanvasHeight: GetSizeType,
   log: LogType
 } from 'env';
 type FillType = (i32, i32, i32, i32) => void;
-type LogType = (i32) => void;
+type LogType = (f32) => void;
+type GetSizeType = () => i32;
 type ParticleType = {
   'x': f32,
   'y': f32,
@@ -20,9 +21,9 @@ const particleByteSize: i32 = 16;
 let total: i32 = 0;
 let width: i32 = 0;
 let height: i32 = 0;
-export function onInit(totalParticles: i32): void {
-  width = 500;
-  height = 300;
+export function onInit(totalParticles: i32) {
+  width = getCanvasWidth();
+  height = getCanvasHeight();
   total = totalParticles;
 
   let particle: ParticleType = 0;
@@ -37,34 +38,33 @@ export function onInit(totalParticles: i32): void {
   }
 }
 
-function bounce(particlePtr: i32, min: f32): void {
-  const particle: ParticleType = particlePtr;
+function bounce(particle: ParticleType, min: f32) {
   const maxHeight: f32 = height - min;
   const maxWidth: f32 = width - min;
 
   if (particle['y'] > maxHeight) {
     particle['y'] -= particle['y'] - maxHeight;
-    particle['vy'] = 0.0 - particle['vy'];
+    particle['vy'] = -particle['vy'];
   } else {
     if (particle['y'] < min) {
-      particle['y'] = 0 - particle['y'];
-      particle['vy'] = 0 - particle['vy'];
+      particle['y'] = min + (min - particle['y']);
+      particle['vy'] = -particle['vy'];
     }
   }
 
   if (particle['x'] > maxWidth) {
     particle['x'] -= particle['x'] - maxWidth;
-    particle['vx'] = 0.0 - particle['vx'];
+    particle['vx'] = -particle['vx'];
   } else {
     if (particle['x'] < min) {
-      particle['x'] = 0.0 - particle['x'];
-      particle['vx'] = 0.0 - particle['vx'];
+        particle['x'] = min + (min - particle['x']);
+        particle['vx'] = -particle['vx'];
     }
   }
 }
 
 let previous: i32 = 0;
-export function onAnimationFrame(timestamp: i32): void {
+export function onAnimationFrame(timestamp: i32): i32 {
   const delta: i32 = previous ? timestamp - previous : 0;
   previous = timestamp;
 
@@ -85,8 +85,10 @@ export function onAnimationFrame(timestamp: i32): void {
 
     bounce(particle, 10.0);
 
+
     fillRect((particle['x'] + 0.5) : i32, (particle['y'] + 0.5): i32, 10, 10);
   }
-}
 
+  return 42;
+}
 

@@ -21,6 +21,8 @@ const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
+export const isPunctuatorAndNotBracket = (t: ?Token) =>
+  t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
 export const predicate = (token: Token, depth: number): boolean =>
   token.value !== ";" && depth > 0;
@@ -39,8 +41,9 @@ const expression = (
   let depth: number = 1;
   let eatFunctionCall = false;
   let inTernary = false;
+  let previousToken = null;
 
-  const consume = () => operands.push(operator(ctx, operators.pop(), operands));
+  const consume = () => operands.push(operator(ctx, operators, operands));
 
   const eatUntil = condition => {
     let prev = last(operators);
@@ -64,104 +67,141 @@ const expression = (
     }
   };
 
-  const process = () => {
-    if (ctx.token.type === Syntax.Constant) {
-      eatFunctionCall = false;
-      operands.push(constant(ctx));
-    } else if (ctx.token.type === Syntax.Identifier) {
-      eatFunctionCall = true;
-      operands.push(maybeIdentifier(ctx));
-    } else if (ctx.token.type === Syntax.StringLiteral) {
-      eatFunctionCall = false;
-      operands.push(stringLiteral(ctx));
-    } else if (ctx.token.type === Syntax.Type) {
-      eatFunctionCall = false;
-      operands.push(builtInType(ctx));
-    } else if (ctx.token.type === Syntax.UnaryExpression) {
-      eatFunctionCall = false;
-      flushOperators(getPrecedence(ctx.token), ctx.token.value);
-      operators.push(ctx.token);
-    } else if (ctx.token.type === Syntax.Punctuator) {
-      switch (ctx.token.value) {
-        case "(":
-          depth++;
-          // Function call.
-          // TODO: figure out a cleaner(?) way of doing this, maybe
-          if (eatFunctionCall) {
-            // definetly not immutable
-            last(operands).Type = Syntax.FunctionIdentifier;
-            flushOperators(PRECEDENCE_FUNCTION_CALL);
-            // Tokenizer does not generate function call tokens it is our job here
-            // to generate a function call on the fly
-            operators.push({
-              ...ctx.token,
-              type: Syntax.FunctionCall
-            });
-            ctx.next();
-            const expr = expression(ctx);
-            if (expr) operands.push(expr);
-            return false;
-          } else {
-            if (ctx.token.value === "?") {
-              inTernary = true;
-            }
-            operators.push(ctx.token);
+  const processPunctuator = () => {
+    switch (ctx.token.value) {
+      case "(":
+        depth++;
+        // Function call.
+        // TODO: figure out a cleaner(?) way of doing this, maybe
+        if (eatFunctionCall) {
+          // definetly not immutable
+          last(operands).Type = Syntax.FunctionIdentifier;
+          flushOperators(PRECEDENCE_FUNCTION_CALL);
+          // Tokenizer does not generate function call tokens it is our job here
+          // to generate a function call on the fly
+          operators.push({
+            ...ctx.token,
+            type: Syntax.FunctionCall
+          });
+          ctx.next();
+          const expr = expression(ctx);
+          if (expr) {
+            operands.push(expr);
           }
-          break;
-        case "[":
-          depth++;
-          operators.push(ctx.token);
-          break;
-        case "]":
-          depth--;
-          eatUntil(isLSqrBracket);
-          consume();
-          break;
-        case ")": {
-          depth--;
-          if (depth < 1) return false;
-          // If we are not in a group already find the last LBracket,
-          // consume everything until that point
-          eatUntil(isLBracket);
-          const previous = last(operators);
-          if (previous && previous.type === Syntax.FunctionCall) consume();
-          else if (depth > 0)
-            // Pop left bracket
-            operators.pop();
-
-          break;
-        }
-        case "{":
-          depth++;
-          operators.push(ctx.token);
-          break;
-        case "}":
-          depth--;
-          if (depth < 1) {
-            return false;
+          return false;
+        } else {
+          if (ctx.token.value === "?") {
+            inTernary = true;
           }
-          eatUntil(isBlockStart);
-          consume();
-          break;
-        default: {
-          if (ctx.token.value === ":" && inTernary) {
-            eatUntil(isTStart);
-            inTernary = false;
-            break;
-          }
-
-          flushOperators(getPrecedence(ctx.token), ctx.token.value);
           operators.push(ctx.token);
         }
+        break;
+      case "[":
+        depth++;
+        operators.push(ctx.token);
+        break;
+      case "]":
+        depth--;
+        eatUntil(isLSqrBracket);
+        consume();
+        break;
+      case ")": {
+        depth--;
+        if (depth < 1) {
+          return false;
+        }
+        // If we are not in a group already find the last LBracket,
+        // consume everything until that point
+        eatUntil(isLBracket);
+        const previous = last(operators);
+        if (previous && previous.type === Syntax.FunctionCall) {
+          consume();
+        } else if (depth > 0) {
+          // Pop left bracket
+          operators.pop();
+        }
+
+        break;
       }
-      eatFunctionCall = false;
+      case "{":
+        depth++;
+        operators.push(ctx.token);
+        break;
+      case "}":
+        depth--;
+        if (depth < 1) {
+          return false;
+        }
+        eatUntil(isBlockStart);
+        consume();
+        break;
+      default: {
+        if (ctx.token.value === ":" && inTernary) {
+          eatUntil(isTStart);
+          inTernary = false;
+          break;
+        }
+
+        const token = (t => {
+          if (
+            (t.value === "-" && previousToken == null) ||
+            (t.value === "-" && isPunctuatorAndNotBracket(previousToken))
+          ) {
+            return {
+              ...t,
+              value: "--"
+            };
+          }
+
+          return t;
+        })(ctx.token);
+
+        flushOperators(getPrecedence(token), token.value);
+        operators.push(token);
+      }
+    }
+  };
+
+  const process = () => {
+    switch (ctx.token.type) {
+      case Syntax.Constant:
+        eatFunctionCall = false;
+        operands.push(constant(ctx));
+        break;
+      case Syntax.Identifier:
+        eatFunctionCall = true;
+        operands.push(maybeIdentifier(ctx));
+        break;
+      case Syntax.StringLiteral:
+        eatFunctionCall = false;
+        operands.push(stringLiteral(ctx));
+        break;
+      case Syntax.Type:
+        eatFunctionCall = false;
+        operands.push(builtInType(ctx));
+        break;
+      case Syntax.UnaryExpression:
+        eatFunctionCall = false;
+        flushOperators(getPrecedence(ctx.token), ctx.token.value);
+        operators.push(ctx.token);
+        break;
+      case Syntax.Punctuator:
+        const punctuatorResult = processPunctuator();
+        if (punctuatorResult != null) {
+          return punctuatorResult;
+        }
+        eatFunctionCall = false;
+        break;
     }
 
     return true;
   };
 
   while (ctx.token && check(ctx.token, depth)) {
-    if (process()) ctx.next();
+    if (process()) {
+      previousToken = ctx.token;
+      ctx.next();
+    }
   }
 
   while (operators.length) consume();
