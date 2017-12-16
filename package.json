@@ -4,12 +4,14 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
+    "validate": "npm run lint && npm run flow",
     "test": "nyc ava",
     "tdd": "ava",
     "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
-    "flow": "flow"
+    "flow": "flow",
+    "lint": "eslint src"
   },
   "repository": {
     "type": "git",
