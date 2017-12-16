@@ -1,4 +1,4 @@
-// Emits function section. For function code emiter look into code.js
+// Emits function section. For function code emitter look into code.js
 import { varuint32, varint1 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
 

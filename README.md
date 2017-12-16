@@ -94,7 +94,7 @@ When this code is ran through the walt compiler you end up with a buffer which c
   * [x] Arrays
   * [x] Memory
   * [x] Custom _Object_ Types
-* Emiter - WIP
+* Emitter - WIP
   * [x] ~Exports~
   * [x] ~Functions~
   * [x] ~Types - wasm built ins(i32/f32)~

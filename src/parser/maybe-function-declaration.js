@@ -105,7 +105,7 @@ const maybeFunctionDeclaration = ctx => {
     // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }
 
-  // generate the code block for the emiter
+  // generate the code block for the emitter
   //
   ctx.Program.Code.push(generateCode(node));
 

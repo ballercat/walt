@@ -51,7 +51,7 @@ class Context {
 
     this.Program = {
       body: [],
-      // Setup keys needed for the emiter
+      // Setup keys needed for the emitter
       Types: [],
       Code: [],
       Exports: [],

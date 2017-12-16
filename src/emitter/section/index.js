@@ -22,20 +22,20 @@ import {
 } from "./codes";
 
 export default {
-  type: writer({ type: SECTION_TYPE, label: "Types", emiter: types }),
-  imports: writer({ type: SECTION_IMPORT, label: "Imports", emiter: imports }),
+  type: writer({ type: SECTION_TYPE, label: "Types", emitter: types }),
+  imports: writer({ type: SECTION_IMPORT, label: "Imports", emitter: imports }),
   function: writer({
     type: SECTION_FUNCTION,
     label: "Functions",
-    emiter: functions
+    emitter: functions
   }),
-  memory: writer({ type: SECTION_MEMORY, label: "Memory", emiter: memory }),
-  exports: writer({ type: SECTION_EXPORT, label: "Exports", emiter: exports }),
-  globals: writer({ type: SECTION_GLOBAL, label: "Globals", emiter: globals }),
+  memory: writer({ type: SECTION_MEMORY, label: "Memory", emitter: memory }),
+  exports: writer({ type: SECTION_EXPORT, label: "Exports", emitter: exports }),
+  globals: writer({ type: SECTION_GLOBAL, label: "Globals", emitter: globals }),
   element: writer({
     type: SECTION_ELEMENT,
     label: "Element",
-    emiter: element
+    emitter: element
   }),
-  code: writer({ type: SECTION_CODE, label: "Code", emiter: code })
+  code: writer({ type: SECTION_CODE, label: "Code", emitter: code })
 };

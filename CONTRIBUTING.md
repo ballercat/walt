@@ -5,7 +5,7 @@ src/
   - index.js --> the "compiler"
   - tokenizer/ --> reads strings returns tokens
   - parser/  --> reads tokens, returns ast
-  - generator/ --> generates IR for emiter
+  - generator/ --> generates IR for emitter
   - emitter/ --> reads ast, returns Web Assembly binary encoding
     - section/ --> contains mini-emitters for wasm binary sections
   - utils/
@@ -23,7 +23,7 @@ For the most part tokenizer is rather stable. There might be a bug or two that n
 
 ## Parser
 
-The most 'hot' area of the codebase. Responsible for generating the correct AST/IR that the emiter
+The most 'hot' area of the codebase. Responsible for generating the correct AST/IR that the emitter
 can convert into binary. This is where the tokens from tokenizer become language features.
 
 The parser currently generates both AST and IR in a single pass of the token stream. The AST _may_ be removed in the future.
