@@ -2,10 +2,7 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import functionCall from "./function-call";
-import {
-  patchUnaryExpression,
-  balanceTypesInMathExpression
-} from "./patch-typecasts";
+import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { subscriptFromNode, getMetaType } from "./array-subscript";
 import type { Token, NodeType } from "../flow/types";
 

@@ -7,8 +7,9 @@ const statement = (ctx) => {
     case Syntax.Keyword:
       return keyword(ctx);
     case Syntax.Punctuator:
-      if (ctx.eat([';']))
-        return null;
+      if (ctx.eat([';']))        {
+return null;
+}
     case Syntax.Identifier:
       return maybeAssignment(ctx);
     default:

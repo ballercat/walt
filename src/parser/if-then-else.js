@@ -21,7 +21,9 @@ const ifThenElse = (ctx: Context) => {
     let stmt = null;
     while (ctx.token && ctx.token.value !== "}") {
       stmt = statement(ctx);
-      if (stmt) node.then.push(stmt);
+      if (stmt) {
+node.then.push(stmt);
+}
     }
 
     ctx.expect(["}"]);
@@ -30,7 +32,9 @@ const ifThenElse = (ctx: Context) => {
       ctx.expect(["{"]);
       while (ctx.token && ctx.token.value !== "}") {
         stmt = statement(ctx);
-        if (stmt) node.else.push(stmt);
+        if (stmt) {
+node.else.push(stmt);
+}
       }
       ctx.expect(["}"]);
     }
@@ -38,7 +42,9 @@ const ifThenElse = (ctx: Context) => {
     // parse single statements only
     node.then.push(statement(ctx));
     ctx.expect([";"]);
-    if (ctx.eat(["else"])) node.else.push(statement(ctx));
+    if (ctx.eat(["else"])) {
+node.else.push(statement(ctx));
+}
   }
 
   return ctx.endNode(node, Syntax.IfThenElse);

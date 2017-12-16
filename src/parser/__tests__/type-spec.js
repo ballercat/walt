@@ -1,7 +1,6 @@
 import test from "ava";
 import typeParser from "../type";
 import { mockContext } from "../../utils/mocks";
-import printNode from "../../utils/print-node";
 
 test("type parser, object", t => {
   const ctx = mockContext("type TestType = { 'foo': i32, 'bar': i32 };");
