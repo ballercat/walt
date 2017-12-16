@@ -1,7 +1,7 @@
 import test from 'ava';
 import emit from '../';
 
-test('emiter, emits valid WebAssembly instance', t => {
+test('emitter, emits valid WebAssembly instance', t => {
   const output = emit();
   return WebAssembly.instantiate(
     output.buffer()
