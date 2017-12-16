@@ -17,9 +17,8 @@ const doIfExpression = (node, ctx) => {
   ctx.expect([")"]);
 }
 
-// push statements while taking into consideration having brackets or not
+// push statements while taking into consideration having curly braces or not
 const doStatement = (node, isThenBranch, ctx) => {
-  // maybe a curly brace or not
   if (ctx.eat(["{"])) {
     while (ctx.token && ctx.token.value !== "}") {
       pushStatement(node, isThenBranch, statement(ctx));

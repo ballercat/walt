@@ -1,7 +1,6 @@
 import statement from "../statement";
 import test from "ava";
 import { mockContext } from "../../utils/mocks";
-import printNode from "../../utils/print-node";
 
 test("while parser", t => {
   const ctx = mockContext("while (x < 10) { x += 1; }");

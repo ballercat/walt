@@ -3,7 +3,6 @@ import parseContstant from "../parser/constant";
 import parseExpression from "../parser/expression";
 import { mockContext } from "../utils/mocks";
 import compile from "..";
-import printNode from "../utils/print-node";
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 

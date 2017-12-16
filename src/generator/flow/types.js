@@ -1,3 +1,4 @@
+//@flow
 import type { NodeType } from "../../flow/types";
 
 export type RawOpcodeType = {
