@@ -23,7 +23,7 @@ test("assigment statement", t =>
 test("unary negation", t => {
   const ctx = mockContext("x = -3;");
   ctx.func = {
-    locals: [{ id: "x", type: "i32", meta: [] }]
+    locals: [{ id: "x", type: "i32", meta: [] }],
   };
   const node = parseStatement(ctx);
   t.snapshot(node);

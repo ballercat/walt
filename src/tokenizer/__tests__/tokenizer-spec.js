@@ -10,17 +10,17 @@ test("next reads tokens, ignoring whitespace", t => {
     value: "global",
     end: {
       col: 11,
-      line: 1
+      line: 1,
     },
     start: {
       col: 5,
-      line: 1
-    }
+      line: 1,
+    },
   });
 });
 
 test("parses a stream into tokens", t => {
-  const stream = new Stream(`let x: i32 = 2;`);
+  const stream = new Stream("let x: i32 = 2;");
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
   t.snapshot(result);
@@ -47,13 +47,13 @@ test("ignores comments", t => {
 });
 
 test("parses basic strings", t => {
-  const stream = new Stream(`'this is a string' "and so is this"`);
+  const stream = new Stream("'this is a string' \"and so is this\"");
   const tokenizer = new Tokenizer(stream);
   t.snapshot(tokenizer.parse());
 });
 
 test("parsers strings within strings", t => {
-  const stream = new Stream(`"here is a string with a 'substring'"`);
+  const stream = new Stream("\"here is a string with a 'substring'\"");
   const tokenizer = new Tokenizer(stream);
   t.snapshot(tokenizer.parse());
 });

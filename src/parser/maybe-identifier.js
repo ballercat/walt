@@ -8,7 +8,7 @@ import {
   findLocalIndex,
   findGlobalIndex,
   findFunctionIndex,
-  findUserTypeIndex
+  findUserTypeIndex,
 } from "./introspection";
 
 // Maybe identifier, maybe function call
@@ -34,7 +34,7 @@ const maybeIdentifier = (ctx: Context): Node => {
   } else if (userTypeIndex !== -1 && ctx.stream.peek().value !== "(") {
     node.type = "i32";
     Type = Syntax.Type;
-  } else if (functionIndex == -1) {
+  } else if (functionIndex === -1) {
     throw ctx.syntaxError(`Undefined variable name ${ctx.token.value}`);
   }
 

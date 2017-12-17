@@ -1,4 +1,4 @@
 // @flow
-export default function generateNoop() {
+export default function generateNoop () {
   return [];
 }

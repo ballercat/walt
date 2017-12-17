@@ -18,7 +18,7 @@ export const variableSize = (targetNode: NodeType): string => {
     );
     const metaSize = get(OBJECT_SIZE, metaType.payload);
 
-    invariant(metaSize, `Object size information is missing`);
+    invariant(metaSize, "Object size information is missing");
 
     return metaSize.payload;
   }
@@ -35,7 +35,7 @@ export const variableSize = (targetNode: NodeType): string => {
   }
 };
 
-export default function sizeof(ctx: Context): NodeType {
+export default function sizeof (ctx: Context): NodeType {
   const node = ctx.startNode();
 
   ctx.eat(["sizeof"]);

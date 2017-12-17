@@ -52,7 +52,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.Sequence]: generateSequence,
   // Typecast
   [Syntax.TypeCast]: generateTypecast,
-  [Syntax.Noop]: generateNoop
+  [Syntax.Noop]: generateNoop,
 };
 
 const mapSyntax: MapSyntaxType = curry((parent, operand) => {
@@ -61,14 +61,14 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
     const value =
       operand.id ||
       operand.value ||
-      (operand.operator && operand.operator.value);
+      operand.operator && operand.operator.value;
     throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
   }
 
   const validate = (block, i) =>
     invariant(
       block.kind,
-      `Unknown opcode generated in block index %s %s. \nOperand: \n%s`,
+      "Unknown opcode generated in block index %s %s. \nOperand: \n%s",
       i,
       JSON.stringify(block),
       printNode(operand)

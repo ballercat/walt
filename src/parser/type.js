@@ -11,7 +11,7 @@ import {
   objectSize,
   objectType,
   objectKeyTypes,
-  TYPE_OBJECT
+  TYPE_OBJECT,
 } from "./metadata";
 
 // A scenario where the type declared needs to be hoisted exists during imports.
@@ -42,8 +42,8 @@ export const getByteOffsetsAndSize = (
   let size = 0;
   walkNode({
     [Syntax.Pair]: keyTypePair => {
-      const { value: key } = keyTypePair.params[0];
-      const { value: typeString } = keyTypePair.params[1];
+      const { "value": key } = keyTypePair.params[0];
+      const { "value": typeString } = keyTypePair.params[1];
       invariant(
         offsetsByKey[key] == null,
         `Duplicate key ${key} not allowed in object type`
@@ -63,13 +63,13 @@ export const getByteOffsetsAndSize = (
         default:
           size += 4;
       }
-    }
+    },
   })(objectLiteralNode);
 
   return [offsetsByKey, size, keyTypeMap];
 };
 
-export default function typeParser(ctx: Context): NodeType {
+export default function typeParser (ctx: Context): NodeType {
   const node = ctx.startNode();
   ctx.eat(["type"]);
 

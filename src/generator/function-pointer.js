@@ -12,7 +12,7 @@ const generateFunctionPointer: GeneratorType = node => {
   );
   return {
     kind: opcode.i32Const,
-    params: [metaTableIndex.payload]
+    params: [metaTableIndex.payload],
   };
 };
 

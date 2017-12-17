@@ -21,7 +21,9 @@ const printNode = (node: Node, level: number = 0): string => {
   const metaString = formatMetadata(node.meta);
   let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
   out = out.padStart(out.length + level * 2);
-  node.params.forEach(p => (out += printNode(p, level + 1)));
+  node.params.forEach(p => {
+    out += printNode(p, level + 1);
+  });
   return out;
 };
 

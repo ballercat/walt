@@ -16,7 +16,7 @@ const generateFunctionCall: GeneratorType = (node, parent) => {
 
   block.push({
     kind: opcode.Call,
-    params: [metaFunctionIndex.payload.functionIndex]
+    params: [metaFunctionIndex.payload.functionIndex],
   });
 
   return block;

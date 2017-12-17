@@ -29,7 +29,7 @@ const whileLoop = (ctx: Context): Node => {
   return ctx.endNode(
     {
       ...node,
-      body
+      body,
     },
     Syntax.Loop
   );

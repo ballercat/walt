@@ -27,10 +27,9 @@ const precedence = {
   "=": PRECEDENCE_ASSIGNMENT,
   "-=": PRECEDENCE_ASSIGNMENT,
   "+=": PRECEDENCE_ASSIGNMENT,
-  ":": 4, // FIXME duplicate keys
   "?": 4,
   ">": 5,
   "<": 5,
-  ":": PRECEDENCE_KEY_VALUE_PAIR
+  ":": PRECEDENCE_KEY_VALUE_PAIR,
 };
 export default precedence;

@@ -27,21 +27,21 @@ export const scopeOperation = curry((op, node) => {
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
-  //invariant(
+  // invariant(
   //  !!node.type,
   //  `Undefined Node type cannot generate const-opcode: ${JSON.stringify(
   //    node,
   //    null,
   //    2
   //  )}`
-  //);
+  // );
 
   const kind: RawOpcodeType = opcode[nodeType + "Const"];
   const params = [Number(node.value)];
 
   return {
     kind,
-    params
+    params,
   };
 };
 
@@ -62,7 +62,7 @@ export const generateValueType = (
   node: NodeType
 ): { mutable: number, type: string } => ({
   mutable: get(TYPE_CONST, node) ? 0 : 1,
-  type: getType(node.type)
+  type: getType(node.type),
 });
 export const setInScope = scopeOperation("Set");
 export const getInScope = scopeOperation("Get");

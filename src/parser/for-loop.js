@@ -42,7 +42,7 @@ const forLoop = (ctx: Context): Node => {
   return ctx.endNode(
     {
       ...node,
-      body
+      body,
     },
     Syntax.Loop
   );

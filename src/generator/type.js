@@ -29,16 +29,16 @@ export const getType = (str: ?string): number => {
 export const generateImplicitFunctionType = ({
   params,
   id,
-  result
+  result,
 }: NodeType): IntermediateTypeDefinitionType => {
   return {
     params: params.map(({ type }) => getType(type)),
     result: result && result !== "void" ? getType(result.type) : null,
-    id: id || ""
+    id: id || "",
   };
 };
 
-export default function generateType(
+export default function generateType (
   node: NodeType
 ): IntermediateTypeDefinitionType {
   invariant(
@@ -66,19 +66,19 @@ export default function generateType(
   // type, so we an just skip this.
   if (right != null) {
     walkNode({
-      [Syntax.Type]: ({ value: typeValue }) => params.push(getType(typeValue))
+      [Syntax.Type]: ({ "value": typeValue }) => params.push(getType(typeValue)),
     })(left);
   }
 
   walkNode({
-    [Syntax.Type]: ({ value: typeValue }) => {
+    [Syntax.Type]: ({ "value": typeValue }) => {
       result = typeValue !== "void" ? getType(typeValue) : null;
-    }
+    },
   })(right || left);
 
   return {
     id: node.id,
     params,
-    result
+    result,
   };
 }

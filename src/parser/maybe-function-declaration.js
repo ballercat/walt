@@ -7,7 +7,7 @@ import statement from "./statement";
 import declaration from "./declaration";
 import { findUserTypeIndex } from "./introspection";
 import metadata, { make, FUNCTION_INDEX } from "./metadata";
-import Context from './context';
+import Context from "./context";
 
 const last = list => list[list.length - 1];
 
@@ -54,8 +54,8 @@ const paramList = ctx => {
 const maybeFunctionDeclaration = (ctx: Context) => {
   const node = ctx.startNode();
   if (!ctx.eat(["function"])) {
-return declaration(ctx);
-}
+    return declaration(ctx);
+  }
 
   ctx.func = node;
   node.func = true;
@@ -86,12 +86,12 @@ return declaration(ctx);
   node.meta = [
     make(
       {
-        get functionIndex() {
+        get functionIndex () {
           return node.functionIndex + ctx.functionImports.length;
-        }
+        },
       },
       FUNCTION_INDEX
-    )
+    ),
   ];
   node.functionIndex = ctx.Program.Functions.length;
   ctx.Program.Functions.push(node.typeIndex);
@@ -103,23 +103,23 @@ return declaration(ctx);
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
     if (stmt) {
-node.body.push(stmt);
-}
+      node.body.push(stmt);
+    }
   }
 
   // Sanity check the return statement
   const ret = last(node.params);
   if (ret && node.type) {
-    if (node.type === "void" && ret.Type === Syntax.ReturnStatement)      {
-throw ctx.syntaxError(
+    if (node.type === "void" && ret.Type === Syntax.ReturnStatement) {
+      throw ctx.syntaxError(
         "Unexpected return value in a function with result : void"
       );
-}
-    if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement)      {
-throw ctx.syntaxError(
+    }
+    if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement) {
+      throw ctx.syntaxError(
         "Expected a return value in a function with result : " + node.result
       );
-}
+    }
   } else if (node.result) {
     // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }

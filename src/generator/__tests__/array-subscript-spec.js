@@ -5,9 +5,9 @@ import { TYPE_ARRAY, TYPE_USER, TYPE_OBJECT } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
 
 test("generated array offsets", t => {
-  const ctx = mockContext(`x[1];`);
+  const ctx = mockContext("x[1];");
   ctx.func = {
-    locals: [{ id: "x", type: "i32", meta: [{ type: TYPE_ARRAY }] }]
+    locals: [{ id: "x", type: "i32", meta: [{ type: TYPE_ARRAY }] }],
   };
   const node = parseExpression(ctx);
   const ir = generateArraySubscript(node);
@@ -15,12 +15,12 @@ test("generated array offsets", t => {
 });
 
 test("doesn not work on undefined variables", t => {
-  const ctx = mockContext(`x[1]`);
+  const ctx = mockContext("x[1]");
   t.throws(() => parseExpression(ctx));
 });
 
 test("generates correct offsets for user-defined objects", t => {
-  const ctx = mockContext(`x['bar'];`);
+  const ctx = mockContext("x['bar'];");
   ctx.func = {
     locals: [
       {
@@ -30,12 +30,12 @@ test("generates correct offsets for user-defined objects", t => {
           {
             type: TYPE_USER,
             payload: {
-              meta: [{ type: TYPE_OBJECT, payload: { foo: 0, bar: 4 } }]
-            }
-          }
-        ]
-      }
-    ]
+              meta: [{ type: TYPE_OBJECT, payload: { foo: 0, bar: 4 } }],
+            },
+          },
+        ],
+      },
+    ],
   };
   const node = parseExpression(ctx);
   const ir = generateArraySubscript(node);

@@ -17,8 +17,8 @@ test("typecasts are patched in binary expressions", t => {
   ctx.globals = [
     {
       id: "x",
-      type: "i32"
-    }
+      type: "i32",
+    },
   ];
 
   // The Pair of (x: f32) should become a TypeCast (to, from)

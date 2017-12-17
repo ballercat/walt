@@ -8,25 +8,25 @@ export type RawOpcodeType = {
   size: number,
   code: number,
   name: string,
-  text: string
+  text: string,
 };
 export type IntermediateOpcodeType = {
   kind: RawOpcodeType,
-  params: number[]
+  params: number[],
 };
 export type IntermediateFunctionType = {
   code: IntermediateOpcodeType[],
-  locals: IntermediateOpcodeType[]
+  locals: IntermediateOpcodeType[],
 };
 export type MapSyntaxType = IntermediateFunctionType => NodeType => IntermediateOpcodeType[];
 
 export type IntermediateTypeDefinitionType = {
   id: string,
   params: number[],
-  result: ?number
+  result: ?number,
 };
 
 export type GeneratorType = (
   NodeType,
   IntermediateOpcodeType
-) => IntermediateOpcodeType[];
+) => IntermediateOpcodeType | IntermediateOpcodeType[];

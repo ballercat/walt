@@ -1,8 +1,8 @@
 // @flow
-import Context from '../parser/context';
-import TokenStream from '../utils/token-stream';
-import Tokenizer from '../tokenizer';
-import Stream from './stream';
+import Context from "../parser/context";
+import TokenStream from "../utils/token-stream";
+import Tokenizer from "../tokenizer";
+import Stream from "./stream";
 
 export const mockContext = (code: string): Context => {
   const stream = new Stream(code);
@@ -10,13 +10,13 @@ export const mockContext = (code: string): Context => {
 
   return new Context({
     body: [],
-    diAssoc: 'right',
+    diAssoc: "right",
     stream: tokens,
     token: tokens.next(),
     lines: stream.lines,
     globals: [],
     functions: [],
-    filename: 'mockContext.walt'
+    filename: "mockContext.walt",
   });
 };
 

@@ -7,9 +7,9 @@ import Syntax from "../../Syntax";
 
 const parse = char => {
   // Don't allow these
-  if (!string(char) && !punctuator(char) && !constant(char) && char !== " ")    {
-return parse;
-}
+  if (!string(char) && !punctuator(char) && !constant(char) && char !== " ") {
+    return parse;
+  }
   return null;
 };
 const tokenParser = token(parse, Syntax.Identifier);

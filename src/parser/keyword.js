@@ -10,7 +10,7 @@ import whileLoop from "./while-loop";
 import returnStatement from "./return-statement";
 import ifThenElse from "./if-then-else";
 import sizeof from "./sizeof";
-import Context from './context';
+import Context from "./context";
 
 const keyword = (ctx: Context) => {
   switch (ctx.token.value) {

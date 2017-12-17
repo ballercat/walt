@@ -2,8 +2,8 @@
 import mapSyntax from "./map-syntax";
 import { setInScope } from "./utils";
 import mergeBlock from "./merge-block";
-import type { Node } from '../flow/types';
-import type { GeneratorType } from './flow/types';
+import type { Node } from "../flow/types";
+import type { GeneratorType } from "./flow/types";
 
 const generateAssignment: GeneratorType = node => {
   const subParent = { postfix: [] };

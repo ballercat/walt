@@ -6,7 +6,7 @@ import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { subscriptFromNode, getMetaType } from "./array-subscript";
 import type { Token, NodeType } from "../flow/types";
 
-function binary(ctx: Context, op: Token, params: NodeType[]) {
+function binary (ctx: Context, op: Token, params: NodeType[]) {
   const node: NodeType = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = params;
@@ -20,7 +20,7 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
     node.value = "=";
     node.params = [
       node.params[0],
-      binary(ctx, { ...op, value }, [node.params[0], node.params[1]])
+      binary(ctx, { ...op, value }, [node.params[0], node.params[1]]),
     ];
   } else if (node.value === "[") {
     return subscriptFromNode(ctx, node, getMetaType(ctx, params[0]));
@@ -43,14 +43,14 @@ const unary = (ctx: Context, op: Token, params: NodeType[]) => {
         value: "0",
         Type: Syntax.Constant,
         params: [],
-        meta: []
+        meta: [],
       },
-      target
-    ]
+      target,
+    ],
   };
 };
 
-function objectLiteral(ctx: Context, op: Token, params: NodeType[]): NodeType {
+function objectLiteral (ctx: Context, op: Token, params: NodeType[]): NodeType {
   const node = ctx.startNode(op);
   node.params = params;
   return ctx.endNode(node, Syntax.ObjectLiteral);

@@ -5,7 +5,7 @@ import { mockContext } from "../utils/mocks.js";
 test("array declaration", t => {
   const ctx = mockContext("let x: i32[] = 0;");
   ctx.func = {
-    locals: []
+    locals: [],
   };
   const node = declaration(ctx);
   t.snapshot(node);

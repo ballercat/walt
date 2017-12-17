@@ -39,7 +39,7 @@ const Syntax = {
   // Semantic Nodes
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
-  FunctionPointer: "FunctionPointer"
+  FunctionPointer: "FunctionPointer",
 };
 
 module.exports = Syntax;

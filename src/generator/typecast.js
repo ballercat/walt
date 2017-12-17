@@ -5,7 +5,7 @@ import { getTypecastOpcode } from "../emitter/opcode";
 import { get, TYPE_CAST } from "../parser/metadata";
 import invariant from "invariant";
 import type { GeneratorType } from "./flow/types";
-import type { Node } from '../flow/types';
+import type { Node } from "../flow/types";
 
 const generateTypecast: GeneratorType = (node, parent) => {
   const metaTypecast = get(TYPE_CAST, node);
@@ -21,8 +21,8 @@ const generateTypecast: GeneratorType = (node, parent) => {
     ...block,
     {
       kind: getTypecastOpcode(to, from),
-      params: []
-    }
+      params: [],
+    },
   ];
 };
 

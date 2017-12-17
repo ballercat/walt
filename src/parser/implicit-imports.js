@@ -16,9 +16,9 @@ export const writeFunctionPointer = (
         fields: [
           {
             id: "table",
-            kind: EXTERN_TABLE
-          }
-        ]
+            kind: EXTERN_TABLE,
+          },
+        ],
       })
     );
   }

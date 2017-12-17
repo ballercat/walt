@@ -2,8 +2,8 @@
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
-import type { Node } from '../flow/types';
-import type { GeneratorType } from './flow/types';
+import type { Node } from "../flow/types";
+import type { GeneratorType } from "./flow/types";
 
 const generateReturn: GeneratorType = node => {
   const parent = { postfix: [] };

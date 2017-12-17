@@ -21,7 +21,7 @@ export const OBJECT_KEY_TYPES = "object/key-types";
 
 export const make = (payload: any, type: string) => ({
   type,
-  payload
+  payload,
 });
 
 export const get = (type: string, node: Node): ?Metadata => {
@@ -32,69 +32,69 @@ export const get = (type: string, node: Node): ?Metadata => {
     )}`
   );
   return node
-    ? node.meta.find(({ type: _type }) => _type === type) || null
+    ? node.meta.find(({ "type": _type }) => _type === type) || null
     : null;
 };
 
 export const funcIndex = (payload: any): Metadata => ({
   payload,
-  type: FUNCTION_INDEX
+  type: FUNCTION_INDEX,
 });
 
 export const localIndex = (payload: any): Metadata => ({
   payload,
-  type: LOCAL_INDEX
+  type: LOCAL_INDEX,
 });
 
 export const globalIndex = (payload: any): Metadata => ({
   payload,
-  type: GLOBAL_INDEX
+  type: GLOBAL_INDEX,
 });
 
 export const tableIndex = (payload: any): Metadata => ({
   payload,
-  type: TABLE_INDEX
+  type: TABLE_INDEX,
 });
 
 export const postfix = (): Metadata => ({
   payload: true,
-  type: POSTFIX
+  type: POSTFIX,
 });
 
 export const prefix = (): Metadata => ({
   payload: true,
-  type: PREFIX
+  type: PREFIX,
 });
 
 export const userType = (payload: any): Metadata => ({
   payload,
-  type: TYPE_USER
+  type: TYPE_USER,
 });
 
 export const objectType = (payload: any): Metadata => ({
   payload,
-  type: TYPE_OBJECT
+  type: TYPE_OBJECT,
 });
 
 export const objectSize = (payload: any): Metadata => ({
   payload,
-  type: OBJECT_SIZE
+  type: OBJECT_SIZE,
 });
 
 export const array = (payload: any): Metadata => ({
   payload,
-  type: TYPE_ARRAY
+  type: TYPE_ARRAY,
 });
 export const constant = (): Metadata => ({ payload: true, type: TYPE_CONST });
 
 export const typeCast = (payload: { to: string, from: string }) => ({
   payload,
-  type: TYPE_CAST
+  type: TYPE_CAST,
 });
 
 export const objectKeyTypes = (payload: { [string]: string }) => ({
   payload,
-  type: OBJECT_KEY_TYPES
+  type: OBJECT_KEY_TYPES,
 });
 
 const metadata = {
@@ -117,7 +117,7 @@ const metadata = {
   TYPE_CONST,
   TYPE_USER,
   TYPE_OBJECT,
-  OBJECT_SIZE
+  OBJECT_SIZE,
 };
 
 export default metadata;

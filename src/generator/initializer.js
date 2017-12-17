@@ -2,8 +2,8 @@
 import Syntax from "../Syntax";
 import { generateValueType } from "./utils";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
-import type { Node } from '../flow/types';
-import type { GeneratorType } from './flow/types';
+import type { Node } from "../flow/types";
+import type { GeneratorType } from "./flow/types";
 
 const generateInit: GeneratorType = node => {
   const _global = generateValueType(node);

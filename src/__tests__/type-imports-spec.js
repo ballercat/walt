@@ -21,11 +21,11 @@ test("function typed imports", t =>
     `,
       {
         env: {
-          log: function(value) {
+          log: function (value) {
             t.is(value, 42);
             resolve();
-          }
-        }
+          },
+        },
       }
     ).then(result => result.instance.exports.test(4434));
   }));
@@ -52,15 +52,15 @@ test("function pointers", t =>
       {
         env: {
           table,
-          log: function(value) {
+          log: function (value) {
             t.is(value, 42);
             resolve();
           },
           setTimeout: (functionPointer, timeout) => {
             const func = table.get(functionPointer);
             setTimeout(func, timeout);
-          }
-        }
+          },
+        },
       }
     ).then(result => result.instance.exports.test());
   }));

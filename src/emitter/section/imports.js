@@ -7,7 +7,7 @@ import {
   EXTERN_GLOBAL,
   EXTERN_FUNCTION,
   EXTERN_TABLE,
-  EXTERN_MEMORY
+  EXTERN_MEMORY,
 } from "../external_kind";
 import { emitString } from "../string";
 

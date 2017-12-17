@@ -2,7 +2,7 @@ import test from "ava";
 import sizeofParser from "../sizeof";
 import { TYPE_USER, OBJECT_SIZE } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
-//import printNode from "../../utils/print-node";
+// import printNode from "../../utils/print-node";
 
 test("sizeof parser, built-in type", t => {
   const ctx = mockContext("sizeof(x);");
@@ -29,10 +29,10 @@ test("sizeof parser, user-defined object types", t => {
       meta: [
         {
           type: TYPE_USER,
-          payload: { meta: [{ type: OBJECT_SIZE, payload: 16 }] }
-        }
-      ]
-    }
+          payload: { meta: [{ type: OBJECT_SIZE, payload: 16 }] },
+        },
+      ],
+    },
   ];
   const node = sizeofParser(ctx);
   t.is(node.value, 16);

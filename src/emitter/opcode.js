@@ -39,7 +39,7 @@ const opcode = (
     size,
     code,
     name,
-    text
+    text,
   };
 
   def[name] = definition;
@@ -261,10 +261,10 @@ export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
  */
 export const opcodeFromOperator = ({
   type,
-  value
+  value,
 }: {
   type: string,
-  value: string
+  value: string,
 }): RawOpcodeType => {
   switch (value) {
     case "+":

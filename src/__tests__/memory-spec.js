@@ -28,8 +28,8 @@ test("memory store on float arrays", t => {
   const ctx = mockContext("x[0] = 2.0;");
   ctx.func = {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] }
-    ]
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
+    ],
   };
   const node = statement(ctx);
   t.snapshot(node);

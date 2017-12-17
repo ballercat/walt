@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import { u8, i32, f32, f64 } from "wasm-types";
 import { varint32, varuint32, varint7 } from "../numbers";
 import { getTypeString } from "../value_type";

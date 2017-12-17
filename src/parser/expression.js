@@ -62,8 +62,8 @@ const expression = (
       getAssociativty(previous) === "left"
     ) {
       if (value === "," && previous.type === Syntax.FunctionCall) {
-break;
-}
+        break;
+      }
       // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
@@ -76,14 +76,14 @@ break;
         // Function call.
         // TODO: figure out a cleaner(?) way of doing this, maybe
         if (eatFunctionCall) {
-          // definetly not immutable
+        // definetly not immutable
           last(operands).Type = Syntax.FunctionIdentifier;
           flushOperators(PRECEDENCE_FUNCTION_CALL);
           // Tokenizer does not generate function call tokens it is our job here
           // to generate a function call on the fly
           operators.push({
             ...ctx.token,
-            type: Syntax.FunctionCall
+            type: Syntax.FunctionCall,
           });
           ctx.next();
           const expr = expression(ctx);
@@ -91,12 +91,12 @@ break;
             operands.push(expr);
           }
           return false;
-        } 
-          if (ctx.token.value === "?") {
-            inTernary = true;
-          }
-          operators.push(ctx.token);
-        
+        }
+        if (ctx.token.value === "?") {
+          inTernary = true;
+        }
+        operators.push(ctx.token);
+
         break;
       case "[":
         depth++;
@@ -119,7 +119,7 @@ break;
         if (previous && previous.type === Syntax.FunctionCall) {
           consume();
         } else if (depth > 0) {
-          // Pop left bracket
+        // Pop left bracket
           operators.pop();
         }
 
@@ -146,12 +146,12 @@ break;
 
         const token = (t => {
           if (
-            (t.value === "-" && previousToken == null) ||
-            (t.value === "-" && isPunctuatorAndNotBracket(previousToken))
+            t.value === "-" && previousToken == null ||
+            t.value === "-" && isPunctuatorAndNotBracket(previousToken)
           ) {
             return {
               ...t,
-              value: "--"
+              value: "--",
             };
           }
 
@@ -207,8 +207,8 @@ break;
   }
 
   while (operators.length) {
-consume();
-}
+    consume();
+  }
 
   // Should be a node
   return operands.pop();

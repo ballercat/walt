@@ -5,7 +5,7 @@ import metadata, {
   OBJECT_KEY_TYPES,
   TYPE_OBJECT,
   TYPE_ARRAY,
-  TYPE_USER
+  TYPE_USER,
 } from "./metadata";
 import { findLocalIndex, findGlobalIndex } from "./introspection";
 
@@ -48,13 +48,13 @@ export const patchStringSubscript = (
 ): NodeType[] => {
   if (metaType.type === TYPE_USER && params[1].Type === Syntax.StringLiteral) {
     const metaObject = metadata.get(TYPE_OBJECT, metaType.payload);
-    invariant(metaObject, `Undefined object properties`);
-    const { payload: byteOffsetsByKey } = metaObject;
-    const { value: key } = params[1];
+    invariant(metaObject, "Undefined object properties");
+    const { "payload": byteOffsetsByKey } = metaObject;
+    const { "value": key } = params[1];
     const absoluteByteOffset = byteOffsetsByKey[key];
     return [
       params[0],
-      ctx.makeNode({ value: absoluteByteOffset, type: "i32" }, Syntax.Constant)
+      ctx.makeNode({ value: absoluteByteOffset, type: "i32" }, Syntax.Constant),
     ];
   }
   return params;

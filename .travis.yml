@@ -1,7 +1,7 @@
 language: node_js
 node_js:
-  - "8.0"
-before_script: "npm run validate"
+  - "8"
+  - latest
 script: "npm test"
 after_success:
   - "npm run coverage"

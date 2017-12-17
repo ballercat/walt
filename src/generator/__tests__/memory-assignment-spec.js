@@ -5,7 +5,7 @@ import {
   TYPE_ARRAY,
   TYPE_USER,
   TYPE_OBJECT,
-  OBJECT_KEY_TYPES
+  OBJECT_KEY_TYPES,
 } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
 
@@ -13,18 +13,18 @@ test("unary negation, arrays", t => {
   const ctx = mockContext("x[0] = ((x * 7 % 200) - 100) / 100.0");
   ctx.func = {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] }
-    ]
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
+    ],
   };
   t.snapshot(parseStatement(ctx));
 });
 
 test("generates correct offsets for arrays", t => {
-  const ctx = mockContext(`x[1] = 42;`);
+  const ctx = mockContext("x[1] = 42;");
   ctx.func = {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] }
-    ]
+      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
+    ],
   };
   const node = parseStatement(ctx);
   const ir = mapSyntax(null, node);
@@ -32,7 +32,7 @@ test("generates correct offsets for arrays", t => {
 });
 
 test("generates correct offsets for user-defined objects", t => {
-  const ctx = mockContext(`x['bar'] = 42;`);
+  const ctx = mockContext("x['bar'] = 42;");
   ctx.func = {
     locals: [
       {
@@ -46,13 +46,13 @@ test("generates correct offsets for user-defined objects", t => {
             payload: {
               meta: [
                 { type: TYPE_OBJECT, payload: { foo: 0, bar: 4 } },
-                { type: OBJECT_KEY_TYPES, payload: { foo: "i32", bar: "i32" } }
-              ]
-            }
-          }
-        ]
-      }
-    ]
+                { type: OBJECT_KEY_TYPES, payload: { foo: "i32", bar: "i32" } },
+              ],
+            },
+          },
+        ],
+      },
+    ],
   };
   const node = parseStatement(ctx);
   const ir = mapSyntax(null, node);

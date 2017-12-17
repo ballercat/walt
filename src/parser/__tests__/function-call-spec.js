@@ -5,14 +5,14 @@ import { mockContext } from "../../utils/mocks";
 test("function call, no arguments", t => {
   const ctx = mockContext("test();");
   ctx.func = {
-    locals: []
+    locals: [],
   };
   ctx.functions = [
     {
       id: "test",
       meta: [],
-      result: "i32"
-    }
+      result: "i32",
+    },
   ];
   const nodes = statement(ctx);
   t.snapshot(nodes);
@@ -21,13 +21,13 @@ test("function call, no arguments", t => {
 test("function call, in a return", t => {
   const ctx = mockContext("return test();");
   ctx.func = {
-    locals: []
+    locals: [],
   };
   ctx.functions = [
     {
       id: "test",
-      meta: []
-    }
+      meta: [],
+    },
   ];
   const nodes = statement(ctx);
   t.snapshot(nodes);

@@ -15,17 +15,17 @@ export const findTypeIndex = (node: Node, ctx: Context): number => {
       );
 
     const resultMatch =
-      t.result == node.result ||
-      (node.result && t.result === getType(node.result.type));
+      t.result === node.result ||
+      node.result && t.result === getType(node.result.type);
 
     return paramsMatch && resultMatch;
   });
 };
 
 const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
-  let field: any = fields.reduce((memo, f) => {
+  let field: any = fields.reduce((memo: ?{}, f) => {
     if (memo) {
-      return (memo: {})[f];
+      return memo[f];
     }
     return memo;
   }, ctx);

@@ -9,9 +9,9 @@ test("array assignment", t => {
       {
         id: "x",
         type: "i32",
-        meta: [{ type: "type/array", payload: true }]
-      }
-    ]
+        meta: [{ type: "type/array", payload: true }],
+      },
+    ],
   };
   const node = assignment(ctx);
   t.snapshot(node);

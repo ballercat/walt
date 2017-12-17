@@ -10,7 +10,7 @@ import { make, FUNCTION_INDEX } from "./metadata";
 
 const field = (ctx: Context): Field => {
   const f: Field = {
-    id: ctx.expect(null, Syntax.Identifier).value
+    id: ctx.expect(null, Syntax.Identifier).value,
   };
 
   ctx.expect([":"]);
@@ -36,7 +36,7 @@ const field = (ctx: Context): Field => {
         // When we DO define a type for it later, patch the dummy type
         hoist: (node: NodeType) => {
           ctx.Program.Types[f.typeIndex] = generateType(node);
-        }
+        },
       });
     }
 
@@ -45,10 +45,10 @@ const field = (ctx: Context): Field => {
     f.meta = [
       make(
         {
-          functionIndex
+          functionIndex,
         },
-        FUNCTION_INDEX
-      )
+        FUNCTION_INDEX,
+      ),
     ];
 
     f.functionIndex = functionIndex;
@@ -75,12 +75,13 @@ const fieldList = (ctx: Context): Field[] => {
 };
 
 const _import = (ctx: Context): Import => {
-  const node: Import = (ctx.startNode(): any);
+  const start: any = ctx.startNode();
+  const node: Import = start;
   ctx.eat(["import"]);
 
   if (!ctx.eat(["{"])) {
-throw ctx.syntaxError("expected {");
-}
+    throw ctx.syntaxError("expected {");
+  }
 
   node.fields = fieldList(ctx);
   ctx.expect(["from"]);

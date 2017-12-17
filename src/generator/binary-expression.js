@@ -1,8 +1,8 @@
 // @flow
-import mapSyntax from './map-syntax';
-import mergeBlock from './merge-block';
-import { opcodeFromOperator } from '../emitter/opcode';
-import type { GeneratorType } from './flow/types';
+import mapSyntax from "./map-syntax";
+import mergeBlock from "./merge-block";
+import { opcodeFromOperator } from "../emitter/opcode";
+import type { GeneratorType } from "./flow/types";
 
 /**
  * Transform a binary expression node into a list of opcodes
@@ -13,7 +13,7 @@ const generateBinaryExpression: GeneratorType = (node, parent) => {
 
   // Map the operator last
   block.push({
-    kind: opcodeFromOperator(node)
+    kind: opcodeFromOperator(node),
   });
 
   return block;

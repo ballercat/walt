@@ -8,28 +8,30 @@ import string from "./string";
 import comments from "./comments";
 import type from "./type";
 
+type Parsers = (string => any)[];
+
 class Tokenizer {
   stream: Stream;
   tokens: Array<any>;
   pos: number;
-  parsers: Array<Function>;
-  
-  constructor(
+  parsers: Parsers;
+
+  constructor (
     stream: Stream,
-    parsers: Array<Function> = [
+    parsers: Parsers = [
       punctuator,
       constant,
       identifier,
       keyword,
       string,
       type,
-      comments
+      comments,
     ]
   ) {
     if (!(stream instanceof Stream)) {
-this.die(`Tokenizer expected instance of Stream in constructor.
+      this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
-}
+    }
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -41,16 +43,16 @@ this.die(`Tokenizer expected instance of Stream in constructor.
    *
    * @return {Object} token
    */
-  next() {
+  next () {
     let value = "";
     this.seekNonWhitespace();
-    let char;
+    let char = "";
     let matchers = this.parsers;
     let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
 
     do {
@@ -71,7 +73,7 @@ this.die(`Tokenizer expected instance of Stream in constructor.
     token.start = start;
     token.end = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
     // Comments are ignored for now
     if (token.type !== comments.type) {
@@ -81,7 +83,7 @@ this.die(`Tokenizer expected instance of Stream in constructor.
     return this.tokens[this.pos++];
   }
 
-  match(char: string, parsers: Array<Function>) {
+  match (char: string, parsers: Parsers) {
     if (char == null) {
       return parsers;
     }
@@ -97,10 +99,10 @@ this.die(`Tokenizer expected instance of Stream in constructor.
    * @param {Object} token
    * @return {Object} token
    */
-  token(value: string, parsers: Array<Function>, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
+  token (value: string, parsers: Parsers, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
-      parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
+      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
       if (parsers.length > 1) {
         parsers = parsers.filter(parser => parser.strict);
       }
@@ -116,13 +118,13 @@ this.die(`Tokenizer expected instance of Stream in constructor.
   /**
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
-  seekNonWhitespace() {
-    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))      {
+  seekNonWhitespace () {
+    while (this.stream.peek() && Stream.whitespace(this.stream.peek())) {
       this.stream.next();
     }
   }
 
-  parse() {
+  parse () {
     while (!Stream.eof(this.stream.peek())) {
       this.next();
     }
@@ -136,7 +138,7 @@ this.die(`Tokenizer expected instance of Stream in constructor.
    * @param {String} reason
    * @throws
    */
-  die(reason: string) {
+  die (reason: string) {
     throw new Error(reason);
   }
 }

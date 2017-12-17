@@ -1,8 +1,8 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import type { Node } from '../flow/types';
-import type { GeneratorType } from './flow/types';
+import type { Node } from "../flow/types";
+import type { GeneratorType } from "./flow/types";
 
 const generateMemory: GeneratorType = node => {
   const memory = { max: 0, initial: 0 };
@@ -10,9 +10,9 @@ const generateMemory: GeneratorType = node => {
   walkNode({
     [Syntax.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
-      const [{ value: key }, { value }] = params;
+      const [{ "value": key }, { value }] = params;
       memory[key] = parseInt(value);
-    }
+    },
   })(node);
 
   return memory;

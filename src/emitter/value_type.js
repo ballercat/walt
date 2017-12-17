@@ -8,21 +8,21 @@ export const FUNC = 0x60;
 export const BLOCK_TYPE = 0x40;
 
 export const getTypeString = (type: number) => {
-  switch(type) {
+  switch (type) {
     case I32:
-      return 'i32';
+      return "i32";
     case I64:
-      return 'i64';
+      return "i64";
     case F32:
-      return 'f32';
+      return "f32";
     case F64:
-      return 'f64';
+      return "f64";
     case FUNC:
-      return 'func';
+      return "func";
     case ANYFUNC:
-      return 'anyfunc';
+      return "anyfunc";
     default:
-      return '?';
+      return "?";
   }
 };
 

@@ -10,7 +10,7 @@ const generateErrorString = (
   func: string
 ): string => {
   const { line, col } = token.start;
-  const { col: end } = token.end;
+  const { "col": end } = token.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
   return `

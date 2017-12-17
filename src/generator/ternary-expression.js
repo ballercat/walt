@@ -3,8 +3,8 @@ import mapSyntax from "./map-syntax";
 import { generateValueType } from "./utils";
 import mergeBlock from "./merge-block";
 import opcode, { opcodeFromOperator } from "../emitter/opcode";
-import type { Node } from '../flow/types';
-import type { GeneratorType } from './flow/types';
+import type { Node } from "../flow/types";
+import type { GeneratorType } from "./flow/types";
 
 const generateTernary: GeneratorType = (node, parent) => {
   // TernaryExpression has a simple param layout of 2(TWO) total parameters.
@@ -24,7 +24,7 @@ const generateTernary: GeneratorType = (node, parent) => {
   // If Opcode
   block.push({
     kind: opcodeFromOperator(node),
-    valueType: generateValueType(node)
+    valueType: generateValueType(node),
   });
 
   // Map the true branch
@@ -36,7 +36,7 @@ const generateTernary: GeneratorType = (node, parent) => {
       .reduce(mergeBlock, [])
   );
   block.push({
-    kind: opcodeFromOperator({ value: ":" })
+    kind: opcodeFromOperator({ value: ":" }),
   });
 
   // Map the false branch

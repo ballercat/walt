@@ -8,11 +8,11 @@ import invariant from "invariant";
 const generateCode = (
   func: NodeType
 ): { code: IntermediateOpcodeType[], locals: IntermediateOpcodeType[] } => {
-  invariant(func.body, `Cannot generate code for function without body`);
+  invariant(func.body, "Cannot generate code for function without body");
 
   const block = {
     code: [],
-    locals: []
+    locals: [],
   };
 
   // NOTE: Declarations have a side-effect of changing the local count

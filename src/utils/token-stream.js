@@ -6,21 +6,21 @@ class TokenStream {
   tokens: Token[];
   pos: number;
 
-  constructor(tokens: Token[] = []) {
+  constructor (tokens: Token[] = []) {
     this.length = tokens.length;
     this.tokens = tokens;
     this.pos = 0;
   }
 
-  next(): Token {
+  next (): Token {
     return this.tokens[this.pos++];
   }
 
-  peek(): Token {
+  peek (): Token {
     return this.tokens[this.pos];
   }
 
-  last(): Token {
+  last (): Token {
     return this.tokens[this.length - 1];
   }
 }

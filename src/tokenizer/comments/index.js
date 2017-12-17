@@ -6,14 +6,14 @@ const everything = () => everything;
 
 const slash = char => {
   if (char === "/") {
-return everything;
-}
+    return everything;
+  }
 };
 
 const maybeComment = char => {
   if (char === "/") {
-return slash;
-}
+    return slash;
+  }
 
   return null;
 };

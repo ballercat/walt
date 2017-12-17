@@ -1,7 +1,7 @@
 // @flow
 import type { IntermediateOpcodeType } from "../generator/flow/types";
 
-export default function prettyPrint(IRList: IntermediateOpcodeType[]): string {
+export default function prettyPrint (IRList: IntermediateOpcodeType[]): string {
   return [
     "------ Intermediate Representation ------",
     `Stats: ${IRList.length} nodes`,
@@ -9,9 +9,9 @@ export default function prettyPrint(IRList: IntermediateOpcodeType[]): string {
     "|   Opcode       |        Parameters    |",
     "|---------------------------------------|",
     ...IRList.map(
-      ({ kind: { name }, params }) =>
+      ({ "kind": { name }, params }) =>
         `| ${name.padEnd(14)} | ${params.join(",").padEnd(20)} |`
     ),
-    "----------------- End -------------------"
+    "----------------- End -------------------",
   ].join("\n");
 }
