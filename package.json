@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npm run lint && npm run ava",
     "ava": "nyc ava",
+    "validate": "npm run lint",
     "tdd": "ava",
     "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
@@ -48,7 +49,6 @@
     "babel-preset-latest": "^6.24.1",
     "coveralls": "^2.13.1",
     "eslint-plugin-flowtype": "^2.40.1",
-    "eslint-plugin-flowtype-errors": "^3.3.6",
     "flow-bin": "^0.54.0",
     "nyc": "^11.1.0",
     "prettier": "^1.7.0",

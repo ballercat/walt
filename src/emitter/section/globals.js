@@ -2,7 +2,6 @@
 import { u8, f32, f64 } from "wasm-types";
 import { I32, F64, F32, getTypeString } from "../value_type";
 import { varuint32, varint32 } from "../numbers";
-import { emitString } from "../string";
 import opcode from "../opcode";
 import OutputStream from "../../utils/output-stream";
 

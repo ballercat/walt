@@ -9,9 +9,9 @@ const statement = (ctx: Context) => {
     case Syntax.Keyword:
       return keyword(ctx);
     case Syntax.Punctuator:
-      if (ctx.eat([';']))
+      if (ctx.eat([';'])) {
         return null;
-      throw ctx.unknown(ctx.token);
+      }
     case Syntax.Identifier:
       return maybeAssignment(ctx);
     default:

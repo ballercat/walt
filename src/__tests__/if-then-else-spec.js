@@ -55,3 +55,36 @@ test("ternary", t =>
   export function test(): i32 {
     return 1 ? 42 : 24;
   }`).then(outputIs(t, 42)));
+
+test("else if statement", () =>
+  compileAndRun(`
+  export function test(x: i32): i32 {
+    if (x == 0) {
+      x = 2;
+    } else if (x == 1) {
+      x = 4;
+    } else {
+      x = 1;
+    }
+    return x;
+  }`).then(({ instance: { exports } }) => {
+   outputIs(exports.test(0), 2);
+   outputIs(exports.test(1), 4);
+   outputIs(exports.test(-1), 1);
+ }));
+
+  test("else if statement no curly braces", () =>
+    compileAndRun(`
+    export function test(x: i32): i32 {
+      if (x == 0)
+        x = 2;
+      else if (x == 1)
+        x = 4;
+      else
+        x = 1;
+      return x;
+    }`).then(({ instance: { exports } }) => {
+     outputIs(exports.test(0), 2);
+     outputIs(exports.test(1), 4);
+     outputIs(exports.test(-1), 1);
+   }));

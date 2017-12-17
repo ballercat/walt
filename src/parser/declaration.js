@@ -30,8 +30,9 @@ const declaration = (ctx: Context): NodeType => {
     node.meta.push(metadata.constant());
   }
 
-  if (!ctx.eat(["const", "let", "function"]))
-    throw ctx.unexpectedValue(["const", "let", "function"]);
+  if (!ctx.eat(["const", "let", "function"]))    {
+throw ctx.unexpectedValue(["const", "let", "function"]);
+}
 
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
@@ -55,8 +56,9 @@ const declaration = (ctx: Context): NodeType => {
     node.params.push(expression(ctx, node.type));
   }
 
-  if (node.const && !node.init)
-    throw ctx.syntaxError("Constant value must be initialized");
+  if (node.const && !node.init)    {
+throw ctx.syntaxError("Constant value must be initialized");
+}
 
   generate(ctx, node);
 

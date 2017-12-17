@@ -1,6 +1,6 @@
 import test from "ava";
 import expression from "../expression";
-import { TYPE_USER, TYPE_ARRAY } from "../metadata";
+import { TYPE_ARRAY } from "../metadata";
 import { mockContext } from "../../utils/mocks";
 import printNode from "../../utils/print-node";
 

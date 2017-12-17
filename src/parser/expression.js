@@ -61,7 +61,9 @@ const expression = (
       getPrecedence(previous) >= precedence &&
       getAssociativty(previous) === "left"
     ) {
-      if (value === "," && previous.type === Syntax.FunctionCall) break;
+      if (value === "," && previous.type === Syntax.FunctionCall) {
+break;
+}
       // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
@@ -89,12 +91,12 @@ const expression = (
             operands.push(expr);
           }
           return false;
-        } else {
+        } 
           if (ctx.token.value === "?") {
             inTernary = true;
           }
           operators.push(ctx.token);
-        }
+        
         break;
       case "[":
         depth++;
@@ -204,7 +206,9 @@ const expression = (
     }
   }
 
-  while (operators.length) consume();
+  while (operators.length) {
+consume();
+}
 
   // Should be a node
   return operands.pop();

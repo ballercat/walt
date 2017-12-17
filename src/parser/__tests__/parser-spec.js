@@ -1,18 +1,8 @@
 import test from "ava";
 import Parser from "..";
-import { I32 } from "../../emitter/value_type";
-import { EXTERN_GLOBAL } from "../../emitter/external_kind";
 import Tokenizer from "../../tokenizer";
 import TokenStream from "../../utils/token-stream";
 import Stream from "../../utils/stream";
-import emit from "../../emitter";
-
-const tokenizer = {
-  empty: new Tokenizer(new Stream("")),
-  semicolon: new Tokenizer(new Stream("")),
-  constGlobals: new Tokenizer(new Stream("const answer: i32 = 42;")),
-  exportGlobals: new Tokenizer(new Stream("export const answer: i32 = 42;"))
-};
 
 const prepare = string =>
   new TokenStream(new Tokenizer(new Stream(string)).parse());

@@ -53,7 +53,9 @@ const paramList = ctx => {
 
 const maybeFunctionDeclaration = (ctx: Context) => {
   const node = ctx.startNode();
-  if (!ctx.eat(["function"])) return declaration(ctx);
+  if (!ctx.eat(["function"])) {
+return declaration(ctx);
+}
 
   ctx.func = node;
   node.func = true;
@@ -100,20 +102,24 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   let stmt = null;
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
-    if (stmt) node.body.push(stmt);
+    if (stmt) {
+node.body.push(stmt);
+}
   }
 
   // Sanity check the return statement
   const ret = last(node.params);
   if (ret && node.type) {
-    if (node.type === "void" && ret.Type === Syntax.ReturnStatement)
-      throw ctx.syntaxError(
+    if (node.type === "void" && ret.Type === Syntax.ReturnStatement)      {
+throw ctx.syntaxError(
         "Unexpected return value in a function with result : void"
       );
-    if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement)
-      throw ctx.syntaxError(
+}
+    if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement)      {
+throw ctx.syntaxError(
         "Expected a return value in a function with result : " + node.result
       );
+}
   } else if (node.result) {
     // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }

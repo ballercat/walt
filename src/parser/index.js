@@ -32,7 +32,9 @@ class Parser {
 
     while (ctx.stream.peek()) {
       const child = statement(ctx);
-      if (child) node.body.push(child);
+      if (child) {
+node.body.push(child);
+}
     }
 
     return node;

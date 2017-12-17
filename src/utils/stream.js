@@ -29,8 +29,11 @@ class Stream {
   next(): string {
     const char = this.input.charAt(this.pos++);
 
-    if (Stream.eol(char)) this.newLine();
-    else this.col++;
+    if (Stream.eol(char)) {
+this.newLine();
+}    else {
+this.col++;
+}
 
     return char;
   }

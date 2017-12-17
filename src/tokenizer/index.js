@@ -26,9 +26,10 @@ class Tokenizer {
       comments
     ]
   ) {
-    if (!(stream instanceof Stream))
-      this.die(`Tokenizer expected instance of Stream in constructor.
+    if (!(stream instanceof Stream)) {
+this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
+}
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -62,7 +63,9 @@ class Tokenizer {
     } while (!Stream.eol(next) && !Stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
-    if (Stream.eof(value)) return null;
+    if (Stream.eof(value)) {
+      return null;
+    }
 
     const token = this.token(value, matchers);
     token.start = start;
@@ -71,13 +74,17 @@ class Tokenizer {
       col: this.stream.col
     };
     // Comments are ignored for now
-    if (token.type !== comments.type) this.tokens.push(token);
+    if (token.type !== comments.type) {
+      this.tokens.push(token);
+    }
 
     return this.tokens[this.pos++];
   }
 
   match(char: string, parsers: Array<Function>) {
-    if (char == null) return parsers;
+    if (char == null) {
+      return parsers;
+    }
 
     return parsers.map(parse => parse(char)).filter(p => p);
   }
@@ -94,10 +101,14 @@ class Tokenizer {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
-      if (parsers.length > 1) parsers = parsers.filter(parser => parser.strict);
+      if (parsers.length > 1) {
+        parsers = parsers.filter(parser => parser.strict);
+      }
     }
 
-    if (parsers.length === 1) token.type = parsers[0].type;
+    if (parsers.length === 1) {
+      token.type = parsers[0].type;
+    }
 
     return token;
   }
@@ -106,12 +117,15 @@ class Tokenizer {
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
   seekNonWhitespace() {
-    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))
+    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))      {
       this.stream.next();
+    }
   }
 
   parse() {
-    while (!Stream.eof(this.stream.peek())) this.next();
+    while (!Stream.eof(this.stream.peek())) {
+      this.next();
+    }
 
     return this.tokens;
   }
