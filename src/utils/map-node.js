@@ -4,7 +4,7 @@ import type { NodeType } from "../flow/types";
 type WalkerType = (node: NodeType) => NodeType;
 type VisitorType = { [string]: WalkerType };
 
-export default function mapNode (visitor: VisitorType): WalkerType {
+export default function mapNode(visitor: VisitorType): WalkerType {
   const impl = (node: NodeType): NodeType => {
     if (node == null) {
       return node;

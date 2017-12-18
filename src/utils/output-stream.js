@@ -7,7 +7,7 @@ export default class OutputStream {
   data: Array<any>;
   size: number;
 
-  constructor () {
+  constructor() {
     // Our data, expand it
     this.data = [];
 
@@ -15,7 +15,7 @@ export default class OutputStream {
     this.size = 0;
   }
 
-  push (type: string, value: any, debug: string = "") {
+  push(type: string, value: any, debug: string = "") {
     let size = 0;
     switch (type) {
       case "varuint7":
@@ -46,7 +46,7 @@ export default class OutputStream {
     return this;
   }
 
-  encode (value: number) {
+  encode(value: number) {
     const encoding = [];
     while (true) {
       const i = value & 127;
@@ -62,7 +62,7 @@ export default class OutputStream {
     return encoding;
   }
 
-  encodeSigned (value: number) {
+  encodeSigned(value: number) {
     const encoding = [];
     const size = 32;
     while (true) {
@@ -84,7 +84,7 @@ export default class OutputStream {
   }
 
   // Get the BUFFER, not data array. **Always creates new buffer**
-  buffer () {
+  buffer() {
     const buffer = new ArrayBuffer(this.size);
     const view = new DataView(buffer);
     let pc = 0;
@@ -100,7 +100,7 @@ export default class OutputStream {
   }
 
   // Writes source OutputStream into the current buffer
-  write (source: ?OutputStream) {
+  write(source: ?OutputStream) {
     if (source) {
       this.data = this.data.concat(source.data);
       this.size += source.size;

@@ -4,7 +4,6 @@ import { nodeMetaType } from "../parser/array-subscript";
 import { TYPE_ARRAY } from "../parser/metadata";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
-import type { Node } from "../flow/types";
 import type { GeneratorType } from "./flow/types";
 
 const generateMemoryAssignment: GeneratorType = (node, parent) => {

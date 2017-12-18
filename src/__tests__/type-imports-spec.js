@@ -21,7 +21,7 @@ test("function typed imports", t =>
     `,
       {
         env: {
-          log: function (value) {
+          log: function(value) {
             t.is(value, 42);
             resolve();
           },
@@ -52,7 +52,7 @@ test("function pointers", t =>
       {
         env: {
           table,
-          log: function (value) {
+          log: function(value) {
             t.is(value, 42);
             resolve();
           },

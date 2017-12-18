@@ -86,7 +86,7 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   node.meta = [
     make(
       {
-        get functionIndex () {
+        get functionIndex() {
           return node.functionIndex + ctx.functionImports.length;
         },
       },

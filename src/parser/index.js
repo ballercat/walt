@@ -6,7 +6,7 @@ import type TokenStream from "../utils/token-stream";
 class Parser {
   context: Context;
 
-  constructor (tokens: TokenStream, lines: string[] = []) {
+  constructor(tokens: TokenStream, lines: string[] = []) {
     this.context = new Context({
       body: [],
       diAssoc: "right",
@@ -20,7 +20,7 @@ class Parser {
   }
 
   // Get the ast
-  parse () {
+  parse() {
     const ctx = this.context;
     // No code, no problem, empty ast equals
     // (module) ; the most basic wasm module

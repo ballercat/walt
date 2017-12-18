@@ -40,7 +40,7 @@ export const typeWeight = (typeString: ?string) => {
   }
 };
 
-function patchTypeCasts (node: NodeType): NodeType {
+function patchTypeCasts(node: NodeType): NodeType {
   return mapNode({
     [Syntax.Pair]: (typeCastMaybe: NodeType): NodeType => {
       const { "params": [targetNode, typeNode] } = typeCastMaybe;

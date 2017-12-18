@@ -69,7 +69,7 @@ export const getByteOffsetsAndSize = (
   return [offsetsByKey, size, keyTypeMap];
 };
 
-export default function typeParser (ctx: Context): NodeType {
+export default function typeParser(ctx: Context): NodeType {
   const node = ctx.startNode();
   ctx.eat(["type"]);
 

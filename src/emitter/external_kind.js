@@ -6,7 +6,7 @@ export const EXTERN_TABLE = 1;
 export const EXTERN_MEMORY = 2;
 export const EXTERN_GLOBAL = 3;
 
-export default function externalKind (value: string) {
+export default function externalKind(value: string) {
   // single byte integer indicating the kind of definition imported or defined
   return { type: u8, value };
 }

@@ -1,7 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import type { Node } from "../flow/types";
 import type { GeneratorType } from "./flow/types";
 
 const generateMemory: GeneratorType = node => {

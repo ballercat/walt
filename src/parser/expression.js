@@ -30,7 +30,6 @@ export const predicate = (token: Token, depth: number): boolean =>
 // Shunting yard
 const expression = (
   ctx: Context,
-  type: string = "i32",
   check: Predicate = predicate
 ) => {
   const operators: Token[] = [];

@@ -36,7 +36,7 @@ class Context {
   functionImports: Node[];
   functionImportsLength: number;
 
-  constructor (options: ContextOptions) {
+  constructor(options: ContextOptions) {
     Object.assign(this, {
       body: [],
       diAssoc: "right",
@@ -63,7 +63,7 @@ class Context {
     };
   }
 
-  syntaxError (msg: string, error: any) {
+  syntaxError(msg: string, error: any) {
     return new SyntaxError(
       generateErrorString(
         msg,
@@ -76,14 +76,14 @@ class Context {
     );
   }
 
-  unexpectedValue (value: string[] | string) {
+  unexpectedValue(value: string[] | string) {
     return this.syntaxError(
       `Expected: ${Array.isArray(value) ? value.join("|") : value}`,
       "Unexpected value"
     );
   }
 
-  unexpected (token?: string) {
+  unexpected(token?: string) {
     return this.syntaxError(
       `Expected: ${Array.isArray(token)
         ? token.join(" | ")
@@ -92,15 +92,15 @@ class Context {
     );
   }
 
-  unknown ({ value }: { value: string }) {
+  unknown({ value }: { value: string }) {
     return this.syntaxError("Unknown token", value);
   }
 
-  unsupported () {
+  unsupported() {
     return this.syntaxError("Language feature not supported", this.token.value);
   }
 
-  expect (value: string[] | null, type?: string): Token {
+  expect(value: string[] | null, type?: string): Token {
     const token = this.token;
     if (!this.eat(value, type)) {
       throw value ? this.unexpectedValue(value) : this.unexpected(type);
@@ -109,11 +109,11 @@ class Context {
     return token;
   }
 
-  next () {
+  next() {
     this.token = this.stream.next();
   }
 
-  eat (value: string[] | null, type?: string): boolean {
+  eat(value: string[] | null, type?: string): boolean {
     if (value) {
       if (value.includes(this.token.value)) {
         this.next();
@@ -130,7 +130,7 @@ class Context {
     return false;
   }
 
-  startNode (token: any = this.token): Node {
+  startNode(token: any = this.token): Node {
     return {
       Type: "",
       value: token.value,
@@ -140,7 +140,7 @@ class Context {
     };
   }
 
-  endNode (node: Node, Type: string): Node {
+  endNode(node: Node, Type: string): Node {
     const token = this.token || this.stream.last();
     return {
       ...node,
@@ -149,7 +149,7 @@ class Context {
     };
   }
 
-  makeNode (node: any, syntax: string): Node {
+  makeNode(node: any, syntax: string): Node {
     return this.endNode(
       {
         ...this.startNode(),

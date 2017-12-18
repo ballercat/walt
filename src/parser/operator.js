@@ -6,7 +6,7 @@ import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { subscriptFromNode, getMetaType } from "./array-subscript";
 import type { Token, NodeType } from "../flow/types";
 
-function binary (ctx: Context, op: Token, params: NodeType[]) {
+function binary(ctx: Context, op: Token, params: NodeType[]) {
   const node: NodeType = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = params;
@@ -50,7 +50,7 @@ const unary = (ctx: Context, op: Token, params: NodeType[]) => {
   };
 };
 
-function objectLiteral (ctx: Context, op: Token, params: NodeType[]): NodeType {
+function objectLiteral(ctx: Context, op: Token, params: NodeType[]): NodeType {
   const node = ctx.startNode(op);
   node.params = params;
   return ctx.endNode(node, Syntax.ObjectLiteral);

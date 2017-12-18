@@ -16,7 +16,7 @@ class Tokenizer {
   pos: number;
   parsers: Parsers;
 
-  constructor (
+  constructor(
     stream: Stream,
     parsers: Parsers = [
       punctuator,
@@ -40,10 +40,8 @@ class Tokenizer {
 
   /**
    * Get next token
-   *
-   * @return {Object} token
    */
-  next () {
+  next() {
     let value = "";
     this.seekNonWhitespace();
     let char = "";
@@ -83,7 +81,7 @@ class Tokenizer {
     return this.tokens[this.pos++];
   }
 
-  match (char: string, parsers: Parsers) {
+  match(char: string, parsers: Parsers) {
     if (char == null) {
       return parsers;
     }
@@ -93,13 +91,8 @@ class Tokenizer {
 
   /**
    * Match a particular non-whitespace value to a token
-   *
-   * @param {String} value Value to match
-   * @param {[Function]} parsers A list of parsers to map against
-   * @param {Object} token
-   * @return {Object} token
    */
-  token (value: string, parsers: Parsers, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
+  token(value: string, parsers: Parsers, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
@@ -118,13 +111,13 @@ class Tokenizer {
   /**
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
-  seekNonWhitespace () {
+  seekNonWhitespace() {
     while (this.stream.peek() && Stream.whitespace(this.stream.peek())) {
       this.stream.next();
     }
   }
 
-  parse () {
+  parse() {
     while (!Stream.eof(this.stream.peek())) {
       this.next();
     }
@@ -134,11 +127,8 @@ class Tokenizer {
 
   /**
    * Stop parsing and throw a fatal error
-   *
-   * @param {String} reason
-   * @throws
    */
-  die (reason: string) {
+  die(reason: string) {
     throw new Error(reason);
   }
 }

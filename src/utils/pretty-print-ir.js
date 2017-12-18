@@ -1,7 +1,7 @@
 // @flow
 import type { IntermediateOpcodeType } from "../generator/flow/types";
 
-export default function prettyPrint (IRList: IntermediateOpcodeType[]): string {
+export default function prettyPrint(IRList: IntermediateOpcodeType[]): string {
   return [
     "------ Intermediate Representation ------",
     `Stats: ${IRList.length} nodes`,

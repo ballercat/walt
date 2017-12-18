@@ -3,7 +3,6 @@ import mapSyntax from "./map-syntax";
 import { generateValueType } from "./utils";
 import mergeBlock from "./merge-block";
 import opcode, { opcodeFromOperator } from "../emitter/opcode";
-import type { Node } from "../flow/types";
 import type { GeneratorType } from "./flow/types";
 
 const generateTernary: GeneratorType = (node, parent) => {

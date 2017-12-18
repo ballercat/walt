@@ -38,7 +38,7 @@ export const generateImplicitFunctionType = ({
   };
 };
 
-export default function generateType (
+export default function generateType(
   node: NodeType
 ): IntermediateTypeDefinitionType {
   invariant(

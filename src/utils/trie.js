@@ -26,7 +26,7 @@ class Trie {
   root: Node;
   fsearch: any;
 
-  constructor (words: Array<string>) {
+  constructor(words: Array<string>) {
     this.root = {
       "char": "",
       "children": {},
@@ -37,7 +37,7 @@ class Trie {
     this.fsearch = fsearch(this.root);
   }
 
-  add (word: string) {
+  add(word: string) {
     let current = this.root;
     let char = word.slice(0, 1);
 

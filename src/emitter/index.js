@@ -3,7 +3,7 @@ import preamble from "./preamble";
 import section from "./section";
 import OutputStream from "../utils/output-stream";
 
-export default function emit (ast: any = {}) {
+export default function emit(ast: any = {}) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module

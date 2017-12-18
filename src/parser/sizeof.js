@@ -35,7 +35,7 @@ export const variableSize = (targetNode: NodeType): string => {
   }
 };
 
-export default function sizeof (ctx: Context): NodeType {
+export default function sizeof(ctx: Context): NodeType {
   const node = ctx.startNode();
 
   ctx.eat(["sizeof"]);

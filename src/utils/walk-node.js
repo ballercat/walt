@@ -6,7 +6,7 @@ type WalkerType = (node: NodeType) => void;
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-function walker (visitor: {
+function walker(visitor: {
   [string]: (NodeType, PatchType) => void,
 }): WalkerType {
   const impl = (node: NodeType, patch = () => {}) => {

@@ -8,7 +8,7 @@ export const MAGIC = 0x6d736100;
 export const MAGIC_INDEX = 0;
 export const VERSION_INDEX = 4;
 
-export default function write () {
+export default function write() {
   return new OutputStream()
     .push(u32, MAGIC, "\\0asm")
     .push(u32, VERSION, `version ${VERSION}`);

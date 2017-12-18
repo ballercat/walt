@@ -13,7 +13,7 @@ const returnStatement = (ctx: Context) => {
 
   // For generator to emit correct consant they must have a correct type
   // in the syntax it's not necessary to define the type since we can infer it here
-  if (expr.type && ctx.func.result !== expr.type) {
+  if (expr.type && ctx.func.result != null && ctx.func.result !== expr.type) {
     throw ctx.syntaxError(
       `Return type mismatch expected ${ctx.func.result}, got ${expr.type}`
     );
