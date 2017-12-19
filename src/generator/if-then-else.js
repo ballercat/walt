@@ -2,19 +2,11 @@
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
-import type {
-  GeneratorType,
-  NodeType,
-  IntermediateOpcodeType
-} from "./flow/types";
+import type { GeneratorType } from "./flow/types";
 
 // probably should be called "generateBranch" and be more generic
 // like handling ternary for example. A lot of shared logic here & ternary
-const generateIf: GeneratorType = (
-  node: NodeType,
-  parent: IntermediateOpcodeType
-) => {
-  debugger;
+const generateIf: GeneratorType = (node, parent) => {
   const mapper = mapSyntax(parent);
   const [condition, thenBlock, ...restParams] = node.params;
   return [
