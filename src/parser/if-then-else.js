@@ -30,7 +30,8 @@ export default function parseIfStatement(ctx: Context): NodeType {
   ctx.eat([";"]);
   while (ctx.eat(["else"])) {
     // maybe another if statement
-    params.push(ctx.makeNode({ params: [statement(ctx)] }, Syntax.Else));
+    const elseNode = ctx.makeNode(null, Syntax.Else);
+    params.push({ ...elseNode, params: [statement(ctx)] });
   }
 
   return ctx.endNode(
