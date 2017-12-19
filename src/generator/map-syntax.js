@@ -17,7 +17,8 @@ import generateTypecast from "./typecast";
 import generateBreak from "./break";
 import generateNoop from "./noop";
 import generateBlock from "./block";
-import generateElse from './else';
+import generateElse from "./else";
+import generateSelect from "./select";
 
 import Syntax from "../Syntax";
 import { getInScope, getConstOpcode } from "./utils";
@@ -36,6 +37,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.TernaryExpression]: generateTernary,
   [Syntax.IfThenElse]: generateIf,
   [Syntax.Else]: generateElse,
+  [Syntax.Select]: generateSelect,
   [Syntax.Block]: generateBlock,
   [Syntax.Identifier]: getInScope,
   [Syntax.FunctionIdentifier]: getInScope,

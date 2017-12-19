@@ -27,15 +27,6 @@ export const scopeOperation = curry((op, node) => {
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
-  //invariant(
-  //  !!node.type,
-  //  `Undefined Node type cannot generate const-opcode: ${JSON.stringify(
-  //    node,
-  //    null,
-  //    2
-  //  )}`
-  //);
-
   const kind: RawOpcodeType = opcode[nodeType + "Const"];
   const params = [Number(node.value)];
 

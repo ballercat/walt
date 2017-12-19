@@ -14,9 +14,7 @@ const condition = (ctx: Context): NodeType => {
 
 export default function parseIfStatement(ctx: Context): NodeType {
   const node: NodeType = {
-    ...ctx.startNode(ctx.token),
-    then: [],
-    else: []
+    ...ctx.startNode(ctx.token)
   };
 
   ctx.eat(["if"]);

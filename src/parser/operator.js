@@ -26,6 +26,8 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
     return subscriptFromNode(ctx, node, getMetaType(ctx, params[0]));
   } else if (node.value === ":") {
     Type = Syntax.Pair;
+  } else if (node.value === "||" || node.value === "&&") {
+    Type = Syntax.Select;
   }
 
   return balanceTypesInMathExpression(ctx.endNode(node, Type));

@@ -5,6 +5,7 @@ const Syntax = {
   Import: "Import",
   Statement: "Statement",
   IfThenElse: "IfThenElse",
+  Select: "Select",
   Else: "Else",
   UnaryExpression: "UnaryExpression",
   BinaryExpression: "BinaryExpression",

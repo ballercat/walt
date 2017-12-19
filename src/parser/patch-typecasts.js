@@ -8,6 +8,8 @@ import type { NodeType } from "../flow/types";
 
 export const isBinaryMathExpression = (node: NodeType): boolean => {
   switch (node.value) {
+    case "&&":
+    case "||":
     case "+":
     case "-":
     case "/":
