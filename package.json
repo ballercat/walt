@@ -7,7 +7,7 @@
     "validate": "npm run lint",
     "test": "nyc ava",
     "tdd": "ava",
-    "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
     "flow": "flow",

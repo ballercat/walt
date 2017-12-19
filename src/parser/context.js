@@ -85,9 +85,9 @@ class Context {
 
   unexpected(token?: string) {
     return this.syntaxError(
-      `Expected: ${Array.isArray(token)
-        ? token.join(" | ")
-        : JSON.stringify(token)}`,
+      `Expected: ${
+        Array.isArray(token) ? token.join(" | ") : JSON.stringify(token)
+      }`,
       `Unexpected token ${this.token.type}`
     );
   }
@@ -114,6 +114,10 @@ class Context {
   }
 
   eat(value: string[] | null, type?: string): boolean {
+    if (this.token == null) {
+      return false;
+    }
+
     if (value) {
       if (value.includes(this.token.value)) {
         this.next();

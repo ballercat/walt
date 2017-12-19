@@ -5,6 +5,7 @@ const Syntax = {
   Import: "Import",
   Statement: "Statement",
   IfThenElse: "IfThenElse",
+  Else: "Else",
   UnaryExpression: "UnaryExpression",
   BinaryExpression: "BinaryExpression",
   TernaryExpression: "TernaryExpression",
@@ -37,9 +38,10 @@ const Syntax = {
   Noop: "Noop",
 
   // Semantic Nodes
+  Block: "Block",
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
   FunctionPointer: "FunctionPointer"
 };
 
-module.exports = Syntax;
+export default Syntax;

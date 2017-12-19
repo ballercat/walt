@@ -1,33 +1,19 @@
 // @flow
 import Syntax from "../Syntax";
-import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
+import type Context from "./context";
+import type { NodeType } from "../flow/types";
 
-const doIfExpression = (node, ctx: Context) => {
+const condition = (ctx: Context): NodeType => {
   ctx.expect(["("]);
-  node.expr = expression(ctx, "i32");
+  const expr = expression(ctx, "i32");
   ctx.expect([")"]);
-}
+  return expr;
+};
 
-// push statements while taking into consideration having brackets or not
-const doStatement = (ctx: Context) => {
-  const statements = [];
-  // maybe a curly brace or not
-  if (ctx.eat(["{"])) {
-    while (ctx.token && ctx.token.value !== "}") {
-      statements.push(statement(ctx));
-    }
-    ctx.expect(["}"]);
-  } else {
-    statements.push(statement(ctx));
-    ctx.expect([";"]);
-  }
-  return statements.filter(stmt => stmt != null);
-}
-
-const ifThenElse = (ctx: Context) => {
-  const node = {
+export default function parseIfStatement(ctx: Context): NodeType {
+  const node: NodeType = {
     ...ctx.startNode(ctx.token),
     then: [],
     else: []
@@ -35,20 +21,23 @@ const ifThenElse = (ctx: Context) => {
 
   ctx.eat(["if"]);
   // First operand is the expression
-  doIfExpression(node, ctx);
-  node.then = doStatement(ctx);
+  const params = [
+    // condition
+    condition(ctx),
+    statement(ctx)
+  ];
 
+  ctx.eat([";"]);
   while (ctx.eat(["else"])) {
     // maybe another if statement
-    if (ctx.eat(["if"])) {
-      doIfExpression(node, ctx);
-      node.then = [...node.then, ...doStatement(ctx)];
-    } else {
-      node.else = [...node.else, ...doStatement(ctx)];
-    }
+    params.push(ctx.makeNode({ params: [statement(ctx)] }, Syntax.Else));
   }
 
-  return ctx.endNode(node, Syntax.IfThenElse);
-};
-
-export default ifThenElse;
+  return ctx.endNode(
+    {
+      ...node,
+      params
+    },
+    Syntax.IfThenElse
+  );
+}

@@ -1,5 +1,6 @@
 //@flow
 import type { NodeType } from "../../flow/types";
+export type { NodeType } from "../../flow/types";
 
 export type RawOpcodeType = {
   result: ?number,
@@ -28,5 +29,5 @@ export type IntermediateTypeDefinitionType = {
 
 export type GeneratorType = (
   NodeType,
-  IntermediateOpcodeType
-) => IntermediateOpcodeType[];
+  IntermediateFunctionType
+) => IntermediateOpcodeType | IntermediateOpcodeType[];
