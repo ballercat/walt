@@ -7,29 +7,22 @@ import OutputStream from "../../utils/output-stream";
 const encode = (payload, { type, init, mutable }) => {
   payload.push(u8, type, getTypeString(type));
   payload.push(u8, mutable, "mutable");
-  if (!Array.isArray(init)) {
-    // Encode the constant
-    switch (type) {
-      case I32:
-        payload.push(u8, opcode.i32Const.code, opcode.i32Const.text);
-        payload.push(varint32, init, `value (${init})`);
-        break;
-      case F32:
-        payload.push(u8, opcode.f32Const.code, opcode.f32Const.text);
-        payload.push(f32, init, `value (${init})`);
-        break;
-      case F64:
-        payload.push(u8, opcode.f64Const.code, opcode.f64Const.text);
-        payload.push(f64, 42.6, `value (${init})`);
-        break;
-    }
-  } else {
-    // Encode a list of opcodes
-    init.forEach(({ kind, params }) => {
-      payload.push(u8, kind.code, kind.text);
-      params.forEach(p => payload.push(varuint32, p, `value (${p})`));
-    });
+  // Encode the constant
+  switch (type) {
+    case I32:
+      payload.push(u8, opcode.i32Const.code, opcode.i32Const.text);
+      payload.push(varint32, init, `value (${init})`);
+      break;
+    case F32:
+      payload.push(u8, opcode.f32Const.code, opcode.f32Const.text);
+      payload.push(f32, init, `value (${init})`);
+      break;
+    case F64:
+      payload.push(u8, opcode.f64Const.code, opcode.f64Const.text);
+      payload.push(f64, 42.6, `value (${init})`);
+      break;
   }
+
   payload.push(u8, opcode.End.code, "end");
 };
 
