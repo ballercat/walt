@@ -1,6 +1,7 @@
 import Stream from "../utils/stream";
 import punctuator from "./punctuator";
 import constant from "./constant";
+import accessIdentifier from "./access-identifier";
 import identifier from "./identifier";
 import keyword from "./keyword";
 import string from "./string";
@@ -11,6 +12,7 @@ class Tokenizer {
   constructor(
     stream,
     parsers = [
+      accessIdentifier,
       punctuator,
       constant,
       identifier,

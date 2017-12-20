@@ -3,6 +3,7 @@ import Syntax from "../Syntax";
 import operator from "./operator";
 import constant from "./constant";
 import stringLiteral from "./string-literal";
+import accessIdentifier from "./access-identifier";
 import builtInType from "./builtin-type";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
@@ -173,6 +174,19 @@ break;
       case Syntax.Identifier:
         eatFunctionCall = true;
         operands.push(maybeIdentifier(ctx));
+        break;
+      case Syntax.AccessIdentifier:
+        // We're manually creating StringLiteral from AccessIdentifier
+        operators.push({
+          type: "Punctuator",
+          value: "[",
+          start: {},
+          end: {}
+        });
+        operands.push(accessIdentifier(ctx));
+        eatUntil(isLSqrBracket);
+        consume();
+        eatFunctionCall = false;
         break;
       case Syntax.StringLiteral:
         eatFunctionCall = false;
