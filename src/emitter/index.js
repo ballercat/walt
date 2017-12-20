@@ -11,6 +11,7 @@ export default function emit(ast = {}) {
     .write(section.type(ast))
     .write(section.imports(ast))
     .write(section.function(ast))
+    .write(section.table(ast))
     .write(section.memory(ast))
     .write(section.globals(ast))
     .write(section.exports(ast))

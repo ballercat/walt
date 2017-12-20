@@ -5,7 +5,7 @@ import { getType } from "../generator/utils";
 import generateType from "../generator/type";
 import generateImport from "../generator/import";
 import type { Field, Import, NodeType } from "../flow/types";
-import { EXTERN_MEMORY } from "../emitter/external_kind";
+import { EXTERN_MEMORY, EXTERN_TABLE } from "../emitter/external_kind";
 import { make, FUNCTION_INDEX } from "./metadata";
 
 const field = (ctx: Context): Field => {
@@ -19,6 +19,8 @@ const field = (ctx: Context): Field => {
     // native type, aka GLOBAL export
     if (typeString === "Memory") {
       f.kind = EXTERN_MEMORY;
+    } else if (typeString === "Table") {
+      f.kind = EXTERN_TABLE;
     } else {
       f.global = getType(typeString);
     }
@@ -79,8 +81,8 @@ const _import = (ctx: Context): Import => {
   ctx.eat(["import"]);
 
   if (!ctx.eat(["{"])) {
-throw ctx.syntaxError("expected {");
-}
+    throw ctx.syntaxError("expected {");
+  }
 
   node.fields = fieldList(ctx);
   ctx.expect(["from"]);

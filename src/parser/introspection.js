@@ -37,6 +37,10 @@ const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
   return -1;
 };
 
+export const findTableIndex = (ctx: Context, functionIndex: number) => {
+  return ctx.Program.Element.findIndex(n => n.functionIndex === functionIndex);
+};
+
 export const findLocalIndex = findFieldIndex(["func", "locals"]);
 export const findGlobalIndex = findFieldIndex(["globals"]);
 export const findFunctionIndex = findFieldIndex(["functions"]);

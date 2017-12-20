@@ -27,7 +27,6 @@ const supported = [
   // s-expression
   "global",
   "module",
-  "table",
   "type",
 
   // specials/asserts

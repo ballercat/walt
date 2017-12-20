@@ -7,11 +7,13 @@ import element from "./element";
 import types from "./types";
 import code from "./code";
 import memory from "./memory";
+import table from "./table";
 import {
   SECTION_TYPE,
   SECTION_IMPORT,
   SECTION_FUNCTION,
   SECTION_MEMORY,
+  SECTION_TABLE,
   SECTION_GLOBAL,
   SECTION_EXPORT,
   SECTION_ELEMENT,
@@ -26,6 +28,7 @@ export default {
     label: "Functions",
     emitter: functions
   }),
+  table: writer({ type: SECTION_TABLE, label: "Table", emitter: table }),
   memory: writer({ type: SECTION_MEMORY, label: "Memory", emitter: memory }),
   exports: writer({ type: SECTION_EXPORT, label: "Exports", emitter: exports }),
   globals: writer({ type: SECTION_GLOBAL, label: "Globals", emitter: globals }),

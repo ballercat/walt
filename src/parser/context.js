@@ -59,7 +59,8 @@ class Context {
       Globals: [],
       Element: [],
       Functions: [],
-      Memory: []
+      Memory: [],
+      Table: []
     };
   }
 

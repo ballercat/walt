@@ -1,14 +1,15 @@
 //@flow
 import Syntax from "../Syntax";
 import meta from "./metadata";
-import { writeFunctionPointer } from "./implicit-imports";
+import generateElement from "../generator/element";
 import type Context from "./context";
 import type { Node } from "../flow/types";
 import {
   findLocalIndex,
   findGlobalIndex,
   findFunctionIndex,
-  findUserTypeIndex
+  findUserTypeIndex,
+  findTableIndex
 } from "./introspection";
 
 // Maybe identifier, maybe function call
@@ -30,7 +31,17 @@ const maybeIdentifier = (ctx: Context): Node => {
   } else if (functionIndex !== -1 && ctx.stream.peek().value !== "(") {
     node.type = "i32";
     Type = Syntax.FunctionPointer;
-    node.meta.push(meta.tableIndex(writeFunctionPointer(ctx, functionIndex)));
+    // if (!ctx.Program.Table.length) {
+    //   throw ctx.syntaxError(`A table must be defined for function pointers`);
+    // }
+
+    let tableIndex = findTableIndex(ctx, functionIndex);
+    if (tableIndex < 0) {
+      tableIndex = ctx.Program.Element.length;
+      ctx.Program.Element.push(generateElement(functionIndex));
+    }
+    // TODO: make meta an object, sheesh
+    node.meta.push(meta.tableIndex(tableIndex));
   } else if (userTypeIndex !== -1 && ctx.stream.peek().value !== "(") {
     node.type = "i32";
     Type = Syntax.Type;

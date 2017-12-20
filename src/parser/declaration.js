@@ -2,6 +2,7 @@
 import Syntax from "../Syntax";
 import generateInit from "../generator/initializer";
 import generateMemory from "../generator/memory";
+import generateTable from "../generator/table";
 import expression from "./expression";
 import metadata from "./metadata";
 import type Context from "./context";
@@ -12,6 +13,8 @@ const generate = (ctx, node) => {
   if (!ctx.func) {
     if (node.type === "Memory") {
       ctx.Program.Memory.push(generateMemory(node));
+    } else if (node.type === "Table") {
+      ctx.Program.Table.push(generateTable(node));
     } else {
       node.meta.push(metadata.globalIndex(ctx.Program.Globals.length));
       ctx.Program.Globals.push(generateInit(node));
@@ -30,9 +33,9 @@ const declaration = (ctx: Context): NodeType => {
     node.meta.push(metadata.constant());
   }
 
-  if (!ctx.eat(["const", "let", "function"]))    {
-throw ctx.unexpectedValue(["const", "let", "function"]);
-}
+  if (!ctx.eat(["const", "let", "function"])) {
+    throw ctx.unexpectedValue(["const", "let", "function"]);
+  }
 
   node.id = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
@@ -56,9 +59,9 @@ throw ctx.unexpectedValue(["const", "let", "function"]);
     node.params.push(expression(ctx, node.type));
   }
 
-  if (node.const && !node.init)    {
-throw ctx.syntaxError("Constant value must be initialized");
-}
+  if (node.const && !node.init) {
+    throw ctx.syntaxError("Constant value must be initialized");
+  }
 
   generate(ctx, node);
 
