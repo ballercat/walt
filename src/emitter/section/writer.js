@@ -5,8 +5,8 @@ import OutputStream from "../../utils/output-stream";
 const writer = ({ type, label, emitter }) => ast => {
   const field = ast[label];
   if (!field || !field.length) {
-return null;
-}
+    return null;
+  }
 
   const stream = new OutputStream().push(u8, type, label + " section");
   const entries = emitter(field);

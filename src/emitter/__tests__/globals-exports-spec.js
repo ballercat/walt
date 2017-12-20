@@ -14,21 +14,21 @@ const ast = {
 
 test("compiles globals accurately", t => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  });
+  return WebAssembly.instantiate(stream.buffer()).then(
+    ({ module, instance }) => {
+      t.is(instance instanceof WebAssembly.Instance, true);
+      t.is(module instanceof WebAssembly.Module, true);
+    }
+  );
 });
 
 test("encodes correct values", t => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-    t.is(instance.exports.meaningOfLife, meaningOfLife);
-  });
+  return WebAssembly.instantiate(stream.buffer()).then(
+    ({ module, instance }) => {
+      t.is(instance instanceof WebAssembly.Instance, true);
+      t.is(module instanceof WebAssembly.Module, true);
+      t.is(instance.exports.meaningOfLife, meaningOfLife);
+    }
+  );
 });

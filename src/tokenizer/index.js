@@ -20,10 +20,10 @@ class Tokenizer {
       comments
     ]
   ) {
-    if (!(stream instanceof Stream))      {
-this.die(`Tokenizer expected instance of Stream in constructor.
+    if (!(stream instanceof Stream)) {
+      this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
-}
+    }
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -58,8 +58,8 @@ this.die(`Tokenizer expected instance of Stream in constructor.
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) {
-return null;
-}
+      return null;
+    }
 
     const token = this.token(value, matchers);
     token.start = start;
@@ -69,16 +69,16 @@ return null;
     };
     // Comments are ignored for now
     if (token.type !== comments.type) {
-this.tokens.push(token);
-}
+      this.tokens.push(token);
+    }
 
     return this.tokens[this.pos++];
   }
 
   match(char, parsers) {
     if (char == null) {
-return parsers;
-}
+      return parsers;
+    }
 
     return parsers.map(parse => parse(char)).filter(p => p);
   }
@@ -94,13 +94,13 @@ return parsers;
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
       if (parsers.length > 1) {
-parsers = parsers.filter(parser => parser.strict);
-}
+        parsers = parsers.filter(parser => parser.strict);
+      }
     }
 
     if (parsers.length === 1) {
-token.type = parsers[0].type;
-}
+      token.type = parsers[0].type;
+    }
 
     return token;
   }
@@ -109,15 +109,15 @@ token.type = parsers[0].type;
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
   seekNonWhitespace() {
-    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))      {
-this.stream.next();
-}
+    while (this.stream.peek() && Stream.whitespace(this.stream.peek())) {
+      this.stream.next();
+    }
   }
 
   parse() {
     while (!Stream.eof(this.stream.peek())) {
-this.next();
-}
+      this.next();
+    }
 
     return this.tokens;
   }

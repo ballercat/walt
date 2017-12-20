@@ -62,8 +62,8 @@ const expression = (
       getAssociativty(previous) === "left"
     ) {
       if (value === "," && previous.type === Syntax.FunctionCall) {
-break;
-}
+        break;
+      }
       // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
@@ -91,12 +91,12 @@ break;
             operands.push(expr);
           }
           return false;
-        } 
-          if (ctx.token.value === "?") {
-            inTernary = true;
-          }
-          operators.push(ctx.token);
-        
+        }
+        if (ctx.token.value === "?") {
+          inTernary = true;
+        }
+        operators.push(ctx.token);
+
         break;
       case "[":
         depth++;
@@ -207,8 +207,8 @@ break;
   }
 
   while (operators.length) {
-consume();
-}
+    consume();
+  }
 
   // Should be a node
   return operands.pop();
