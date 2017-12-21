@@ -66,36 +66,36 @@ test('ternary', async () => {
   outputIs(result, 42);
 });
 
-// test('else if statement', async () => {
-//   const { instance: { exports } } = await compileAndRun(`
-//   export function test(x: i32): i32 {
-//     if (x == 0) {
-//       x = 2;
-//     } else if (x == 1) {
-//       x = 4;
-//     } else {
-//       x = 1;
-//     }
-//     return x;
-//   }`);
-//   expect(exports.test(0)).toBe(2);
-//   expect(exports.test(1)).toBe(4);
-//   expect(exports.test(-1)).toBe(1);
-// });
+test('else if statement', async () => {
+  const { instance: { exports } } = await compileAndRun(`
+  export function test(x: i32): i32 {
+    if (x == 0) {
+      x = 2;
+    } else if (x == 1) {
+      x = 4;
+    } else {
+      x = 1;
+    }
+    return x;
+  }`);
+  expect(exports.test(0)).toBe(2);
+  expect(exports.test(1)).toBe(4);
+  expect(exports.test(-1)).toBe(1);
+});
 
-// test('else if statement no curly braces', async () => {
-//   const { instance: { exports } } = await compileAndRun(`
-//   export function test(x: i32): i32 {
-//     if (x == 0)
-//       x = 2;
-//     else if (x == 1)
-//       x = 4;
-//     else
-//       x = 1;
-//     return x;
-//   }`);
-//   console.log(exports.test(1));
-//   expect(exports.test(0)).toBe(2);
-//   expect(exports.test(1)).toBe(4);
-//   expect(exports.test(-1)).toBe(1);
-// });
+test('else if statement no curly braces', async () => {
+  const { instance: { exports } } = await compileAndRun(`
+  export function test(x: i32): i32 {
+    if (x == 0)
+      x = 2;
+    else if (x == 1)
+      x = 4;
+    else
+      x = 1;
+    return x;
+  }`);
+  console.log(exports.test(1));
+  expect(exports.test(0)).toBe(2);
+  expect(exports.test(1)).toBe(4);
+  expect(exports.test(-1)).toBe(1);
+});
