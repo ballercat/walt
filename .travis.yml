@@ -1,6 +1,8 @@
 language: node_js
 node_js:
   - "8.0"
+env:
+  - CI=true
 before_script: "npm run validate"
 script: "npm test"
 after_success:
