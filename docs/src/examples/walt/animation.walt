@@ -45,21 +45,17 @@ function bounce(particle: ParticleType, min: f32) {
   if (particle['y'] > maxHeight) {
     particle['y'] -= particle['y'] - maxHeight;
     particle['vy'] = -particle['vy'];
-  } else {
-    if (particle['y'] < min) {
-      particle['y'] = min + (min - particle['y']);
-      particle['vy'] = -particle['vy'];
-    }
+  } else if (particle['y'] < min) {
+    particle['y'] = min + (min - particle['y']);
+    particle['vy'] = -particle['vy'];
   }
 
   if (particle['x'] > maxWidth) {
     particle['x'] -= particle['x'] - maxWidth;
     particle['vx'] = -particle['vx'];
-  } else {
-    if (particle['x'] < min) {
-        particle['x'] = min + (min - particle['x']);
-        particle['vx'] = -particle['vx'];
-    }
+  } else if (particle['x'] < min) {
+    particle['x'] = min + (min - particle['x']);
+    particle['vx'] = -particle['vx'];
   }
 }
 
