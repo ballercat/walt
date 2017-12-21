@@ -55,10 +55,10 @@ Node 8+ has native Web Assembly support and this project takes full advantage of
 Almost every piece of the compiler is unit tested.
 
 * `npm run tdd`
-* `npm run tdd -- --watch`
-* `npm run tdd -- --watch <spec_file_path>`
 
-Do not confuse with `npm test`. The `npm test` command is used for CI integration and generates
+Above command will start Jest interactive mode which you can use during the development.
+
+Do not confuse `npm run tdd` with `npm test`. The `npm test` command is used for CI integration and generates
 full code coverage reports. You may still use it if you are interested in coverall report.
 
 ## Merge Requests

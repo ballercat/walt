@@ -1,11 +1,10 @@
 import Tokenizer from "..";
 import Stream from "../../utils/stream";
 import Syntax from "../../Syntax";
-import test from "ava";
 
-test("next reads tokens, ignoring whitespace", t => {
+test("next reads tokens, ignoring whitespace", () => {
   const tokenizer = new Tokenizer(new Stream("     global"));
-  t.deepEqual(tokenizer.next(), {
+  expect(tokenizer.next()).toEqual({
     type: Syntax.Keyword,
     value: "global",
     end: {
@@ -19,14 +18,14 @@ test("next reads tokens, ignoring whitespace", t => {
   });
 });
 
-test("parses a stream into tokens", t => {
+test("parses a stream into tokens", () => {
   const stream = new Stream(`let x: i32 = 2;`);
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
-  t.snapshot(result);
+  expect(result).toMatchSnapshot();
 });
 
-test("ignores whitespace at the end of file", t => {
+test("ignores whitespace at the end of file", () => {
   const stream = new Stream(`
   function test(): i32 {
     return 2 + 2;
@@ -34,26 +33,26 @@ test("ignores whitespace at the end of file", t => {
   `);
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
-  t.snapshot(result);
+  expect(result).toMatchSnapshot();
 });
 
-test("ignores comments", t => {
+test("ignores comments", () => {
   const stream = new Stream(`
   // comment
   2`);
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
-  t.snapshot(result);
+  expect(result).toMatchSnapshot();
 });
 
-test("parses basic strings", t => {
+test("parses basic strings", () => {
   const stream = new Stream(`'this is a string' "and so is this"`);
   const tokenizer = new Tokenizer(stream);
-  t.snapshot(tokenizer.parse());
+  expect(tokenizer.parse()).toMatchSnapshot();
 });
 
-test("parsers strings within strings", t => {
+test("parsers strings within strings", () => {
   const stream = new Stream(`"here is a string with a 'substring'"`);
   const tokenizer = new Tokenizer(stream);
-  t.snapshot(tokenizer.parse());
+  expect(tokenizer.parse()).toMatchSnapshot();
 });

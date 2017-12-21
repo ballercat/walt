@@ -1,8 +1,7 @@
-import test from "ava";
-import { I32 } from "../value_type";
-import { EXTERN_FUNCTION } from "../external_kind";
-import opcode from "../opcode";
-import emit from "..";
+import { I32 } from '../value_type';
+import { EXTERN_FUNCTION } from '../external_kind';
+import opcode from '../opcode';
+import emit from '..';
 
 // This ast structure tests more than just function sections.
 // But for us to even test the function section we need to have
@@ -12,19 +11,16 @@ const ast = {
   Types: [{ params: [], result: I32 }],
   Functions: [0],
   Code: [{ locals: [], code: [{ kind: opcode.GetGlobal, params: [0] }] }],
-  Exports: [{ kind: EXTERN_FUNCTION, field: "echo", index: 0 }],
+  Exports: [{ kind: EXTERN_FUNCTION, field: 'echo', index: 0 }],
   Globals: [{ mutable: 0, type: I32, init: meaningOfLife }]
 };
 
-test("compiles functions accurately", t => {
+test('compiles functions accurately', async () => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
+  const { module, instance } = await WebAssembly.instantiate(stream.buffer());
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
 
-    // cool
-    t.is(instance.exports.echo(), meaningOfLife);
-  });
+  // cool
+  expect(instance.exports.echo()).toBe(meaningOfLife);
 });

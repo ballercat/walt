@@ -1,25 +1,24 @@
-import test from "ava";
 import parseExpression from "../../parser/expression";
 import generateArraySubscript from "../array-subscript";
 import { TYPE_ARRAY, TYPE_USER, TYPE_OBJECT } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
 
-test("generated array offsets", t => {
+test("generated array offsets", () => {
   const ctx = mockContext(`x[1];`);
   ctx.func = {
     locals: [{ id: "x", type: "i32", meta: [{ type: TYPE_ARRAY }] }]
   };
   const node = parseExpression(ctx);
   const ir = generateArraySubscript(node);
-  t.snapshot(ir);
+  expect(ir).toMatchSnapshot();
 });
 
-test("doesn not work on undefined variables", t => {
+test("doesn not work on undefined variables", () => {
   const ctx = mockContext(`x[1]`);
-  t.throws(() => parseExpression(ctx));
+  expect(() => parseExpression(ctx)).toThrow();
 });
 
-test("generates correct offsets for user-defined objects", t => {
+test("generates correct offsets for user-defined objects", () => {
   const ctx = mockContext(`x['bar'];`);
   ctx.func = {
     locals: [
@@ -39,5 +38,5 @@ test("generates correct offsets for user-defined objects", t => {
   };
   const node = parseExpression(ctx);
   const ir = generateArraySubscript(node);
-  t.snapshot(ir);
+  expect(ir).toMatchSnapshot();
 });

@@ -1,26 +1,25 @@
-import test from "ava";
 import sizeofParser from "../sizeof";
 import { TYPE_USER, OBJECT_SIZE } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
 //import printNode from "../../utils/print-node";
 
-test("sizeof parser, built-in type", t => {
+test("sizeof parser, built-in type", () => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [{ id: "x", type: "i32", meta: [] }];
   const node = sizeofParser(ctx);
 
-  t.is(node.value, "4");
-  t.is(node.type, "i32");
+  expect(node.value).toBe("4");
+  expect(node.type).toBe("i32");
 });
 
-test("sizeof parser, arrays throw", t => {
+test("sizeof parser, arrays throw", () => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [{ id: "x", type: "i32", meta: [{ type: "type/array" }] }];
 
-  t.throws(() => sizeofParser(ctx));
+  expect(() => sizeofParser(ctx)).toThrow();
 });
 
-test("sizeof parser, user-defined object types", t => {
+test("sizeof parser, user-defined object types", () => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [
     {
@@ -35,12 +34,12 @@ test("sizeof parser, user-defined object types", t => {
     }
   ];
   const node = sizeofParser(ctx);
-  t.is(node.value, 16);
+  expect(node.value).toBe(16);
 });
 
-test("sizeof parser, 64 bit variables", t => {
+test("sizeof parser, 64 bit variables", () => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [{ id: "x", type: "f64", meta: [] }];
   const node = sizeofParser(ctx);
-  t.snapshot(node);
+  expect(node).toMatchSnapshot();
 });

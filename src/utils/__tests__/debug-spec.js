@@ -1,4 +1,3 @@
-import test from "ava";
 import debug from "../debug";
 import { getIR } from "../..";
 
@@ -8,6 +7,6 @@ export function echo(): i32 {
   return x;
 }`;
 
-test("debug prints web-assembly opcodes", t => {
-  t.snapshot(debug(getIR(DEFAULT_EXAMPLE)));
+test("debug prints web-assembly opcodes", () => {
+  expect(debug(getIR(DEFAULT_EXAMPLE))).toMatchSnapshot();
 });

@@ -1,4 +1,3 @@
-import test from "ava";
 import parseStatement from "../../parser/statement";
 import mapSyntax from "../map-syntax";
 import {
@@ -9,17 +8,17 @@ import {
 } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
 
-test("unary negation, arrays", t => {
+test("unary negation, arrays", () => {
   const ctx = mockContext("x[0] = ((x * 7 % 200) - 100) / 100.0");
   ctx.func = {
     locals: [
       { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] }
     ]
   };
-  t.snapshot(parseStatement(ctx));
+  expect(parseStatement(ctx)).toMatchSnapshot();
 });
 
-test("generates correct offsets for arrays", t => {
+test("generates correct offsets for arrays", () => {
   const ctx = mockContext(`x[1] = 42;`);
   ctx.func = {
     locals: [
@@ -28,10 +27,10 @@ test("generates correct offsets for arrays", t => {
   };
   const node = parseStatement(ctx);
   const ir = mapSyntax(null, node);
-  t.snapshot(ir);
+  expect(ir).toMatchSnapshot();
 });
 
-test("generates correct offsets for user-defined objects", t => {
+test("generates correct offsets for user-defined objects", () => {
   const ctx = mockContext(`x['bar'] = 42;`);
   ctx.func = {
     locals: [
@@ -56,5 +55,5 @@ test("generates correct offsets for user-defined objects", t => {
   };
   const node = parseStatement(ctx);
   const ir = mapSyntax(null, node);
-  t.snapshot(ir);
+  expect(ir).toMatchSnapshot();
 });

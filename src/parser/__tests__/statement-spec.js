@@ -1,8 +1,7 @@
-import test from "ava";
 import statement from "../statement";
 import { mockContext } from "../../utils/mocks";
 
-test("not yet implemented keywords throw", t => {
+test("not yet implemented keywords throw", () => {
   const ctx = mockContext("table");
-  t.throws(() => statement(ctx));
+  expect(() => statement(ctx)).toThrow();
 });

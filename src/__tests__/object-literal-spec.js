@@ -1,32 +1,29 @@
-import test from "ava";
-import compile from "..";
+import compile from '..';
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src), imports);
-const outputIs = (t, value) => result =>
-  t.is(result.instance.exports.test(), value);
 
-test("types and assignment", t => {
-  return compileAndRun(
-    `
-  const memory: Memory = { 'initial': 1 };
+const outputIs = (result, value) =>
+  expect(result.instance.exports.test()).toBe(value);
 
-  type TestType = { 'foo': i32, 'bar': i32 };
+test('types and assignment', async () => {
+  const result = await compileAndRun(`
+    const memory: Memory = { 'initial': 1 };
+    type TestType = { 'foo': i32, 'bar': i32 };
+    export function test(): i32 {
+      let obj: TestType = 0;
 
-  export function test(): i32 {
-    let obj: TestType = 0;
+      obj['foo'] = 42;
+      obj['bar'] = 20;
 
-    obj['foo'] = 42;
-    obj['bar'] = 20;
-
-    return obj['foo'] + obj['bar'];
-  }`
-  ).then(outputIs(t, 62));
+      return obj['foo'] + obj['bar'];
+    }`);
+  outputIs(result, 62);
 });
 
-test("object indexing and alignment", t => {
-  return compileAndRun(
-    `const memory: Memory = { 'initial': 1 };
+test('object indexing and alignment', async () => {
+  const result = await compileAndRun(`
+    const memory: Memory = { 'initial': 1 };
     type TestType = { 'foo': i32, 'bar': i32 };
     export function test(): i32 {
       let obj: TestType = 0;
@@ -36,13 +33,13 @@ test("object indexing and alignment", t => {
       obj['bar'] = 20;
 
       return arr[0] + arr[1];
-    }`
-  ).then(outputIs(t, 62));
+    }`);
+  outputIs(result, 62);
 });
 
-test("float types", t => {
-  return compileAndRun(
-    `const memory: Memory = { 'initial': 1 };
+test('float types', async () => {
+  const result = await compileAndRun(`
+    const memory: Memory = { 'initial': 1 };
     type TestType = { 'foo': i32 };
     export function test(): f32 {
       let obj: f32[] = 0;
@@ -50,6 +47,6 @@ test("float types", t => {
 
       return obj[1];
     }
-    `
-  ).then(outputIs(t, 2));
+    `);
+  outputIs(result, 2);
 });

@@ -1,8 +1,7 @@
 import mapSyntax from "../map-syntax";
-import test from "ava";
 
-test("map syntax throws if Type is unknown", t => {
-  t.throws(() => {
+test("map syntax throws if Type is unknown", () => {
+  expect(() => {
     mapSyntax({}, { value: "unknown", Type: null });
-  });
+  }).toThrow();
 });

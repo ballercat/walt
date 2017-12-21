@@ -1,83 +1,92 @@
-import test from "ava";
-import compile from "..";
+import compile from '..';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 
-test("empty module compilation", t =>
-  compileAndRun("").then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  }));
+test('empty module compilation', async () => {
+  const { module, instance } = await compileAndRun('');
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
+});
 
-test("global declaration compilation", t =>
-  compileAndRun("let answer: i32 = 42;").then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  }));
+test('global declaration compilation', async () => {
+  const { module, instance } = await compileAndRun('let answer: i32 = 42;');
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
+});
 
-test("global constant exports", t =>
-  compileAndRun(`
-      export const a: i32 = 42;
-      export const b: f64 = 42.6;
-  `).then(result => {
-    t.is(result.instance.exports.a, 42);
-    t.is(result.instance.exports.b, 42.6);
-  }));
+test('global constant exports', async () => {
+  const result = await compileAndRun(`
+    export const a: i32 = 42;
+    export const b: f64 = 42.6;
+`);
+  expect(result.instance.exports.a).toBe(42);
+  expect(result.instance.exports.b).toBe(42.6);
+});
 
-test("function exports", t =>
-  compileAndRun(`
-      export function echo() : i32 {
-        return 48;
-      }
-    `).then(result => {
-    t.is(result.instance.exports.echo(), 48);
-  }));
-
-test("function locals", t =>
-  compileAndRun(`
+test('function exports', async () => {
+  const result = await compileAndRun(`
     export function echo() : i32 {
-      const x : i32 = 42;
-      return x;
+      return 48;
     }
-  `).then(result => {
-    t.is(result.instance.exports.echo(), 42);
-  }));
+  `);
+  expect(result.instance.exports.echo()).toBe(48);
+});
 
-test("function scope", t =>
-  compileAndRun(`
-    const x : i32 = 11;
-    export function test() : i32 {
-      const x : i32 = 42;
-      return x;
-    }
-  `).then(result => t.is(result.instance.exports.test(), 42)));
-
-test("global reference in function scope", t =>
-  compileAndRun(`
+test('function locals', async () => {
+  const result = await compileAndRun(`
+  export function echo() : i32 {
     const x : i32 = 42;
-    export function test() : i32 {
-      return x;
-    }
-  `).then(result => t.is(result.instance.exports.test(), 42)));
+    return x;
+  }
+`);
+  expect(result.instance.exports.echo()).toBe(42);
+});
 
-test("compiles large signed consants correctly", t =>
-  compileAndRun(`
-    export function test(): i32 {
-      return 126;
-    }
-  `).then(result => t.is(result.instance.exports.test(), 126)));
+test('function scope', async () => {
+  const result = await compileAndRun(`
+  const x : i32 = 11;
+  export function test() : i32 {
+    const x : i32 = 42;
+    return x;
+  }
+`);
+  expect(result.instance.exports.test()).toBe(42);
+});
 
-test("compiles large signed global consants correctly", t =>
-  compileAndRun(`
-    const x: i32 = 126;
-    export function test(): i32 {
-      return x;
-    }
-  `).then(result => t.is(result.instance.exports.test(), 126)));
+test('global reference in function scope', async () => {
+  const result = await compileAndRun(`
+  const x : i32 = 42;
+  export function test() : i32 {
+    return x;
+  }
+`);
+  expect(result.instance.exports.test()).toBe(42);
+});
 
-test("compiles math", t =>
-  compileAndRun(`
-    export function test(): i32 {
-      return 2 + 2 - 4;
-    }
-  `).then(result => t.is(result.instance.exports.test(), 0)));
+test('compiles large signed consants correctly', async () => {
+  const result = await compileAndRun(`
+  export function test(): i32 {
+    return 126;
+  }
+`);
+  expect(result.instance.exports.test()).toBe(126);
+});
+
+test('compiles large signed global consants correctly', async () => {
+  const result = await compileAndRun(`
+  const x: i32 = 126;
+  export function test(): i32 {
+    return x;
+  }
+`);
+  expect(result.instance.exports.test()).toBe(126);
+});
+
+test('compiles math', async () => {
+  const result = await compileAndRun(`
+  export function test(): i32 {
+    return 2 + 2 - 4;
+  }
+`);
+  expect(result.instance.exports.test()).toBe(0);
+});
