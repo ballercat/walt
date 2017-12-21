@@ -5,7 +5,7 @@ import constant from "./constant";
 import stringLiteral from "./string-literal";
 import builtInType from "./builtin-type";
 import { getAssociativty, getPrecedence } from "./introspection";
-import maybeIdentifier from "./maybe-identifier";
+import maybeIdentifier, { accessIdentifier } from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
 import type Context from "./context";
 import type { Node, Token } from "../flow/types";
@@ -21,6 +21,7 @@ const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
+
 export const isPunctuatorAndNotBracket = (t: ?Token) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
@@ -62,8 +63,8 @@ const expression = (
       getAssociativty(previous) === "left"
     ) {
       if (value === "," && previous.type === Syntax.FunctionCall) {
-break;
-}
+        break;
+      }
       // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
@@ -71,6 +72,9 @@ break;
 
   const processPunctuator = () => {
     switch (ctx.token.value) {
+      case ".":
+        operators.push(ctx.token);
+        break;
       case "(":
         depth++;
         // Function call.
@@ -91,12 +95,12 @@ break;
             operands.push(expr);
           }
           return false;
-        } 
-          if (ctx.token.value === "?") {
-            inTernary = true;
-          }
-          operators.push(ctx.token);
-        
+        }
+        if (ctx.token.value === "?") {
+          inTernary = true;
+        }
+        operators.push(ctx.token);
+
         break;
       case "[":
         depth++;
@@ -171,8 +175,18 @@ break;
         operands.push(constant(ctx));
         break;
       case Syntax.Identifier:
-        eatFunctionCall = true;
-        operands.push(maybeIdentifier(ctx));
+        const prev = last(operators);
+        if (prev && prev.value === ".") {
+          operators.pop();
+          operators.push({ ...prev, value: "[" });
+          operands.push(accessIdentifier(ctx));
+          eatUntil(isLSqrBracket);
+          consume();
+          eatFunctionCall = false;
+        } else {
+          operands.push(maybeIdentifier(ctx));
+          eatFunctionCall = true;
+        }
         break;
       case Syntax.StringLiteral:
         eatFunctionCall = false;
@@ -207,8 +221,8 @@ break;
   }
 
   while (operators.length) {
-consume();
-}
+    consume();
+  }
 
   // Should be a node
   return operands.pop();

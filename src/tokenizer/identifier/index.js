@@ -4,12 +4,12 @@ import constant from "../constant";
 import string from "../string";
 import Syntax from "../../Syntax";
 
-const parse = char => {
+const maybeIdentifier = char => {
   // Don't allow these
-  if (!string(char) && !punctuator(char) && !constant(char) && char !== " ")    {
-return parse;
-}
+  if (!string(char) && !punctuator(char) && !constant(char) && char !== " ") {
+    return maybeIdentifier;
+  }
   return null;
 };
-const tokenParser = token(parse, Syntax.Identifier);
-export default tokenParser;
+
+export default token(maybeIdentifier, Syntax.Identifier);

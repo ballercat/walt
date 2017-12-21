@@ -1,16 +1,16 @@
 // @flow
-import invariant from "invariant";
-import Syntax from "../Syntax";
+import invariant from 'invariant';
+import Syntax from '../Syntax';
 import metadata, {
   OBJECT_KEY_TYPES,
   TYPE_OBJECT,
   TYPE_ARRAY,
   TYPE_USER
-} from "./metadata";
-import { findLocalIndex, findGlobalIndex } from "./introspection";
+} from './metadata';
+import { findLocalIndex, findGlobalIndex } from './introspection';
 
-import type { TokenType, NodeType, MetadataType } from "../flow/types";
-import type Context from "./context";
+import type { TokenType, NodeType, MetadataType } from '../flow/types';
+import type Context from './context';
 
 export const nodeMetaType = (targetNode: NodeType): ?MetadataType =>
   metadata.get(TYPE_USER, targetNode) || metadata.get(TYPE_ARRAY, targetNode);
@@ -54,7 +54,7 @@ export const patchStringSubscript = (
     const absoluteByteOffset = byteOffsetsByKey[key];
     return [
       params[0],
-      ctx.makeNode({ value: absoluteByteOffset, type: "i32" }, Syntax.Constant)
+      ctx.makeNode({ value: absoluteByteOffset, type: 'i32' }, Syntax.Constant)
     ];
   }
   return params;
