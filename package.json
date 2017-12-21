@@ -5,12 +5,11 @@
   "main": "index.js",
   "scripts": {
     "validate": "npm run lint",
-    "test": "jest --coverage",
+    "test": "jest --coverage --maxWorkers=4",
     "tdd": "jest --watch",
     "coverage": "npm test && cat ./coverage/lcov.info | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
-    "build":
-      "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
+    "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
     "flow": "flow",
     "lint": "eslint src"
   },
@@ -18,7 +17,10 @@
     "type": "git",
     "url": "git+https://github.com/ballercat/walt.git"
   },
-  "keywords": ["wasm", "wast"],
+  "keywords": [
+    "wasm",
+    "wast"
+  ],
   "author": "Arthur Buldauskas",
   "license": "MIT",
   "bugs": {
