@@ -1,4 +1,3 @@
-import test from 'ava';
 import { I32 } from '../value_type';
 import { EXTERN_GLOBAL } from '../external_kind';
 import emit from '..';
@@ -20,12 +19,12 @@ const ast = {
   ]
 };
 
-test('compiles imports accurately', t => {
+test('compiles imports accurately', async () => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer(), { a: { b: 42 }, foo: { bar: 0xFFFFF } }
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  })
+  const { module, instance } = await WebAssembly.instantiate(stream.buffer(), {
+    a: { b: 42 },
+    foo: { bar: 0xfffff }
+  });
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
 });

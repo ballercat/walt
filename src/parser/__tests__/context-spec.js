@@ -1,4 +1,3 @@
-import test from "ava";
 import Context from "../context";
 
 const ctx = new Context({
@@ -11,20 +10,20 @@ const ctx = new Context({
   func: { id: "test" }
 });
 
-test("syntaxError generates an accurate error string", t => {
+test("syntaxError generates an accurate error string", () => {
   const syntaxError = ctx.syntaxError("Test Error", "unknown token");
-  t.is(syntaxError instanceof SyntaxError, true);
-  t.snapshot(syntaxError.toString());
+  expect(syntaxError instanceof SyntaxError).toBe(true);
+  expect(syntaxError.toString()).toMatchSnapshot();
 });
 
-test("unknown token generates syntax error", t => {
+test("unknown token generates syntax error", () => {
   const syntaxError = ctx.unknown(ctx.token);
-  t.is(syntaxError instanceof SyntaxError, true);
-  t.snapshot(syntaxError.toString());
+  expect(syntaxError instanceof SyntaxError).toBe(true);
+  expect(syntaxError.toString()).toMatchSnapshot();
 });
 
-test("unexpected generates syntax error", t => {
+test("unexpected generates syntax error", () => {
   const syntaxError = ctx.unexpected(ctx.token.value);
-  t.is(syntaxError instanceof SyntaxError, true);
-  t.snapshot(syntaxError.toString());
+  expect(syntaxError instanceof SyntaxError).toBe(true);
+  expect(syntaxError.toString()).toMatchSnapshot();
 });

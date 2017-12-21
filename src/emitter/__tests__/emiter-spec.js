@@ -1,12 +1,8 @@
-import test from 'ava';
 import emit from '../';
 
-test('emitter, emits valid WebAssembly instance', t => {
+test('emitter, emits valid WebAssembly instance', async () => {
   const output = emit();
-  return WebAssembly.instantiate(
-    output.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  })
+  const { module, instance } = await WebAssembly.instantiate(output.buffer());
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
 });

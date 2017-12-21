@@ -1,34 +1,27 @@
-import test from "ava";
-import { I32 } from "../value_type";
-import { EXTERN_GLOBAL } from "../external_kind";
-import emit from "..";
+import { I32 } from '../value_type';
+import { EXTERN_GLOBAL } from '../external_kind';
+import emit from '..';
 
 // TODO:
 // the only way we can test output of globals is by exporting them
 // should build in some assert() into the binary :)
 const meaningOfLife = 42;
 const ast = {
-  Exports: [{ kind: EXTERN_GLOBAL, field: "meaningOfLife", index: 0 }],
+  Exports: [{ kind: EXTERN_GLOBAL, field: 'meaningOfLife', index: 0 }],
   Globals: [{ mutable: 0, type: I32, init: meaningOfLife }]
 };
 
-test("compiles globals accurately", t => {
+test('compiles globals accurately', async () => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-  });
+  const { module, instance } = await WebAssembly.instantiate(stream.buffer());
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
 });
 
-test("encodes correct values", t => {
+test('encodes correct values', async () => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
-    t.is(instance.exports.meaningOfLife, meaningOfLife);
-  });
+  const { module, instance } = await WebAssembly.instantiate(stream.buffer());
+  expect(instance instanceof WebAssembly.Instance).toBe(true);
+  expect(module instanceof WebAssembly.Module).toBe(true);
+  expect(instance.exports.meaningOfLife).toBe(meaningOfLife);
 });
