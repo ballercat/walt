@@ -94,7 +94,6 @@ test('else if statement no curly braces', async () => {
       x = 1;
     return x;
   }`);
-  console.log(exports.test(1));
   expect(exports.test(0)).toBe(2);
   expect(exports.test(1)).toBe(4);
   expect(exports.test(-1)).toBe(1);
