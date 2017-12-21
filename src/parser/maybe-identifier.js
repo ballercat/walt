@@ -11,6 +11,11 @@ import {
   findUserTypeIndex
 } from "./introspection";
 
+export const accessIdentifier = (ctx: Context): Node => {
+  const node = ctx.startNode();
+  return ctx.endNode(node, Syntax.StringLiteral);
+};
+
 // Maybe identifier, maybe function call
 const maybeIdentifier = (ctx: Context): Node => {
   const node = ctx.startNode();

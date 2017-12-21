@@ -13,7 +13,6 @@ const Syntax = {
   Punctuator: "Punctuator",
   Identifier: "Identifier",
   ArraySubscript: "ArraySubscript",
-  AccessIdentifier: "AccessIdentifier",
   Constant: "Constant",
   Type: "Type",
   Declaration: "Declaration",

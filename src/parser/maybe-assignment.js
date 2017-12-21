@@ -1,16 +1,16 @@
 //@flow
-import Syntax from '../Syntax';
-import maybeIdentifier from './maybe-identifier';
-import memoryStore from './memory-store';
-import expression from './expression';
-import type Context from './context';
-import type { NodeType } from '../flow/types';
+import Syntax from "../Syntax";
+import maybeIdentifier from "./maybe-identifier";
+import memoryStore from "./memory-store";
+import expression from "./expression";
+import type Context from "./context";
+import type { NodeType } from "../flow/types";
 
 // It is easier to parse assignment this way as we need to maintain a valid type
 // through out the right-hand side of the expression
 function maybeAssignment(ctx: Context): NodeType {
-  const { type, value } = ctx.stream.peek();
-  if (value === '[' || type === Syntax.AccessIdentifier) {
+  const { value } = ctx.stream.peek();
+  if (value === "[" || value === ".") {
     return memoryStore(ctx);
   }
 
