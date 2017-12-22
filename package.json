@@ -62,6 +62,9 @@
     "rollup-plugin-uglify": "^2.0.1",
     "uglify-es": "^3.0.17"
   },
+  "prettier": {
+    "trailingComma": "all"
+  },
   "ava": {
     "files": [
       "src/**/*[sS]pec.js",

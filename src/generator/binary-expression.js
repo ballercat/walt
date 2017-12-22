@@ -13,7 +13,11 @@ const generateBinaryExpression: GeneratorType = (node, parent) => {
 
   // Map the operator last
   block.push({
-    kind: opcodeFromOperator(node),
+    kind: opcodeFromOperator({
+      ...node,
+      type: node.type || "i32",
+    }),
+    params: [],
   });
 
   return block;

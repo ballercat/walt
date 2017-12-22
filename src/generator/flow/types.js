@@ -1,6 +1,6 @@
 // @flow
 import type { NodeType } from "../../flow/types";
-
+export type { NodeType } from "../../flow/types";
 export type RawOpcodeType = {
   result: ?number,
   first: ?number,
@@ -10,15 +10,21 @@ export type RawOpcodeType = {
   name: string,
   text: string,
 };
+export type IntermediateVariableTye = {
+  mutable: 0 | 1,
+  type: string,
+};
 export type IntermediateOpcodeType = {
   kind: RawOpcodeType,
   params: number[],
 };
 export type IntermediateFunctionType = {
   code: IntermediateOpcodeType[],
-  locals: IntermediateOpcodeType[],
+  locals: IntermediateVariableTye[],
 };
-export type MapSyntaxType = IntermediateFunctionType => NodeType => IntermediateOpcodeType[];
+export type MapSyntaxType = (
+  ?IntermediateFunctionType,
+) => NodeType => IntermediateOpcodeType[];
 
 export type IntermediateTypeDefinitionType = {
   id: string,
@@ -28,5 +34,13 @@ export type IntermediateTypeDefinitionType = {
 
 export type GeneratorType = (
   NodeType,
-  IntermediateOpcodeType
-) => IntermediateOpcodeType | IntermediateOpcodeType[];
+  IntermediateFunctionType,
+) => IntermediateOpcodeType[];
+
+export type IntermediateImportType = {
+  module: string,
+  field: string,
+  global?: boolean,
+  kind: number,
+  typeIndex?: number,
+};
