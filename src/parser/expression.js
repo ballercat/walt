@@ -30,7 +30,8 @@ export const predicate = (token: Token, depth: number): boolean =>
 // Shunting yard
 const expression = (
   ctx: Context,
-  check: Predicate = predicate
+  type: string = "i32",
+  check: Predicate = predicate,
 ) => {
   const operators: Token[] = [];
   const operands: Node[] = [];
@@ -75,7 +76,7 @@ const expression = (
         // Function call.
         // TODO: figure out a cleaner(?) way of doing this, maybe
         if (eatFunctionCall) {
-        // definetly not immutable
+          // definetly not immutable
           last(operands).Type = Syntax.FunctionIdentifier;
           flushOperators(PRECEDENCE_FUNCTION_CALL);
           // Tokenizer does not generate function call tokens it is our job here
@@ -118,7 +119,7 @@ const expression = (
         if (previous && previous.type === Syntax.FunctionCall) {
           consume();
         } else if (depth > 0) {
-        // Pop left bracket
+          // Pop left bracket
           operators.pop();
         }
 
@@ -145,8 +146,8 @@ const expression = (
 
         const token = (t => {
           if (
-            t.value === "-" && previousToken == null ||
-            t.value === "-" && isPunctuatorAndNotBracket(previousToken)
+            (t.value === "-" && previousToken == null) ||
+            (t.value === "-" && isPunctuatorAndNotBracket(previousToken))
           ) {
             return {
               ...t,

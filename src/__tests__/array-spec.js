@@ -7,6 +7,7 @@ test("array declaration", t => {
   ctx.func = {
     locals: [],
   };
+  debugger;
   const node = declaration(ctx);
   t.snapshot(node);
 });

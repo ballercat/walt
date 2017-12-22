@@ -11,7 +11,7 @@ import { I32, F32, F64, I64 } from "../emitter/value_type";
 import type { IntermediateTypeDefinitionType } from "./flow/types";
 
 // clean this up
-export const getType = (str: ?string): number => {
+export const getType = (str: string): number => {
   switch (str) {
     case "f32":
       return F32;
@@ -30,30 +30,34 @@ export const generateImplicitFunctionType = ({
   params,
   id,
   result,
-}: NodeType): IntermediateTypeDefinitionType => {
+}: {
+  params: NodeType[],
+  id: string,
+  result: string | null,
+}): IntermediateTypeDefinitionType => {
+  const resultType = result && result !== "void" ? getType(result) : null;
   return {
-    params: params.map(({ type }) => getType(type)),
-    result: result && result !== "void" ? getType(result.type) : null,
+    params: params.map(({ type }) => getType(type || "i32")),
+    result: resultType,
     id: id || "",
   };
 };
 
 export default function generateType(
-  node: NodeType
+  node: NodeType,
 ): IntermediateTypeDefinitionType {
   invariant(
     typeof node.id === "string",
     `Generator: A type must have a valid string identifier, node: ${JSON.stringify(
-      node
-    )}`
+      node,
+    )}`,
   );
 
   const typeExpression = node.params[0];
   invariant(
     typeExpression && typeExpression.Type === Syntax.BinaryExpression,
-    `Generator: A function type must be of form (<type>, ...) => <type> node: ${printNode(
-      node
-    )}`
+    "Generator: A function type must be of form (<type>, ...) <type> node:" +
+      `${printNode(node)}`,
   );
 
   // Collect the function params and result by walking the tree of nodes
@@ -66,13 +70,13 @@ export default function generateType(
   // type, so we an just skip this.
   if (right != null) {
     walkNode({
-      [Syntax.Type]: ({ "value": typeValue }) => params.push(getType(typeValue)),
+      [Syntax.Type]: ({ value: typeValue }) => params.push(getType(typeValue)),
     })(left);
   }
 
   walkNode({
-    [Syntax.Type]: ({ "value": typeValue }) => {
-      result = typeValue !== "void" ? getType(typeValue) : null;
+    [Syntax.Type]: ({ value: typeValue }) => {
+      result = typeValue && typeValue !== "void" ? getType(typeValue) : null;
     },
   })(right || left);
 

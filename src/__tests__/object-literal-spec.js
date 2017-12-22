@@ -20,7 +20,7 @@ test("types and assignment", t => {
     obj['bar'] = 20;
 
     return obj['foo'] + obj['bar'];
-  }`
+  }`,
   ).then(outputIs(t, 62));
 });
 
@@ -36,7 +36,7 @@ test("object indexing and alignment", t => {
       obj['bar'] = 20;
 
       return arr[0] + arr[1];
-    }`
+    }`,
   ).then(outputIs(t, 62));
 });
 
@@ -50,6 +50,6 @@ test("float types", t => {
 
       return obj[1];
     }
-    `
+    `,
   ).then(outputIs(t, 2));
 });

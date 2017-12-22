@@ -90,7 +90,7 @@ const maybeFunctionDeclaration = (ctx: Context) => {
           return node.functionIndex + ctx.functionImports.length;
         },
       },
-      FUNCTION_INDEX
+      FUNCTION_INDEX,
     ),
   ];
   node.functionIndex = ctx.Program.Functions.length;
@@ -112,12 +112,12 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   if (ret && node.type) {
     if (node.type === "void" && ret.Type === Syntax.ReturnStatement) {
       throw ctx.syntaxError(
-        "Unexpected return value in a function with result : void"
+        "Unexpected return value in a function with result : void",
       );
     }
     if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement) {
       throw ctx.syntaxError(
-        "Expected a return value in a function with result : " + node.result
+        "Expected a return value in a function with result : " + node.result,
       );
     }
   } else if (node.result) {

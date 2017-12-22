@@ -29,7 +29,7 @@ export type MapSyntaxType = (
 export type IntermediateTypeDefinitionType = {
   id: string,
   params: number[],
-  result: ?number,
+  result: number | null,
 };
 
 export type GeneratorType = (
