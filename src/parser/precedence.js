@@ -11,9 +11,9 @@ export const PRECEDENCE_DIVIDE = 1;
 export const PRECEDENCE_INCREMENT = 2;
 export const PRECEDENCE_DECREMENT = 2;
 export const PRECEDENCE_ASSIGNMENT = 3;
-export const PRECEDENCE_BITWISE_OR = 7;
-export const PRECEDENCE_BITWISE_XOR = 8;
-export const PRECEDENCE_BITWISE_AND = 9;
+export const PRECEDENCE_BITWISE_OR = -3;
+export const PRECEDENCE_BITWISE_XOR = -2;
+export const PRECEDENCE_BITWISE_AND = -1;
 
 export const PRECEDENCE_FUNCTION_CALL = 19;
 export const PRECEDENCE_KEY_VALUE_PAIR = -1;
