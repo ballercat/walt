@@ -5,7 +5,7 @@ import invariant from "invariant";
 import { I32, F32, F64 } from "../emitter/value_type";
 import { get, LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../parser/metadata";
 import type {
-  IntermediateVariableTye,
+  IntermediateVariableType,
   IntermediateOpcodeType,
   RawOpcodeType,
 } from "./flow/types";
@@ -24,7 +24,7 @@ export const scopeOperation = curry((op, node) => {
   );
 
   const kind = local ? op + "Local" : op + "Global";
-  const params = [Number(index.payload)];
+  const params = [Number(local ? index.payload.index : _global)];
 
   return { kind: opcode[kind], params };
 });
@@ -50,7 +50,7 @@ export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
 };
 
 // clean this up
-export const getType = (str: ?string): string => {
+export const getType = (str: ?string): number => {
   switch (str) {
     case "f32":
       return F32;
@@ -62,7 +62,7 @@ export const getType = (str: ?string): string => {
       return I32;
   }
 };
-export const generateValueType = (node: NodeType): IntermediateVariableTye => ({
+export const generateValueType = (node: NodeType): IntermediateVariableType => ({
   mutable: get(TYPE_CONST, node) ? 0 : 1,
   type: getType(node.type),
 });

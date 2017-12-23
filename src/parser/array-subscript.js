@@ -7,25 +7,21 @@ import metadata, {
   TYPE_ARRAY,
   TYPE_USER,
 } from "./metadata";
-import { findLocalIndex, findGlobalIndex } from "./introspection";
-
-import type { TokenType, NodeType, MetadataType } from "../flow/types";
+import { findLocalVariable, findGlobalIndex } from "./introspection";
+import type { NodeType, MetadataType } from "../flow/types";
 import type Context from "./context";
 
 export const nodeMetaType = (targetNode: NodeType): ?MetadataType =>
   metadata.get(TYPE_USER, targetNode) || metadata.get(TYPE_ARRAY, targetNode);
 
-export const getMetaType = (ctx: Context, token: TokenType): ?MetadataType => {
-  const localIndex = findLocalIndex(ctx, token);
+export const getMetaType = (
+  ctx: Context,
+  token: { value: string },
+): ?MetadataType => {
+  const local = ctx.func ? findLocalVariable(ctx.func, token) : null;
   const globalIndex = findGlobalIndex(ctx, token);
-
   // Set the target variable
-  let targetNode = null;
-  if (localIndex > -1) {
-    targetNode = ctx.func.locals[localIndex];
-  } else {
-    targetNode = ctx.globals[globalIndex];
-  }
+  const targetNode = local ? local.node : ctx.globals[globalIndex];
 
   // Don't allow unknown variables
   if (targetNode == null) {
@@ -44,13 +40,13 @@ export const getMetaType = (ctx: Context, token: TokenType): ?MetadataType => {
 export const patchStringSubscript = (
   ctx: Context,
   metaType: MetadataType,
-  params: NodeType[]
+  params: NodeType[],
 ): NodeType[] => {
   if (metaType.type === TYPE_USER && params[1].Type === Syntax.StringLiteral) {
     const metaObject = metadata.get(TYPE_OBJECT, metaType.payload);
     invariant(metaObject, "Undefined object properties");
-    const { "payload": byteOffsetsByKey } = metaObject;
-    const { "value": key } = params[1];
+    const { payload: byteOffsetsByKey } = metaObject;
+    const { value: key } = params[1];
     const absoluteByteOffset = byteOffsetsByKey[key];
     return [
       params[0],
@@ -63,7 +59,7 @@ export const patchStringSubscript = (
 export const subscriptFromNode = (
   ctx: Context,
   node: NodeType,
-  metaType: MetadataType
+  metaType: MetadataType,
 ): NodeType => {
   if (metaType.type === TYPE_USER) {
     const objectKeyTypeMap = metadata.get(OBJECT_KEY_TYPES, metaType.payload);

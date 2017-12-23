@@ -1,4 +1,8 @@
 import test from "ava";
+import { mockContext } from "../utils/mocks";
+// import printNode from "../utils/print-node";
+import parseFunction from "../parser/maybe-function-declaration";
+import { OBJECT_KEY_TYPES, TYPE_OBJECT } from "../parser/metadata";
 import compile from "..";
 
 const compileAndRun = (src, imports) =>
@@ -69,7 +73,7 @@ test("function pointers", t => {
       env: {
         table,
       },
-    }
+    },
   ).then(outputIs(t, 42));
 });
 
@@ -87,3 +91,24 @@ test("pointers as function arguments", t =>
     addOne(original);
     return original['a'];
   }`).then(outputIs(t, 5)));
+
+test("function parser", t => {
+  const ctx = mockContext(`function test(): i32 {
+    let original: Type = 0;
+    original['a'] = 4;
+    return original['a'];
+  }`);
+  ctx.userTypes = {
+    Type: {
+      value: "Type",
+      type: "i32",
+      meta: [
+        { type: OBJECT_KEY_TYPES, payload: { a: "i32" } },
+        { type: TYPE_OBJECT, payload: { a: 4 } },
+      ],
+      params: [],
+    },
+  };
+  const node = parseFunction(ctx);
+  t.snapshot(node);
+});

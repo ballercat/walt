@@ -29,14 +29,24 @@ export type NodeType = {
   range: Marker[],
   Type: string,
   id?: string,
-  type?: string,
+  type: string | null,
   value: string,
   size?: number,
   result?: Typed | null,
   meta: Metadata[],
   params: NodeType[],
   body?: NodeType[],
+  expr?: NodeType,
+  then?: NodeType[],
+  else?: NodeType[],
 };
+export type FunctionNodeType = {
+  id: string,
+  result: Typed | null,
+  locals: NodeType[],
+  functionIndex: number,
+  typeIndex: number,
+} & NodeType;
 
 export type Node = NodeType;
 
@@ -45,7 +55,8 @@ export type Field = {
   global?: number,
   typeIndex?: number,
   functionIndex?: number,
-};
+  kind?: number,
+} & NodeType;
 
 export type Import = {
   fields: Field[],

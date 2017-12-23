@@ -18,7 +18,7 @@ const fsearch = node => {
 
 type Node = {
   char: string,
-  children: {[string]: Node},
+  children: { [string]: Node },
   leaf: boolean,
 };
 
@@ -28,9 +28,9 @@ class Trie {
 
   constructor(words: Array<string>) {
     this.root = {
-      "char": "",
-      "children": {},
-      "leaf": false,
+      char: "",
+      children: {},
+      leaf: false,
     };
 
     words.map(word => this.add(word));
@@ -43,9 +43,7 @@ class Trie {
 
     word = word.slice(1);
 
-    while (
-      typeof current.children[char] !== "undefined" &&
-      char.length > 0) {
+    while (typeof current.children[char] !== "undefined" && char.length > 0) {
       current = current.children[char];
       char = word.slice(0, 1);
       word = word.slice(1);
@@ -69,4 +67,3 @@ class Trie {
 }
 
 module.exports = Trie;
-

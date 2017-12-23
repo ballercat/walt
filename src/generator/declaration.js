@@ -6,7 +6,10 @@ import opcode from "../emitter/opcode";
 import { get, LOCAL_INDEX } from "../parser/metadata";
 import type { GeneratorType } from "./flow/types";
 
-const generateDeclaration: GeneratorType = (node, parent) => {
+const generateDeclaration: GeneratorType = (
+  node,
+  parent = { code: [], locals: [] },
+) => {
   const initNode = node.params[0];
 
   if (parent && Array.isArray(parent.locals)) {

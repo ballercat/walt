@@ -30,6 +30,8 @@ export const predicate = (token: Token, depth: number): boolean =>
 // Shunting yard
 const expression = (
   ctx: Context,
+  // Type param is no longer used but a bunch of code still passes it in
+  // eslint-disable-next-line
   type: string = "i32",
   check: Predicate = predicate,
 ) => {

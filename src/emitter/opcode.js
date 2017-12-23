@@ -20,7 +20,7 @@ const opcode = (
   size: number,
   code: number,
   name: string,
-  text: string
+  text: string,
 ) => {
   const definition: RawOpcodeType = {
     result,
@@ -253,9 +253,13 @@ export const opcodeFromOperator = ({
   type,
   value,
 }: {
-  type: string,
+  type: string | null,
   value: string,
 }): RawOpcodeType => {
+  if (type == null) {
+    return def.Noop;
+  }
+
   switch (value) {
     case "+":
       return def[type + "Add"];

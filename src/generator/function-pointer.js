@@ -8,12 +8,14 @@ const generateFunctionPointer: GeneratorType = node => {
   const metaTableIndex = get(TABLE_INDEX, node);
   invariant(
     metaTableIndex,
-    `Cannot generate function pointer for node: ${JSON.stringify(node)}`
+    `Cannot generate function pointer for node: ${JSON.stringify(node)}`,
   );
-  return {
-    kind: opcode.i32Const,
-    params: [metaTableIndex.payload],
-  };
+  return [
+    {
+      kind: opcode.i32Const,
+      params: [metaTableIndex.payload],
+    },
+  ];
 };
 
 export default generateFunctionPointer;

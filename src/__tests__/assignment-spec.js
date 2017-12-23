@@ -1,6 +1,6 @@
 import test from "ava";
 import compile from "..";
-import { mockContext } from "../utils/mocks";
+import { mockContext, mockFunction } from "../utils/mocks";
 import parseStatement from "../parser/statement";
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
@@ -9,7 +9,7 @@ const outputIs = (t, value) => result =>
 
 test("declration assignment", t =>
   compileAndRun(
-    "export function test(): i32 { let x: i32 = 2; return x; }"
+    "export function test(): i32 { let x: i32 = 2; return x; }",
   ).then(outputIs(t, 2)));
 test("assigment statement", t =>
   compileAndRun(`
@@ -21,10 +21,9 @@ test("assigment statement", t =>
   }`).then(outputIs(t, 4)));
 
 test("unary negation", t => {
-  const ctx = mockContext("x = -3;");
-  ctx.func = {
-    locals: [{ id: "x", type: "i32", meta: [] }],
-  };
+  const ctx = mockFunction(mockContext("x = -3;"), {
+    locals: [{ value: "x", type: "i32", meta: [] }],
+  });
   const node = parseStatement(ctx);
   t.snapshot(node);
 });

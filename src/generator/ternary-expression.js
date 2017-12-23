@@ -24,6 +24,7 @@ const generateTernary: GeneratorType = (node, parent) => {
   block.push({
     kind: opcodeFromOperator(node),
     valueType: generateValueType(node),
+    params: [],
   });
 
   // Map the true branch
@@ -32,10 +33,11 @@ const generateTernary: GeneratorType = (node, parent) => {
     resultPair.params
       .slice(0, 1)
       .map(mapper)
-      .reduce(mergeBlock, [])
+      .reduce(mergeBlock, []),
   );
   block.push({
-    kind: opcodeFromOperator({ value: ":" }),
+    kind: opcodeFromOperator({ value: ":", type: "i32" }),
+    params: [],
   });
 
   // Map the false branch
@@ -44,11 +46,11 @@ const generateTernary: GeneratorType = (node, parent) => {
     resultPair.params
       .slice(-1)
       .map(mapper)
-      .reduce(mergeBlock, [])
+      .reduce(mergeBlock, []),
   );
 
   // Wrap up the node
-  block.push({ kind: opcode.End });
+  block.push({ kind: opcode.End, params: [] });
 
   return block;
 };

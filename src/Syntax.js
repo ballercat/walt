@@ -16,6 +16,7 @@ const Syntax = {
   ArraySubscript: "ArraySubscript",
   Constant: "Constant",
   Type: "Type",
+  UserType: "UserType",
   Declaration: "Declaration",
   FunctionDeclaration: "FunctionDeclaration",
   ArrayDeclaration: "ArrayDeclaration",
@@ -33,13 +34,17 @@ const Syntax = {
   Pair: "Pair",
   TypeCast: "TypeCast",
   Break: "Break",
+  Comment: "Comment",
 
   Noop: "Noop",
 
   // Semantic Nodes
+  ObjectField: "ObjectField",
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
   FunctionPointer: "FunctionPointer",
+  FunctionResult: "FunctionResult",
+  FunctionLocals: "FunctionLocals",
 };
 
-module.exports = Syntax;
+export default Syntax;

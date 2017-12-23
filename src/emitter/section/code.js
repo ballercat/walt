@@ -5,7 +5,6 @@ import { getTypeString } from "../value_type";
 import OutputStream from "../../utils/output-stream";
 import opcode from "../opcode";
 
-// TODO
 const emitLocal = (stream, local) => {
   if (local.isParam == null) {
     stream.push(varuint32, 1, "number of locals of following type");

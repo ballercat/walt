@@ -279,7 +279,7 @@
     "quote-props": [                // require quotes around object literal property names (off by default)
       2,
       "consistent-as-needed",
-      { "keywords": true }
+      { "keywords": false }
     ],
     "quotes": 2,                    // specify whether double or single quotes should be used
     "semi": 2,                      // require or disallow use of semicolons instead of ASI

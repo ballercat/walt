@@ -16,7 +16,7 @@ test("typecasts are patched in binary expressions", t => {
   const ctx = mockContext("(x: f32) + 5.0");
   ctx.globals = [
     {
-      id: "x",
+      value: "x",
       type: "i32",
     },
   ];
@@ -58,14 +58,14 @@ test("int to float typecasts are compiled", t =>
 
 test("binary expressions, are type promoted when necessary", t => {
   const ctx = mockContext("2.5 + 2 + 0.5 * (10 / 5);");
-  ctx.globals = [{ id: "x", type: "i32" }];
+  ctx.globals = [{ value: "x", type: "i32" }];
   const node = parseExpression(ctx);
   t.snapshot(node);
 });
 
 test("binary expression results can be typecast", t => {
   const ctx = mockContext("(10 + 5): f32");
-  ctx.globals = [{ id: "x", type: "i32" }];
+  ctx.globals = [{ value: "x", type: "i32" }];
   const node = parseExpression(ctx);
   t.snapshot(node);
 });

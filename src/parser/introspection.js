@@ -1,28 +1,29 @@
 // @flow
 import type Context from "./context";
-import { getType } from "../generator/utils";
 import Syntax from "../Syntax";
 import precedence from "./precedence";
-import type { Token, Node, NodeType } from "../flow/types";
+import { generateImplicitFunctionType } from "../generator/type";
+import { get, LOCAL_INDEX_MAP, localIndex } from "./metadata";
+import type { Token, NodeType } from "../flow/types";
 
-export const findTypeIndex = (node: Node, ctx: Context): number => {
+export const findTypeIndex = (functionNode: NodeType, ctx: Context): number => {
+  const search = generateImplicitFunctionType(functionNode);
+
   return ctx.Program.Types.findIndex(t => {
     const paramsMatch =
-      t.params.length === node.params.length &&
-      t.params.reduce(
-        (a, v, i) => node.params[i] && a && v === getType(node.params[i].type),
-        true
-      );
+      t.params.length === search.params.length &&
+      t.params.reduce((a, v, i) => a && v === search.params[i], true);
 
-    const resultMatch =
-      t.result === node.result ||
-      node.result && t.result === getType(node.result.type);
+    const resultMatch = t.result === search.result;
 
     return paramsMatch && resultMatch;
   });
 };
 
-const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
+const findFieldIndex = (fields: string[]) => (
+  ctx: Context,
+  token: { value: string },
+) => {
   let field: any = fields.reduce((memo: ?{}, f) => {
     if (memo) {
       return memo[f];
@@ -38,14 +39,47 @@ const findFieldIndex = (fields: string[]) => (ctx: Context, token: Token) => {
 };
 
 export const findLocalIndex = findFieldIndex(["func", "locals"]);
-export const findGlobalIndex = findFieldIndex(["globals"]);
-export const findFunctionIndex = findFieldIndex(["functions"]);
+export const findGlobalIndex = (ctx: Context, { value }: { value: string }) =>
+  ctx.globals.findIndex(node => node.value === value);
+export const findFunctionIndex = (
+  ctx: Context,
+  { value }: { value: string },
+) => {
+  return ctx.functions.findIndex(fn => fn.value === value);
+};
 export const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
-export const getTargetNode = (): ?NodeType => {};
+export const findLocalVariable = (
+  functionNode: NodeType,
+  identifier: { value: string },
+): { index: number, node: NodeType } | null => {
+  const localIndexMap = get(LOCAL_INDEX_MAP, functionNode);
+  if (localIndexMap != null) {
+    return localIndexMap.payload[identifier.value];
+  }
+  return null;
+};
 
-// FIXME: do all of this inline here
-// FIXME: add a symbol for function call
+export const addFunctionLocal = (
+  functionNode: NodeType,
+  localNode: NodeType,
+) => {
+  const localIndexMap = get(LOCAL_INDEX_MAP, functionNode);
+  if (localIndexMap != null) {
+    const { payload } = localIndexMap;
+    const localsCount = Object.keys(payload).length;
+    localIndexMap.payload = {
+      ...localIndexMap.payload,
+      [localNode.value]: {
+        index: localsCount,
+        node: localNode,
+      },
+    };
+
+    localNode.meta.push(localIndex(localsCount));
+  }
+};
+
 export const getPrecedence = (token: Token): number => {
   if (token.type === Syntax.UnaryExpression) {
     return precedence["+"];

@@ -2,9 +2,10 @@
 import Syntax from "../Syntax";
 import keyword from "./keyword";
 import maybeAssignment from "./maybe-assignment";
-import Context from "./context";
+import type Context from "./context";
+import type { NodeType } from "../flow/types";
 
-const statement = (ctx: Context) => {
+const statement = (ctx: Context): NodeType | null => {
   switch (ctx.token.type) {
     case Syntax.Keyword:
       return keyword(ctx);
@@ -20,4 +21,3 @@ const statement = (ctx: Context) => {
 };
 
 export default statement;
-

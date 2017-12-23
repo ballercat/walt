@@ -8,7 +8,10 @@ import type { GeneratorType } from "./flow/types";
 // like handling ternary for example. A lot of shared logic here & ternary
 const generateIf: GeneratorType = (node, parent) => {
   const mapper = mapSyntax(parent);
-  const block = [node.expr].map(mapper).reduce(mergeBlock, []);
+  const block = [];
+  if (node.expr) {
+    block.push.apply(block, [node.expr].map(mapper).reduce(mergeBlock, []));
+  }
 
   block.push({
     kind: opcode.If,
@@ -19,15 +22,18 @@ const generateIf: GeneratorType = (node, parent) => {
 
   // after the expression is on the stack and opcode is following it we can write the
   // implicit 'then' block
-  block.push.apply(block, node.then.map(mapper).reduce(mergeBlock, []));
+  block.push.apply(block, (node.then || []).map(mapper).reduce(mergeBlock, []));
 
   // fllowed by the optional 'else'
-  if (node.else.length) {
-    block.push({ kind: opcode.Else });
-    block.push.apply(block, node.else.map(mapper).reduce(mergeBlock, []));
+  if (node.else != null && node.else.length > 0) {
+    block.push({ kind: opcode.Else, params: [] });
+    block.push.apply(
+      block,
+      (node.else || []).map(mapper).reduce(mergeBlock, []),
+    );
   }
 
-  block.push({ kind: opcode.End });
+  block.push({ kind: opcode.End, params: [] });
   return block;
 };
 

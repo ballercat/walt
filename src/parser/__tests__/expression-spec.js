@@ -1,13 +1,13 @@
 import test from "ava";
 import expression from "../expression";
 import { TYPE_ARRAY } from "../metadata";
-import { mockContext } from "../../utils/mocks";
+import { mockContext, mockFunction } from "../../utils/mocks";
 import printNode from "../../utils/print-node";
 
 test("array: offset is constant", t => {
   const ctx = mockContext("b[1] + 5");
   ctx.globals = [
-    { id: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
+    { value: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
   ];
   const node = expression(ctx);
   t.snapshot(node);
@@ -16,8 +16,8 @@ test("array: offset is constant", t => {
 test("array: offset is compound expression", t => {
   const ctx = mockContext("a + b[1 + 1] * 5");
   ctx.globals = [
-    { id: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
-    { id: "a", type: "i32" },
+    { value: "b", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "i32" }] },
+    { value: "a", type: "i32" },
   ];
   const node = expression(ctx);
   t.snapshot(node);
@@ -36,48 +36,29 @@ test("sequence, of compound expressions", t => {
 });
 
 test("function calls", t => {
-  const ctx = mockContext("test(1, 2 + 2 * 3, 3);");
-  ctx.func = {
-    locals: [],
-  };
-  ctx.functions = [
-    {
-      id: "test",
-      meta: [],
-    },
-  ];
+  const ctx = mockFunction(mockContext("test(1, 2 + 2 * 3, 3);"), {
+    value: "test",
+    meta: [],
+  });
   const node = expression(ctx);
   t.snapshot(node);
 });
 
 test("function calls in expressions", t => {
-  const ctx = mockContext("2 + test();");
-  ctx.func = {
-    locals: [],
-  };
-  ctx.functions = [
-    {
-      id: "test",
-      result: "i32",
-      meta: [],
-    },
-  ];
+  const ctx = mockFunction(mockContext("2 + test();"), {
+    value: "test",
+    result: "i32",
+    meta: [],
+  });
   const node = expression(ctx);
   t.snapshot(node);
 });
 
 test("function parameters", t => {
-  const ctx = mockContext("test(2);");
-
-  ctx.func = {
-    locals: [],
-  };
-  ctx.functions = [
-    {
-      id: "test",
-      meta: [],
-    },
-  ];
+  const ctx = mockFunction(mockContext("test(2);"), {
+    value: "test",
+    meta: [],
+  });
   const node = expression(ctx);
   t.snapshot(node);
 });
@@ -95,23 +76,25 @@ test("type definition", t => {
 });
 
 test("array subscript inside a return statement", t => {
-  const ctx = mockContext("return x[0] + x[1];");
-  ctx.func = {
+  const ctx = mockFunction(mockContext("return x[0] + x[1];"), {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
+      {
+        value: "x",
+        type: "i32",
+        meta: [{ type: TYPE_ARRAY, payload: "f32" }],
+      },
     ],
-  };
+  });
   const node = expression(ctx);
   t.snapshot(node);
 });
 
 test("array subscripts on float variables", t => {
-  const ctx = mockContext("x[0] + 5;");
-  ctx.func = {
+  const ctx = mockFunction(mockContext("x[0] + 5;"), {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
+      { value: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
     ],
-  };
+  });
   const node = expression(ctx);
   t.snapshot(node);
 });
@@ -123,12 +106,11 @@ test("unary negation, simple", t => {
 });
 
 test("unary negation, array subscript", t => {
-  const ctx = mockContext("x[0] = -x[0];");
-  ctx.func = {
+  const ctx = mockFunction(mockContext("x[0] = -x[0];"), {
     locals: [
-      { id: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
+      { value: "x", type: "i32", meta: [{ type: TYPE_ARRAY, payload: "f32" }] },
     ],
-  };
+  });
   t.snapshot(printNode(expression(ctx)));
 });
 
@@ -146,7 +128,7 @@ test("unary negation, does not break math", t => {
 
 test("unary negation, variables in expressions", t => {
   const ctx = Object.assign(mockContext("-x + 2 * 3"), {
-    globals: [{ id: "x", type: "f32" }],
+    globals: [{ value: "x", type: "f32" }],
   });
   const node = expression(ctx);
   t.snapshot(node);

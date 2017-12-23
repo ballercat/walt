@@ -2,6 +2,9 @@
 import type { Node } from "../flow/types";
 
 const formatMetadata = meta => {
+  if (meta == null) {
+    return "";
+  }
   return meta
     .map(({ type, payload }) => {
       let payloadString = "";
@@ -16,14 +19,19 @@ const formatMetadata = meta => {
     .join(",");
 };
 
-const printNode = (node: Node, level: number = 0): string => {
+const printNode = (node?: Node, level: number = 0): string => {
+  if (node == null) {
+    return "";
+  }
   const typeString = `${node.type ? "<" + node.type + ">" : ""}`;
   const metaString = formatMetadata(node.meta);
   let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
   out = out.padStart(out.length + level * 2);
-  node.params.forEach(p => {
-    out += printNode(p, level + 1);
-  });
+  if (node.params) {
+    node.params.forEach(p => {
+      out += printNode(p, level + 1);
+    });
+  }
   return out;
 };
 

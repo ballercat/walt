@@ -1,11 +1,13 @@
 // @flow
-import type { Node, Metadata } from "../flow/types";
+import printNode from "../utils/print-node";
+import type { NodeType, Metadata } from "../flow/types";
 import invariant from "invariant";
 
 // All of the metadata options are used like redux actions
 // this is intentional but only for the purposes of a common
 // flexible api.
 export const FUNCTION_INDEX = "function/index";
+export const LOCAL_INDEX_MAP = "function/locals-index-map";
 export const POSTFIX = "operator/postfix";
 export const PREFIX = "operator/prefix";
 export const LOCAL_INDEX = "local/index";
@@ -15,6 +17,7 @@ export const TYPE_CONST = "type/const";
 export const TYPE_ARRAY = "type/array";
 export const TYPE_USER = "type/user";
 export const TYPE_OBJECT = "type/object";
+export const TYPE_INDEX = "type/index";
 export const OBJECT_SIZE = "object/size";
 export const TYPE_CAST = "type/cast";
 export const OBJECT_KEY_TYPES = "object/key-types";
@@ -24,15 +27,15 @@ export const make = (payload: any, type: string) => ({
   payload,
 });
 
-export const get = (type: string, node: Node): ?Metadata => {
+export const get = (type: string, node: NodeType): ?Metadata => {
   invariant(
     node.meta,
-    `Attemptend to access Metadata but it was undefined in node ${JSON.stringify(
-      node
-    )}`
+    `Attemptend to access Metadata but it was undefined in node ${printNode(
+      node,
+    )}`,
   );
   return node
-    ? node.meta.find(({ "type": _type }) => _type === type) || null
+    ? node.meta.find(({ type: _type }) => _type === type) || null
     : null;
 };
 
@@ -95,6 +98,16 @@ export const typeCast = (payload: { to: string, from: string }) => ({
 export const objectKeyTypes = (payload: { [string]: string }) => ({
   payload,
   type: OBJECT_KEY_TYPES,
+});
+
+export const typeIndex = (payload: number): Metadata => ({
+  payload,
+  type: TYPE_INDEX,
+});
+
+export const localIndexMap = (payload: { [string]: number }): Metadata => ({
+  type: LOCAL_INDEX_MAP,
+  payload,
 });
 
 const metadata = {

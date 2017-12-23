@@ -10,17 +10,19 @@ export type RawOpcodeType = {
   name: string,
   text: string,
 };
-export type IntermediateVariableTye = {
+export type IntermediateVariableType = {
   mutable: 0 | 1,
-  type: string,
+  type: number,
+  init?: number,
 };
 export type IntermediateOpcodeType = {
   kind: RawOpcodeType,
   params: number[],
+  valueType?: IntermediateVariableType,
 };
 export type IntermediateFunctionType = {
   code: IntermediateOpcodeType[],
-  locals: IntermediateVariableTye[],
+  locals: IntermediateVariableType[],
 };
 export type MapSyntaxType = (
   ?IntermediateFunctionType,
@@ -40,7 +42,7 @@ export type GeneratorType = (
 export type IntermediateImportType = {
   module: string,
   field: string,
-  global?: boolean,
+  global: boolean,
   kind: number,
-  typeIndex?: number,
+  typeIndex: number | null,
 };

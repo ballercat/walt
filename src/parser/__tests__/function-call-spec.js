@@ -1,34 +1,22 @@
 import test from "ava";
 import statement from "../statement";
-import { mockContext } from "../../utils/mocks";
+import { mockContext, mockFunction } from "../../utils/mocks";
 
 test("function call, no arguments", t => {
-  const ctx = mockContext("test();");
-  ctx.func = {
-    locals: [],
-  };
-  ctx.functions = [
-    {
-      id: "test",
-      meta: [],
-      result: "i32",
-    },
-  ];
+  const ctx = mockFunction(mockContext("test();"), {
+    value: "test",
+    meta: [],
+    result: "i32",
+  });
   const nodes = statement(ctx);
   t.snapshot(nodes);
 });
 
 test("function call, in a return", t => {
-  const ctx = mockContext("return test();");
-  ctx.func = {
-    locals: [],
-  };
-  ctx.functions = [
-    {
-      id: "test",
-      meta: [],
-    },
-  ];
+  const ctx = mockFunction(mockContext("return test();"), {
+    value: "test",
+    meta: [],
+  });
   const nodes = statement(ctx);
   t.snapshot(nodes);
 });
