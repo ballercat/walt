@@ -39,3 +39,18 @@ test("chain bitwise xor operator", t => {
   `).then(outputIs(t, 1));
 });
 
+test("chain bitwise and operator", t => {
+  compileAndRun(`
+    export function test(): i32 {
+      return 15 & 7 & 2;
+    }
+  `).then(outputIs(t, 2));
+});
+
+test("chain bitwise or operator", t => {
+  compileAndRun(`
+    export function test(): i32 {
+      return 8 | 4 | 2 | 1;
+    }
+  `).then(outputIs(t, 15));
+});
