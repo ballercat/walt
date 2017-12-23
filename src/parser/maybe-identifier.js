@@ -7,7 +7,7 @@ import {
 } from "./metadata";
 import { writeFunctionPointer } from "./implicit-imports";
 import type Context from "./context";
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 import {
   findLocalVariable,
   findGlobalIndex,
@@ -15,7 +15,7 @@ import {
 } from "./introspection";
 
 // Maybe identifier, maybe function call
-const maybeIdentifier = (ctx: Context): Node => {
+const maybeIdentifier = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   const local = ctx.func ? findLocalVariable(ctx.func, ctx.token) : null;
   const globalIndex = findGlobalIndex(ctx, ctx.token);
