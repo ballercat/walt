@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "lts"
+  - "lts/*"
 before_script: "npm run validate"
 script: "npm test"
 after_success:
