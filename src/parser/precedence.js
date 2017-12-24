@@ -11,6 +11,9 @@ export const PRECEDENCE_DIVIDE = 1;
 export const PRECEDENCE_INCREMENT = 2;
 export const PRECEDENCE_DECREMENT = 2;
 export const PRECEDENCE_ASSIGNMENT = 3;
+export const PRECEDENCE_BITWISE_OR = -3;
+export const PRECEDENCE_BITWISE_XOR = -2;
+export const PRECEDENCE_BITWISE_AND = -1;
 
 export const PRECEDENCE_FUNCTION_CALL = 19;
 export const PRECEDENCE_KEY_VALUE_PAIR = -1;
@@ -31,5 +34,8 @@ const precedence = {
   ">": 5,
   "<": 5,
   ":": PRECEDENCE_KEY_VALUE_PAIR,
+  "^": PRECEDENCE_BITWISE_XOR,
+  "&": PRECEDENCE_BITWISE_AND,
+  "|": PRECEDENCE_BITWISE_OR,
 };
 export default precedence;
