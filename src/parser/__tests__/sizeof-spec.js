@@ -1,8 +1,8 @@
 import test from "ava";
 import sizeofParser from "../sizeof";
+import statement from "../statement";
 import { TYPE_USER, OBJECT_SIZE } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
-// import printNode from "../../utils/print-node";
 
 test("sizeof parser, built-in type", t => {
   const ctx = mockContext("sizeof(x);");
@@ -45,5 +45,12 @@ test("sizeof parser, 64 bit variables", t => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [{ value: "x", type: "f64", meta: [], params: [] }];
   const node = sizeofParser(ctx);
+  t.snapshot(node);
+});
+
+test("statements as sizeof calls", t => {
+  const ctx = mockContext("sizeof(x);");
+  ctx.globals = [{ value: "x", type: "f64", meta: [], params: [] }];
+  const node = statement(ctx);
   t.snapshot(node);
 });
