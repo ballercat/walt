@@ -68,13 +68,13 @@ test("else if statement", () =>
     }
     return x;
   }`).then(({ instance: { exports } }) => {
-   outputIs(exports.test(0), 2);
-   outputIs(exports.test(1), 4);
-   outputIs(exports.test(-1), 1);
- }));
+    outputIs(exports.test(0), 2);
+    outputIs(exports.test(1), 4);
+    outputIs(exports.test(-1), 1);
+  }));
 
-  test("else if statement no curly braces", () =>
-    compileAndRun(`
+test("else if statement no curly braces", () =>
+  compileAndRun(`
     export function test(x: i32): i32 {
       if (x == 0)
         x = 2;
@@ -84,7 +84,7 @@ test("else if statement", () =>
         x = 1;
       return x;
     }`).then(({ instance: { exports } }) => {
-     outputIs(exports.test(0), 2);
-     outputIs(exports.test(1), 4);
-     outputIs(exports.test(-1), 1);
-   }));
+    outputIs(exports.test(0), 2);
+    outputIs(exports.test(1), 4);
+    outputIs(exports.test(-1), 1);
+  }));

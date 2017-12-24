@@ -28,8 +28,8 @@ const functionCall = (ctx: Context, op: Token, operands: Node[]) => {
   } else {
     func = ctx.functions.find(({ id }) => id == identifier.value);
     if (!func) {
-throw ctx.syntaxError(`Undefined function: ${identifier.value}`);
-}
+      throw ctx.syntaxError(`Undefined function: ${identifier.value}`);
+    }
 
     node.meta.push({ ...func.meta[0] });
   }

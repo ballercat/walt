@@ -79,8 +79,8 @@ const _import = (ctx: Context): Import => {
   ctx.eat(["import"]);
 
   if (!ctx.eat(["{"])) {
-throw ctx.syntaxError("expected {");
-}
+    throw ctx.syntaxError("expected {");
+  }
 
   node.fields = fieldList(ctx);
   ctx.expect(["from"]);

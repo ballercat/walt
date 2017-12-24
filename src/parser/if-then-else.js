@@ -8,7 +8,7 @@ const doIfExpression = (node, ctx: Context) => {
   ctx.expect(["("]);
   node.expr = expression(ctx, "i32");
   ctx.expect([")"]);
-}
+};
 
 // push statements while taking into consideration having brackets or not
 const doStatement = (ctx: Context) => {
@@ -24,7 +24,7 @@ const doStatement = (ctx: Context) => {
     ctx.expect([";"]);
   }
   return statements.filter(stmt => stmt != null);
-}
+};
 
 const ifThenElse = (ctx: Context) => {
   const node = {

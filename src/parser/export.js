@@ -8,9 +8,9 @@ const _export = ctx => {
 
   const decl = maybeFunctionDeclaration(ctx);
   if (!decl.func) {
-    if (decl.params.length === 0)      {
-throw ctx.syntaxError("Exports must have a value");
-}
+    if (decl.params.length === 0) {
+      throw ctx.syntaxError("Exports must have a value");
+    }
   }
 
   ctx.Program.Exports.push(generateExport(decl));

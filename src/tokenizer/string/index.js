@@ -6,33 +6,33 @@ const nextFails = () => null;
 
 const endsInSingleQuote = char => {
   if (char === "\\") {
-return quoteOK(endsInSingleQuote);
-}
+    return quoteOK(endsInSingleQuote);
+  }
   if (char === "'") {
-return nextFails;
-}
+    return nextFails;
+  }
 
   return endsInSingleQuote;
 };
 
 const endsInDoubleQuote = char => {
   if (char === "\\") {
-return quoteOK(endsInDoubleQuote);
-}
+    return quoteOK(endsInDoubleQuote);
+  }
   if (char === '"') {
-return nextFails;
-}
+    return nextFails;
+  }
 
   return endsInDoubleQuote;
 };
 
 const maybeQuote = char => {
   if (char === "'") {
-return endsInSingleQuote;
-}
+    return endsInSingleQuote;
+  }
   if (char === '"') {
-return endsInDoubleQuote;
-}
+    return endsInDoubleQuote;
+  }
 
   return null;
 };

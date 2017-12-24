@@ -7,8 +7,8 @@ const isDot = char => char === ".";
 const number = char => (isNumber(char) ? number : null);
 const numberOrDot = char => {
   if (isDot(char)) {
-return number;
-}
+    return number;
+  }
 
   if (isNumber(char)) {
     return numberOrDot;
@@ -18,12 +18,12 @@ return number;
 
 const root = char => {
   if (isDot(char)) {
-return number;
-}
+    return number;
+  }
 
   if (isNumber(char)) {
-return numberOrDot;
-}
+    return numberOrDot;
+  }
 
   return null;
 };
