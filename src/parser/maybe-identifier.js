@@ -3,15 +3,16 @@ import Syntax from "../Syntax";
 import {
   globalIndex as setMetaGlobalIndex,
   localIndex as setMetaLocalIndex,
-  tableIndex,
+  tableIndex as setMetaTableIndex,
 } from "./metadata";
-import { writeFunctionPointer } from "./implicit-imports";
+import generateElement from "../generator/element";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
 import {
   findLocalVariable,
   findGlobalIndex,
   findFunctionIndex,
+  findTableIndex,
 } from "./introspection";
 
 // Maybe identifier, maybe function call
@@ -33,7 +34,13 @@ const maybeIdentifier = (ctx: Context): NodeType => {
   } else if (functionIndex !== -1 && ctx.stream.peek().value !== "(") {
     node.type = "i32";
     Type = Syntax.FunctionPointer;
-    node.meta.push(tableIndex(writeFunctionPointer(ctx, functionIndex)));
+    let tableIndex = findTableIndex(ctx, functionIndex);
+    if (tableIndex < 0) {
+      tableIndex = ctx.Program.Element.length;
+      ctx.Program.Element.push(generateElement(functionIndex));
+    }
+    // make meta an object, sheesh
+    node.meta.push(setMetaTableIndex(tableIndex));
   } else if (userType != null && ctx.stream.peek().value !== "(") {
     node.type = "i32";
     Type = Syntax.UserType;

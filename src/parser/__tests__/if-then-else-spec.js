@@ -15,7 +15,7 @@ test("if then else, complex nested blocks", t => {
     }
   }`
   );
-  ctx.globals = [{ id: "x", type: "i32", meta: [] }];
+  ctx.globals = [{ value: "x", type: "i32", meta: [] }];
   const node = statement(ctx);
   t.snapshot(node);
 });

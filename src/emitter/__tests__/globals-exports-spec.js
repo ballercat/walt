@@ -9,7 +9,7 @@ import emit from "..";
 const init = 42;
 const ast = {
   Exports: [{ kind: EXTERN_GLOBAL, field: "meaningOfLife", index: 0 }],
-  Globals: [{ mutable: 0, type: I32, init }]
+  Globals: [{ mutable: 0, type: I32, init }],
 };
 
 test("compiles globals accurately, i32", t => {
@@ -25,7 +25,8 @@ test("compiles globals accurately, i32", t => {
 test("compiles globals accurately, f32", t => {
   const stream = emit({
     ...ast,
-    Globals: [{ mutable: 0, type: F32, init }]
+    Globals: [{ mutable: 0, type: F32, init }],
+  });
   return WebAssembly.instantiate(stream.buffer()).then(
     ({ module, instance }) => {
       t.is(instance instanceof WebAssembly.Instance, true);
