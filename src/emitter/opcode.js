@@ -289,6 +289,12 @@ export const opcodeFromOperator = ({
       return def.Else;
     case "[":
       return def[type + "Load"];
+    case "&":
+      return def[type + "And"];
+    case "|":
+      return def[type + "Or"];
+    case "^":
+      return def[type + "Xor"];
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   }

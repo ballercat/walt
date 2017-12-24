@@ -19,6 +19,9 @@ export const isBinaryMathExpression = (node: NodeType): boolean => {
     case ">=":
     case "<=":
     case "!=":
+    case "&":
+    case "|":
+    case "^":
       return true;
     default:
       return false;
