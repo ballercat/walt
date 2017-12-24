@@ -91,8 +91,12 @@ test("function pointers", t => {
   ).then(outputIs(t, 42));
 });
 
-test("function pointers, multiple, with table declared", t => {
-  return compileAndRun(
+test("table max can be set", () =>
+  compileAndRun(
+    "const table: Table = { 'element': 'anyfunc', 'initial': 1, 'max': 2 };"
+  ));
+test("function pointers, multiple, with table declared", t =>
+  compileAndRun(
     `
       const table: Table = { 'element': 'anyfunc', 'initial': 10 };
       type Test = () => i32;
@@ -109,8 +113,7 @@ test("function pointers, multiple, with table declared", t => {
         return callback(result) + callback(result);
       }
       `
-  ).then(outputIs(t, 4));
-});
+  ).then(outputIs(t, 4)));
 test("pointers as function arguments", t =>
   compileAndRun(`
   type Type = { 'a': i32 };

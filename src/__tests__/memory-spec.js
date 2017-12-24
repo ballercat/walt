@@ -22,8 +22,8 @@ test("memory parser", t => {
   t.snapshot(node);
 });
 
-test("memory can be defined", t => {
-  return compileAndRun(
+test("memory can be defined", t =>
+  compileAndRun(
     `
   const memory: Memory = { 'initial': 2 };
 
@@ -34,8 +34,10 @@ test("memory can be defined", t => {
     x[y] = 2;
     return x[0] * x[y];
   }`
-  ).then(outputIs(t, 42));
-});
+  ).then(outputIs(t, 42)));
+
+test("memory max can be set", () =>
+  compileAndRun("const memory: Memory = { 'initial': 1, 'max': 2 };"));
 
 test("memory store on float arrays", t => {
   const ctx = mockContext("x[0] = 2.0;");
