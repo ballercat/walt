@@ -1,3 +1,4 @@
+// @flow
 import token from "../token";
 import Syntax from "../../Syntax";
 
@@ -6,33 +7,33 @@ const nextFails = () => null;
 
 const endsInSingleQuote = char => {
   if (char === "\\") {
-return quoteOK(endsInSingleQuote);
-}
+    return quoteOK(endsInSingleQuote);
+  }
   if (char === "'") {
-return nextFails;
-}
+    return nextFails;
+  }
 
   return endsInSingleQuote;
 };
 
 const endsInDoubleQuote = char => {
   if (char === "\\") {
-return quoteOK(endsInDoubleQuote);
-}
-  if (char === '"') {
-return nextFails;
-}
+    return quoteOK(endsInDoubleQuote);
+  }
+  if (char === "\"") {
+    return nextFails;
+  }
 
   return endsInDoubleQuote;
 };
 
 const maybeQuote = char => {
   if (char === "'") {
-return endsInSingleQuote;
-}
-  if (char === '"') {
-return endsInDoubleQuote;
-}
+    return endsInSingleQuote;
+  }
+  if (char === "\"") {
+    return endsInDoubleQuote;
+  }
 
   return null;
 };

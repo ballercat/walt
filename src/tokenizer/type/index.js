@@ -1,3 +1,4 @@
+// @flow
 import Trie from "../../utils/trie";
 import token from "../token";
 import Syntax from "../../Syntax";

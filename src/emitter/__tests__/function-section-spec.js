@@ -13,18 +13,18 @@ const ast = {
   Functions: [0],
   Code: [{ locals: [], code: [{ kind: opcode.GetGlobal, params: [0] }] }],
   Exports: [{ kind: EXTERN_FUNCTION, field: "echo", index: 0 }],
-  Globals: [{ mutable: 0, type: I32, init: meaningOfLife }]
+  Globals: [{ mutable: 0, type: I32, init: meaningOfLife }],
 };
 
 test("compiles functions accurately", t => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer()
-  ).then(({ module, instance }) => {
-    t.is(instance instanceof WebAssembly.Instance, true);
-    t.is(module instanceof WebAssembly.Module, true);
+  return WebAssembly.instantiate(stream.buffer()).then(
+    ({ module, instance }) => {
+      t.is(instance instanceof WebAssembly.Instance, true);
+      t.is(module instanceof WebAssembly.Module, true);
 
-    // cool
-    t.is(instance.exports.echo(), meaningOfLife);
-  });
+      // cool
+      t.is(instance.exports.echo(), meaningOfLife);
+    }
+  );
 });

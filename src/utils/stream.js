@@ -30,16 +30,16 @@ class Stream {
     const char = this.input.charAt(this.pos++);
 
     if (Stream.eol(char)) {
-this.newLine();
-}    else {
-this.col++;
-}
+      this.newLine();
+    } else {
+      this.col++;
+    }
 
     return char;
   }
 
   // Begin a new line
-  newLine(): void {
+  newLine() {
     this.line++;
     this.col = 0;
   }

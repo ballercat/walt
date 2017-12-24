@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import type Context from "./context";
 import type { Node } from "../flow/types";

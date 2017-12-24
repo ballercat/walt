@@ -7,7 +7,7 @@ import expression from "./expression";
 import metadata from "./metadata";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
-import { findUserTypeIndex } from "./introspection";
+import { addFunctionLocal } from "./introspection";
 
 const generate = (ctx, node) => {
   if (!ctx.func) {
@@ -21,8 +21,7 @@ const generate = (ctx, node) => {
       ctx.globals.push(node);
     }
   } else {
-    node.meta.push(metadata.localIndex(ctx.func.locals.length));
-    ctx.func.locals.push(node);
+    addFunctionLocal(ctx.func, node);
   }
 };
 
@@ -37,13 +36,13 @@ const declaration = (ctx: Context): NodeType => {
     throw ctx.unexpectedValue(["const", "let", "function"]);
   }
 
-  node.id = ctx.expect(null, Syntax.Identifier).value;
+  node.value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
 
-  const userTypeIndex = findUserTypeIndex(ctx, ctx.token);
-  if (userTypeIndex !== -1) {
+  const userType = ctx.userTypes[ctx.token.value];
+  if (userType != null) {
     node.type = "i32";
-    node.meta.push(metadata.userType(ctx.userTypes[userTypeIndex]));
+    node.meta.push(metadata.userType(userType));
     // Eat the identifier for the user defined type
     ctx.eat(null, Syntax.Identifier);
   } else {
@@ -56,7 +55,7 @@ const declaration = (ctx: Context): NodeType => {
   }
 
   if (ctx.eat(["="])) {
-    node.params.push(expression(ctx, node.type));
+    node.params.push(expression(ctx));
   }
 
   if (node.const && !node.init) {

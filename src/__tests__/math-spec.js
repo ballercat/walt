@@ -11,22 +11,22 @@ const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
 test("addition", t =>
-  compileAndRun(`export function test() : i32 { return 2 + 2; }`).then(
+  compileAndRun("export function test() : i32 { return 2 + 2; }").then(
     outputIs(t, 4)
   ));
 
 test("subtraction", t =>
-  compileAndRun(`export function test(): i32 { return 4 - 2; }`).then(
+  compileAndRun("export function test(): i32 { return 4 - 2; }").then(
     outputIs(t, 2)
   ));
 
 test("multiplication", t =>
-  compileAndRun(`export function test(): i32 { return 2 * 2; }`).then(
+  compileAndRun("export function test(): i32 { return 2 * 2; }").then(
     outputIs(t, 4)
   ));
 
 test("division", t =>
-  compileAndRun(`export function test(): i32 { return 4 / 2; }`).then(
+  compileAndRun("export function test(): i32 { return 4 / 2; }").then(
     outputIs(t, 2)
   ));
 

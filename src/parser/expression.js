@@ -30,6 +30,8 @@ export const predicate = (token: Token, depth: number): boolean =>
 // Shunting yard
 const expression = (
   ctx: Context,
+  // Type param is no longer used but a bunch of code still passes it in
+  // eslint-disable-next-line
   type: string = "i32",
   check: Predicate = predicate
 ) => {
@@ -62,8 +64,8 @@ const expression = (
       getAssociativty(previous) === "left"
     ) {
       if (value === "," && previous.type === Syntax.FunctionCall) {
-break;
-}
+        break;
+      }
       // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
@@ -83,7 +85,7 @@ break;
           // to generate a function call on the fly
           operators.push({
             ...ctx.token,
-            type: Syntax.FunctionCall
+            type: Syntax.FunctionCall,
           });
           ctx.next();
           const expr = expression(ctx);
@@ -91,12 +93,12 @@ break;
             operands.push(expr);
           }
           return false;
-        } 
-          if (ctx.token.value === "?") {
-            inTernary = true;
-          }
-          operators.push(ctx.token);
-        
+        }
+        if (ctx.token.value === "?") {
+          inTernary = true;
+        }
+        operators.push(ctx.token);
+
         break;
       case "[":
         depth++;
@@ -151,7 +153,7 @@ break;
           ) {
             return {
               ...t,
-              value: "--"
+              value: "--",
             };
           }
 
@@ -207,8 +209,8 @@ break;
   }
 
   while (operators.length) {
-consume();
-}
+    consume();
+  }
 
   // Should be a node
   return operands.pop();

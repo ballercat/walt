@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import generateFunctionCall from "./function-call";
 import generateIndirectFunctionCall from "./indirect-function-call";
 import generateBinaryExpression from "./binary-expression";
@@ -58,7 +58,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.Sequence]: generateSequence,
   // Typecast
   [Syntax.TypeCast]: generateTypecast,
-  [Syntax.Noop]: generateNoop
+  [Syntax.Noop]: generateNoop,
 };
 
 const mapSyntax: MapSyntaxType = curry((parent, operand) => {
@@ -74,7 +74,7 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
   const validate = (block, i) =>
     invariant(
       block.kind,
-      `Unknown opcode generated in block index %s %s. \nOperand: \n%s`,
+      "Unknown opcode generated in block index %s %s. \nOperand: \n%s",
       i,
       JSON.stringify(block),
       printNode(operand)

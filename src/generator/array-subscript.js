@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import invariant from "invariant";
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
@@ -20,7 +20,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
     block.push.apply(block, [
       // TODO: fix this for user-defined types
       { kind: opcode.i32Const, params: [4] },
-      { kind: opcode.i32Mul, params: [] }
+      { kind: opcode.i32Mul, params: [] },
     ]);
   }
 
@@ -38,8 +38,8 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
       // TODO: make this extendible
       2,
       // Memory. Always 0 in the WASM MVP
-      0
-    ]
+      0,
+    ],
   });
 
   return block;

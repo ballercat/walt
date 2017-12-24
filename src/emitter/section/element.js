@@ -5,7 +5,7 @@ import opcode from "../opcode";
 import OutputStream from "../../utils/output-stream";
 
 type Element = {
-  functionIndex: number
+  functionIndex: number,
 };
 
 const emitElement = (stream: OutputStream) => (

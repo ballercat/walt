@@ -11,7 +11,8 @@ import {
   objectSize,
   objectType,
   objectKeyTypes,
-  TYPE_OBJECT
+  typeIndex as setMetaTypeIndex,
+  TYPE_OBJECT,
 } from "./metadata";
 
 // A scenario where the type declared needs to be hoisted exists during imports.
@@ -22,7 +23,7 @@ import {
 export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
   // At this point we may have found a type which needs to hoist
   const needsHoisting = ctx.Program.Types.find(
-    ({ id, hoist }) => id === node.id && hoist
+    ({ id, hoist }) => id === node.value && hoist
   );
 
   if (needsHoisting) {
@@ -31,6 +32,8 @@ export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
 
   if (get(TYPE_OBJECT, node) == null) {
     ctx.Program.Types.push(generateType(node));
+    node.meta.push(setMetaTypeIndex(ctx.Program.Types.length - 1));
+    ctx.functionTypes[node.value] = node;
   }
 };
 
@@ -63,17 +66,17 @@ export const getByteOffsetsAndSize = (
         default:
           size += 4;
       }
-    }
+    },
   })(objectLiteralNode);
 
   return [offsetsByKey, size, keyTypeMap];
 };
 
 export default function typeParser(ctx: Context): NodeType {
-  const node = ctx.startNode();
+  const node: NodeType = ctx.startNode();
   ctx.eat(["type"]);
 
-  node.id = ctx.expect(null, Syntax.Identifier).value;
+  node.value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
 
   // Quick way to figure out if we are looking at an object to follow or a function definition.
@@ -89,7 +92,11 @@ export default function typeParser(ctx: Context): NodeType {
     node.meta.push(objectType(offsetsByKey));
     node.meta.push(objectSize(totalSize));
     node.meta.push(objectKeyTypes(keyTypeMap));
-    ctx.userTypes.push(node);
+    node.type = "i32";
+    ctx.userTypes[node.value] = node;
+  } else {
+    const resultNode = node.params[0].params[1] || node.params[0].params[0];
+    node.type = resultNode.type;
   }
 
   hoistTypeMaybe(ctx, node);

@@ -26,7 +26,6 @@ test("compiles globals accurately, f32", t => {
   const stream = emit({
     ...ast,
     Globals: [{ mutable: 0, type: F32, init }]
-  });
   return WebAssembly.instantiate(stream.buffer()).then(
     ({ module, instance }) => {
       t.is(instance instanceof WebAssembly.Instance, true);

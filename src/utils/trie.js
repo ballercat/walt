@@ -1,8 +1,9 @@
+// @flow
 /**
  * A very basic trie with functional,recursive search
  */
 const fsearch = node => {
-  const next = char => {
+  const next = (char: string) => {
     if (node && node.children[char]) {
       return fsearch(node.children[char]);
     }
@@ -15,37 +16,44 @@ const fsearch = node => {
   return next;
 };
 
+type Node = {
+  char: string,
+  children: { [string]: Node },
+  leaf: boolean,
+};
+
 class Trie {
-  constructor (words) {
+  root: Node;
+  fsearch: any;
+
+  constructor(words: Array<string>) {
     this.root = {
-      char: '',
+      char: "",
       children: {},
-      leaf: false
+      leaf: false,
     };
 
     words.map(word => this.add(word));
     this.fsearch = fsearch(this.root);
   }
 
-  add(word) {
+  add(word: string) {
     let current = this.root;
     let char = word.slice(0, 1);
 
     word = word.slice(1);
 
-    while(
-      typeof current.children[char] !== 'undefined' &&
-      char.length > 0) {
+    while (typeof current.children[char] !== "undefined" && char.length > 0) {
       current = current.children[char];
       char = word.slice(0, 1);
       word = word.slice(1);
     }
 
-    while(char.length > 0) {
+    while (char.length > 0) {
       const node = {
         char,
         children: {},
-        leaf: false
+        leaf: false,
       };
 
       current.children[char] = node;
@@ -59,4 +67,3 @@ class Trie {
 }
 
 module.exports = Trie;
-

@@ -1,3 +1,4 @@
+// @flow
 import Stream from "../utils/stream";
 import punctuator from "./punctuator";
 import constant from "./constant";
@@ -7,23 +8,30 @@ import string from "./string";
 import comments from "./comments";
 import type from "./type";
 
+type Parsers = ((string) => any)[];
+
 class Tokenizer {
+  stream: Stream;
+  tokens: Array<any>;
+  pos: number;
+  parsers: Parsers;
+
   constructor(
-    stream,
-    parsers = [
+    stream: Stream,
+    parsers: Parsers = [
       punctuator,
       constant,
       identifier,
       keyword,
       string,
       type,
-      comments
+      comments,
     ]
   ) {
-    if (!(stream instanceof Stream))      {
-this.die(`Tokenizer expected instance of Stream in constructor.
+    if (!(stream instanceof Stream)) {
+      this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
-}
+    }
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -32,19 +40,17 @@ this.die(`Tokenizer expected instance of Stream in constructor.
 
   /**
    * Get next token
-   *
-   * @return {Object} token
    */
   next() {
     let value = "";
     this.seekNonWhitespace();
-    let char;
+    let char = "";
     let matchers = this.parsers;
     let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
 
     do {
@@ -58,49 +64,55 @@ this.die(`Tokenizer expected instance of Stream in constructor.
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) {
-return null;
-}
+      return null;
+    }
 
     const token = this.token(value, matchers);
     token.start = start;
     token.end = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
     // Comments are ignored for now
     if (token.type !== comments.type) {
-this.tokens.push(token);
-}
+      this.tokens.push(token);
+    }
 
     return this.tokens[this.pos++];
   }
 
-  match(char, parsers) {
+  match(char: string, parsers: Parsers) {
     if (char == null) {
-return parsers;
-}
+      return parsers;
+    }
 
     return parsers.map(parse => parse(char)).filter(p => p);
   }
 
   /**
    * Match a particular non-whitespace value to a token
-   *
-   * @param {String} value Value to match
-   * @return {Object} token
    */
-  token(value, parsers, token = { type: "unknown", value }) {
+  token(
+    value: string,
+    parsers: Parsers,
+    token: { type: string, value: string, start: {}, end: {} } = {
+      type: "unknown",
+      value,
+      start: {},
+      end: {},
+    }
+  ) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
       if (parsers.length > 1) {
-parsers = parsers.filter(parser => parser.strict);
-}
+        parsers = parsers.filter(parser => parser.strict);
+      }
     }
 
     if (parsers.length === 1) {
-token.type = parsers[0].type;
-}
+      token.type = parsers[0].type;
+    }
 
     return token;
   }
@@ -109,26 +121,23 @@ token.type = parsers[0].type;
    * Seek Stream until next non-whitespace character. Can end in eof/eol
    */
   seekNonWhitespace() {
-    while (this.stream.peek() && Stream.whitespace(this.stream.peek()))      {
-this.stream.next();
-}
+    while (this.stream.peek() && Stream.whitespace(this.stream.peek())) {
+      this.stream.next();
+    }
   }
 
   parse() {
     while (!Stream.eof(this.stream.peek())) {
-this.next();
-}
+      this.next();
+    }
 
     return this.tokens;
   }
 
   /**
    * Stop parsing and throw a fatal error
-   *
-   * @param {String} reason
-   * @throws
    */
-  die(reason) {
+  die(reason: string) {
     throw new Error(reason);
   }
 }

@@ -4,11 +4,11 @@ import Context from "../context";
 const ctx = new Context({
   token: {
     start: { line: 1, col: 13 },
-    end: { line: 1, col: 30 }
+    end: { line: 1, col: 30 },
   },
   lines: ["let x: i32 = someUnknownToken;"],
   filename: "test.walt",
-  func: { id: "test" }
+  func: { id: "test" },
 });
 
 test("syntaxError generates an accurate error string", t => {

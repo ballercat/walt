@@ -1,3 +1,4 @@
+// @flow
 // Emits function section. For function code emitter look into code.js
 import { varuint32, varint1 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
@@ -10,7 +11,7 @@ const emitEntry = (payload, entry) => {
   }
 };
 
-const emit = memories => {
+const emit = (memories: any[]) => {
   const stream = new OutputStream();
   stream.push(varuint32, memories.length, "count");
   memories.forEach(entry => emitEntry(stream, entry));

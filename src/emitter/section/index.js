@@ -1,5 +1,6 @@
+// @flow
 import imports from "./imports";
-import exports from "./exports";
+import exports_ from "./exports";
 import globals from "./globals";
 import functions from "./functions";
 import writer from "./writer";
@@ -17,7 +18,7 @@ import {
   SECTION_GLOBAL,
   SECTION_EXPORT,
   SECTION_ELEMENT,
-  SECTION_CODE
+  SECTION_CODE,
 } from "./codes";
 
 export default {
@@ -26,16 +27,20 @@ export default {
   function: writer({
     type: SECTION_FUNCTION,
     label: "Functions",
-    emitter: functions
+    emitter: functions,
   }),
   table: writer({ type: SECTION_TABLE, label: "Table", emitter: table }),
   memory: writer({ type: SECTION_MEMORY, label: "Memory", emitter: memory }),
-  exports: writer({ type: SECTION_EXPORT, label: "Exports", emitter: exports }),
+  exports: writer({
+    type: SECTION_EXPORT,
+    label: "Exports",
+    emitter: exports_,
+  }),
   globals: writer({ type: SECTION_GLOBAL, label: "Globals", emitter: globals }),
   element: writer({
     type: SECTION_ELEMENT,
     label: "Element",
-    emitter: element
+    emitter: element,
   }),
-  code: writer({ type: SECTION_CODE, label: "Code", emitter: code })
+  code: writer({ type: SECTION_CODE, label: "Code", emitter: code }),
 };

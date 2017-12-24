@@ -12,16 +12,6 @@ const ___ = null;
 
 /**
  * Convert Opcode definiton to usable object(s)
- *
- * @param {Number} result result type
- * @param {Number} first  t1 type of the 1st parameter
- * @param {Number} second type of the 2nd parameter
- * @param {Number} m      memory size of the operation, if any
- * @param {Number} code   opcode
- * @param {String} name   used to generate the opcode enum
- * @param {String} text   a string of the opcode name in the text format
- *
- * @return {Object} Opcode
  **/
 const opcode = (
   result: ?number,
@@ -39,7 +29,7 @@ const opcode = (
     size,
     code,
     name,
-    text
+    text,
   };
 
   def[name] = definition;
@@ -261,11 +251,15 @@ export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
  */
 export const opcodeFromOperator = ({
   type,
-  value
+  value,
 }: {
-  type: string,
-  value: string
+  type: string | null,
+  value: string,
 }): RawOpcodeType => {
+  if (type == null) {
+    return def.Noop;
+  }
+
   switch (value) {
     case "+":
       return def[type + "Add"];

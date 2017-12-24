@@ -1,133 +1,211 @@
+// @flow
 import Syntax from "../Syntax";
 import { generateImplicitFunctionType } from "../generator/type";
 import generateCode from "../generator";
+import { handleUndefined } from "../utils/generate-error";
 import { findTypeIndex } from "./introspection";
 import statement from "./statement";
 import declaration from "./declaration";
-import { findUserTypeIndex } from "./introspection";
-import metadata, { make, FUNCTION_INDEX } from "./metadata";
+import expression from "./expression";
+import mapNode from "../utils/map-node";
+import walkNode from "../utils/walk-node";
+import {
+  make,
+  FUNCTION_INDEX,
+  typeIndex as setTypeIndex,
+  userType as setMetaUserType,
+  localIndexMap,
+} from "./metadata";
+import type { NodeType, Metadata } from "../flow/types";
+import type Context from "./context";
 
 const last = list => list[list.length - 1];
 
-const param = ctx => {
-  const node = ctx.startNode();
-  node.id = ctx.expect(null, Syntax.Identifier).value;
-  ctx.expect([":"]);
-
-  // maybe a custom type
-  const { value } = ctx.token;
-  if (ctx.eat(null, Syntax.Identifier)) {
-    // find the type
-    const typePointer = ctx.Program.Types.find(({ id }) => id === value);
-    const userType = ctx.userTypes[findUserTypeIndex(ctx, { value })];
-    if (userType) {
-      node.meta.push(metadata.userType(userType));
-    }
-    if (typePointer == null && !userType) {
-      throw ctx.syntaxError("Undefined Type", value);
-    }
-
-    node.typePointer = typePointer;
-    node.type = "i32";
-  } else {
-    node.type = ctx.expect(null, Syntax.Type).value;
-  }
-
-  node.isParam = true;
-
-  ctx.eat([","]);
-  return ctx.endNode(node, Syntax.Param);
-};
-
-const paramList = ctx => {
-  const list = [];
+export const parseArguments = (ctx: Context): NodeType => {
   ctx.expect(["("]);
-  while (ctx.token.value !== ")") {
-    list.push(param(ctx));
-  }
+  ctx.handleUndefinedIdentifier = () => {};
+  const argumentsNode = expression(ctx);
+  ctx.handleUndefinedIdentifier = handleUndefined(ctx);
   ctx.expect([")"]);
-  return list;
+
+  return mapNode({
+    [Syntax.Pair]: pairNode => {
+      const [identifierNode, typeNode] = pairNode.params;
+      if (typeNode.Type !== Syntax.Type) {
+        const functionType = ctx.functionTypes[typeNode.value];
+        const userType = ctx.userTypes[typeNode.value];
+        const typePointer = functionType || userType;
+        const meta = [];
+
+        if (typePointer == null) {
+          throw ctx.syntaxError("Undefined Type", typeNode.value);
+        }
+        if (userType) {
+          meta.push(setMetaUserType(userType));
+        }
+
+        return {
+          ...pairNode,
+          params: [
+            {
+              ...identifierNode,
+              type: typePointer.type,
+              meta,
+            },
+            {
+              ...typeNode,
+              ...typePointer,
+              // clear params so we don't recurse into object definition
+              params: [],
+              type: "i32",
+              Type: Syntax.Type,
+            },
+          ],
+        };
+      }
+
+      return {
+        ...pairNode,
+        params: [{ ...identifierNode, type: typeNode.type }, typeNode],
+      };
+    },
+  })(argumentsNode);
 };
 
-export default function maybeFunctionDeclaration(ctx) {
-  const node = ctx.startNode();
+export const parseFunctionResult = (ctx: Context): NodeType => {
+  const baseNode: NodeType = ctx.startNode();
+  if (ctx.eat([":"])) {
+    return ctx.endNode(
+      {
+        ...baseNode,
+        type: (() => {
+          const value = ctx.token.value;
+          if (ctx.eat(null, Syntax.Type)) {
+            return value === "void" ? null : value;
+          }
+
+          return "i32";
+        })(),
+      },
+      Syntax.FunctionResult
+    );
+  }
+
+  return ctx.endNode(
+    {
+      ...baseNode,
+    },
+    Syntax.FunctionResult
+  );
+};
+
+export const initializeLocals = (argsNode: NodeType): Metadata => {
+  const payload = {};
+  walkNode({
+    [Syntax.Pair]: pairNode => {
+      const [identifierNode, typeNode] = pairNode.params;
+      const localsCount = Object.keys(payload).length;
+      payload[identifierNode.value] = {
+        index: localsCount,
+        node: identifierNode,
+        typeNode,
+      };
+    },
+  })(argsNode);
+
+  return localIndexMap(payload);
+};
+
+const maybeFunctionDeclaration = (ctx: Context) => {
   if (!ctx.eat(["function"])) {
     return declaration(ctx);
   }
 
-  ctx.func = node;
-  node.func = true;
-  node.id = ctx.expect(null, Syntax.Identifier).value;
-  node.params = paramList(ctx);
-  node.locals = [...node.params];
-
-  if (ctx.eat([":"])) {
-    node.result = ctx.expect(null, Syntax.Type).value;
-    node.result = node.result === "void" ? null : node.result;
-  } else {
-    node.result = null;
-  }
+  const baseNode = ctx.startNode();
+  const value = ctx.expect(null, Syntax.Identifier).value;
+  const argumentsNode = parseArguments(ctx);
+  const localsMetadata = initializeLocals(argumentsNode);
+  const resultNode = parseFunctionResult(ctx);
 
   // NOTE: We need to write function into Program BEFORE
   // we parse the body as the body may refer to the function
   // itself recursively
   // Either re-use an existing type or write a new one
-  const typeIndex = findTypeIndex(node, ctx);
-  if (typeIndex !== -1) {
-    node.typeIndex = typeIndex;
-  } else {
-    // attach to a type index
-    node.typeIndex = ctx.Program.Types.length;
-    ctx.Program.Types.push(generateImplicitFunctionType(node));
-  }
 
-  node.meta = [
-    make(
-      {
-        get functionIndex() {
-          return node.functionIndex + ctx.functionImports.length;
-        }
+  const emptyNode: NodeType = {
+    ...baseNode,
+    value,
+    type: resultNode.type,
+    params: [argumentsNode, resultNode],
+    meta: [localsMetadata],
+  };
+  const typeIndex = (() => {
+    const index = findTypeIndex(emptyNode, ctx);
+    if (index === -1) {
+      // attach to a type index
+      ctx.Program.Types.push(generateImplicitFunctionType(emptyNode));
+      return ctx.Program.Types.length - 1;
+    }
+
+    return index;
+  })();
+  const functionIndex = ctx.Program.Functions.length;
+  const functionIndexMeta = make(
+    {
+      get functionIndex() {
+        return functionIndex + ctx.functionImports.length;
       },
-      FUNCTION_INDEX
-    )
+    },
+    FUNCTION_INDEX
+  );
+
+  emptyNode.meta = [
+    ...emptyNode.meta,
+    setTypeIndex(typeIndex),
+    functionIndexMeta,
   ];
-  node.functionIndex = ctx.Program.Functions.length;
-  ctx.Program.Functions.push(node.typeIndex);
-  ctx.functions.push(node);
+  ctx.func = emptyNode;
+  ctx.functions.push(emptyNode);
 
   ctx.expect(["{"]);
-  node.body = [];
-  let stmt = null;
+  const statements = [];
   while (ctx.token && ctx.token.value !== "}") {
-    stmt = statement(ctx);
+    const stmt = statement(ctx);
     if (stmt) {
-      node.body.push(stmt);
+      statements.push(stmt);
     }
   }
 
   // Sanity check the return statement
-  const ret = last(node.params);
-  if (ret && node.type) {
-    if (node.type === "void" && ret.Type === Syntax.ReturnStatement) {
+  const ret = last(statements);
+  if (ret && resultNode.type) {
+    if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
       throw ctx.syntaxError(
         "Unexpected return value in a function with result : void"
       );
     }
-    if (node.type !== "void" && ret.Type !== Syntax.ReturnStatement) {
+    if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
       throw ctx.syntaxError(
-        "Expected a return value in a function with result : " + node.result
+        "Expected a return value in a function with result : " +
+          JSON.stringify(resultNode.type)
       );
     }
-  } else if (node.result) {
-    // throw ctx.syntaxError(`Return type expected ${node.result}, received ${JSON.stringify(ret)}`);
   }
 
+  const node = {
+    ...emptyNode,
+    params: [...emptyNode.params, ...statements],
+  };
+
+  ctx.Program.Functions.push(typeIndex);
+
   // generate the code block for the emitter
-  //
   ctx.Program.Code.push(generateCode(node));
 
   ctx.expect(["}"]);
   ctx.func = null;
 
   return ctx.endNode(node, Syntax.FunctionDeclaration);
-}
+};
+
+export default maybeFunctionDeclaration;

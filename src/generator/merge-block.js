@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import type { IntermediateOpcodeType } from "./flow/types";
 
 const mergeBlock = (

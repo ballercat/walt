@@ -1,3 +1,4 @@
+// @flow
 // More or less JavaScript precedence
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 
@@ -26,12 +27,9 @@ const precedence = {
   "=": PRECEDENCE_ASSIGNMENT,
   "-=": PRECEDENCE_ASSIGNMENT,
   "+=": PRECEDENCE_ASSIGNMENT,
-  "-=": PRECEDENCE_ASSIGNMENT,
-  "+=": PRECEDENCE_ASSIGNMENT,
-  ":": 4,
   "?": 4,
   ">": 5,
   "<": 5,
-  ":": PRECEDENCE_KEY_VALUE_PAIR
+  ":": PRECEDENCE_KEY_VALUE_PAIR,
 };
 export default precedence;

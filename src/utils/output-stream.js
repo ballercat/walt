@@ -1,8 +1,12 @@
+// @flow
 import invariant from "invariant";
 import { sizeof, set, u8 } from "wasm-types";
 
 // Used to output raw binary, holds values and types in a large array 'stream'
 export default class OutputStream {
+  data: Array<any>;
+  size: number;
+
   constructor() {
     // Our data, expand it
     this.data = [];
@@ -11,7 +15,7 @@ export default class OutputStream {
     this.size = 0;
   }
 
-  push(type, value, debug = "") {
+  push(type: string, value: any, debug: string = "") {
     let size = 0;
     switch (type) {
       case "varuint7":
@@ -42,7 +46,7 @@ export default class OutputStream {
     return this;
   }
 
-  encode(value) {
+  encode(value: number) {
     const encoding = [];
     while (true) {
       const i = value & 127;
@@ -58,7 +62,7 @@ export default class OutputStream {
     return encoding;
   }
 
-  encodeSigned(value) {
+  encodeSigned(value: number) {
     const encoding = [];
     const size = 32;
     while (true) {
@@ -96,7 +100,7 @@ export default class OutputStream {
   }
 
   // Writes source OutputStream into the current buffer
-  write(source) {
+  write(source: ?OutputStream) {
     if (source) {
       this.data = this.data.concat(source.data);
       this.size += source.size;

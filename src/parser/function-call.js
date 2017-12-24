@@ -1,6 +1,7 @@
 // @flow
 import invariant from "invariant";
 import Syntax from "../Syntax";
+import { findLocalVariable } from "./introspection";
 import type Context from "./context";
 import type { Token, Node } from "../flow/types";
 
@@ -13,29 +14,31 @@ const functionCall = (ctx: Context, op: Token, operands: Node[]) => {
   }
 
   const identifier = operands.splice(-1)[0];
-  const maybePointer = ctx.func.locals.find(l => l.id === identifier.value);
-  const localIndex = ctx.func.locals.findIndex(
-    ({ id }) => id === identifier.value
-  );
+  const maybePointer = ctx.func
+    ? findLocalVariable(ctx.func, identifier)
+    : null;
 
-  let Type = Syntax.FunctionCall;
-  let func = null;
-
-  if (maybePointer && localIndex > -1) {
-    Type = Syntax.IndirectFunctionCall;
-    func = ctx.functions[identifier.meta[0].payload];
-    node.params.push(identifier);
-  } else {
-    func = ctx.functions.find(({ id }) => id == identifier.value);
-    if (!func) {
-throw ctx.syntaxError(`Undefined function: ${identifier.value}`);
-}
-
-    node.meta.push({ ...func.meta[0] });
+  if (maybePointer) {
+    return ctx.endNode(
+      {
+        ...node,
+        params: [...node.params, identifier],
+      },
+      Syntax.IndirectFunctionCall
+    );
   }
 
+  const Type = Syntax.FunctionCall;
+  const func = ctx.functions.find(({ value }) => value === identifier.value);
+  if (!func) {
+    throw ctx.syntaxError(`Undefined function: ${identifier.value}`);
+  }
+
+  node.meta = [...func.meta];
+
   invariant(func, `Undefined function ${identifier.value}`);
-  node.type = func.result;
+
+  node.type = func.type;
 
   return ctx.endNode(node, Type);
 };

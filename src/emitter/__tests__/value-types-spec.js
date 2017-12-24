@@ -6,7 +6,7 @@ import {
   F32,
   F64,
   FUNC,
-  ANYFUNC
+  ANYFUNC,
 } from "../value_type";
 
 test("getTypeString returns string version of the constant", t => {

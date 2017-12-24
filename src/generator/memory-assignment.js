@@ -1,10 +1,12 @@
+// @flow
 import mapSyntax from "./map-syntax";
 import { nodeMetaType } from "../parser/array-subscript";
 import { TYPE_ARRAY } from "../parser/metadata";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
+import type { GeneratorType } from "./flow/types";
 
-const generateMemoryAssignment = (node, parent) => {
+const generateMemoryAssignment: GeneratorType = (node, parent) => {
   const targetNode = node.params[0];
   const metaType = nodeMetaType(targetNode);
 
@@ -12,12 +14,12 @@ const generateMemoryAssignment = (node, parent) => {
     .map(mapSyntax(parent))
     .reduce(mergeBlock, []);
 
-  if (metaType.type === TYPE_ARRAY) {
+  if (metaType && metaType.type === TYPE_ARRAY) {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
       // TODO: fix this for user-defined types
       { kind: opcode.i32Const, params: [4] },
-      { kind: opcode.i32Mul, params: [] }
+      { kind: opcode.i32Mul, params: [] },
     ]);
   }
 
@@ -35,14 +37,14 @@ const generateMemoryAssignment = (node, parent) => {
 
   // The last piece is the WASM opcode. Either load or store
   block.push({
-    kind: opcode[node.type + "Store"],
+    kind: opcode[(node.type || "") + "Store"],
     params: [
       // Alignment
       // TODO: make this extendible
       2,
       // Memory. Always 0 in the WASM MVP
-      0
-    ]
+      0,
+    ],
   });
 
   return block;
