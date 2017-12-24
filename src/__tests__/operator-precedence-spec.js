@@ -23,7 +23,6 @@ test("test correct precedence", t => {
   `).then(outputIs(t, 6));
 });
 
-
 test("test correct precedence with negative numbers", t => {
   compileAndRun(`
     export function test(): i32 {

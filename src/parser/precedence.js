@@ -36,6 +36,6 @@ const precedence = {
   ":": PRECEDENCE_KEY_VALUE_PAIR,
   "^": PRECEDENCE_BITWISE_XOR,
   "&": PRECEDENCE_BITWISE_AND,
-  "|": PRECEDENCE_BITWISE_OR
+  "|": PRECEDENCE_BITWISE_OR,
 };
 export default precedence;
