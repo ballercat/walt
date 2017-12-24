@@ -29,6 +29,12 @@ test("logical and in math expression", t =>
     return (1 && 2) + 2;
   }`).then(outputIs(t, 4)));
 
+test("precedence of logical operators in math expression", t =>
+  compileAndRun(`
+  export function test(): i32 {
+    return 1 && 2 + 2 * 2 || 2 + 2;
+  }`).then(outputIs(t, 6)));
+
 test("chained logical operators", t =>
   compileAndRun(`
   export function test(): i32 {
