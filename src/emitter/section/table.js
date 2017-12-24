@@ -3,13 +3,13 @@ import { varuint32, varint1, varint7 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
 
 const typeBytecodes = {
-  anyfunc: 0x70
+  anyfunc: 0x70,
 };
 
 type TableEntryType = {
   initial: number,
   max?: number,
-  type: string
+  type: string,
 };
 
 const emitEntry = (payload, entry: TableEntryType) => {

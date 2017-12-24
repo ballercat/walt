@@ -11,7 +11,7 @@ const supported = [
   "Function",
   "Memory",
   "Table",
-  "void"
+  "void",
 ];
 const trie = new Trie(supported);
 export default token(trie.fsearch, Syntax.Type, supported);
