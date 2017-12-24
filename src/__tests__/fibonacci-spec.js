@@ -8,10 +8,8 @@ const checks = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
 test("fibonacci", t =>
   compileAndRun(`
     export function fibonacci(n: i32): i32 {
-      if (n == 0)
-        return 0;
-      if (n == 1)
-        return 1;
+      if (n == 0) return 0;
+      if (n == 1) return 1;
       return fibonacci(n - 1) + fibonacci(n - 2);
     }
   `).then(result => {
