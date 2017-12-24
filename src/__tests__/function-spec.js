@@ -51,6 +51,19 @@ test("void result type is optional", () =>
   export function test() {
   }`));
 
+test("non initialized locals", () =>
+  compileAndRun(`
+  export function test() {
+    const x: i32;
+  }`));
+
+test("i64 locals", t =>
+  compileAndRun(`
+  export function test(): i32 {
+    const x: i64 = 42;
+    return x: i32;
+  }`).then(outputIs(t, 42)));
+
 test("function pointers", t => {
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
   return compileAndRun(

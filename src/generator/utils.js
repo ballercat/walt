@@ -2,7 +2,7 @@
 import opcode from "../emitter/opcode";
 import curry from "curry";
 import invariant from "invariant";
-import { I32, F32, F64 } from "../emitter/value_type";
+import { I32, I64, F32, F64 } from "../emitter/value_type";
 import { get, LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../parser/metadata";
 import type {
   IntermediateVariableType,
@@ -56,6 +56,8 @@ export const getType = (str: ?string): number => {
       return F32;
     case "f64":
       return F64;
+    case "i64":
+      return I64;
     case "i32":
     case "Function":
     default:
