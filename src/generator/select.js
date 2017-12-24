@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import opcode from "../emitter/opcode";
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
@@ -16,7 +16,7 @@ const generateSelect: GeneratorType = (node, parent) => {
       ...[rightHandSide].map(mapSyntax(parent)).reduce(mergeBlock, []),
       { kind: opcode.i32Const, params: [0] },
       ...condition,
-      selectOpcode
+      selectOpcode,
     ];
   }
 
@@ -24,7 +24,7 @@ const generateSelect: GeneratorType = (node, parent) => {
     ...condition,
     ...[rightHandSide].map(mapSyntax(parent)).reduce(mergeBlock, []),
     ...condition,
-    selectOpcode
+    selectOpcode,
   ];
 };
 

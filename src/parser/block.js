@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import statement from "./statement";
 import type Context from "./context";
@@ -21,7 +21,7 @@ export default function blockParser(ctx: Context): NodeType {
   return ctx.endNode(
     {
       ...node,
-      params
+      params,
     },
     Syntax.Block
   );

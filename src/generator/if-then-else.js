@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
@@ -15,7 +15,7 @@ const generateIf: GeneratorType = (node, parent) => {
       kind: opcode.If,
       // if-then-else blocks have no return value and the Wasm spec requires us to
       // provide a literal byte '0x40' for "empty block" in these cases
-      params: [0x40]
+      params: [0x40],
     },
 
     // after the expression is on the stack and opcode is following it we can write the
@@ -24,7 +24,7 @@ const generateIf: GeneratorType = (node, parent) => {
 
     // fllowed by the optional 'else'
     ...restParams.map(mapper).reduce(mergeBlock, []),
-    { kind: opcode.End, params: [] }
+    { kind: opcode.End, params: [] },
   ];
 };
 

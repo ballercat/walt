@@ -14,28 +14,33 @@ const condition = (ctx: Context): NodeType => {
 
 export default function parseIfStatement(ctx: Context): NodeType {
   const node: NodeType = {
-    ...ctx.startNode(ctx.token)
+    ...ctx.startNode(ctx.token),
   };
 
   ctx.eat(["if"]);
   // First operand is the expression
-  const params = [
-    // condition
-    condition(ctx),
-    statement(ctx)
-  ];
+  const params: NodeType[] = [condition(ctx)];
+  const statementNode = statement(ctx);
+  if (statementNode) {
+    params.push(statementNode);
+  }
 
   ctx.eat([";"]);
   while (ctx.eat(["else"])) {
     // maybe another if statement
     const elseNode = ctx.makeNode(null, Syntax.Else);
-    params.push({ ...elseNode, params: [statement(ctx)] });
+    const elseParams = [];
+    const stmt = statement(ctx);
+    if (stmt) {
+      elseParams.push(stmt);
+    }
+    params.push({ ...elseNode, params: elseParams });
   }
 
   return ctx.endNode(
     {
       ...node,
-      params
+      params,
     },
     Syntax.IfThenElse
   );

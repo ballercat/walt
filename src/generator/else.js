@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import opcode from "../emitter/opcode";
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
@@ -9,7 +9,7 @@ const generateElse: GeneratorType = (node, parent) => {
   // but currently they are only used as part of a larger control flow instructions
   return [
     { kind: opcode.Else, params: [] },
-    ...node.params.map(mapSyntax(parent)).reduce(mergeBlock, [])
+    ...node.params.map(mapSyntax(parent)).reduce(mergeBlock, []),
   ];
 };
 

@@ -64,7 +64,7 @@ class Context {
       Element: [],
       Functions: [],
       Memory: [],
-      Table: []
+      Table: [],
     };
   }
 

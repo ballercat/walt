@@ -1,8 +1,12 @@
+// @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
+import type { NodeType } from "./flow/types";
 
-export default function generateMemory(node) {
-  const table = { max: 0, initial: 0 };
+export default function generateMemory(
+  node: NodeType
+): { max: number, initial: number, type: string } {
+  const table = { max: 0, initial: 0, type: "" };
 
   walkNode({
     [Syntax.Pair]: ({ params }) => {
@@ -13,7 +17,7 @@ export default function generateMemory(node) {
       } else if (key === "element") {
         table.type = value;
       }
-    }
+    },
   })(node);
 
   return table;
