@@ -33,7 +33,7 @@ test("memory can be defined", t => {
     x[0] = 21;
     x[y] = 2;
     return x[0] * x[y];
-  }`,
+  }`
   ).then(outputIs(t, 42));
 });
 

@@ -9,7 +9,7 @@ import type {
 import invariant from "invariant";
 
 const generateCode = (
-  func: NodeType,
+  func: NodeType
 ): { code: IntermediateOpcodeType[], locals: IntermediateVariableType[] } => {
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;

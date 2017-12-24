@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "nyc ava",
-    "validate": "npm run lint && npm run flow",
+    "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
     "flow": "flow",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "prettier": "prettier --list-different src/**/*.js",
+    "precommit": "lint-staged"
   },
   "repository": {
     "type": "git",
@@ -49,8 +51,10 @@
     "coveralls": "^3.0.0",
     "eslint-plugin-flowtype": "^2.40.1",
     "flow-bin": "^0.61.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^6.0.0",
     "nyc": "^11.1.0",
-    "prettier": "^1.7.0",
+    "prettier": "^1.9.2",
     "rollup": "^0.52.2",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.0.2",
@@ -63,7 +67,7 @@
     "uglify-es": "^3.0.17"
   },
   "prettier": {
-    "trailingComma": "all"
+    "trailingComma": "es5"
   },
   "ava": {
     "files": [
@@ -82,5 +86,11 @@
       "babel-register"
     ],
     "babel": "inherit"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }

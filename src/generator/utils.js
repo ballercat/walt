@@ -19,8 +19,8 @@ export const scopeOperation = curry((op, node) => {
   invariant(
     index,
     `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(
-      op,
-    )} node: ${JSON.stringify(node, null, 2)}`,
+      op
+    )} node: ${JSON.stringify(node, null, 2)}`
   );
 
   const kind = local ? op + "Local" : op + "Global";
@@ -62,7 +62,9 @@ export const getType = (str: ?string): number => {
       return I32;
   }
 };
-export const generateValueType = (node: NodeType): IntermediateVariableType => ({
+export const generateValueType = (
+  node: NodeType
+): IntermediateVariableType => ({
   mutable: get(TYPE_CONST, node) ? 0 : 1,
   type: getType(node.type),
 });

@@ -12,7 +12,7 @@ const generateFunctionCall: GeneratorType = (node, parent) => {
   const metaFunctionIndex = get(FUNCTION_INDEX, node);
   invariant(
     metaFunctionIndex,
-    "Undefined function index for node \n" + `${printNode(node)}`,
+    "Undefined function index for node \n" + `${printNode(node)}`
   );
 
   block.push({

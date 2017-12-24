@@ -20,7 +20,7 @@ const returnStatement = (ctx: Context) => {
     ctx.func.type !== expr.type
   ) {
     throw ctx.syntaxError(
-      `Return type mismatch expected ${ctx.func.type}, got ${expr.type}`,
+      `Return type mismatch expected ${ctx.func.type}, got ${expr.type}`
     );
   } else if (!expr.type && ctx.func && ctx.func.type) {
     expr.type = ctx.func.type;

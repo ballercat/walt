@@ -23,7 +23,7 @@ import {
 export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
   // At this point we may have found a type which needs to hoist
   const needsHoisting = ctx.Program.Types.find(
-    ({ id, hoist }) => id === node.value && hoist,
+    ({ id, hoist }) => id === node.value && hoist
   );
 
   if (needsHoisting) {
@@ -38,7 +38,7 @@ export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
 };
 
 export const getByteOffsetsAndSize = (
-  objectLiteralNode: NodeType,
+  objectLiteralNode: NodeType
 ): [{ [string]: number }, number, { [string]: string }] => {
   const offsetsByKey = {};
   const keyTypeMap = {};
@@ -49,7 +49,7 @@ export const getByteOffsetsAndSize = (
       const { value: typeString } = keyTypePair.params[1];
       invariant(
         offsetsByKey[key] == null,
-        `Duplicate key ${key} not allowed in object type`,
+        `Duplicate key ${key} not allowed in object type`
       );
 
       keyTypeMap[key] = typeString;
@@ -87,7 +87,7 @@ export default function typeParser(ctx: Context): NodeType {
 
   if (isObjectType) {
     const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
-      node.params[0],
+      node.params[0]
     );
     node.meta.push(objectType(offsetsByKey));
     node.meta.push(objectSize(totalSize));

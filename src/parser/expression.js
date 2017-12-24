@@ -33,7 +33,7 @@ const expression = (
   // Type param is no longer used but a bunch of code still passes it in
   // eslint-disable-next-line
   type: string = "i32",
-  check: Predicate = predicate,
+  check: Predicate = predicate
 ) => {
   const operators: Token[] = [];
   const operands: Node[] = [];

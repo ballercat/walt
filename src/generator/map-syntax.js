@@ -61,7 +61,7 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
     const value =
       operand.id ||
       operand.value ||
-      operand.operator && operand.operator.value;
+      (operand.operator && operand.operator.value);
     throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
   }
 

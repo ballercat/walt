@@ -20,7 +20,7 @@ const opcode = (
   size: number,
   code: number,
   name: string,
-  text: string,
+  text: string
 ) => {
   const definition: RawOpcodeType = {
     result,

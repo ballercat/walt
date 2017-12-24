@@ -87,7 +87,7 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
           return "i32";
         })(),
       },
-      Syntax.FunctionResult,
+      Syntax.FunctionResult
     );
   }
 
@@ -95,7 +95,7 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
     {
       ...baseNode,
     },
-    Syntax.FunctionResult,
+    Syntax.FunctionResult
   );
 };
 
@@ -156,7 +156,7 @@ const maybeFunctionDeclaration = (ctx: Context) => {
         return functionIndex + ctx.functionImports.length;
       },
     },
-    FUNCTION_INDEX,
+    FUNCTION_INDEX
   );
 
   emptyNode.meta = [
@@ -181,13 +181,13 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   if (ret && resultNode.type) {
     if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
       throw ctx.syntaxError(
-        "Unexpected return value in a function with result : void",
+        "Unexpected return value in a function with result : void"
       );
     }
     if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
       throw ctx.syntaxError(
         "Expected a return value in a function with result : " +
-          JSON.stringify(resultNode.type),
+          JSON.stringify(resultNode.type)
       );
     }
   }

@@ -22,9 +22,10 @@ const ast = {
 
 test("compiles imports accurately", t => {
   const stream = emit(ast);
-  return WebAssembly.instantiate(
-    stream.buffer(), { a: { b: 42 }, foo: { bar: 0xFFFFF } }
-  ).then(({ module, instance }) => {
+  return WebAssembly.instantiate(stream.buffer(), {
+    a: { b: 42 },
+    foo: { bar: 0xfffff },
+  }).then(({ module, instance }) => {
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
   });

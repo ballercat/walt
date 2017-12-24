@@ -6,7 +6,7 @@ import type Context from "./context";
 
 export const writeFunctionPointer = (
   ctx: Context,
-  functionIndex: number,
+  functionIndex: number
 ): boolean => {
   if (!ctx.Program.Element.length) {
     ctx.Program.Imports.push.apply(
@@ -53,12 +53,12 @@ export const writeFunctionPointer = (
             type: null,
           },
         ],
-      }),
+      })
     );
   }
 
   const exists = ctx.Program.Element.findIndex(
-    n => n.functionIndex === functionIndex,
+    n => n.functionIndex === functionIndex
   );
   if (exists < 0) {
     ctx.Program.Element.push(generateElement(functionIndex));

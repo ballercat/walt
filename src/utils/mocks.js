@@ -20,7 +20,6 @@ export const mockContext = (code: string): Context => {
     filename: "mockContext.walt",
   });
 };
-
 export const mockFunction = (ctx: Context, options: any): Context => {
   const meta = [];
   let type = "i32";

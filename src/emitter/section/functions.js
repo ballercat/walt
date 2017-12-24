@@ -14,4 +14,3 @@ const emit = (functions: any[]) => {
 };
 
 export default emit;
-

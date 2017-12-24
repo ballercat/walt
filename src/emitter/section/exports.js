@@ -19,4 +19,3 @@ const emit = (exports: any[]) => {
 };
 
 export default emit;
-

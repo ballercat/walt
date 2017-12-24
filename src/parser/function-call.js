@@ -24,7 +24,7 @@ const functionCall = (ctx: Context, op: Token, operands: Node[]) => {
         ...node,
         params: [...node.params, identifier],
       },
-      Syntax.IndirectFunctionCall,
+      Syntax.IndirectFunctionCall
     );
   }
 

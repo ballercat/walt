@@ -76,15 +76,15 @@ class Context {
         this.token,
         this.lines[this.token.start.line - 1],
         this.filename || "unknown",
-        functionId,
-      ),
+        functionId
+      )
     );
   }
 
   unexpectedValue(value: string[] | string) {
     return this.syntaxError(
       `Expected: ${Array.isArray(value) ? value.join("|") : value}`,
-      "Unexpected value",
+      "Unexpected value"
     );
   }
 
@@ -93,7 +93,7 @@ class Context {
       `Expected: ${
         Array.isArray(token) ? token.join(" | ") : JSON.stringify(token)
       }`,
-      `Unexpected token ${this.token.type}`,
+      `Unexpected token ${this.token.type}`
     );
   }
 
@@ -161,7 +161,7 @@ class Context {
         ...this.startNode(),
         ...node,
       },
-      syntax,
+      syntax
     );
   }
 }

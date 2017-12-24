@@ -22,7 +22,7 @@ export const findTypeIndex = (functionNode: NodeType, ctx: Context): number => {
 
 const findFieldIndex = (fields: string[]) => (
   ctx: Context,
-  token: { value: string },
+  token: { value: string }
 ) => {
   let field: any = fields.reduce((memo: ?{}, f) => {
     if (memo) {
@@ -43,7 +43,7 @@ export const findGlobalIndex = (ctx: Context, { value }: { value: string }) =>
   ctx.globals.findIndex(node => node.value === value);
 export const findFunctionIndex = (
   ctx: Context,
-  { value }: { value: string },
+  { value }: { value: string }
 ) => {
   return ctx.functions.findIndex(fn => fn.value === value);
 };
@@ -51,7 +51,7 @@ export const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
 export const findLocalVariable = (
   functionNode: NodeType,
-  identifier: { value: string },
+  identifier: { value: string }
 ): { index: number, node: NodeType } | null => {
   const localIndexMap = get(LOCAL_INDEX_MAP, functionNode);
   if (localIndexMap != null) {
@@ -62,7 +62,7 @@ export const findLocalVariable = (
 
 export const addFunctionLocal = (
   functionNode: NodeType,
-  localNode: NodeType,
+  localNode: NodeType
 ) => {
   const localIndexMap = get(LOCAL_INDEX_MAP, functionNode);
   if (localIndexMap != null) {

@@ -27,7 +27,7 @@ export const getKindConstant = (value: string) => {
 };
 
 export default function generateImportFromNode(
-  node: NodeType,
+  node: NodeType
 ): IntermediateImportType[] {
   const [importsNode, moduleStringLiteralNode] = node.params;
   const { value: module } = moduleStringLiteralNode;

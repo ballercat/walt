@@ -11,7 +11,7 @@ export default function generateErrorString(
   token: Token,
   Line: string,
   filename: string,
-  func: string,
+  func: string
 ): string {
   const { line, col } = token.start;
   const { col: end } = token.end;

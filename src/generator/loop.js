@@ -26,7 +26,7 @@ const generateLoop: GeneratorType = (node, parent) => {
     node.params
       .slice(0, 1)
       .map(mapper)
-      .reduce(mergeBlock, []),
+      .reduce(mergeBlock, [])
   );
   block.push({ kind: opcode.Block, params: [0x40] });
   block.push({ kind: opcode.Loop, params: [0x40] });

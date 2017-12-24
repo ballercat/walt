@@ -29,7 +29,7 @@ test("function typed imports", t => {
             resolve();
           },
         },
-      },
+      }
     ).then(result => result.instance.exports.test(4434));
   });
 });
@@ -65,13 +65,13 @@ test("function pointers", t =>
             setTimeout(func, timeout);
           },
         },
-      },
+      }
     ).then(result => result.instance.exports.test());
   }));
 
 test("import expression generator", t => {
   const ctx = mockContext(
-    "import { field: i32, foo: CustomType, bar: SomeOtherType } from 'env';",
+    "import { field: i32, foo: CustomType, bar: SomeOtherType } from 'env';"
   );
   const node = parseImport(ctx);
   t.snapshot(generateImportFromNode(node));

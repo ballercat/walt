@@ -33,7 +33,7 @@ const generateTernary: GeneratorType = (node, parent) => {
     resultPair.params
       .slice(0, 1)
       .map(mapper)
-      .reduce(mergeBlock, []),
+      .reduce(mergeBlock, [])
   );
   block.push({
     kind: opcodeFromOperator({ value: ":", type: "i32" }),
@@ -46,7 +46,7 @@ const generateTernary: GeneratorType = (node, parent) => {
     resultPair.params
       .slice(-1)
       .map(mapper)
-      .reduce(mergeBlock, []),
+      .reduce(mergeBlock, [])
   );
 
   // Wrap up the node

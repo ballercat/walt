@@ -26,7 +26,7 @@ export const getType = (str: string): number => {
 };
 
 export const generateImplicitFunctionType = (
-  functionNode: NodeType,
+  functionNode: NodeType
 ): IntermediateTypeDefinitionType => {
   const [argsNode, resultNode] = functionNode.params;
   const resultType = resultNode.type ? getType(resultNode.type) : null;
@@ -48,21 +48,21 @@ export const generateImplicitFunctionType = (
 };
 
 export default function generateType(
-  node: NodeType,
+  node: NodeType
 ): IntermediateTypeDefinitionType {
   const id = node.value;
   invariant(
     typeof id === "string",
     `Generator: A type must have a valid string identifier, node: ${JSON.stringify(
-      node,
-    )}`,
+      node
+    )}`
   );
 
   const typeExpression = node.params[0];
   invariant(
     typeExpression && typeExpression.Type === Syntax.BinaryExpression,
     "Generator: A function type must be of form (<type>, ...) <type> node:" +
-      `${printNode(node)}`,
+      `${printNode(node)}`
   );
 
   // Collect the function params and result by walking the tree of nodes

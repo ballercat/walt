@@ -5,7 +5,7 @@ import invariant from "invariant";
 import type { NodeType } from "./flow/types";
 
 export default function generateExport(
-  node: NodeType,
+  node: NodeType
 ): {
   index: number,
   kind: number,

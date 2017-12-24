@@ -14,7 +14,7 @@ import type { NodeType } from "../flow/types";
 export const hoistType = (
   ctx: Context,
   typeNode: NodeType,
-  functionNode: NodeType,
+  functionNode: NodeType
 ): number => {
   const typeIndex = ctx.Program.Types.length;
   ctx.Program.Types.push({
@@ -41,7 +41,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
           {
             functionIndex,
           },
-          FUNCTION_INDEX,
+          FUNCTION_INDEX
         );
         const functionNode = {
           ...identifierNode,
@@ -49,7 +49,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
           meta: [functionIndexMeta],
         };
         const typeIndexMeta = setTypeIndex(
-          hoistType(ctx, typeNode, functionNode),
+          hoistType(ctx, typeNode, functionNode)
         );
         ctx.Program.Functions.push(null);
         ctx.functions.push(functionNode);

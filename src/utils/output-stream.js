@@ -22,7 +22,7 @@ export default class OutputStream {
       case "varuint32":
       case "varint7":
       case "varint1": {
-      // Encode all of the LEB128 aka 'var*' types
+        // Encode all of the LEB128 aka 'var*' types
         value = this.encode(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
@@ -70,10 +70,10 @@ export default class OutputStream {
       value = value >>> 7;
       const signbit = byte & 0x40;
       if (value < 0) {
-        value = value | ~0 << size - 7;
+        value = value | (~0 << (size - 7));
       }
 
-      if (value === 0 && !signbit || value === -1 && signbit) {
+      if ((value === 0 && !signbit) || (value === -1 && signbit)) {
         encoding.push(byte);
         break;
       } else {

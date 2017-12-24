@@ -73,7 +73,7 @@ test("function pointers", t => {
       env: {
         table,
       },
-    },
+    }
   ).then(outputIs(t, 42));
 });
 

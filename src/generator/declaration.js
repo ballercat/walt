@@ -8,7 +8,7 @@ import type { GeneratorType } from "./flow/types";
 
 const generateDeclaration: GeneratorType = (
   node,
-  parent = { code: [], locals: [] },
+  parent = { code: [], locals: [] }
 ) => {
   const initNode = node.params[0];
 
@@ -20,7 +20,7 @@ const generateDeclaration: GeneratorType = (
     const metaIndex = get(LOCAL_INDEX, node);
     invariant(
       metaIndex,
-      "Local Index is undefined. Cannot generate declaration",
+      "Local Index is undefined. Cannot generate declaration"
     );
     return [
       ...generateExpression({ ...initNode, type: node.type }, parent),

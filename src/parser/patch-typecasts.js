@@ -43,9 +43,9 @@ export const typeWeight = (typeString: ?string) => {
 function patchTypeCasts(node: NodeType): NodeType {
   return mapNode({
     [Syntax.Pair]: (typeCastMaybe: NodeType): NodeType => {
-      const { "params": [targetNode, typeNode] } = typeCastMaybe;
-      const { "type": from } = targetNode;
-      const { "value": to } = typeNode;
+      const { params: [targetNode, typeNode] } = typeCastMaybe;
+      const { type: from } = targetNode;
+      const { value: to } = typeNode;
 
       // If both sides of a pair don't have types then it's not a typecast,
       // more likely a string: value pair in an object for example
@@ -80,7 +80,7 @@ export const balanceTypesInMathExpression = (
 
     // find the result type in the expression
     let type = null;
-    patchedNode.params.forEach(({ "type": childType }) => {
+    patchedNode.params.forEach(({ type: childType }) => {
       // The way we do that is by scanning the top-level nodes in our expression
       if (typeWeight(type) < typeWeight(childType)) {
         type = childType;

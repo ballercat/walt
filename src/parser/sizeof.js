@@ -14,7 +14,7 @@ export const variableSize = (targetNode: NodeType): string => {
   if (metaType != null) {
     invariant(
       metaType.type === TYPE_USER,
-      `sizeof is not-supported on type supplied ${metaType.type}`,
+      `sizeof is not-supported on type supplied ${metaType.type}`
     );
     const metaSize = get(OBJECT_SIZE, metaType.payload);
 

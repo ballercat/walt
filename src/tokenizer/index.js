@@ -8,7 +8,7 @@ import string from "./string";
 import comments from "./comments";
 import type from "./type";
 
-type Parsers = (string => any)[];
+type Parsers = ((string) => any)[];
 
 class Tokenizer {
   stream: Stream;
@@ -92,10 +92,19 @@ class Tokenizer {
   /**
    * Match a particular non-whitespace value to a token
    */
-  token(value: string, parsers: Parsers, token: { type: string, value: string, start: {}, end: {}} = { type: "unknown", value, start: {}, end: {} }) {
+  token(
+    value: string,
+    parsers: Parsers,
+    token: { type: string, value: string, start: {}, end: {} } = {
+      type: "unknown",
+      value,
+      start: {},
+      end: {},
+    }
+  ) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
-      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
+      parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
       if (parsers.length > 1) {
         parsers = parsers.filter(parser => parser.strict);
       }

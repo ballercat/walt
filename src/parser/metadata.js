@@ -31,8 +31,8 @@ export const get = (type: string, node: NodeType): ?Metadata => {
   invariant(
     node.meta,
     `Attemptend to access Metadata but it was undefined in node ${printNode(
-      node,
-    )}`,
+      node
+    )}`
   );
   return node
     ? node.meta.find(({ type: _type }) => _type === type) || null

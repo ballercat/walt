@@ -1,8 +1,14 @@
 // @flow
-const wrap = (predicate: string => any, type: string, supported?: Array<string>) => {
+const wrap = (
+  predicate: string => any,
+  type: string,
+  supported?: Array<string>
+) => {
   const wrapper = (value: string) => {
     const result = predicate(value);
-    return typeof result === "function" ? wrap(result, type, supported) : result;
+    return typeof result === "function"
+      ? wrap(result, type, supported)
+      : result;
   };
   wrapper.type = type;
   wrapper.supported = supported;
@@ -12,4 +18,3 @@ const wrap = (predicate: string => any, type: string, supported?: Array<string>)
 };
 
 module.exports = wrap;
-

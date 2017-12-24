@@ -9,7 +9,7 @@ const outputIs = (t, value) => result =>
 
 test("declration assignment", t =>
   compileAndRun(
-    "export function test(): i32 { let x: i32 = 2; return x; }",
+    "export function test(): i32 { let x: i32 = 2; return x; }"
   ).then(outputIs(t, 2)));
 test("assigment statement", t =>
   compileAndRun(`

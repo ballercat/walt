@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/ballercat/walt/issues)
 [![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 <p align="center">
   <img src="walt.png" width="117" height="74"><br><br>
@@ -29,6 +30,7 @@ Highlights:
 ### [Roadmap](https://github.com/ballercat/walt/wiki/Roadmap)
 
 # Problem
+
 Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for `.wat` files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
 then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final WebAssembly binary. This is an
 attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without loosing readability.
@@ -37,6 +39,7 @@ I feel like this is currently a problem. Most Web engineers are not familiar wit
 should be able to edit WebAssembly as easily as any other systems programmer.
 
 # Solution
+
 Provide a **thin layer** of syntax sugar on top of `.wat` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
 the WebAssembly output. Meaning there should be minimal to none post optimization to be done to the wast code generated. The re-use of JavaScript semantics is intentional as I do not wish to create a brand new language.
 
@@ -44,11 +47,9 @@ Here is what an example of a `.walt` module which exports a recursive Fibonacci 
 
 ```js
 export function fibonacci(n: i32): i32 {
-  if (n == 0)
-    return 0;
+  if (n == 0) return 0;
 
-  if (n == 1)
-    return 1;
+  if (n == 1) return 1;
 
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
@@ -57,9 +58,11 @@ export function fibonacci(n: i32): i32 {
 When this code is ran through the walt compiler you end up with a buffer which can be used to create a WebAssembly module with a `fibonacci` export just as you would expect. All done with familiar JS syntax and without any external binary toolkits! A working demo of this exists in the `fibonacci-spec.js` [unit test file](https://github.com/ballercat/walt/blob/master/src/__tests__/fibonacci-spec.js).
 
 # Project Goals
+
 The ultimate goal of Walt is to make WebAssembly accessible to average JavaScript engineer by providing a subset of JavaScript syntax which compiles to WebAssembly bytecode directly. That WebAssembly should be easy to make use of and simple to integrate into an existing project with the current build tools.
 
 ## Use cases
+
 Pretty much everyone who wants a quick-start into wasm can use Walt to get there. The use-cases are not specific to this project alone but more to WebAssembly in general. The fact that Walt does not require a stand-alone compiler and can integrate into any(almost?) build tool still makes certain projects better candidates over others.
 
 * Web/Node libraries, looking to improve performance.
@@ -73,5 +76,3 @@ See [Wiki](https://github.com/ballercat/walt/wiki) for detailed design decisions
 ## Prior Art
 * [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
 * [mini-c](https://github.com/maierfelix/mini-c) - Experimental C to WebAssembly compiler
-
-

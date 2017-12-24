@@ -29,7 +29,7 @@ const generateIf: GeneratorType = (node, parent) => {
     block.push({ kind: opcode.Else, params: [] });
     block.push.apply(
       block,
-      (node.else || []).map(mapper).reduce(mergeBlock, []),
+      (node.else || []).map(mapper).reduce(mergeBlock, [])
     );
   }
 

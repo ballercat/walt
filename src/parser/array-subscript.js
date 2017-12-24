@@ -16,7 +16,7 @@ export const nodeMetaType = (targetNode: NodeType): ?MetadataType =>
 
 export const getMetaType = (
   ctx: Context,
-  token: { value: string },
+  token: { value: string }
 ): ?MetadataType => {
   const local = ctx.func ? findLocalVariable(ctx.func, token) : null;
   const globalIndex = findGlobalIndex(ctx, token);
@@ -40,7 +40,7 @@ export const getMetaType = (
 export const patchStringSubscript = (
   ctx: Context,
   metaType: MetadataType,
-  params: NodeType[],
+  params: NodeType[]
 ): NodeType[] => {
   if (metaType.type === TYPE_USER && params[1].Type === Syntax.StringLiteral) {
     const metaObject = metadata.get(TYPE_OBJECT, metaType.payload);
@@ -59,7 +59,7 @@ export const patchStringSubscript = (
 export const subscriptFromNode = (
   ctx: Context,
   node: NodeType,
-  metaType: MetadataType,
+  metaType: MetadataType
 ): NodeType => {
   if (metaType.type === TYPE_USER) {
     const objectKeyTypeMap = metadata.get(OBJECT_KEY_TYPES, metaType.payload);

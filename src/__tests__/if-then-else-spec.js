@@ -67,7 +67,7 @@ test("else if statement", () =>
       x = 1;
     }
     return x;
-  }`).then(({ "instance": { exports } }) => {
+  }`).then(({ instance: { exports } }) => {
     outputIs(exports.test(0), 2);
     outputIs(exports.test(1), 4);
     outputIs(exports.test(-1), 1);
@@ -83,7 +83,7 @@ test("else if statement no curly braces", () =>
       else
         x = 1;
       return x;
-    }`).then(({ "instance": { exports } }) => {
+    }`).then(({ instance: { exports } }) => {
     outputIs(exports.test(0), 2);
     outputIs(exports.test(1), 4);
     outputIs(exports.test(-1), 1);
