@@ -1,3 +1,4 @@
+// @flow
 import Trie from "../../utils/trie";
 import token from "../token";
 import Syntax from "../../Syntax";
@@ -37,7 +38,7 @@ const supported = [
 
   // additional syntax
   // statically replaced with consant value at compile time
-  "sizeof"
+  "sizeof",
 ];
 
 export const nosupport = [
@@ -55,7 +56,7 @@ export const nosupport = [
   "catch",
   "finally",
   // Everything is statically typed
-  "typeof"
+  "typeof",
 ];
 
 const trie = new Trie(supported);

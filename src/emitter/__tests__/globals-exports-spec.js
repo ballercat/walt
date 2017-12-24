@@ -9,7 +9,7 @@ import emit from "..";
 const meaningOfLife = 42;
 const ast = {
   Exports: [{ kind: EXTERN_GLOBAL, field: "meaningOfLife", index: 0 }],
-  Globals: [{ mutable: 0, type: I32, init: meaningOfLife }]
+  Globals: [{ mutable: 0, type: I32, init: meaningOfLife }],
 };
 
 test("compiles globals accurately", t => {

@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import type { Token } from "../flow/types";
 
 class TokenStream {

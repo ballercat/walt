@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import { getTypecastOpcode } from "../emitter/opcode";
@@ -20,8 +20,8 @@ const generateTypecast: GeneratorType = (node, parent) => {
     ...block,
     {
       kind: getTypecastOpcode(to, from),
-      params: []
-    }
+      params: [],
+    },
   ];
 };
 

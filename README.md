@@ -74,6 +74,5 @@ Pretty much everyone who wants a quick-start into wasm can use Walt to get there
 See [Wiki](https://github.com/ballercat/walt/wiki) for detailed design decisions etc.
 
 ## Prior Art
-
 * [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
 * [mini-c](https://github.com/maierfelix/mini-c) - Experimental C to WebAssembly compiler

@@ -1,3 +1,4 @@
+// @flow
 import token from "../token";
 import Syntax from "../../Syntax";
 
@@ -19,7 +20,7 @@ const endsInDoubleQuote = char => {
   if (char === "\\") {
     return quoteOK(endsInDoubleQuote);
   }
-  if (char === '"') {
+  if (char === "\"") {
     return nextFails;
   }
 
@@ -30,7 +31,7 @@ const maybeQuote = char => {
   if (char === "'") {
     return endsInSingleQuote;
   }
-  if (char === '"') {
+  if (char === "\"") {
     return endsInDoubleQuote;
   }
 

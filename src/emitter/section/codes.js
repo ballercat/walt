@@ -1,3 +1,4 @@
+// @flow
 export const SECTION_TYPE = 1;
 export const SECTION_IMPORT = 2;
 export const SECTION_FUNCTION = 3;

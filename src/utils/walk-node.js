@@ -7,7 +7,7 @@ type WalkerType = (node: NodeType) => void;
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
 function walker(visitor: {
-  [string]: (NodeType, PatchType) => void
+  [string]: (NodeType, PatchType) => void,
 }): WalkerType {
   const impl = (node: NodeType, patch = () => {}) => {
     if (node == null) {
@@ -31,7 +31,7 @@ function walker(visitor: {
         node.params = [
           ...params.slice(0, currentIndex),
           newNode,
-          ...params.slice(currentIndex + 1)
+          ...params.slice(currentIndex + 1),
         ];
       });
     }

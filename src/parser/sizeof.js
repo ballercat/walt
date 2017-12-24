@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import Syntax from "../Syntax";
 import { get, TYPE_USER, OBJECT_SIZE } from "./metadata";
-import { findLocalIndex, findGlobalIndex } from "./introspection";
+import { findLocalVariable, findGlobalIndex } from "./introspection";
 import { nodeMetaType } from "./array-subscript";
 
 import type { NodeType } from "../flow/types";
@@ -18,7 +18,7 @@ export const variableSize = (targetNode: NodeType): string => {
     );
     const metaSize = get(OBJECT_SIZE, metaType.payload);
 
-    invariant(metaSize, `Object size information is missing`);
+    invariant(metaSize, "Object size information is missing");
 
     return metaSize.payload;
   }
@@ -41,16 +41,9 @@ export default function sizeof(ctx: Context): NodeType {
   ctx.eat(["sizeof"]);
   ctx.eat(["("]);
 
-  const localIndex = findLocalIndex(ctx, ctx.token);
+  const local = ctx.func ? findLocalVariable(ctx.func, ctx.token) : null;
   const globalIndex = findGlobalIndex(ctx, ctx.token);
-
-  // Set the target variable
-  let targetNode = null;
-  if (localIndex > -1) {
-    targetNode = ctx.func.locals[localIndex];
-  } else {
-    targetNode = ctx.globals[globalIndex];
-  }
+  const targetNode = local ? local.node : ctx.globals[globalIndex];
 
   // Don't allow unknown variables
   if (targetNode == null) {

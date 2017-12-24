@@ -1,3 +1,4 @@
+// @flow
 const Syntax = {
   // Syntax Nodes
   Keyword: "Keyword",
@@ -15,6 +16,7 @@ const Syntax = {
   ArraySubscript: "ArraySubscript",
   Constant: "Constant",
   Type: "Type",
+  UserType: "UserType",
   Declaration: "Declaration",
   FunctionDeclaration: "FunctionDeclaration",
   ArrayDeclaration: "ArrayDeclaration",
@@ -31,15 +33,18 @@ const Syntax = {
   ObjectLiteral: "ObjectLiteral",
   Pair: "Pair",
   TypeCast: "TypeCast",
-  UnaryExpression: "UnaryExpression",
   Break: "Break",
+  Comment: "Comment",
 
   Noop: "Noop",
 
   // Semantic Nodes
+  ObjectField: "ObjectField",
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
-  FunctionPointer: "FunctionPointer"
+  FunctionPointer: "FunctionPointer",
+  FunctionResult: "FunctionResult",
+  FunctionLocals: "FunctionLocals",
 };
 
-module.exports = Syntax;
+export default Syntax;

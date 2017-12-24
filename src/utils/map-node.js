@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import type { NodeType } from "../flow/types";
 
 type WalkerType = (node: NodeType) => NodeType;
@@ -25,7 +25,7 @@ export default function mapNode(visitor: VisitorType): WalkerType {
 
     return {
       ...mappedNode,
-      params
+      params,
     };
   };
 

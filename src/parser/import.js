@@ -1,98 +1,94 @@
 // @flow
 import Syntax from "../Syntax";
-import type Context from "./context";
-import { getType } from "../generator/utils";
+import { handleUndefined } from "../utils/generate-error";
+import mapNode from "../utils/map-node";
 import generateType from "../generator/type";
-import generateImport from "../generator/import";
-import type { Field, Import, NodeType } from "../flow/types";
-import { EXTERN_MEMORY } from "../emitter/external_kind";
-import { make, FUNCTION_INDEX } from "./metadata";
+import generateImport, { getKindConstant } from "../generator/import";
+import expression from "./expression";
+import { EXTERN_FUNCTION } from "../emitter/external_kind";
+import { make, FUNCTION_INDEX, typeIndex as setTypeIndex } from "./metadata";
 
-const field = (ctx: Context): Field => {
-  const f: Field = {
-    id: ctx.expect(null, Syntax.Identifier).value
-  };
+import type Context from "./context";
+import type { NodeType } from "../flow/types";
 
-  ctx.expect([":"]);
-  const typeString: string = ctx.token.value;
-  if (ctx.eat(null, Syntax.Type)) {
-    // native type, aka GLOBAL export
-    if (typeString === "Memory") {
-      f.kind = EXTERN_MEMORY;
-    } else {
-      f.global = getType(typeString);
-    }
-  } else if (ctx.eat(null, Syntax.Identifier)) {
-    // now we need to find a typeIndex, if we don't find one we create one
-    // with the idea that a type will be filled in later. if one is not we
-    // will throw a SyntaxError when we attempt to emit the binary
+export const hoistType = (
+  ctx: Context,
+  typeNode: NodeType,
+  functionNode: NodeType
+): number => {
+  const typeIndex = ctx.Program.Types.length;
+  ctx.Program.Types.push({
+    id: typeNode.value,
+    params: [],
+    // When we DO define a type for it later, patch the dummy type
+    hoist: (node: NodeType) => {
+      functionNode.type = node.type;
+      ctx.Program.Types[typeIndex] = generateType(node);
+    },
+  });
 
-    f.typeIndex = ctx.Program.Types.findIndex(({ id }) => id === typeString);
-    if (f.typeIndex === -1) {
-      f.typeIndex = ctx.Program.Types.length;
-      ctx.Program.Types.push({
-        id: typeString,
-        params: [],
-        // When we DO define a type for it later, patch the dummy type
-        hoist: (node: NodeType) => {
-          ctx.Program.Types[f.typeIndex] = generateType(node);
-        }
-      });
-    }
-
-    // attach to a type index
-    const functionIndex = ctx.Program.Functions.length;
-    f.meta = [
-      make(
-        {
-          functionIndex
-        },
-        FUNCTION_INDEX
-      )
-    ];
-
-    f.functionIndex = functionIndex;
-
-    ctx.Program.Functions.push(null);
-    ctx.functions.push(f);
-  }
-
-  return f;
+  return typeIndex;
 };
 
-const fieldList = (ctx: Context): Field[] => {
-  const fields: Field[] = [];
-  while (ctx.token.value !== "}") {
-    const f: Field = field(ctx);
-    if (f) {
-      fields.push(f);
-      ctx.eat([","]);
-    }
-  }
-  ctx.expect(["}"]);
+export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
+  return mapNode({
+    [Syntax.Pair]: pairNode => {
+      const [identifierNode, typeNode] = pairNode.params;
+      if (getKindConstant(typeNode.value) === EXTERN_FUNCTION) {
+        // crate a new type
+        const functionIndex = ctx.Program.Functions.length;
+        const functionIndexMeta = make(
+          {
+            functionIndex,
+          },
+          FUNCTION_INDEX
+        );
+        const functionNode = {
+          ...identifierNode,
+          id: identifierNode.value,
+          meta: [functionIndexMeta],
+        };
+        const typeIndexMeta = setTypeIndex(
+          hoistType(ctx, typeNode, functionNode)
+        );
+        ctx.Program.Functions.push(null);
+        ctx.functions.push(functionNode);
+        return {
+          ...pairNode,
+          params: [
+            functionNode,
+            {
+              ...typeNode,
+              meta: [typeIndexMeta],
+            },
+          ],
+        };
+      }
 
-  return fields;
+      return pairNode;
+    },
+  })(node);
 };
 
-const _import = (ctx: Context): Import => {
-  const node: Import = (ctx.startNode(): any);
+export default function parseImport(ctx: Context): NodeType {
+  const baseNode = ctx.startNode();
   ctx.eat(["import"]);
 
   if (!ctx.eat(["{"])) {
     throw ctx.syntaxError("expected {");
   }
 
-  node.fields = fieldList(ctx);
+  ctx.handleUndefinedIdentifier = () => {};
+  const fields = expression(ctx);
+  ctx.handleUndefinedIdentifier = handleUndefined(ctx);
+
+  ctx.expect(["}"]);
   ctx.expect(["from"]);
 
-  node.module = ctx.expect(null, Syntax.StringLiteral).value;
-  // NOTE: string literals contain the starting and ending quote char
-  node.module = node.module.substring(1, node.module.length - 1);
+  const module = expression(ctx);
 
+  const node = patchTypeIndexes(ctx, { ...baseNode, params: [fields, module] });
   ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport(node));
 
-  ctx.endNode(node, Syntax.Import);
-  return node;
-};
-
-export default _import;
+  return ctx.endNode(node, Syntax.Import);
+}

@@ -4,7 +4,7 @@ import preamble, {
   MAGIC,
   VERSION,
   MAGIC_INDEX,
-  VERSION_INDEX
+  VERSION_INDEX,
 } from "../preamble";
 
 test("preamble writes correct values", t => {

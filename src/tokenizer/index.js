@@ -1,3 +1,4 @@
+// @flow
 import Stream from "../utils/stream";
 import punctuator from "./punctuator";
 import constant from "./constant";
@@ -7,17 +8,24 @@ import string from "./string";
 import comments from "./comments";
 import type from "./type";
 
+type Parsers = ((string) => any)[];
+
 class Tokenizer {
+  stream: Stream;
+  tokens: Array<any>;
+  pos: number;
+  parsers: Parsers;
+
   constructor(
-    stream,
-    parsers = [
+    stream: Stream,
+    parsers: Parsers = [
       punctuator,
       constant,
       identifier,
       keyword,
       string,
       type,
-      comments
+      comments,
     ]
   ) {
     if (!(stream instanceof Stream)) {
@@ -32,19 +40,17 @@ class Tokenizer {
 
   /**
    * Get next token
-   *
-   * @return {Object} token
    */
   next() {
     let value = "";
     this.seekNonWhitespace();
-    let char;
+    let char = "";
     let matchers = this.parsers;
     let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
 
     do {
@@ -65,7 +71,7 @@ class Tokenizer {
     token.start = start;
     token.end = {
       line: this.stream.line,
-      col: this.stream.col
+      col: this.stream.col,
     };
     // Comments are ignored for now
     if (token.type !== comments.type) {
@@ -75,7 +81,7 @@ class Tokenizer {
     return this.tokens[this.pos++];
   }
 
-  match(char, parsers) {
+  match(char: string, parsers: Parsers) {
     if (char == null) {
       return parsers;
     }
@@ -85,11 +91,17 @@ class Tokenizer {
 
   /**
    * Match a particular non-whitespace value to a token
-   *
-   * @param {String} value Value to match
-   * @return {Object} token
    */
-  token(value, parsers, token = { type: "unknown", value }) {
+  token(
+    value: string,
+    parsers: Parsers,
+    token: { type: string, value: string, start: {}, end: {} } = {
+      type: "unknown",
+      value,
+      start: {},
+      end: {},
+    }
+  ) {
     // Strict parsers must end on a leaf node
     if (parsers.length > 1) {
       parsers = parsers.filter(parser => (parser.strict ? parser.leaf : true));
@@ -124,11 +136,8 @@ class Tokenizer {
 
   /**
    * Stop parsing and throw a fatal error
-   *
-   * @param {String} reason
-   * @throws
    */
-  die(reason) {
+  die(reason: string) {
     throw new Error(reason);
   }
 }

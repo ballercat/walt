@@ -1,6 +1,8 @@
+// @flow
 import { sizeof } from "wasm-types";
+import OutputStream from "./output-stream";
 
-const _debug = (stream, begin = 0, end) => {
+const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
   let pc = 0;
   return (
     stream.data

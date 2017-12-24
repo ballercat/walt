@@ -39,7 +39,7 @@ class Stream {
   }
 
   // Begin a new line
-  newLine(): void {
+  newLine() {
     this.line++;
     this.col = 0;
   }

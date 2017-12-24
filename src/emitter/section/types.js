@@ -1,3 +1,4 @@
+// @flow
 import { FUNC, getTypeString } from "../value_type";
 import { varuint32, varint7, varint1 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
@@ -15,7 +16,7 @@ const emitType = (stream, { params, result }) => {
   }
 };
 
-const emit = types => {
+const emit = (types: any[]) => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, "count");
 

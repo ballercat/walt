@@ -30,6 +30,8 @@ export const predicate = (token: Token, depth: number): boolean =>
 // Shunting yard
 const expression = (
   ctx: Context,
+  // Type param is no longer used but a bunch of code still passes it in
+  // eslint-disable-next-line
   type: string = "i32",
   check: Predicate = predicate
 ) => {
@@ -83,7 +85,7 @@ const expression = (
           // to generate a function call on the fly
           operators.push({
             ...ctx.token,
-            type: Syntax.FunctionCall
+            type: Syntax.FunctionCall,
           });
           ctx.next();
           const expr = expression(ctx);
@@ -151,7 +153,7 @@ const expression = (
           ) {
             return {
               ...t,
-              value: "--"
+              value: "--",
             };
           }
 

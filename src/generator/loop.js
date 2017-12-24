@@ -1,8 +1,10 @@
+// @flow
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
+import type { GeneratorType } from "./flow/types";
 
-const generateLoop = (node, parent) => {
+const generateLoop: GeneratorType = (node, parent) => {
   const block = [];
   const mapper = mapSyntax(parent);
   const reverse = {
@@ -11,7 +13,7 @@ const generateLoop = (node, parent) => {
     ">=": "<",
     "<=": ">",
     "==": "!=",
-    "!=": "=="
+    "!=": "==",
   };
 
   // First param in a for loop is assignment expression or Noop if it's a while loop
@@ -32,13 +34,13 @@ const generateLoop = (node, parent) => {
   block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
   block.push({ kind: opcode.BrIf, params: [1] });
 
-  block.push.apply(block, node.body.map(mapper).reduce(mergeBlock, []));
+  block.push.apply(block, (node.body || []).map(mapper).reduce(mergeBlock, []));
 
   block.push.apply(block, expression.map(mapper).reduce(mergeBlock, []));
   block.push({ kind: opcode.Br, params: [0] });
 
-  block.push({ kind: opcode.End });
-  block.push({ kind: opcode.End });
+  block.push({ kind: opcode.End, params: [] });
+  block.push({ kind: opcode.End, params: [] });
 
   return block;
 };

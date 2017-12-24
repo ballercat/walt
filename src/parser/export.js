@@ -1,8 +1,11 @@
+// @flow
 import Syntax from "../Syntax";
 import generateExport from "../generator/export";
 import maybeFunctionDeclaration from "./maybe-function-declaration";
+import type { NodeType } from "../flow/types";
+import type Context from "./context";
 
-const _export = ctx => {
+export default function _export(ctx: Context): NodeType {
   const node = ctx.startNode();
   ctx.eat(["export"]);
 
@@ -14,11 +17,7 @@ const _export = ctx => {
   }
 
   ctx.Program.Exports.push(generateExport(decl));
-  node.decl = decl;
+  node.params.push(decl);
 
-  ctx.endNode(node, Syntax.Export);
-
-  return node;
-};
-
-export default _export;
+  return ctx.endNode(node, Syntax.Export);
+}

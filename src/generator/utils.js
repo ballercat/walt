@@ -4,7 +4,11 @@ import curry from "curry";
 import invariant from "invariant";
 import { I32, F32, F64 } from "../emitter/value_type";
 import { get, LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../parser/metadata";
-import type { IntermediateOpcodeType, RawOpcodeType } from "./flow/types";
+import type {
+  IntermediateVariableType,
+  IntermediateOpcodeType,
+  RawOpcodeType,
+} from "./flow/types";
 import type { NodeType } from "../flow/types";
 
 export const scopeOperation = curry((op, node) => {
@@ -20,33 +24,33 @@ export const scopeOperation = curry((op, node) => {
   );
 
   const kind = local ? op + "Local" : op + "Global";
-  const params = [Number(index.payload)];
+  const params = [Number(local ? index.payload.index : _global)];
 
   return { kind: opcode[kind], params };
 });
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
-  //invariant(
+  // invariant(
   //  !!node.type,
   //  `Undefined Node type cannot generate const-opcode: ${JSON.stringify(
   //    node,
   //    null,
   //    2
   //  )}`
-  //);
+  // );
 
   const kind: RawOpcodeType = opcode[nodeType + "Const"];
   const params = [Number(node.value)];
 
   return {
     kind,
-    params
+    params,
   };
 };
 
 // clean this up
-export const getType = (str: ?string): string => {
+export const getType = (str: ?string): number => {
   switch (str) {
     case "f32":
       return F32;
@@ -60,12 +64,9 @@ export const getType = (str: ?string): string => {
 };
 export const generateValueType = (
   node: NodeType
-): { mutable: number, type: string } => {
-  const value = {
-    mutable: get(TYPE_CONST, node) ? 0 : 1,
-    type: getType(node.type)
-  };
-  return value;
-};
+): IntermediateVariableType => ({
+  mutable: get(TYPE_CONST, node) ? 0 : 1,
+  type: getType(node.type),
+});
 export const setInScope = scopeOperation("Set");
 export const getInScope = scopeOperation("Get");

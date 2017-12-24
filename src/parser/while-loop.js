@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
@@ -29,7 +29,7 @@ const whileLoop = (ctx: Context): Node => {
   return ctx.endNode(
     {
       ...node,
-      body
+      body,
     },
     Syntax.Loop
   );

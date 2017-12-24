@@ -1,8 +1,8 @@
 // @flow
-import type Context from "./context";
-import { EXTERN_TABLE } from "../emitter/external_kind";
+import Syntax from "../Syntax";
 import generateElement from "../generator/element";
 import generateImport from "../generator/import";
+import type Context from "./context";
 
 export const writeFunctionPointer = (
   ctx: Context,
@@ -12,13 +12,47 @@ export const writeFunctionPointer = (
     ctx.Program.Imports.push.apply(
       ctx.Program.Imports,
       generateImport({
-        module: "env",
-        fields: [
+        Type: Syntax.Import,
+        value: "import",
+        range: [],
+        meta: [],
+        type: null,
+        params: [
           {
-            id: "table",
-            kind: EXTERN_TABLE
-          }
-        ]
+            Type: Syntax.Pair,
+            value: ":",
+            meta: [],
+            range: [],
+            type: null,
+            params: [
+              {
+                Type: Syntax.Identifier,
+                value: "table",
+                params: [],
+                meta: [],
+                range: [],
+                type: null,
+              },
+              {
+                Type: Syntax.Identifier,
+                value: "Table",
+                params: [],
+                meta: [],
+                range: [],
+                type: null,
+              },
+            ],
+          },
+
+          {
+            value: "env",
+            Type: Syntax.Identifier,
+            meta: [],
+            params: [],
+            range: [],
+            type: null,
+          },
+        ],
       })
     );
   }

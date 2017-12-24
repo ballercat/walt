@@ -1,4 +1,4 @@
-//@flow
+// @flow
 import statement from "./statement";
 import Context from "./context";
 import type TokenStream from "../utils/token-stream";
@@ -15,7 +15,7 @@ class Parser {
       lines,
       globals: [],
       functions: [],
-      filename: "unknown.walt"
+      filename: "unknown.walt",
     });
   }
 

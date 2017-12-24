@@ -1,8 +1,10 @@
+// @flow
 import Syntax from "../Syntax";
 import { generateValueType } from "./utils";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
+import type { NodeType, IntermediateVariableType } from "./flow/types";
 
-const generateInit = node => {
+const generateInit = (node: NodeType): IntermediateVariableType => {
   const _global = generateValueType(node);
 
   const { Type, value } = node.params[0];

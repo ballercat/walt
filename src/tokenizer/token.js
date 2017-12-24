@@ -1,5 +1,10 @@
-const wrap = (predicate, type, supported) => {
-  const wrapper = value => {
+// @flow
+const wrap = (
+  predicate: string => any,
+  type: string,
+  supported?: Array<string>
+) => {
+  const wrapper = (value: string) => {
     const result = predicate(value);
     return typeof result === "function"
       ? wrap(result, type, supported)

@@ -2,11 +2,11 @@ import test from "ava";
 import sizeofParser from "../sizeof";
 import { TYPE_USER, OBJECT_SIZE } from "../../parser/metadata";
 import { mockContext } from "../../utils/mocks";
-//import printNode from "../../utils/print-node";
+// import printNode from "../../utils/print-node";
 
 test("sizeof parser, built-in type", t => {
   const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ id: "x", type: "i32", meta: [] }];
+  ctx.globals = [{ value: "x", type: "i32", meta: [], params: [] }];
   const node = sizeofParser(ctx);
 
   t.is(node.value, "4");
@@ -15,7 +15,9 @@ test("sizeof parser, built-in type", t => {
 
 test("sizeof parser, arrays throw", t => {
   const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ id: "x", type: "i32", meta: [{ type: "type/array" }] }];
+  ctx.globals = [
+    { value: "x", type: "i32", meta: [{ type: "type/array" }], params: [] },
+  ];
 
   t.throws(() => sizeofParser(ctx));
 });
@@ -24,15 +26,16 @@ test("sizeof parser, user-defined object types", t => {
   const ctx = mockContext("sizeof(x);");
   ctx.globals = [
     {
-      id: "x",
+      value: "x",
       type: "i32",
+      params: [],
       meta: [
         {
           type: TYPE_USER,
-          payload: { meta: [{ type: OBJECT_SIZE, payload: 16 }] }
-        }
-      ]
-    }
+          payload: { params: [], meta: [{ type: OBJECT_SIZE, payload: 16 }] },
+        },
+      ],
+    },
   ];
   const node = sizeofParser(ctx);
   t.is(node.value, 16);
@@ -40,7 +43,7 @@ test("sizeof parser, user-defined object types", t => {
 
 test("sizeof parser, 64 bit variables", t => {
   const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ id: "x", type: "f64", meta: [] }];
+  ctx.globals = [{ value: "x", type: "f64", meta: [], params: [] }];
   const node = sizeofParser(ctx);
   t.snapshot(node);
 });

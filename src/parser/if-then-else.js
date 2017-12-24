@@ -3,6 +3,7 @@ import Syntax from "../Syntax";
 import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
+import type { NodeType } from "../flow/types";
 
 const doIfExpression = (node, ctx: Context) => {
   ctx.expect(["("]);
@@ -11,16 +12,22 @@ const doIfExpression = (node, ctx: Context) => {
 };
 
 // push statements while taking into consideration having brackets or not
-const doStatement = (ctx: Context) => {
+const doStatement = (ctx: Context): NodeType[] => {
   const statements = [];
   // maybe a curly brace or not
   if (ctx.eat(["{"])) {
     while (ctx.token && ctx.token.value !== "}") {
-      statements.push(statement(ctx));
+      const stmt = statement(ctx);
+      if (stmt != null) {
+        statements.push(stmt);
+      }
     }
     ctx.expect(["}"]);
   } else {
-    statements.push(statement(ctx));
+    const stmt = statement(ctx);
+    if (stmt) {
+      statements.push(stmt);
+    }
     ctx.expect([";"]);
   }
   return statements.filter(stmt => stmt != null);
@@ -30,7 +37,7 @@ const ifThenElse = (ctx: Context) => {
   const node = {
     ...ctx.startNode(ctx.token),
     then: [],
-    else: []
+    else: [],
   };
 
   ctx.eat(["if"]);
