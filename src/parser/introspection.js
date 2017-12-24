@@ -1,6 +1,5 @@
 // @flow
 import type Context from "./context";
-import Syntax from "../Syntax";
 import precedence from "./precedence";
 import { generateImplicitFunctionType } from "../generator/type";
 import { get, LOCAL_INDEX_MAP, localIndex } from "./metadata";
@@ -20,38 +19,19 @@ export const findTypeIndex = (functionNode: NodeType, ctx: Context): number => {
   });
 };
 
-const findFieldIndex = (fields: string[]) => (
-  ctx: Context,
-  token: { value: string }
-) => {
-  let field: any = fields.reduce((memo: ?{}, f) => {
-    if (memo) {
-      return memo[f];
-    }
-    return memo;
-  }, ctx);
-
-  if (field) {
-    return field.findIndex(node => node.id === token.value);
-  }
-
-  return -1;
-};
-
 export const findTableIndex = (ctx: Context, functionIndex: number) => {
   return ctx.Program.Element.findIndex(n => n.functionIndex === functionIndex);
 };
 
-export const findLocalIndex = findFieldIndex(["func", "locals"]);
 export const findGlobalIndex = (ctx: Context, { value }: { value: string }) =>
   ctx.globals.findIndex(node => node.value === value);
+
 export const findFunctionIndex = (
   ctx: Context,
   { value }: { value: string }
 ) => {
   return ctx.functions.findIndex(fn => fn.value === value);
 };
-export const findUserTypeIndex = findFieldIndex(["userTypes"]);
 
 export const findLocalVariable = (
   functionNode: NodeType,
@@ -84,21 +64,10 @@ export const addFunctionLocal = (
   }
 };
 
-export const getPrecedence = (token: Token): number => {
-  if (token.type === Syntax.UnaryExpression) {
-    return precedence["+"];
-  }
+export const getPrecedence = (token: Token): number => precedence[token.value];
 
-  return precedence[token.value];
-};
 export const getAssociativty = (token: Token): "left" | "right" => {
   switch (token.value) {
-    case "+":
-    case "-":
-    case "/":
-    case "*":
-    case ":":
-      return "left";
     case "=":
     case "-=":
     case "+=":
@@ -106,6 +75,11 @@ export const getAssociativty = (token: Token): "left" | "right" => {
     case "++":
     case "?":
       return "right";
+    case "+":
+    case "-":
+    case "/":
+    case "*":
+    case ":":
     default:
       return "left";
   }

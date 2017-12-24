@@ -1,6 +1,4 @@
 // @flow
-import Syntax from "../Syntax";
-import maybeIdentifier from "./maybe-identifier";
 import memoryStore from "./memory-store";
 import expression from "./expression";
 import type Context from "./context";
@@ -12,11 +10,6 @@ function maybeAssignment(ctx: Context): NodeType {
   const nextValue = ctx.stream.peek().value;
   if (nextValue === "[") {
     return memoryStore(ctx);
-  }
-
-  const target = maybeIdentifier(ctx);
-  if (target.Type === Syntax.FunctionCall) {
-    return target;
   }
 
   return expression(ctx);
