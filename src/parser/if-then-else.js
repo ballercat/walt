@@ -1,61 +1,47 @@
 // @flow
 import Syntax from "../Syntax";
-import type Context from "./context";
 import statement from "./statement";
 import expression from "./expression";
+import type Context from "./context";
 import type { NodeType } from "../flow/types";
 
-const doIfExpression = (node, ctx: Context) => {
+const condition = (ctx: Context): NodeType => {
   ctx.expect(["("]);
-  node.expr = expression(ctx, "i32");
+  const expr = expression(ctx, "i32");
   ctx.expect([")"]);
+  return expr;
 };
 
-// push statements while taking into consideration having brackets or not
-const doStatement = (ctx: Context): NodeType[] => {
-  const statements = [];
-  // maybe a curly brace or not
-  if (ctx.eat(["{"])) {
-    while (ctx.token && ctx.token.value !== "}") {
-      const stmt = statement(ctx);
-      if (stmt != null) {
-        statements.push(stmt);
-      }
-    }
-    ctx.expect(["}"]);
-  } else {
-    const stmt = statement(ctx);
-    if (stmt) {
-      statements.push(stmt);
-    }
-    ctx.expect([";"]);
-  }
-  return statements.filter(stmt => stmt != null);
-};
-
-const ifThenElse = (ctx: Context) => {
-  const node = {
+export default function parseIfStatement(ctx: Context): NodeType {
+  const node: NodeType = {
     ...ctx.startNode(ctx.token),
-    then: [],
-    else: [],
   };
 
   ctx.eat(["if"]);
   // First operand is the expression
-  doIfExpression(node, ctx);
-  node.then = doStatement(ctx);
-
-  while (ctx.eat(["else"])) {
-    // maybe another if statement
-    if (ctx.eat(["if"])) {
-      doIfExpression(node, ctx);
-      node.then = [...node.then, ...doStatement(ctx)];
-    } else {
-      node.else = [...node.else, ...doStatement(ctx)];
-    }
+  const params: NodeType[] = [condition(ctx)];
+  const statementNode = statement(ctx);
+  if (statementNode) {
+    params.push(statementNode);
   }
 
-  return ctx.endNode(node, Syntax.IfThenElse);
-};
+  ctx.eat([";"]);
+  while (ctx.eat(["else"])) {
+    // maybe another if statement
+    const elseNode = ctx.makeNode(null, Syntax.Else);
+    const elseParams = [];
+    const stmt = statement(ctx);
+    if (stmt) {
+      elseParams.push(stmt);
+    }
+    params.push({ ...elseNode, params: elseParams });
+  }
 
-export default ifThenElse;
+  return ctx.endNode(
+    {
+      ...node,
+      params,
+    },
+    Syntax.IfThenElse
+  );
+}

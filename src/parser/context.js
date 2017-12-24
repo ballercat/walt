@@ -64,6 +64,7 @@ class Context {
       Element: [],
       Functions: [],
       Memory: [],
+      Table: [],
     };
   }
 
@@ -119,6 +120,10 @@ class Context {
   }
 
   eat(value: string[] | null, type?: string): boolean {
+    if (this.token == null) {
+      return false;
+    }
+
     if (value) {
       if (value.includes(this.token.value)) {
         this.next();

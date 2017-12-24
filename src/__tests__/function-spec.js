@@ -51,10 +51,24 @@ test("void result type is optional", () =>
   export function test() {
   }`));
 
+test("non initialized locals", () =>
+  compileAndRun(`
+  export function test() {
+    const x: i32;
+  }`));
+
+test("i64 locals", t =>
+  compileAndRun(`
+  export function test(): i32 {
+    const x: i64 = 42;
+    return x: i32;
+  }`).then(outputIs(t, 42)));
+
 test("function pointers", t => {
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
   return compileAndRun(
     `
+      import { table: Table } from 'env';
       type Test = () => i32;
 
       function callback(pointer: Test): i32 {
@@ -77,6 +91,29 @@ test("function pointers", t => {
   ).then(outputIs(t, 42));
 });
 
+test("table max can be set", () =>
+  compileAndRun(
+    "const table: Table = { 'element': 'anyfunc', 'initial': 1, 'max': 2 };"
+  ));
+test("function pointers, multiple, with table declared", t =>
+  compileAndRun(
+    `
+      const table: Table = { 'element': 'anyfunc', 'initial': 10 };
+      type Test = () => i32;
+
+      function callback(pointer: Test): i32 {
+        return pointer();
+      }
+
+      function result(): i32 {
+        return 2;
+      }
+
+      export function test(): i32 {
+        return callback(result) + callback(result);
+      }
+      `
+  ).then(outputIs(t, 4)));
 test("pointers as function arguments", t =>
   compileAndRun(`
   type Type = { 'a': i32 };

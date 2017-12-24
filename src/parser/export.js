@@ -10,13 +10,11 @@ export default function _export(ctx: Context): NodeType {
   ctx.eat(["export"]);
 
   const decl = maybeFunctionDeclaration(ctx);
-  if (!decl.func) {
-    if (decl.params.length === 0) {
-      throw ctx.syntaxError("Exports must have a value");
-    }
+  if (decl.Type === Syntax.Declaration && decl.params.length < 1) {
+    throw ctx.syntaxError("Scalar exports must be initialized with a value");
   }
-
   ctx.Program.Exports.push(generateExport(decl));
+
   node.params.push(decl);
 
   return ctx.endNode(node, Syntax.Export);

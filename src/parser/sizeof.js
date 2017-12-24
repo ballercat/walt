@@ -24,12 +24,11 @@ export const variableSize = (targetNode: NodeType): string => {
   }
 
   switch (targetNode.type) {
-    case "i32":
-    case "f32":
-      return "4";
     case "i64":
     case "f64":
       return "8";
+    case "i32":
+    case "f32":
     default:
       return "4";
   }
@@ -44,11 +43,6 @@ export default function sizeof(ctx: Context): NodeType {
   const local = ctx.func ? findLocalVariable(ctx.func, ctx.token) : null;
   const globalIndex = findGlobalIndex(ctx, ctx.token);
   const targetNode = local ? local.node : ctx.globals[globalIndex];
-
-  // Don't allow unknown variables
-  if (targetNode == null) {
-    throw ctx.syntaxError(`Undefined variable ${ctx.token.value}`);
-  }
 
   node.value = variableSize(targetNode);
   // All sizes are 32-bit

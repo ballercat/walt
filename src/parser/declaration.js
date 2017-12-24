@@ -2,6 +2,7 @@
 import Syntax from "../Syntax";
 import generateInit from "../generator/initializer";
 import generateMemory from "../generator/memory";
+import generateTable from "../generator/table";
 import expression from "./expression";
 import metadata from "./metadata";
 import type Context from "./context";
@@ -12,6 +13,8 @@ const generate = (ctx, node) => {
   if (!ctx.func) {
     if (node.type === "Memory") {
       ctx.Program.Memory.push(generateMemory(node));
+    } else if (node.type === "Table") {
+      ctx.Program.Table.push(generateTable(node));
     } else {
       node.meta.push(metadata.globalIndex(ctx.Program.Globals.length));
       ctx.Program.Globals.push(generateInit(node));

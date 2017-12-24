@@ -2,6 +2,7 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/ballercat/walt/issues)
 [![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/walt-js-wasm/Lobby)
 
 <p align="center">
   <img src="walt.png" width="117" height="74"><br><br>

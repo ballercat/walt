@@ -1,0 +1,24 @@
+// @flow
+import Syntax from "../Syntax";
+import walkNode from "../utils/walk-node";
+import type { NodeType } from "./flow/types";
+
+export default function generateMemory(
+  node: NodeType
+): { max: number, initial: number, type: string } {
+  const table = { max: 0, initial: 0, type: "" };
+
+  walkNode({
+    [Syntax.Pair]: ({ params }) => {
+      // This could procude garbage values but that is a fault of the source code
+      const [{ value: key }, { value }] = params;
+      if (key === "initial") {
+        table.initial = parseInt(value);
+      } else if (key === "element") {
+        table.type = value;
+      }
+    },
+  })(node);
+
+  return table;
+}
