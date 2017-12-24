@@ -28,3 +28,9 @@ test("logical and in math expression", t =>
   export function test(): i32 {
     return (1 && 2) + 2;
   }`).then(outputIs(t, 4)));
+
+test("chained logical operators", t =>
+  compileAndRun(`
+  export function test(): i32 {
+    return 1 && 2 && 3;
+  }`).then(outputIs(t, 3)));
