@@ -64,6 +64,12 @@ test("i64 locals", t =>
     return x: i32;
   }`).then(outputIs(t, 42)));
 
+test("function names with numbers are supported", t =>
+  compileAndRun(`
+  export function test1foo42bar() {}`).then(module => {
+    t.is(typeof module.instance.exports.test1foo42bar, "function");
+  }));
+
 test("function pointers", t => {
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
   return compileAndRun(
