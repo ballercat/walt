@@ -16,10 +16,10 @@ export default {
   format: "umd",
   moduleName: "Walt",
   plugins: [
-    flow(),
     eslint(),
+    flow(),
     replace({
-      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV)
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     }),
     babel({
       babelrc: false,
@@ -30,15 +30,15 @@ export default {
           {
             modules: false,
             targets: {
-              chrome: "60.0.0"
-            }
-          }
-        ]
+              chrome: "60.0.0",
+            },
+          },
+        ],
       ],
-      plugins: ["external-helpers", "transform-object-rest-spread"]
+      plugins: ["external-helpers", "transform-object-rest-spread"],
     }),
     resolve(),
     commonjs(),
-    PROD && uglify({}, minify)
-  ]
+    PROD && uglify({}, minify),
+  ],
 };
