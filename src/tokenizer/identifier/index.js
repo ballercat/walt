@@ -5,10 +5,17 @@ import constant from "../constant";
 import string from "../string";
 import Syntax from "../../Syntax";
 
+const supportAny = char => {
+  if (!string(char) && !punctuator(char) && char !== " ") {
+    return supportAny;
+  }
+  return null;
+};
+
 const parse = char => {
   // Don't allow these
   if (!string(char) && !punctuator(char) && !constant(char) && char !== " ") {
-    return parse;
+    return supportAny;
   }
   return null;
 };

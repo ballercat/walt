@@ -36,6 +36,22 @@ test("memory can be defined", t =>
   }`
   ).then(outputIs(t, 42)));
 
+test("memory can be imported", t => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const view = new Int32Array(memory.buffer);
+  view[1024] = 42;
+  return compileAndRun(
+    `
+  import { memory: Memory } from 'env';
+  export function test(): i32 {
+    const pointer: i32[] = 0;
+    return pointer[1024];
+  }
+  `,
+    { env: { memory } }
+  ).then(outputIs(t, 42));
+});
+
 test("memory max can be set", () =>
   compileAndRun("const memory: Memory = { 'initial': 1, 'max': 2 };"));
 

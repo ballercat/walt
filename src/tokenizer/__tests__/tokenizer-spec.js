@@ -57,3 +57,9 @@ test("parsers strings within strings", t => {
   const tokenizer = new Tokenizer(stream);
   t.snapshot(tokenizer.parse());
 });
+
+test("parses identifiers with numbers", t => {
+  const stream = new Stream("test1foo42bar ");
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
