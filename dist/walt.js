@@ -3021,7 +3021,6 @@ function breakParser(ctx) {
 // here we _hoist_ it in the binary output by placing it literally before the
 // binary imports inside our Program.
 const hoistTypeMaybe$1 = (ctx, node) => {
-  debugger;
   // At this point we may have found a type which needs to hoist
   let typeIndex$$1 = ctx.Program.Types.findIndex(({ id }) => id === node.value);
 
