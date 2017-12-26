@@ -266,7 +266,7 @@
     "no-ternary": 0,                // disallow the use of ternary operators (off by default)
     "no-trailing-spaces": 2,        // disallow trailing whitespace at the end of lines
     "no-underscore-dangle": 0,      // disallow dangling underscores in identifiers
-    "object-curly-spacing": [      // enforce consistent spacing inside braces
+    "object-curly-spacing": [       // enforce consistent spacing inside braces
       2,
       "always"
     ],
@@ -281,7 +281,11 @@
       "consistent-as-needed",
       { "keywords": false }
     ],
-    "quotes": 2,                    // specify whether double or single quotes should be used
+    "quotes": [                     // specify whether double or single quotes should be used
+      "error",
+      "double",
+      { "avoidEscape": true }
+    ],  
     "semi": 2,                      // require or disallow use of semicolons instead of ASI
     "sort-vars": 0,                 // sort variables within the same declaration block (off by default)
     "space-before-function-paren": [// require a space after function names (off by default)
