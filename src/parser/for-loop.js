@@ -3,11 +3,11 @@ import Syntax from "../Syntax";
 import expression from "./expression";
 import statement from "./statement";
 import type Context from "./context";
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 
-const paramList = (ctx: Context): Node[] => {
+const paramList = (ctx: Context): NodeType[] => {
   ctx.expect(["("]);
-  const params: Node[] = [];
+  const params: NodeType[] = [];
   let node = null;
   while (ctx.token.value && ctx.token.value !== ")") {
     node = expression(ctx, "i32");
@@ -21,7 +21,7 @@ const paramList = (ctx: Context): Node[] => {
   return params;
 };
 
-const forLoop = (ctx: Context): Node => {
+const forLoop = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(["for"]);
 

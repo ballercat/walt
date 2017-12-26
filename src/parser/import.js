@@ -11,22 +11,28 @@ import { make, FUNCTION_INDEX, typeIndex as setTypeIndex } from "./metadata";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
 
-export const hoistType = (
+export const hoistTypeMaybe = (
   ctx: Context,
   typeNode: NodeType,
   functionNode: NodeType
 ): number => {
-  const typeIndex = ctx.Program.Types.length;
-  ctx.Program.Types.push({
-    id: typeNode.value,
-    params: [],
-    // When we DO define a type for it later, patch the dummy type
-    hoist: (node: NodeType) => {
-      functionNode.type = node.type;
-      ctx.Program.Types[typeIndex] = generateType(node);
-    },
-  });
+  const typeIndex = ctx.Program.Types.findIndex(
+    ({ id }) => id === typeNode.value
+  );
+  if (typeIndex < 0) {
+    const hoistIndex = ctx.Program.Types.length;
+    ctx.Program.Types.push({
+      id: typeNode.value,
+      params: [],
+      // When we DO define a type for it later, patch the dummy type
+      hoist: (node: NodeType) => {
+        functionNode.type = node.type;
+        ctx.Program.Types[hoistIndex] = generateType(node);
+      },
+    });
 
+    return hoistIndex;
+  }
   return typeIndex;
 };
 
@@ -49,7 +55,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
           meta: [functionIndexMeta],
         };
         const typeIndexMeta = setTypeIndex(
-          hoistType(ctx, typeNode, functionNode)
+          hoistTypeMaybe(ctx, typeNode, functionNode)
         );
         ctx.Program.Functions.push(null);
         ctx.functions.push(functionNode);

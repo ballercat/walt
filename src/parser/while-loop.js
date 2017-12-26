@@ -3,9 +3,9 @@ import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
 import statement from "./statement";
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 
-const whileLoop = (ctx: Context): Node => {
+const whileLoop = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(["while"]);
   ctx.expect(["("]);

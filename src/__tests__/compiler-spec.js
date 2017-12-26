@@ -1,7 +1,8 @@
 import test from "ava";
 import compile from "..";
 
-const compileAndRun = src => WebAssembly.instantiate(compile(src));
+const compileAndRun = (src, imports) =>
+  WebAssembly.instantiate(compile(src), imports);
 
 test("empty module compilation", t =>
   compileAndRun("").then(({ module, instance }) => {
@@ -14,6 +15,22 @@ test("global declaration compilation", t =>
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
   }));
+
+test("global indexes compile correctly", t =>
+  compileAndRun(
+    `import { two: TwoType, alsoTwo: TwoType } from 'env';
+  type TwoType = () => i32;
+  const memory: Memory = { 'initial': 1 };
+  const bar: i32 = 2;
+  let foo: i32 = 3;
+  let baz: i32 = 0;
+  export function test(): i32 {
+    foo = two();
+    baz = alsoTwo();
+    return foo + baz;
+  }`,
+    { env: { two: () => 2, alsoTwo: () => 2 } }
+  ).then(module => t.is(module.instance.exports.test(), 4)));
 
 test("global constant exports", t =>
   compileAndRun(`

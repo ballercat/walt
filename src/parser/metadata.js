@@ -50,7 +50,7 @@ export const localIndex = (payload: any): Metadata => ({
 });
 
 export const globalIndex = (payload: any): Metadata => ({
-  payload,
+  payload: { index: payload },
   type: GLOBAL_INDEX,
 });
 

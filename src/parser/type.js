@@ -22,17 +22,19 @@ import {
 // binary imports inside our Program.
 export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
   // At this point we may have found a type which needs to hoist
-  const needsHoisting = ctx.Program.Types.find(
-    ({ id, hoist }) => id === node.value && hoist
-  );
-
-  if (needsHoisting) {
-    needsHoisting.hoist(node);
-  }
+  let typeIndex = ctx.Program.Types.findIndex(({ id }) => id === node.value);
 
   if (get(TYPE_OBJECT, node) == null) {
-    ctx.Program.Types.push(generateType(node));
-    node.meta.push(setMetaTypeIndex(ctx.Program.Types.length - 1));
+    const typeNode = ctx.Program.Types[typeIndex];
+
+    if (typeNode == null) {
+      typeIndex = ctx.Program.Types.length;
+      ctx.Program.Types.push(generateType(node));
+    } else if (typeNode.hoist !== null) {
+      typeNode.hoist(node);
+    }
+
+    node.meta.push(setMetaTypeIndex(typeIndex));
     ctx.functionTypes[node.value] = node;
   }
 };

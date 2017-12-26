@@ -24,21 +24,13 @@ export const scopeOperation = curry((op, node) => {
   );
 
   const kind = local ? op + "Local" : op + "Global";
-  const params = [Number(local ? index.payload.index : _global)];
+  const params = [Number(index.payload.index)];
 
   return { kind: opcode[kind], params };
 });
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
-  // invariant(
-  //  !!node.type,
-  //  `Undefined Node type cannot generate const-opcode: ${JSON.stringify(
-  //    node,
-  //    null,
-  //    2
-  //  )}`
-  // );
 
   const kind: RawOpcodeType = opcode[nodeType + "Const"];
   const params = [Number(node.value)];
