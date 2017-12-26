@@ -8,7 +8,7 @@ import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
 import type Context from "./context";
-import type { Node, Token } from "../flow/types";
+import type { NodeType, Token } from "../flow/types";
 
 export type Predicate = (Token, number) => boolean;
 export type OperatorCheck = Token => boolean;
@@ -36,7 +36,7 @@ const expression = (
   check: Predicate = predicate
 ) => {
   const operators: Token[] = [];
-  const operands: Node[] = [];
+  const operands: NodeType[] = [];
   // Depth is the nesting level of brackets in this expression. If we find a
   // closing bracket which causes our depth to fall below 1, then we know we
   // should exit the expression.

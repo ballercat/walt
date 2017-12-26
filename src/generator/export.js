@@ -16,7 +16,7 @@ export default function generateExport(
 
   if (globalIndexMeta) {
     return {
-      index: globalIndexMeta.payload,
+      index: globalIndexMeta.payload.index,
       kind: EXTERN_GLOBAL,
       field: node.value,
     };

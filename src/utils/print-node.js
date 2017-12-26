@@ -1,5 +1,5 @@
 // @flow
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 
 const formatMetadata = meta => {
   if (meta == null) {
@@ -19,7 +19,7 @@ const formatMetadata = meta => {
     .join(",");
 };
 
-const printNode = (node?: Node, level: number = 0): string => {
+const printNode = (node?: NodeType, level: number = 0): string => {
   if (node == null) {
     return "";
   }

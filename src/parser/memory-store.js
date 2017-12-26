@@ -3,10 +3,10 @@ import invariant from "invariant";
 import Syntax from "../Syntax";
 import expression from "./expression";
 import type Context from "./context";
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 
 // Parse the expression and set the appropriate Type for the generator
-const memoryStore = (ctx: Context): Node => {
+const memoryStore = (ctx: Context): NodeType => {
   // Parse the assignment
   const node = expression(ctx, "i32");
 

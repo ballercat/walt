@@ -31,10 +31,9 @@ export type NodeType = {
   id?: string,
   type: string | null,
   value: string,
-  size?: number,
-  result?: Typed | null,
   meta: Metadata[],
   params: NodeType[],
+  // delete these
   body?: NodeType[],
   expr?: NodeType,
   then?: NodeType[],
@@ -47,8 +46,6 @@ export type FunctionNodeType = {
   functionIndex: number,
   typeIndex: number,
 } & NodeType;
-
-export type Node = NodeType;
 
 export type Field = {
   id: string,

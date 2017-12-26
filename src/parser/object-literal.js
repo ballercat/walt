@@ -2,9 +2,9 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
-import type { Node } from "../flow/types";
+import type { NodeType } from "../flow/types";
 
-const field = (ctx: Context): Node => {
+const field = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   node.id = ctx.expect(null, Syntax.StringLiteral).value;
   ctx.expect([":"]);
@@ -12,10 +12,10 @@ const field = (ctx: Context): Node => {
   return ctx.endNode(node, Syntax.ObjectField);
 };
 
-const fieldList = (ctx: Context): Node[] => {
-  const fields: Node[] = [];
+const fieldList = (ctx: Context): NodeType[] => {
+  const fields: NodeType[] = [];
   while (ctx.token && ctx.token.value !== "}") {
-    const f: Node = field(ctx);
+    const f: NodeType = field(ctx);
     if (f) {
       fields.push(f);
       ctx.eat([","]);
@@ -26,7 +26,7 @@ const fieldList = (ctx: Context): Node[] => {
   return fields;
 };
 
-const objectLiteral = (ctx: Context): Node => {
+const objectLiteral = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.expect(["{"]);
 
