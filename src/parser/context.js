@@ -1,6 +1,9 @@
 // @flow
 import type TokenStream from "../utils/token-stream";
-import generateErrorString, { handleUndefined } from "../utils/generate-error";
+import generateErrorString, {
+  handleUndefined,
+  handleUndefinedField,
+} from "../utils/generate-error";
 import type { Token, NodeType } from "../flow/types";
 
 /**
@@ -37,6 +40,7 @@ class Context {
   functionImports: NodeType[];
   functionImportsLength: number;
   handleUndefinedIdentifier: string => void;
+  handleUndefinedField: (string, string) => void;
 
   constructor(options: ContextOptions) {
     Object.assign(this, {
@@ -50,6 +54,7 @@ class Context {
       userTypes: {},
       functionTypes: {},
       handleUndefinedIdentifier: handleUndefined(this),
+      handleUndefinedField: handleUndefinedField(this),
       ...options,
     });
 
@@ -68,18 +73,24 @@ class Context {
     };
   }
 
-  syntaxError(msg: string, error: any) {
+  _getError(msg: string, error: any) {
     const functionId = (this.func ? this.func.id : "global") || "unknown";
-    return new SyntaxError(
-      generateErrorString(
-        msg,
-        error || "",
-        this.token,
-        this.lines[this.token.start.line - 1],
-        this.filename || "unknown",
-        functionId
-      )
+    return generateErrorString(
+      msg,
+      error || "",
+      this.token,
+      this.lines[this.token.start.line - 1],
+      this.filename || "unknown",
+      functionId
     );
+  }
+
+  syntaxError(msg: string, error: any) {
+    return new SyntaxError(this._getError(msg, error));
+  }
+
+  typeError(msg: string, error: any) {
+    return new TypeError(this._getError(msg, error));
   }
 
   unexpectedValue(value: string[] | string) {

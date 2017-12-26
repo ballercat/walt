@@ -20,7 +20,7 @@ test("unary negation, arrays", t => {
           meta: [{ type: TYPE_ARRAY, payload: "i32" }],
         },
       ],
-    },
+    }
   );
   t.snapshot(parseStatement(ctx));
 });

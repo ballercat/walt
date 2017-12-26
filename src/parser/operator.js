@@ -23,7 +23,7 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
       node.params[0],
       binary(ctx, { ...op, value }, [node.params[0], node.params[1]]),
     ];
-  } else if (node.value === "[") {
+  } else if (node.value === "[" || node.value === ".") {
     const metaType = getMetaType(ctx, params[0]);
     invariant(metaType, "Cannot parse array subscript");
     return subscriptFromNode(ctx, node, metaType);

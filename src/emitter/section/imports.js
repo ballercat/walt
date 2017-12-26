@@ -15,7 +15,7 @@ const emit = (entries: any[]) => {
   const payload = new OutputStream().push(
     varuint32,
     entries.length,
-    "entry count",
+    "entry count"
   );
 
   entries.forEach(({ module, field, kind, global, typeIndex }) => {

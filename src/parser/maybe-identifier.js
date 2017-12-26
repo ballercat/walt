@@ -15,6 +15,27 @@ import {
   findTableIndex,
 } from "./introspection";
 
+export const maybeAccess = (ctx: Context, parent: NodeType): NodeType => {
+  const node = ctx.startNode();
+
+  // there gotta by the better way to do this
+  const parentType = parent.meta[0].payload.node.meta[0].payload.value;
+  const userType = ctx.userTypes[parentType];
+
+  const metaItem = userType.meta.find(i => i.type === "object/key-types");
+
+  const includes =
+    metaItem && Object.keys(metaItem.payload).includes(ctx.token.value);
+
+  if (!includes) {
+    ctx.handleUndefinedField(parentType, ctx.token.value);
+  }
+
+  // We have to convert Identifier to StringLiteral
+  // This is because if we'd keept Identifier later on we'd have an error related memory assignmet
+  return ctx.endNode(node, Syntax.StringLiteral);
+};
+
 // Maybe identifier, maybe function call
 const maybeIdentifier = (ctx: Context): NodeType => {
   const node = ctx.startNode();

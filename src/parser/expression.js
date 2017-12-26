@@ -5,7 +5,7 @@ import constant from "./constant";
 import stringLiteral from "./string-literal";
 import builtInType from "./builtin-type";
 import { getAssociativty, getPrecedence } from "./introspection";
-import maybeIdentifier from "./maybe-identifier";
+import maybeIdentifier, { maybeAccess } from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
 import type Context from "./context";
 import type { Node, Token } from "../flow/types";
@@ -21,6 +21,7 @@ const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
+
 export const isPunctuatorAndNotBracket = (t: ?Token) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
@@ -174,7 +175,18 @@ const expression = (
         break;
       case Syntax.Identifier:
         eatFunctionCall = true;
-        operands.push(maybeIdentifier(ctx));
+        const lastOperand = last(operands);
+        const lastOperator = last(operators);
+        if (
+          lastOperand &&
+          lastOperand.Type === Syntax.Identifier &&
+          lastOperator &&
+          lastOperator.value === "."
+        ) {
+          operands.push(maybeAccess(ctx, lastOperand));
+        } else {
+          operands.push(maybeIdentifier(ctx));
+        }
         break;
       case Syntax.StringLiteral:
         eatFunctionCall = false;

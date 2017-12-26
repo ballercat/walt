@@ -8,7 +8,7 @@ import type { NodeType } from "../flow/types";
 // through out the right-hand side of the expression
 function maybeAssignment(ctx: Context): NodeType {
   const nextValue = ctx.stream.peek().value;
-  if (nextValue === "[") {
+  if (nextValue === "[" || nextValue === ".") {
     return memoryStore(ctx);
   }
 

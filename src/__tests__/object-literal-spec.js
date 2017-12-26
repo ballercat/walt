@@ -6,6 +6,33 @@ const compileAndRun = (src, imports) =>
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
+test("dot operator", t => {
+  return compileAndRun(`
+    const memory: Memory = { 'initial': 1 };
+  
+    type TestType = { 'foo': i32, 'bar': i32 };
+  
+    export function test(): i32 {
+      let obj: TestType = 0;
+  
+      obj["bar"] = 20;
+      obj.foo = 42;
+  
+      return obj.foo + obj.bar;
+    }`).then(outputIs(t, 62));
+});
+
+test.failing("dot operator error message", () => {
+  return compileAndRun(`
+    const memory: Memory = { 'initial': 1 };
+    type TestType = { 'foo': i32 };
+    export function test(): i32 {
+      let obj: TestType = 0;
+      obj.foo = 42;
+      return obj.fooo;
+    }`);
+});
+
 test("types and assignment", t => {
   return compileAndRun(
     `
