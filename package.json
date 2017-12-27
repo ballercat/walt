@@ -4,7 +4,7 @@
   "description": "Walt packages",
   "main": "index.js",
   "scripts": {
-    "install": "lerna bootstrap --stream",
+    "install": "npm install && lerna bootstrap --stream",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream"
   },
