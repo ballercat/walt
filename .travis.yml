@@ -1,8 +1,13 @@
 language: node_js
 node_js:
   - "lts/*"
+install: "npm run install"
 before_script: "npm run validate"
 script: "npm test"
 after_success:
   - "npm run coverage"
+cache:
+  directories:
+    - packages/walt/node_modules
+    - packages/walt-docs/node_modules
 
