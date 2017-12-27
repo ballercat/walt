@@ -4,7 +4,8 @@
   "description": "Walt packages",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "validate": "lerna run validate --stream",
+    "test": "lerna run test --stream"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,6 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "dependencies": {
-    "lerna": "^2.5.1"
+    "lerna": "2.5.1"
   }
 }

@@ -4,7 +4,6 @@
   "description": "WAlt documentation",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server -d --hot --inline",
     "build": "webpack"
   },
