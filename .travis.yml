@@ -1,6 +1,9 @@
 language: node_js
 node_js:
   - "lts/*"
+install:
+  - npm intall
+  - npm run postinstall
 before_script: "npm run validate"
 script: "npm test"
 after_success:
