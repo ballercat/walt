@@ -6,7 +6,8 @@
   "scripts": {
     "postinstall": "lerna bootstrap --stream",
     "validate": "lerna run validate --stream",
-    "test": "lerna run test --stream"
+    "test": "lerna run test --stream",
+    "coverage": "lerna run coverage --stream"
   },
   "repository": {
     "type": "git",
