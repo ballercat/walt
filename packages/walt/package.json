@@ -1,6 +1,6 @@
 {
   "name": "walt",
-  "version": "0.3.0",
+  "version": "0.2.1",
   "description": "Alternative syntax for WebAssembly text format",
   "main": "index.js",
   "scripts": {
