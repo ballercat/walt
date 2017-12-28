@@ -1,16 +1,16 @@
-[![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/ballercat/walt/issues)
-[![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/walt-js-wasm/Lobby)
-
 <p align="center">
   <img src="walt.png" width="117" height="74"><br><br>
   <b>Walt</b> |
   <i>Alternative Syntax for WebAssembly</i> |
   <a href="https://ballercat.github.io/walt/">Demo</a>
 </p>
-
+<p align="center">
+<a href="https://travis-ci.org/ballercat/walt"><img src="https://travis-ci.org/ballercat/walt.svg?branch=master" alt="Build Status"></a>
+<a href="https://github.com/ballercat/walt/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions welcome"></a>
+<a href="https://coveralls.io/github/ballercat/walt?branch=master"><img src="https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master" alt="Coverage Status"></a>
+<a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square" alt="code style: prettier"></a>
+<a href="https://gitter.im/walt-js-wasm/Lobby"><img src="https://badges.gitter.im/gitterHQ/gitter.png" alt="Gitter chat"></a>
+</p>
 :zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
 
 Highlights:
