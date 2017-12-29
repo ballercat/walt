@@ -9,7 +9,7 @@
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
-    "build": "node_modules/rollup/bin/rollup -c rollup.config.js && cp dist/walt.js docs/dist/",
+    "build": "node_modules/rollup/bin/rollup -c rollup.config.js",
     "flow": "flow",
     "lint": "eslint src",
     "prettier": "prettier --list-different src/**/*.js",
@@ -21,7 +21,10 @@
   },
   "keywords": [
     "wasm",
-    "wast"
+    "wast",
+    "javascript",
+    "webassembly",
+    "compiler"
   ],
   "author": "Arthur Buldauskas",
   "license": "MIT",

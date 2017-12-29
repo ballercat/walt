@@ -61,11 +61,6 @@ class Stream {
   }
 }
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var trie$1 = createCommonjsModule(function (module) {
 //      
 /**
  * A very basic trie with functional,recursive search
@@ -126,10 +121,8 @@ class Trie {
   }
 }
 
-module.exports = Trie;
-});
+var trie$1 = Trie;
 
-var token = createCommonjsModule(function (module) {
 //      
 const wrap = (predicate, type, supported) => {
   const wrapper = value => {
@@ -143,8 +136,7 @@ const wrap = (predicate, type, supported) => {
   return wrapper;
 };
 
-module.exports = wrap;
-});
+var token = wrap;
 
 //      
 const Syntax = {
@@ -489,7 +481,6 @@ function blockParser(ctx) {
   }), Syntax.Block);
 }
 
-var wasmTypes = createCommonjsModule(function (module) {
 /* eslint-env es6 */
 /**
  * WASM types
@@ -539,7 +530,7 @@ const sizeof = {
 // TODO: Make this configurable.
 const LITTLE_ENDIAN = true;
 
-const get = (type, index, dataView) => {
+const get$1 = (type, index, dataView) => {
   switch (type) {
     case i32:
       return dataView.getInt32(index, LITTLE_ENDIAN);
@@ -570,7 +561,7 @@ const get = (type, index, dataView) => {
   }
 };
 
-const set = (type, index, dataView, value) => {
+const set$1 = (type, index, dataView, value) => {
   switch (type) {
     case i32:
       return dataView.setInt32(index, value, LITTLE_ENDIAN);
@@ -601,7 +592,7 @@ const set = (type, index, dataView, value) => {
   }
 };
 
-module.exports = {
+var index = {
   i32,
   i64,
   f32,
@@ -615,28 +606,19 @@ module.exports = {
   u16,
   u32,
   u64,
-  set,
-  get,
+  set: set$1,
+  get: get$1,
   sizeof
 };
-});
 
-var wasmTypes_1 = wasmTypes.i32;
-var wasmTypes_2 = wasmTypes.i64;
-var wasmTypes_3 = wasmTypes.f32;
-var wasmTypes_4 = wasmTypes.f64;
-var wasmTypes_5 = wasmTypes.anyfunc;
-var wasmTypes_6 = wasmTypes.func;
-var wasmTypes_7 = wasmTypes.block_type;
-var wasmTypes_8 = wasmTypes.i8;
-var wasmTypes_9 = wasmTypes.u8;
-var wasmTypes_10 = wasmTypes.i16;
-var wasmTypes_11 = wasmTypes.u16;
-var wasmTypes_12 = wasmTypes.u32;
-var wasmTypes_13 = wasmTypes.u64;
-var wasmTypes_14 = wasmTypes.set;
-var wasmTypes_15 = wasmTypes.get;
-var wasmTypes_16 = wasmTypes.sizeof;
+var index_1 = index.i32;
+var index_2 = index.i64;
+var index_3 = index.f32;
+var index_4 = index.f64;
+var index_9 = index.u8;
+var index_12 = index.u32;
+var index_14 = index.set;
+var index_16 = index.sizeof;
 
 //      
 /**
@@ -691,158 +673,158 @@ opcode(___, ___, ___, 0, 0x21, "SetLocal", "set_local");
 opcode(___, ___, ___, 0, 0x22, "TeeLocal", "tee_local");
 opcode(___, ___, ___, 0, 0x23, "GetGlobal", "get_global");
 opcode(___, ___, ___, 0, 0x24, "SetGlobal", "set_global");
-opcode(wasmTypes_1, wasmTypes_1, ___, 4, 0x28, "i32Load", "i32.load");
-opcode(wasmTypes_2, wasmTypes_1, ___, 8, 0x29, "i64Load", "i64.load");
-opcode(wasmTypes_3, wasmTypes_1, ___, 4, 0x2a, "f32Load", "f32.load");
-opcode(wasmTypes_3, wasmTypes_1, ___, 8, 0x2b, "f64Load", "f64.load");
-opcode(wasmTypes_1, wasmTypes_1, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
-opcode(wasmTypes_1, wasmTypes_1, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
-opcode(wasmTypes_1, wasmTypes_1, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
-opcode(wasmTypes_1, wasmTypes_1, ___, 2, 0x2f, "i32Load16U", "i32.load16_u");
-opcode(wasmTypes_2, wasmTypes_1, ___, 1, 0x30, "i64Load8S", "i64.load8_s");
-opcode(wasmTypes_2, wasmTypes_1, ___, 1, 0x31, "i64Load8U", "i64.load8_u");
-opcode(wasmTypes_2, wasmTypes_1, ___, 2, 0x32, "i64Load16S", "i64.load16_s");
-opcode(wasmTypes_2, wasmTypes_1, ___, 2, 0x33, "i64Load16U", "i64.load16_u");
-opcode(wasmTypes_2, wasmTypes_1, ___, 4, 0x34, "i64Load32S", "i64.load32_s");
-opcode(wasmTypes_2, wasmTypes_1, ___, 4, 0x35, "i64Load32U", "i64.load32_u");
-opcode(___, wasmTypes_1, wasmTypes_1, 4, 0x36, "i32Store", "i32.store");
-opcode(___, wasmTypes_1, wasmTypes_2, 8, 0x37, "i64Store", "i64.store");
-opcode(___, wasmTypes_1, wasmTypes_3, 4, 0x38, "f32Store", "f32.store");
-opcode(___, wasmTypes_1, wasmTypes_3, 8, 0x39, "f64Store", "f64.store");
-opcode(___, wasmTypes_1, wasmTypes_1, 1, 0x3a, "i32Store8", "i32.store8");
-opcode(___, wasmTypes_1, wasmTypes_1, 2, 0x3b, "i32Store16", "i32.store16");
-opcode(___, wasmTypes_1, wasmTypes_2, 1, 0x3c, "i64Store8", "i64.store8");
-opcode(___, wasmTypes_1, wasmTypes_2, 2, 0x3d, "i64Store16", "i64.store16");
-opcode(___, wasmTypes_1, wasmTypes_2, 4, 0x3e, "i64Store32", "i64.store32");
-opcode(wasmTypes_1, ___, ___, 0, 0x3f, "CurrentMemory", "current_memory");
-opcode(wasmTypes_1, wasmTypes_1, ___, 0, 0x40, "GrowMemory", "grow_memory");
-opcode(wasmTypes_1, ___, ___, 0, 0x41, "i32Const", "i32.const");
-opcode(wasmTypes_2, ___, ___, 0, 0x42, "i64Const", "i64.const");
-opcode(wasmTypes_3, ___, ___, 0, 0x43, "f32Const", "f32.const");
-opcode(wasmTypes_3, ___, ___, 0, 0x44, "f64Const", "f64.const");
-opcode(wasmTypes_1, wasmTypes_1, ___, 0, 0x45, "i32Eqz", "i32.eqz");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x46, "i32Eq", "i32.eq");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x47, "i32Ne", "i32.ne");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x48, "i32LtS", "i32.lt_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x49, "i32LtU", "i32.lt_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4a, "i32GtS", "i32.gt_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4b, "i32GtU", "i32.gt_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4c, "i32LeS", "i32.le_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4d, "i32LeU", "i32.le_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4e, "i32GeS", "i32.ge_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x4f, "i32GeU", "i32.ge_u");
-opcode(wasmTypes_1, wasmTypes_2, ___, 0, 0x50, "i64Eqz", "i64.eqz");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x51, "i64Eq", "i64.eq");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x52, "i64Ne", "i64.ne");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x53, "i64LtS", "i64.lt_s");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x54, "i64LtU", "i64.lt_u");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x55, "i64GtS", "i64.gt_s");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x56, "i64GtU", "i64.gt_u");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x57, "i64LeS", "i64.le_s");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x58, "i64LeU", "i64.le_u");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x59, "i64GeS", "i64.ge_s");
-opcode(wasmTypes_1, wasmTypes_2, wasmTypes_2, 0, 0x5a, "i64GeU", "i64.ge_u");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x5b, "f32Eq", "f32.eq");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x5c, "f32Ne", "f32.ne");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x5d, "f32Lt", "f32.lt");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x5e, "f32Gt", "f32.gt");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x5f, "f32Le", "f32.le");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x60, "f32Ge", "f32.ge");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x61, "f64Eq", "f64.eq");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x62, "f64Ne", "f64.ne");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x63, "f64Lt", "f64.lt");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x64, "f64Gt", "f64.gt");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x65, "f64Le", "f64.le");
-opcode(wasmTypes_1, wasmTypes_3, wasmTypes_3, 0, 0x66, "f64Ge", "f64.ge");
-opcode(wasmTypes_1, wasmTypes_1, ___, 0, 0x67, "i32Clz", "i32.clz");
-opcode(wasmTypes_1, wasmTypes_1, ___, 0, 0x68, "i32Ctz", "i32.ctz");
-opcode(wasmTypes_1, wasmTypes_1, ___, 0, 0x69, "i32Popcnt", "i32.popcnt");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6a, "i32Add", "i32.add");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6b, "i32Sub", "i32.sub");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6c, "i32Mul", "i32.mul");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6d, "i32DivS", "i32.div_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6e, "i32DivU", "i32.div_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x6f, "i32RemS", "i32.rem_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x70, "i32RemU", "i32.rem_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x71, "i32And", "i32.and");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x72, "i32Or", "i32.or");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x73, "i32Xor", "i32.xor");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x74, "i32Shl", "i32.shl");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x75, "i32ShrS", "i32.shr_s");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x76, "i32ShrU", "i32.shr_u");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x77, "i32Rotl", "i32.rotl");
-opcode(wasmTypes_1, wasmTypes_1, wasmTypes_1, 0, 0x78, "i32Rotr", "i32.rotr");
-opcode(wasmTypes_2, wasmTypes_2, ___, 0, 0x79, "i64Clz", "i64.clz");
-opcode(wasmTypes_2, wasmTypes_2, ___, 0, 0x7a, "i64Ctz", "i64.ctz");
-opcode(wasmTypes_2, wasmTypes_2, ___, 0, 0x7b, "i64Popcnt", "i64.popcnt");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x7c, "i64Add", "i64.add");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x7d, "i64Sub", "i64.sub");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x7e, "i64Mul", "i64.mul");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x7f, "i64DivS", "i64.div_s");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x80, "i64DivU", "i64.div_u");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x81, "i64RemS", "i64.rem_s");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x82, "i64RemU", "i64.rem_u");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x83, "i64And", "i64.and");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x84, "i64Or", "i64.or");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x85, "i64Xor", "i64.xor");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x86, "i64Shl", "i64.shl");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x87, "i64ShrS", "i64.shr_s");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x88, "i64ShrU", "i64.shr_u");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x89, "i64Rotl", "i64.rotl");
-opcode(wasmTypes_2, wasmTypes_2, wasmTypes_2, 0, 0x8a, "i64Rotr", "i64.rotr");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x8b, "f32Abs", "f32.abs");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x8c, "f32Neg", "f32.neg");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x8d, "f32Ceil", "f32.ceil");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x8e, "f32Floor", "f32.floor");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x8f, "f32Trunc", "f32.trunc");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x90, "f32Nearest", "f32.nearest");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x91, "f32Sqrt", "f32.sqrt");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x92, "f32Add", "f32.add");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x93, "f32Sub", "f32.sub");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x94, "f32Mul", "f32.mul");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x95, "f32Div", "f32.div");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x96, "f32Min", "f32.min");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x97, "f32Max", "f32.max");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x98, "f32Copysign", "f32.copysign");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x99, "f32Abs", "f64.abs");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9a, "f32Neg", "f64.neg");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9b, "f32Ceil", "f64.ceil");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9c, "f32Floor", "f64.floor");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9d, "f32Trunc", "f64.trunc");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9e, "f32Nearest", "f64.nearest");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0x9f, "f32Sqrt", "f64.sqrt");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa0, "f64Add", "f64.add");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa1, "f64Sub", "f64.sub");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa2, "f64Mul", "f64.mul");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa3, "f64Div", "f64.div");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa4, "f64Min", "f64.min");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa5, "f64Max", "f64.max");
-opcode(wasmTypes_3, wasmTypes_3, wasmTypes_3, 0, 0xa6, "f64Copysign", "f64.copysign");
-opcode(wasmTypes_1, wasmTypes_2, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
-opcode(wasmTypes_1, wasmTypes_3, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
-opcode(wasmTypes_1, wasmTypes_3, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");
-opcode(wasmTypes_1, wasmTypes_3, ___, 0, 0xaa, "i32TruncSf64", "i32.trunc_s/f64");
-opcode(wasmTypes_1, wasmTypes_3, ___, 0, 0xab, "i32TruncUf64", "i32.trunc_u/f64");
-opcode(wasmTypes_2, wasmTypes_1, ___, 0, 0xac, "i64ExtendSi32", "i64.extend_s/i32");
-opcode(wasmTypes_2, wasmTypes_1, ___, 0, 0xad, "i64ExtendUi32", "i64.extend_u/i32");
-opcode(wasmTypes_2, wasmTypes_3, ___, 0, 0xae, "i64TruncSf32", "i64.trunc_s/f32");
-opcode(wasmTypes_2, wasmTypes_3, ___, 0, 0xaf, "i64TruncUf32", "i64.trunc_u/f32");
-opcode(wasmTypes_2, wasmTypes_3, ___, 0, 0xb0, "i64TruncSf64", "i64.trunc_s/f64");
-opcode(wasmTypes_2, wasmTypes_3, ___, 0, 0xb1, "i64TruncUf64", "i64.trunc_u/f64");
-opcode(wasmTypes_3, wasmTypes_1, ___, 0, 0xb2, "f32ConvertSi32", "f32.convert_s/i32");
-opcode(wasmTypes_3, wasmTypes_1, ___, 0, 0xb3, "f32ConvertUi32", "f32.convert_u/i32");
-opcode(wasmTypes_3, wasmTypes_2, ___, 0, 0xb4, "f32ConvertSi64", "f32.convert_s/i64");
-opcode(wasmTypes_3, wasmTypes_2, ___, 0, 0xb5, "f32ConvertUi64", "f32.convert_u/i64");
-opcode(wasmTypes_3, wasmTypes_3, ___, 0, 0xb6, "f32Demotef64", "f32.demote/f64");
-opcode(wasmTypes_3, wasmTypes_1, ___, 0, 0xb7, "f64ConvertSi32", "f64.convert_s/i32");
-opcode(wasmTypes_3, wasmTypes_1, ___, 0, 0xb8, "f64ConvertUi32", "f64.convert_u/i32");
-opcode(wasmTypes_3, wasmTypes_2, ___, 0, 0xb9, "f64ConvertSi64", "f64.convert_s/i64");
-opcode(wasmTypes_3, wasmTypes_2, ___, 0, 0xba, "f64ConvertUi64", "f64.convert_u/i64");
-opcode(wasmTypes_3, wasmTypes_3, ___, 0, 0xbb, "f64Promotef32", "f64.promote/f32");
-opcode(wasmTypes_1, wasmTypes_3, ___, 0, 0xbc, "i32Reinterpretf32", "i32.reinterpret/f32");
-opcode(wasmTypes_2, wasmTypes_3, ___, 0, 0xbd, "i64Reinterpretf64", "i64.reinterpret/f64");
-opcode(wasmTypes_3, wasmTypes_1, ___, 0, 0xbe, "f32Reinterpreti32", "f32.reinterpret/i32");
-opcode(wasmTypes_3, wasmTypes_2, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
+opcode(index_1, index_1, ___, 4, 0x28, "i32Load", "i32.load");
+opcode(index_2, index_1, ___, 8, 0x29, "i64Load", "i64.load");
+opcode(index_3, index_1, ___, 4, 0x2a, "f32Load", "f32.load");
+opcode(index_3, index_1, ___, 8, 0x2b, "f64Load", "f64.load");
+opcode(index_1, index_1, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
+opcode(index_1, index_1, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
+opcode(index_1, index_1, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
+opcode(index_1, index_1, ___, 2, 0x2f, "i32Load16U", "i32.load16_u");
+opcode(index_2, index_1, ___, 1, 0x30, "i64Load8S", "i64.load8_s");
+opcode(index_2, index_1, ___, 1, 0x31, "i64Load8U", "i64.load8_u");
+opcode(index_2, index_1, ___, 2, 0x32, "i64Load16S", "i64.load16_s");
+opcode(index_2, index_1, ___, 2, 0x33, "i64Load16U", "i64.load16_u");
+opcode(index_2, index_1, ___, 4, 0x34, "i64Load32S", "i64.load32_s");
+opcode(index_2, index_1, ___, 4, 0x35, "i64Load32U", "i64.load32_u");
+opcode(___, index_1, index_1, 4, 0x36, "i32Store", "i32.store");
+opcode(___, index_1, index_2, 8, 0x37, "i64Store", "i64.store");
+opcode(___, index_1, index_3, 4, 0x38, "f32Store", "f32.store");
+opcode(___, index_1, index_3, 8, 0x39, "f64Store", "f64.store");
+opcode(___, index_1, index_1, 1, 0x3a, "i32Store8", "i32.store8");
+opcode(___, index_1, index_1, 2, 0x3b, "i32Store16", "i32.store16");
+opcode(___, index_1, index_2, 1, 0x3c, "i64Store8", "i64.store8");
+opcode(___, index_1, index_2, 2, 0x3d, "i64Store16", "i64.store16");
+opcode(___, index_1, index_2, 4, 0x3e, "i64Store32", "i64.store32");
+opcode(index_1, ___, ___, 0, 0x3f, "CurrentMemory", "current_memory");
+opcode(index_1, index_1, ___, 0, 0x40, "GrowMemory", "grow_memory");
+opcode(index_1, ___, ___, 0, 0x41, "i32Const", "i32.const");
+opcode(index_2, ___, ___, 0, 0x42, "i64Const", "i64.const");
+opcode(index_3, ___, ___, 0, 0x43, "f32Const", "f32.const");
+opcode(index_3, ___, ___, 0, 0x44, "f64Const", "f64.const");
+opcode(index_1, index_1, ___, 0, 0x45, "i32Eqz", "i32.eqz");
+opcode(index_1, index_1, index_1, 0, 0x46, "i32Eq", "i32.eq");
+opcode(index_1, index_1, index_1, 0, 0x47, "i32Ne", "i32.ne");
+opcode(index_1, index_1, index_1, 0, 0x48, "i32LtS", "i32.lt_s");
+opcode(index_1, index_1, index_1, 0, 0x49, "i32LtU", "i32.lt_u");
+opcode(index_1, index_1, index_1, 0, 0x4a, "i32GtS", "i32.gt_s");
+opcode(index_1, index_1, index_1, 0, 0x4b, "i32GtU", "i32.gt_u");
+opcode(index_1, index_1, index_1, 0, 0x4c, "i32LeS", "i32.le_s");
+opcode(index_1, index_1, index_1, 0, 0x4d, "i32LeU", "i32.le_u");
+opcode(index_1, index_1, index_1, 0, 0x4e, "i32GeS", "i32.ge_s");
+opcode(index_1, index_1, index_1, 0, 0x4f, "i32GeU", "i32.ge_u");
+opcode(index_1, index_2, ___, 0, 0x50, "i64Eqz", "i64.eqz");
+opcode(index_1, index_2, index_2, 0, 0x51, "i64Eq", "i64.eq");
+opcode(index_1, index_2, index_2, 0, 0x52, "i64Ne", "i64.ne");
+opcode(index_1, index_2, index_2, 0, 0x53, "i64LtS", "i64.lt_s");
+opcode(index_1, index_2, index_2, 0, 0x54, "i64LtU", "i64.lt_u");
+opcode(index_1, index_2, index_2, 0, 0x55, "i64GtS", "i64.gt_s");
+opcode(index_1, index_2, index_2, 0, 0x56, "i64GtU", "i64.gt_u");
+opcode(index_1, index_2, index_2, 0, 0x57, "i64LeS", "i64.le_s");
+opcode(index_1, index_2, index_2, 0, 0x58, "i64LeU", "i64.le_u");
+opcode(index_1, index_2, index_2, 0, 0x59, "i64GeS", "i64.ge_s");
+opcode(index_1, index_2, index_2, 0, 0x5a, "i64GeU", "i64.ge_u");
+opcode(index_1, index_3, index_3, 0, 0x5b, "f32Eq", "f32.eq");
+opcode(index_1, index_3, index_3, 0, 0x5c, "f32Ne", "f32.ne");
+opcode(index_1, index_3, index_3, 0, 0x5d, "f32Lt", "f32.lt");
+opcode(index_1, index_3, index_3, 0, 0x5e, "f32Gt", "f32.gt");
+opcode(index_1, index_3, index_3, 0, 0x5f, "f32Le", "f32.le");
+opcode(index_1, index_3, index_3, 0, 0x60, "f32Ge", "f32.ge");
+opcode(index_1, index_3, index_3, 0, 0x61, "f64Eq", "f64.eq");
+opcode(index_1, index_3, index_3, 0, 0x62, "f64Ne", "f64.ne");
+opcode(index_1, index_3, index_3, 0, 0x63, "f64Lt", "f64.lt");
+opcode(index_1, index_3, index_3, 0, 0x64, "f64Gt", "f64.gt");
+opcode(index_1, index_3, index_3, 0, 0x65, "f64Le", "f64.le");
+opcode(index_1, index_3, index_3, 0, 0x66, "f64Ge", "f64.ge");
+opcode(index_1, index_1, ___, 0, 0x67, "i32Clz", "i32.clz");
+opcode(index_1, index_1, ___, 0, 0x68, "i32Ctz", "i32.ctz");
+opcode(index_1, index_1, ___, 0, 0x69, "i32Popcnt", "i32.popcnt");
+opcode(index_1, index_1, index_1, 0, 0x6a, "i32Add", "i32.add");
+opcode(index_1, index_1, index_1, 0, 0x6b, "i32Sub", "i32.sub");
+opcode(index_1, index_1, index_1, 0, 0x6c, "i32Mul", "i32.mul");
+opcode(index_1, index_1, index_1, 0, 0x6d, "i32DivS", "i32.div_s");
+opcode(index_1, index_1, index_1, 0, 0x6e, "i32DivU", "i32.div_u");
+opcode(index_1, index_1, index_1, 0, 0x6f, "i32RemS", "i32.rem_s");
+opcode(index_1, index_1, index_1, 0, 0x70, "i32RemU", "i32.rem_u");
+opcode(index_1, index_1, index_1, 0, 0x71, "i32And", "i32.and");
+opcode(index_1, index_1, index_1, 0, 0x72, "i32Or", "i32.or");
+opcode(index_1, index_1, index_1, 0, 0x73, "i32Xor", "i32.xor");
+opcode(index_1, index_1, index_1, 0, 0x74, "i32Shl", "i32.shl");
+opcode(index_1, index_1, index_1, 0, 0x75, "i32ShrS", "i32.shr_s");
+opcode(index_1, index_1, index_1, 0, 0x76, "i32ShrU", "i32.shr_u");
+opcode(index_1, index_1, index_1, 0, 0x77, "i32Rotl", "i32.rotl");
+opcode(index_1, index_1, index_1, 0, 0x78, "i32Rotr", "i32.rotr");
+opcode(index_2, index_2, ___, 0, 0x79, "i64Clz", "i64.clz");
+opcode(index_2, index_2, ___, 0, 0x7a, "i64Ctz", "i64.ctz");
+opcode(index_2, index_2, ___, 0, 0x7b, "i64Popcnt", "i64.popcnt");
+opcode(index_2, index_2, index_2, 0, 0x7c, "i64Add", "i64.add");
+opcode(index_2, index_2, index_2, 0, 0x7d, "i64Sub", "i64.sub");
+opcode(index_2, index_2, index_2, 0, 0x7e, "i64Mul", "i64.mul");
+opcode(index_2, index_2, index_2, 0, 0x7f, "i64DivS", "i64.div_s");
+opcode(index_2, index_2, index_2, 0, 0x80, "i64DivU", "i64.div_u");
+opcode(index_2, index_2, index_2, 0, 0x81, "i64RemS", "i64.rem_s");
+opcode(index_2, index_2, index_2, 0, 0x82, "i64RemU", "i64.rem_u");
+opcode(index_2, index_2, index_2, 0, 0x83, "i64And", "i64.and");
+opcode(index_2, index_2, index_2, 0, 0x84, "i64Or", "i64.or");
+opcode(index_2, index_2, index_2, 0, 0x85, "i64Xor", "i64.xor");
+opcode(index_2, index_2, index_2, 0, 0x86, "i64Shl", "i64.shl");
+opcode(index_2, index_2, index_2, 0, 0x87, "i64ShrS", "i64.shr_s");
+opcode(index_2, index_2, index_2, 0, 0x88, "i64ShrU", "i64.shr_u");
+opcode(index_2, index_2, index_2, 0, 0x89, "i64Rotl", "i64.rotl");
+opcode(index_2, index_2, index_2, 0, 0x8a, "i64Rotr", "i64.rotr");
+opcode(index_3, index_3, index_3, 0, 0x8b, "f32Abs", "f32.abs");
+opcode(index_3, index_3, index_3, 0, 0x8c, "f32Neg", "f32.neg");
+opcode(index_3, index_3, index_3, 0, 0x8d, "f32Ceil", "f32.ceil");
+opcode(index_3, index_3, index_3, 0, 0x8e, "f32Floor", "f32.floor");
+opcode(index_3, index_3, index_3, 0, 0x8f, "f32Trunc", "f32.trunc");
+opcode(index_3, index_3, index_3, 0, 0x90, "f32Nearest", "f32.nearest");
+opcode(index_3, index_3, index_3, 0, 0x91, "f32Sqrt", "f32.sqrt");
+opcode(index_3, index_3, index_3, 0, 0x92, "f32Add", "f32.add");
+opcode(index_3, index_3, index_3, 0, 0x93, "f32Sub", "f32.sub");
+opcode(index_3, index_3, index_3, 0, 0x94, "f32Mul", "f32.mul");
+opcode(index_3, index_3, index_3, 0, 0x95, "f32Div", "f32.div");
+opcode(index_3, index_3, index_3, 0, 0x96, "f32Min", "f32.min");
+opcode(index_3, index_3, index_3, 0, 0x97, "f32Max", "f32.max");
+opcode(index_3, index_3, index_3, 0, 0x98, "f32Copysign", "f32.copysign");
+opcode(index_3, index_3, index_3, 0, 0x99, "f32Abs", "f64.abs");
+opcode(index_3, index_3, index_3, 0, 0x9a, "f32Neg", "f64.neg");
+opcode(index_3, index_3, index_3, 0, 0x9b, "f32Ceil", "f64.ceil");
+opcode(index_3, index_3, index_3, 0, 0x9c, "f32Floor", "f64.floor");
+opcode(index_3, index_3, index_3, 0, 0x9d, "f32Trunc", "f64.trunc");
+opcode(index_3, index_3, index_3, 0, 0x9e, "f32Nearest", "f64.nearest");
+opcode(index_3, index_3, index_3, 0, 0x9f, "f32Sqrt", "f64.sqrt");
+opcode(index_3, index_3, index_3, 0, 0xa0, "f64Add", "f64.add");
+opcode(index_3, index_3, index_3, 0, 0xa1, "f64Sub", "f64.sub");
+opcode(index_3, index_3, index_3, 0, 0xa2, "f64Mul", "f64.mul");
+opcode(index_3, index_3, index_3, 0, 0xa3, "f64Div", "f64.div");
+opcode(index_3, index_3, index_3, 0, 0xa4, "f64Min", "f64.min");
+opcode(index_3, index_3, index_3, 0, 0xa5, "f64Max", "f64.max");
+opcode(index_3, index_3, index_3, 0, 0xa6, "f64Copysign", "f64.copysign");
+opcode(index_1, index_2, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
+opcode(index_1, index_3, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
+opcode(index_1, index_3, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");
+opcode(index_1, index_3, ___, 0, 0xaa, "i32TruncSf64", "i32.trunc_s/f64");
+opcode(index_1, index_3, ___, 0, 0xab, "i32TruncUf64", "i32.trunc_u/f64");
+opcode(index_2, index_1, ___, 0, 0xac, "i64ExtendSi32", "i64.extend_s/i32");
+opcode(index_2, index_1, ___, 0, 0xad, "i64ExtendUi32", "i64.extend_u/i32");
+opcode(index_2, index_3, ___, 0, 0xae, "i64TruncSf32", "i64.trunc_s/f32");
+opcode(index_2, index_3, ___, 0, 0xaf, "i64TruncUf32", "i64.trunc_u/f32");
+opcode(index_2, index_3, ___, 0, 0xb0, "i64TruncSf64", "i64.trunc_s/f64");
+opcode(index_2, index_3, ___, 0, 0xb1, "i64TruncUf64", "i64.trunc_u/f64");
+opcode(index_3, index_1, ___, 0, 0xb2, "f32ConvertSi32", "f32.convert_s/i32");
+opcode(index_3, index_1, ___, 0, 0xb3, "f32ConvertUi32", "f32.convert_u/i32");
+opcode(index_3, index_2, ___, 0, 0xb4, "f32ConvertSi64", "f32.convert_s/i64");
+opcode(index_3, index_2, ___, 0, 0xb5, "f32ConvertUi64", "f32.convert_u/i64");
+opcode(index_3, index_3, ___, 0, 0xb6, "f32Demotef64", "f32.demote/f64");
+opcode(index_3, index_1, ___, 0, 0xb7, "f64ConvertSi32", "f64.convert_s/i32");
+opcode(index_3, index_1, ___, 0, 0xb8, "f64ConvertUi32", "f64.convert_u/i32");
+opcode(index_3, index_2, ___, 0, 0xb9, "f64ConvertSi64", "f64.convert_s/i64");
+opcode(index_3, index_2, ___, 0, 0xba, "f64ConvertUi64", "f64.convert_u/i64");
+opcode(index_3, index_3, ___, 0, 0xbb, "f64Promotef32", "f64.promote/f32");
+opcode(index_1, index_3, ___, 0, 0xbc, "i32Reinterpretf32", "i32.reinterpret/f32");
+opcode(index_2, index_3, ___, 0, 0xbd, "i64Reinterpretf64", "i64.reinterpret/f64");
+opcode(index_3, index_1, ___, 0, 0xbe, "f32Reinterpreti32", "f32.reinterpret/i32");
+opcode(index_3, index_2, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
 
 const getTypecastOpcode = (to, from) => {
   const toType = to[0];
@@ -1194,7 +1176,7 @@ const make = (payload, type) => ({
   payload
 });
 
-const get$1 = (type, node) => {
+const get$2 = (type, node) => {
   invariant_1(node.meta, `Attemptend to access Metadata but it was undefined in node ${printNode(node)}`);
   return node ? node.meta.find(({ type: _type }) => _type === type) || null : null;
 };
@@ -1269,7 +1251,7 @@ const localIndexMap = payload => ({
 
 const metadata = {
   make,
-  get: get$1,
+  get: get$2,
   postfix,
   funcIndex,
   localIndex,
@@ -1292,8 +1274,8 @@ const metadata = {
 
 //      
 const scopeOperation = curry_1((op, node) => {
-  const local = get$1(LOCAL_INDEX, node);
-  const _global = get$1(GLOBAL_INDEX, node);
+  const local = get$2(LOCAL_INDEX, node);
+  const _global = get$2(GLOBAL_INDEX, node);
   const index = local || _global;
 
   invariant_1(index, `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(op)} node: ${JSON.stringify(node, null, 2)}`);
@@ -1332,7 +1314,7 @@ const getType = str => {
   }
 };
 const generateValueType = node => ({
-  mutable: get$1(TYPE_CONST, node) ? 0 : 1,
+  mutable: get$2(TYPE_CONST, node) ? 0 : 1,
   type: getType(node.type)
 });
 const setInScope = scopeOperation("Set");
@@ -1572,7 +1554,7 @@ const findFunctionIndex = (ctx, { value }) => {
 };
 
 const findLocalVariable = (functionNode, identifier) => {
-  const localIndexMap$$1 = get$1(LOCAL_INDEX_MAP, functionNode);
+  const localIndexMap$$1 = get$2(LOCAL_INDEX_MAP, functionNode);
   if (localIndexMap$$1 != null) {
     return localIndexMap$$1.payload[identifier.value];
   }
@@ -1580,7 +1562,7 @@ const findLocalVariable = (functionNode, identifier) => {
 };
 
 const addFunctionLocal = (functionNode, localNode) => {
-  const localIndexMap$$1 = get$1(LOCAL_INDEX_MAP, functionNode);
+  const localIndexMap$$1 = get$2(LOCAL_INDEX_MAP, functionNode);
   if (localIndexMap$$1 != null) {
     const { payload } = localIndexMap$$1;
     const localsCount = Object.keys(payload).length;
@@ -2273,7 +2255,7 @@ const mergeBlock = (block, v) => {
 //      
 const generateFunctionCall = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  const metaFunctionIndex = get$1(FUNCTION_INDEX, node);
+  const metaFunctionIndex = get$2(FUNCTION_INDEX, node);
   invariant_1(metaFunctionIndex, "Undefined function index for node \n" + `${printNode(node)}`);
 
   block.push({
@@ -2289,10 +2271,10 @@ const generateIndirectFunctionCall = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   const [pointerIdentifierNode] = node.params;
 
-  const localIndex$$1 = get$1(LOCAL_INDEX, pointerIdentifierNode);
+  const localIndex$$1 = get$2(LOCAL_INDEX, pointerIdentifierNode);
   invariant_1(localIndex$$1, "Undefined local index, not a valid function pointer");
   const { typeNode } = localIndex$$1.payload;
-  const typeIndexMeta = get$1(TYPE_INDEX, typeNode);
+  const typeIndexMeta = get$2(TYPE_INDEX, typeNode);
   invariant_1(typeIndexMeta, "Variable is not of a valid function pointer type");
 
   return [...block, {
@@ -2379,7 +2361,7 @@ const generateIf = (node, parent) => {
 
 //      
 const generateFunctionPointer = node => {
-  const metaTableIndex = get$1(TABLE_INDEX, node);
+  const metaTableIndex = get$2(TABLE_INDEX, node);
   invariant_1(metaTableIndex, `Cannot generate function pointer for node: ${JSON.stringify(node)}`);
   return [{
     kind: def.i32Const,
@@ -2408,7 +2390,7 @@ const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
   }
 
   if (initNode) {
-    const metaIndex = get$1(LOCAL_INDEX, node);
+    const metaIndex = get$2(LOCAL_INDEX, node);
     invariant_1(metaIndex, "Local Index is undefined. Cannot generate declaration");
     return [...generateExpression(_extends({}, initNode, { type: node.type }), parent), { kind: def.SetLocal, params: [metaIndex.payload] }];
   }
@@ -2528,7 +2510,7 @@ function generateImportFromNode(node) {
       const { value: importTypeValue } = typeOrIdentifierNode;
       const kind = getKindConstant(importTypeValue);
       const typeIndex$$1 = (() => {
-        const typeIndexMeta = get$1(TYPE_INDEX, typeOrIdentifierNode);
+        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
         if (typeIndexMeta) {
           return typeIndexMeta.payload;
         }
@@ -2591,7 +2573,7 @@ const generateSequence = (node, parent) => {
 
 //      
 const generateTypecast = (node, parent) => {
-  const metaTypecast = get$1(TYPE_CAST, node);
+  const metaTypecast = get$2(TYPE_CAST, node);
   invariant_1(metaTypecast, `Cannot generate typecast for node: ${JSON.stringify(node)}`);
 
   const { to, from } = metaTypecast.payload;
@@ -2895,8 +2877,8 @@ const maybeFunctionDeclaration = ctx => {
 
 //      
 function generateExport(node) {
-  const functionIndexMeta = get$1(FUNCTION_INDEX, node);
-  const globalIndexMeta = get$1(GLOBAL_INDEX, node);
+  const functionIndexMeta = get$2(FUNCTION_INDEX, node);
+  const globalIndexMeta = get$2(GLOBAL_INDEX, node);
 
   if (globalIndexMeta) {
     return {
@@ -3024,7 +3006,7 @@ const hoistTypeMaybe$1 = (ctx, node) => {
   // At this point we may have found a type which needs to hoist
   let typeIndex$$1 = ctx.Program.Types.findIndex(({ id }) => id === node.value);
 
-  if (get$1(TYPE_OBJECT, node) == null) {
+  if (get$2(TYPE_OBJECT, node) == null) {
     const typeNode = ctx.Program.Types[typeIndex$$1];
 
     if (typeNode == null) {
@@ -3350,7 +3332,7 @@ const variableSize = targetNode => {
 
   if (metaType != null) {
     invariant_1(metaType.type === TYPE_USER, `sizeof is not-supported on type supplied ${metaType.type}`);
-    const metaSize = get$1(OBJECT_SIZE, metaType.payload);
+    const metaSize = get$2(OBJECT_SIZE, metaType.payload);
 
     invariant_1(metaSize, "Object size information is missing");
 
@@ -3368,7 +3350,7 @@ const variableSize = targetNode => {
   }
 };
 
-function sizeof(ctx) {
+function sizeof$1(ctx) {
   const node = ctx.startNode();
 
   ctx.eat(["sizeof"]);
@@ -3410,7 +3392,7 @@ const keyword$1 = ctx => {
     case "return":
       return returnStatement(ctx);
     case "sizeof":
-      return sizeof(ctx);
+      return sizeof$1(ctx);
     case "break":
       return breakParser(ctx);
     default:
@@ -3560,7 +3542,7 @@ class OutputStream {
         }
       default:
         {
-          size = wasmTypes_16[type];
+          size = index_16[type];
           invariant_1(size, `Cannot write a value of size ${size}, type ${type}`);
         }
     }
@@ -3615,10 +3597,10 @@ class OutputStream {
     let pc = 0;
     this.data.forEach(({ type, value }) => {
       if (Array.isArray(value)) {
-        value.forEach(v => wasmTypes_14(wasmTypes_9, pc++, view, v));
+        value.forEach(v => index_14(index_9, pc++, view, v));
       } else {
-        wasmTypes_14(type, pc, view, value);
-        pc += wasmTypes_16[type];
+        index_14(type, pc, view, value);
+        pc += index_16[type];
       }
     });
     return buffer;
@@ -3643,7 +3625,7 @@ const MAGIC = 0x6d736100;
 
 
 function write() {
-  return new OutputStream().push(wasmTypes_12, MAGIC, "\\0asm").push(wasmTypes_12, VERSION, `version ${VERSION}`);
+  return new OutputStream().push(index_12, MAGIC, "\\0asm").push(index_12, VERSION, `version ${VERSION}`);
 }
 
 //      
@@ -3657,7 +3639,7 @@ const varint32 = "varint32";
 function emitString(stream, string, debug = "string length") {
   stream.push(varuint32, string.length, debug);
   for (let i = 0; i < string.length; i++) {
-    stream.push(wasmTypes_9, string.charCodeAt(i), string[i]);
+    stream.push(index_9, string.charCodeAt(i), string[i]);
   }
   return stream;
 }
@@ -3673,28 +3655,28 @@ const emit$1 = entries => {
     switch (kind) {
       case EXTERN_GLOBAL:
         {
-          payload.push(wasmTypes_9, kind, "Global");
-          payload.push(wasmTypes_9, global, getTypeString(global));
-          payload.push(wasmTypes_9, 0, "immutable");
+          payload.push(index_9, kind, "Global");
+          payload.push(index_9, global, getTypeString(global));
+          payload.push(index_9, 0, "immutable");
           break;
         }
       case EXTERN_FUNCTION:
         {
-          payload.push(wasmTypes_9, kind, "Function");
+          payload.push(index_9, kind, "Function");
           payload.push(varuint32, typeIndex, "type index");
           break;
         }
       case EXTERN_TABLE:
         {
-          payload.push(wasmTypes_9, kind, "Table");
-          payload.push(wasmTypes_9, ANYFUNC, "function table types");
+          payload.push(index_9, kind, "Table");
+          payload.push(index_9, ANYFUNC, "function table types");
           payload.push(varint1, 0, "has max value");
           payload.push(varuint32, 0, "iniital table size");
           break;
         }
       case EXTERN_MEMORY:
         {
-          payload.push(wasmTypes_9, kind, "Memory");
+          payload.push(index_9, kind, "Memory");
           payload.push(varint1, 0, "has no max");
           payload.push(varuint32, 1, "iniital memory size(PAGES)");
           break;
@@ -3710,11 +3692,11 @@ const emit$2 = exports => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, "count");
 
-  exports.forEach(({ field, kind, index }) => {
+  exports.forEach(({ field, kind, index: index$$1 }) => {
     emitString(payload, field, "field");
 
-    payload.push(wasmTypes_9, kind, "Global");
-    payload.push(varuint32, index, "index");
+    payload.push(index_9, kind, "Global");
+    payload.push(varuint32, index$$1, "index");
   });
 
   return payload;
@@ -3722,25 +3704,25 @@ const emit$2 = exports => {
 
 //      
 const encode = (payload, { type, init, mutable }) => {
-  payload.push(wasmTypes_9, type, getTypeString(type));
-  payload.push(wasmTypes_9, mutable, "mutable");
+  payload.push(index_9, type, getTypeString(type));
+  payload.push(index_9, mutable, "mutable");
   // Encode the constant
   switch (type) {
     case I32:
-      payload.push(wasmTypes_9, def.i32Const.code, def.i32Const.text);
+      payload.push(index_9, def.i32Const.code, def.i32Const.text);
       payload.push(varint32, init, `value (${init})`);
       break;
     case F32:
-      payload.push(wasmTypes_9, def.f32Const.code, def.f32Const.text);
-      payload.push(wasmTypes_3, init, `value (${init})`);
+      payload.push(index_9, def.f32Const.code, def.f32Const.text);
+      payload.push(index_3, init, `value (${init})`);
       break;
     case F64:
-      payload.push(wasmTypes_9, def.f64Const.code, def.f64Const.text);
-      payload.push(wasmTypes_4, 42.6, `value (${init})`);
+      payload.push(index_9, def.f64Const.code, def.f64Const.text);
+      payload.push(index_4, 42.6, `value (${init})`);
       break;
   }
 
-  payload.push(wasmTypes_9, def.End.code, "end");
+  payload.push(index_9, def.End.code, "end");
 };
 
 const emit$3 = globals => {
@@ -3771,7 +3753,7 @@ const writer = ({ type, label, emitter }) => ast => {
     return null;
   }
 
-  const stream = new OutputStream().push(wasmTypes_9, type, label + " section");
+  const stream = new OutputStream().push(index_9, type, label + " section");
   const entries = emitter(field);
 
   stream.push(varuint32, entries.size, "size");
@@ -3781,11 +3763,11 @@ const writer = ({ type, label, emitter }) => ast => {
 };
 
 //      
-const emitElement = stream => ({ functionIndex }, index) => {
+const emitElement = stream => ({ functionIndex }, index$$1) => {
   stream.push(varuint32, 0, "table index");
-  stream.push(wasmTypes_9, def.i32Const.code, "offset");
-  stream.push(varuint32, index, "");
-  stream.push(wasmTypes_9, def.End.code, "end");
+  stream.push(index_9, def.i32Const.code, "offset");
+  stream.push(varuint32, index$$1, "");
+  stream.push(index_9, def.End.code, "end");
   stream.push(varuint32, 1, "number of elements");
   stream.push(varuint32, functionIndex, "function index");
 };
@@ -3836,11 +3818,11 @@ const emitFunctionBody = (stream, { locals, code }) => {
 
   code.forEach(({ kind, params, valueType }) => {
     // There is a much nicer way of doing this
-    body.push(wasmTypes_9, kind.code, kind.text);
+    body.push(index_9, kind.code, kind.text);
 
     if (valueType) {
-      body.push(wasmTypes_9, valueType.type, "result type");
-      body.push(wasmTypes_9, valueType.mutable, "mutable");
+      body.push(index_9, valueType.type, "result type");
+      body.push(index_9, valueType.mutable, "mutable");
     }
 
     // map over all params, if any and encode each one
@@ -3855,18 +3837,18 @@ const emitFunctionBody = (stream, { locals, code }) => {
       } else {
         // either encode unsigned 32 bit values or floats
         switch (kind.result) {
-          case wasmTypes_9:
-            type = wasmTypes_9;
+          case index_9:
+            type = index_9;
             break;
-          case wasmTypes_4:
-            type = wasmTypes_4;
+          case index_4:
+            type = index_4;
             stringType = "f64.literal";
             break;
-          case wasmTypes_3:
-            type = wasmTypes_3;
+          case index_3:
+            type = index_3;
             stringType = "f32.literal";
             break;
-          case wasmTypes_1:
+          case index_1:
             type = varint32;
             stringType = "i32.literal";
             break;
@@ -3888,7 +3870,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
 
   stream.write(localsStream);
   stream.write(body);
-  stream.push(wasmTypes_9, def.End.code, "end");
+  stream.push(index_9, def.End.code, "end");
 };
 
 const emit$7 = functions => {
@@ -3997,7 +3979,7 @@ const _debug = (stream, begin = 0, end) => {
       valueString = value.toString(16).padStart(16);
     }
     const out = `${pcString}: ${valueString} ; ${debug}`;
-    pc += wasmTypes_16[type] || value.length;
+    pc += index_16[type] || value.length;
     return out;
   }).join("\n") + "\n ============ fin =============";
 };
