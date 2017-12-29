@@ -5,7 +5,7 @@ import { Header, Image, Segment } from "semantic-ui-react";
 import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
-import waltCompiler, { getIR as getWaltIR, debug as debugWalt } from "walt";
+import waltCompiler, { getIR as getWaltIR, debug as debugWalt } from "walt-compiler";
 
 const exampleList = Object.keys(examples).map(key => {
   return {

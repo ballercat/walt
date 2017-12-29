@@ -25,7 +25,7 @@ export type IntermediateFunctionType = {
   locals: IntermediateVariableType[],
 };
 export type MapSyntaxType = (
-  ?IntermediateFunctionType,
+  ?IntermediateFunctionType
 ) => NodeType => IntermediateOpcodeType[];
 
 export type IntermediateTypeDefinitionType = {
@@ -36,7 +36,7 @@ export type IntermediateTypeDefinitionType = {
 
 export type GeneratorType = (
   NodeType,
-  IntermediateFunctionType,
+  IntermediateFunctionType
 ) => IntermediateOpcodeType[];
 
 export type IntermediateImportType = {

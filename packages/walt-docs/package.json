@@ -64,6 +64,6 @@
     "react-dom": "15.6.1",
     "semantic-ui-css": "2.2.12",
     "semantic-ui-react": "0.73.1",
-    "walt": "^0.2.4"
+    "walt-compiler": "^0.2.0"
   }
 }

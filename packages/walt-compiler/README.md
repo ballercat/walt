@@ -3,12 +3,12 @@ This is the main walt compiler package.
 
 ### Install
 
-`npm install --save walt`
+`npm install --save walt-compiler`
 
 ### API
 
 ```js
-import compileWalt, { debug as printWasm } from 'walt';
+import compileWalt, { debug as printWasm } from 'walt-compiler';
 
 const buffer = compileWalt(`
   export function count() {

@@ -281,7 +281,9 @@
       "consistent-as-needed",
       { "keywords": false }
     ],
-    "quotes": 2,                    // specify whether double or single quotes should be used
+    "quotes": [ "error", "double",                    // specify whether double or single quotes should be used
+      { "avoidEscape": true }
+    ],
     "semi": 2,                      // require or disallow use of semicolons instead of ASI
     "sort-vars": 0,                 // sort variables within the same declaration block (off by default)
     "space-before-function-paren": [// require a space after function names (off by default)

@@ -4,7 +4,7 @@
   "description": "Walt packages",
   "main": "index.js",
   "scripts": {
-    "postinstall": "lerna bootstrap --stream --hoist walt",
+    "postinstall": "lerna bootstrap --stream --hoist walt-compiler",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
     "coverage": "lerna run coverage --stream"
