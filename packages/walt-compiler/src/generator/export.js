@@ -2,15 +2,9 @@
 import { get, GLOBAL_INDEX, FUNCTION_INDEX } from "../parser/metadata";
 import { EXTERN_GLOBAL, EXTERN_FUNCTION } from "../emitter/external_kind";
 import invariant from "invariant";
-import type { NodeType } from "./flow/types";
+import type { NodeType, IntermediateExportType } from "./flow/types";
 
-export default function generateExport(
-  node: NodeType
-): {
-  index: number,
-  kind: number,
-  field: string,
-} {
+export default function generateExport(node: NodeType): IntermediateExportType {
   const functionIndexMeta = get(FUNCTION_INDEX, node);
   const globalIndexMeta = get(GLOBAL_INDEX, node);
 

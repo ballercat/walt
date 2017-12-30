@@ -1,26 +1,20 @@
 // @flow
-import Tokenizer from "./tokenizer";
-import Parser from "./parser";
-import Stream from "./utils/stream";
-import TokenStream from "./utils/token-stream";
+import parser from "./parser";
 import emit from "./emitter";
+import generator from "./generator";
 import _debug from "./utils/debug";
 
 export const debug = _debug;
 
 // Used for deugging purposes
 export const getAst = (source: string) => {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokenStream = new TokenStream(tokenizer.parse());
-  const parser = new Parser(tokenStream, stream.lines);
-  const ast = parser.parse();
+  const ast = parser(source);
   return ast;
 };
 
 export const getIR = (source: string) => {
   const ast = getAst(source);
-  const wasm = emit(ast);
+  const wasm = emit(generator(ast));
   return wasm;
 };
 

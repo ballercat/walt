@@ -94,7 +94,6 @@ export default function parseImport(ctx: Context): NodeType {
   const module = expression(ctx);
 
   const node = patchTypeIndexes(ctx, { ...baseNode, params: [fields, module] });
-  ctx.Program.Imports.push.apply(ctx.Program.Imports, generateImport(node));
 
   return ctx.endNode(node, Syntax.Import);
 }

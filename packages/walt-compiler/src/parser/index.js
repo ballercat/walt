@@ -1,44 +1,50 @@
 // @flow
+import Syntax from "../Syntax";
 import statement from "./statement";
 import Context from "./context";
-import type TokenStream from "../utils/token-stream";
+import Tokenizer from "../tokenizer";
+import Stream from "../utils/stream";
+import TokenStream from "../utils/token-stream";
 
-class Parser {
-  context: Context;
+import type { NodeType } from "../flow/types";
 
-  constructor(tokens: TokenStream, lines: string[] = []) {
-    this.context = new Context({
-      body: [],
-      diAssoc: "right",
-      stream: tokens,
-      token: tokens.next(),
-      lines,
-      globals: [],
-      functions: [],
-      filename: "unknown.walt",
-    });
-  }
+export default function parse(source: string): NodeType {
+  const stream = new Stream(source);
+  const tokenizer = new Tokenizer(stream);
+  const tokens = new TokenStream(tokenizer.parse());
 
-  // Get the ast
-  parse() {
-    const ctx = this.context;
-    // No code, no problem, empty ast equals
-    // (module) ; the most basic wasm module
-    if (!ctx.stream || !ctx.stream.length) {
-      return {};
-    }
+  const ctx = new Context({
+    body: [],
+    diAssoc: "right",
+    stream: tokens,
+    token: tokens.next(),
+    lines: stream.lines,
+    globals: [],
+    functions: [],
+    filename: "unknown.walt",
+  });
 
-    const node = ctx.Program;
+  const node: NodeType = ctx.makeNode(
+    {
+      value: "ROOT_NODE",
+    },
+    Syntax.Program
+  );
 
-    while (ctx.stream.peek()) {
-      const child = statement(ctx);
-      if (child) {
-        node.body.push(child);
-      }
-    }
-
+  // No code, no problem, empty ast equals
+  // (module) ; the most basic wasm module
+  if (!ctx.stream || !ctx.stream.length) {
     return node;
   }
-}
 
-export default Parser;
+  while (ctx.stream.peek()) {
+    const child = statement(ctx);
+    if (child) {
+      node.params.push(child);
+    }
+  }
+
+  debugger;
+
+  return node;
+}

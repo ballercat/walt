@@ -1,9 +1,9 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import type { NodeType } from "./flow/types";
+import type { NodeType, IntermediateMemoryType } from "./flow/types";
 
-const generateMemory = (node: NodeType): { max: number, initial: number } => {
+const generateMemory = (node: NodeType): IntermediateMemoryType => {
   const memory = { max: 0, initial: 0 };
 
   walkNode({

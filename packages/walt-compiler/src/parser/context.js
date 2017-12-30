@@ -140,7 +140,7 @@ class Context {
     return false;
   }
 
-  startNode(token: any = this.token): NodeType {
+  startNode(token: any = this.token || {}): NodeType {
     return {
       Type: "",
       value: token.value,
@@ -152,7 +152,7 @@ class Context {
   }
 
   endNode(node: NodeType, Type: string): NodeType {
-    const token = this.token || this.stream.last();
+    const token = this.token || this.stream.last() || {};
     return {
       ...node,
       Type,

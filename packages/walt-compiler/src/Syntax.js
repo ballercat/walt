@@ -1,5 +1,8 @@
 // @flow
 const Syntax = {
+  // Main Program
+  Program: "Program",
+
   // Syntax Nodes
   Keyword: "Keyword",
   Export: "Export",
