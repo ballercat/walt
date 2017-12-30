@@ -44,7 +44,5 @@ export default function parse(source: string): NodeType {
     }
   }
 
-  debugger;
-
   return node;
 }

@@ -1,9 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
-import { generateImplicitFunctionType } from "../generator/type";
-import generateCode from "../generator";
 import { handleUndefined } from "../utils/generate-error";
-import { findTypeIndex } from "./introspection";
 import statement from "./statement";
 import declaration from "./declaration";
 import expression from "./expression";
@@ -12,7 +9,6 @@ import walkNode from "../utils/walk-node";
 import {
   make,
   FUNCTION_INDEX,
-  typeIndex as setTypeIndex,
   userType as setMetaUserType,
   localIndexMap,
 } from "./metadata";
@@ -139,16 +135,16 @@ const maybeFunctionDeclaration = (ctx: Context) => {
     params: [argumentsNode, resultNode],
     meta: [localsMetadata],
   };
-  const typeIndex = (() => {
-    const index = findTypeIndex(emptyNode, ctx);
-    if (index === -1) {
-      // attach to a type index
-      ctx.Program.Types.push(generateImplicitFunctionType(emptyNode));
-      return ctx.Program.Types.length - 1;
-    }
+  // const typeIndex = (() => {
+  //   const index = findTypeIndex(emptyNode, ctx);
+  //   if (index === -1) {
+  //     // attach to a type index
+  //     ctx.Program.Types.push(generateImplicitFunctionType(emptyNode));
+  //     return ctx.Program.Types.length - 1;
+  //   }
 
-    return index;
-  })();
+  //   return index;
+  // })();
   const functionIndex = ctx.Program.Functions.length;
   const functionIndexMeta = make(
     {
@@ -161,7 +157,7 @@ const maybeFunctionDeclaration = (ctx: Context) => {
 
   emptyNode.meta = [
     ...emptyNode.meta,
-    setTypeIndex(typeIndex),
+    // setTypeIndex(typeIndex),
     functionIndexMeta,
   ];
   ctx.func = emptyNode;
@@ -196,11 +192,6 @@ const maybeFunctionDeclaration = (ctx: Context) => {
     ...emptyNode,
     params: [...emptyNode.params, ...statements],
   };
-
-  ctx.Program.Functions.push(typeIndex);
-
-  // generate the code block for the emitter
-  ctx.Program.Code.push(generateCode(node));
 
   ctx.expect(["}"]);
   ctx.func = null;

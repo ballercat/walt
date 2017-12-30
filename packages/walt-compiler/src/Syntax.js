@@ -28,7 +28,6 @@ const Syntax = {
   IndirectFunctionCall: "IndirectFunctionCall",
   FunctionCall: "FunctionCall",
   Loop: "Loop",
-  Program: "Program",
   MemoryAssignment: "MemoryAssignment",
   Assignment: "Assignment",
   Param: "Param",

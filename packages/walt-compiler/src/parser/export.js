@@ -1,6 +1,5 @@
 // @flow
 import Syntax from "../Syntax";
-import generateExport from "../generator/export";
 import maybeFunctionDeclaration from "./maybe-function-declaration";
 import type { NodeType } from "../flow/types";
 import type Context from "./context";

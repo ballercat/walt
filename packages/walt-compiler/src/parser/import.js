@@ -3,7 +3,7 @@ import Syntax from "../Syntax";
 import { handleUndefined } from "../utils/generate-error";
 import mapNode from "../utils/map-node";
 import generateType from "../generator/type";
-import generateImport, { getKindConstant } from "../generator/import";
+import { getKindConstant } from "../generator/import";
 import expression from "./expression";
 import { EXTERN_FUNCTION } from "../emitter/external_kind";
 import { make, FUNCTION_INDEX, typeIndex as setTypeIndex } from "./metadata";
@@ -42,7 +42,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
       const [identifierNode, typeNode] = pairNode.params;
       if (getKindConstant(typeNode.value) === EXTERN_FUNCTION) {
         // crate a new type
-        const functionIndex = ctx.Program.Functions.length;
+        const functionIndex = ctx.functions.length;
         const functionIndexMeta = make(
           {
             functionIndex,

@@ -62,13 +62,13 @@ export type IntermediateMemoryType = { max: number, initial: number };
 
 export type ProgramType = {
   // Setup keys needed for the emitter
-  Types: [],
-  Code: [],
+  Types: IntermediateTypeDefinitionType[],
+  Code: IntermediateFunctionType[],
   Exports: IntermediateExportType[],
   Imports: IntermediateImportType[],
   Globals: IntermediateVariableType[],
   Element: [],
-  Functions: [],
+  Functions: number[],
   Memory: IntermediateMemoryType[],
   Table: IntermediateTableType[],
 };

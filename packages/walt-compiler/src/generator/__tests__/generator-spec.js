@@ -57,3 +57,23 @@ test("generates scalar imports", t => {
   const program = generator(ast);
   t.snapshot(program);
 });
+
+test("function declaration", t => {
+  const ast = parser(`function test(): i32 {
+    return 42;
+  }`);
+  const program = generator(ast);
+  t.snapshot(program);
+});
+
+test("function calls", t => {
+  const ast = parser(`
+  function addTwo(x: i32): i32 {
+    return x + 2;
+  }
+  function test(): i32 {
+    return addTwo(2);
+  }`);
+  const program = generator(ast);
+  t.snapshot(program);
+});

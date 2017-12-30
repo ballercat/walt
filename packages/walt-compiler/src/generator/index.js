@@ -9,6 +9,7 @@ import generateMemory from "./memory";
 import generateTable from "./table";
 import generateInitializer from "../generator/initializer";
 import generateImport from "./import";
+import { generateImplicitFunctionType } from "./type";
 
 import { get, GLOBAL_INDEX } from "../parser/metadata";
 
@@ -54,7 +55,21 @@ export default function generator(ast: NodeType): ProgramType {
     Table: [],
   };
 
-  walkNode({
+  const findTypeIndex = (functionNode: NodeType): number => {
+    const search = generateImplicitFunctionType(functionNode);
+
+    return program.Types.findIndex(t => {
+      const paramsMatch =
+        t.params.length === search.params.length &&
+        t.params.reduce((a, v, i) => a && v === search.params[i], true);
+
+      const resultMatch = t.result === search.result;
+
+      return paramsMatch && resultMatch;
+    });
+  };
+
+  const nodeMap = {
     [Syntax.Export]: node => {
       const [nodeToExport] = node.params;
       program.Exports.push(generateExport(nodeToExport));
@@ -77,7 +92,24 @@ export default function generator(ast: NodeType): ProgramType {
     [Syntax.Import]: node => {
       program.Imports.push(...generateImport(node));
     },
-  })(ast);
+    [Syntax.FunctionDeclaration]: node => {
+      const typeIndex = (() => {
+        const index = findTypeIndex(node);
+        if (index === -1) {
+          // attach to a type index
+          program.Types.push(generateImplicitFunctionType(node));
+          return program.Types.length - 1;
+        }
+
+        return index;
+      })();
+
+      program.Functions.push(typeIndex);
+      program.Code.push(generateCode(node));
+    },
+  };
+
+  walkNode(nodeMap)(ast);
 
   return program;
 }
