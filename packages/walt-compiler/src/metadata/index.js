@@ -14,6 +14,7 @@ import {
   FUNCTION_INDEX,
   TYPE_OBJECT,
   localIndexMap,
+  typeCast,
   constant as setMetaConst,
   localIndex as setMetaLocalIndex,
   globalIndex as setMetaGlobalIndex,
@@ -107,7 +108,7 @@ export default function metadata(ast: NodeType): NodeType {
 
       const locals = { ...localIndexMeta.payload };
 
-      const bodyWithMetadata = mapNode({
+      return mapNode({
         [Syntax.Declaration]: declaration => {
           const index = Object.keys(locals).length;
           const meta = [setMetaLocalIndex(index)];
@@ -169,18 +170,35 @@ export default function metadata(ast: NodeType): NodeType {
 
           return call;
         },
-      })(patchedNode);
+        [Syntax.FunctionArguments]: (args, _) => args,
+        [Syntax.Pair]: (typeCastMaybe: NodeType, childMapper): NodeType => {
+          const [targetNode, typeNode] = typeCastMaybe.params.map(childMapper);
+          const { type: from } = targetNode;
+          const { value: to } = typeNode;
 
-      return mapNode({
-        // Ignore argument nodes, since they are id: type pairs
-        [Syntax.FunctionArguments]: (args, _ignore) => args,
-        [Syntax.Pair]: pair => {
-          return patchTypeCasts(pair);
+          // If both sides of a pair don't have types then it's not a typecast,
+          // more likely a string: value pair in an object for example
+          if (typeNode.Type === Syntax.Type && !!from && !!to) {
+            return {
+              ...typeCastMaybe,
+              type: to,
+              value: targetNode.value,
+              Type: Syntax.TypeCast,
+              meta: [...typeCastMaybe.meta, typeCast({ to, from })],
+              // We need to drop the typeNode here, because it's not something we can generate
+              params: [targetNode],
+            };
+          }
+
+          return typeCastMaybe;
         },
-        [Syntax.BinaryExpression]: binaryNode => {
-          return balanceTypesInMathExpression(binaryNode);
+        [Syntax.BinaryExpression]: (binaryNode, childMapper) => {
+          return balanceTypesInMathExpression({
+            ...binaryNode,
+            params: binaryNode.params.map(childMapper),
+          });
         },
-      })(bodyWithMetadata);
+      })(patchedNode);
     },
   })(ast);
 }
