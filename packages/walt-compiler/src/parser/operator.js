@@ -33,7 +33,8 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
     Type = Syntax.Select;
   }
 
-  return balanceTypesInMathExpression(ctx.endNode(node, Type));
+  return ctx.endNode(node, Type);
+  // return balanceTypesInMathExpression(ctx.endNode(node, Type));
 }
 
 const unary = (ctx: Context, op: Token, params: NodeType[]) => {

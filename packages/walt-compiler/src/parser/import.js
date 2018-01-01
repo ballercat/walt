@@ -52,7 +52,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
         const functionNode = {
           ...identifierNode,
           id: identifierNode.value,
-          meta: [functionIndexMeta],
+          // meta: [functionIndexMeta],
         };
         const typeIndexMeta = setTypeIndex(
           hoistTypeMaybe(ctx, typeNode, functionNode)
@@ -65,7 +65,7 @@ export const patchTypeIndexes = (ctx: Context, node: NodeType): NodeType => {
             functionNode,
             {
               ...typeNode,
-              meta: [typeIndexMeta],
+              // meta: [typeIndexMeta],
             },
           ],
         };
@@ -93,7 +93,7 @@ export default function parseImport(ctx: Context): NodeType {
 
   const module = expression(ctx);
 
-  const node = patchTypeIndexes(ctx, { ...baseNode, params: [fields, module] });
+  // const node = patchTypeIndexes(ctx, { ...baseNode, params: [fields, module] });
 
-  return ctx.endNode(node, Syntax.Import);
+  return ctx.endNode({ ...baseNode, params: [fields, module] }, Syntax.Import);
 }

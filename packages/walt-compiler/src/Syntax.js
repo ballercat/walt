@@ -23,6 +23,7 @@ const Syntax = {
   Type: "Type",
   UserType: "UserType",
   Declaration: "Declaration",
+  ImmutableDeclaration: "ImmutableDeclaration",
   FunctionDeclaration: "FunctionDeclaration",
   ArrayDeclaration: "ArrayDeclaration",
   IndirectFunctionCall: "IndirectFunctionCall",
@@ -48,6 +49,7 @@ const Syntax = {
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
   FunctionPointer: "FunctionPointer",
+  FunctionArguments: "FunctionArguments",
   FunctionResult: "FunctionResult",
   FunctionLocals: "FunctionLocals",
 };

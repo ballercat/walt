@@ -4,22 +4,13 @@ import expression from "./expression";
 import metadata from "./metadata";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
-import { addFunctionLocal } from "./introspection";
-
-const generate = (ctx, node) => {
-  if (!ctx.func) {
-    node.meta.push(metadata.globalIndex(ctx.globals.length));
-    ctx.globals.push(node);
-  } else {
-    addFunctionLocal(ctx.func, node);
-  }
-};
 
 const declaration = (ctx: Context): NodeType => {
   const node = ctx.startNode();
+  let Type = Syntax.Declaration;
 
   if (ctx.token.value === "const") {
-    node.meta.push(metadata.constant());
+    Type = Syntax.ImmutableDeclaration;
   }
 
   if (!ctx.eat(["const", "let", "function"])) {
@@ -52,9 +43,7 @@ const declaration = (ctx: Context): NodeType => {
     throw ctx.syntaxError("Constant value must be initialized");
   }
 
-  generate(ctx, node);
-
-  return ctx.endNode(node, Syntax.Declaration);
+  return ctx.endNode(node, Type);
 };
 
 export default declaration;

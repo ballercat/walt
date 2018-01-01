@@ -5,14 +5,8 @@ import statement from "./statement";
 import declaration from "./declaration";
 import expression from "./expression";
 import mapNode from "../utils/map-node";
-import walkNode from "../utils/walk-node";
-import {
-  make,
-  FUNCTION_INDEX,
-  userType as setMetaUserType,
-  localIndexMap,
-} from "./metadata";
-import type { NodeType, Metadata } from "../flow/types";
+import { make, FUNCTION_INDEX, userType as setMetaUserType } from "./metadata";
+import type { NodeType } from "../flow/types";
 import type Context from "./context";
 
 const last = list => list[list.length - 1];
@@ -20,7 +14,13 @@ const last = list => list[list.length - 1];
 export const parseArguments = (ctx: Context): NodeType => {
   ctx.expect(["("]);
   ctx.handleUndefinedIdentifier = () => {};
-  const argumentsNode = expression(ctx);
+  const argumentsNode = ctx.makeNode(
+    {
+      params: [expression(ctx)],
+      value: "FUNCTION_ARGUMENTS",
+    },
+    Syntax.FunctionArguments
+  );
   ctx.handleUndefinedIdentifier = handleUndefined(ctx);
   ctx.expect([")"]);
 
@@ -90,26 +90,10 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
   return ctx.endNode(
     {
       ...baseNode,
+      value: "FUNCTION_RESULT",
     },
     Syntax.FunctionResult
   );
-};
-
-export const initializeLocals = (argsNode: NodeType): Metadata => {
-  const payload = {};
-  walkNode({
-    [Syntax.Pair]: pairNode => {
-      const [identifierNode, typeNode] = pairNode.params;
-      const localsCount = Object.keys(payload).length;
-      payload[identifierNode.value] = {
-        index: localsCount,
-        node: identifierNode,
-        typeNode,
-      };
-    },
-  })(argsNode);
-
-  return localIndexMap(payload);
 };
 
 const maybeFunctionDeclaration = (ctx: Context) => {
@@ -120,7 +104,6 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   const baseNode = ctx.startNode();
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
-  const localsMetadata = initializeLocals(argumentsNode);
   const resultNode = parseFunctionResult(ctx);
 
   // NOTE: We need to write function into Program BEFORE
@@ -133,33 +116,7 @@ const maybeFunctionDeclaration = (ctx: Context) => {
     value,
     type: resultNode.type,
     params: [argumentsNode, resultNode],
-    meta: [localsMetadata],
   };
-  // const typeIndex = (() => {
-  //   const index = findTypeIndex(emptyNode, ctx);
-  //   if (index === -1) {
-  //     // attach to a type index
-  //     ctx.Program.Types.push(generateImplicitFunctionType(emptyNode));
-  //     return ctx.Program.Types.length - 1;
-  //   }
-
-  //   return index;
-  // })();
-  const functionIndex = ctx.Program.Functions.length;
-  const functionIndexMeta = make(
-    {
-      get functionIndex() {
-        return functionIndex + ctx.functionImports.length;
-      },
-    },
-    FUNCTION_INDEX
-  );
-
-  emptyNode.meta = [
-    ...emptyNode.meta,
-    // setTypeIndex(typeIndex),
-    functionIndexMeta,
-  ];
   ctx.func = emptyNode;
   ctx.functions.push(emptyNode);
 

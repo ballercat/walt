@@ -9,7 +9,7 @@ import type { GeneratorType } from "./flow/types";
 const generateIndirectFunctionCall: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   const [pointerIdentifierNode] = node.params;
-
+  debugger;
   const localIndex = get(LOCAL_INDEX, pointerIdentifierNode);
   invariant(localIndex, "Undefined local index, not a valid function pointer");
   const { typeNode } = localIndex.payload;

@@ -14,7 +14,7 @@ const emitElement = (stream: OutputStream) => (
 ) => {
   stream.push(varuint32, 0, "table index");
   stream.push(u8, opcode.i32Const.code, "offset");
-  stream.push(varuint32, index, "");
+  stream.push(varuint32, index, index.toString());
   stream.push(u8, opcode.End.code, "end");
   stream.push(varuint32, 1, "number of elements");
   stream.push(varuint32, functionIndex, "function index");

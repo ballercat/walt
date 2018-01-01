@@ -4,16 +4,28 @@ import Syntax from "../Syntax";
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import walkNode from "../utils/walk-node";
+import mapNode from "../utils/map-node";
+import generateElement from "./element";
 import generateExport from "./export";
 import generateMemory from "./memory";
 import generateTable from "./table";
 import generateInitializer from "../generator/initializer";
 import generateImport from "./import";
+import generateType from "./type";
 import { generateImplicitFunctionType } from "./type";
 
-import { get, GLOBAL_INDEX } from "../parser/metadata";
+import {
+  get,
+  GLOBAL_INDEX,
+  FUNCTION_INDEX,
+  TYPE_OBJECT,
+  localIndexMap,
+  tableIndex as setMetaTableIndex,
+  typeIndex as setMetaTypeIndex,
+} from "../parser/metadata";
 
 import type { NodeType, ProgramType } from "./flow/types";
+import type { Metadata } from "../flow/types";
 import type {
   IntermediateOpcodeType,
   IntermediateVariableType,
@@ -69,6 +81,35 @@ export default function generator(ast: NodeType): ProgramType {
     });
   };
 
+  const findTableIndex = functionIndex =>
+    program.Element.findIndex(n => n.functionIndex === functionIndex);
+
+  const typeMap = {};
+  const astWithTypes = mapNode({
+    [Syntax.Typedef]: node => {
+      let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
+
+      if (get(TYPE_OBJECT, node) == null) {
+        let typeNode = program.Types[typeIndex];
+
+        if (typeNode == null) {
+          typeIndex = program.Types.length;
+          program.Types.push(generateType(node));
+        }
+
+        typeNode = {
+          ...node,
+          meata: [...node.meta, setMetaTypeIndex(typeIndex)],
+        };
+
+        typeMap[node.value] = { typeIndex, typeNode };
+        return typeNode;
+      }
+
+      return node;
+    },
+  })(ast);
+
   const nodeMap = {
     [Syntax.Export]: node => {
       const [nodeToExport] = node.params;
@@ -104,12 +145,44 @@ export default function generator(ast: NodeType): ProgramType {
         return index;
       })();
 
+      const patched = mapNode({
+        [Syntax.Type]: typeNode => {
+          debugger;
+          const userDefinedType = typeMap[typeNode.value];
+          if (userDefinedType != null) {
+            return {
+              ...typeNode,
+              meta: [...typeNode.meta, setMetaTypeIndex(userDefinedType.index)],
+            };
+          }
+
+          return typeNode;
+        },
+        [Syntax.FunctionPointer]: pointer => {
+          const metaFunctionIndex = get(FUNCTION_INDEX, pointer);
+          if (metaFunctionIndex) {
+            const functionIndex = metaFunctionIndex.payload;
+            let tableIndex = findTableIndex(functionIndex);
+            if (tableIndex < 0) {
+              tableIndex = program.Element.length;
+              program.Element.push(generateElement(functionIndex));
+            }
+            // make meta an object, sheesh
+            return {
+              ...pointer,
+              meta: [...pointer.meta, setMetaTableIndex(tableIndex)],
+            };
+          }
+          return pointer;
+        },
+      })(node);
+
       program.Functions.push(typeIndex);
-      program.Code.push(generateCode(node));
+      program.Code.push(generateCode(patched));
     },
   };
 
-  walkNode(nodeMap)(ast);
+  walkNode(nodeMap)(astWithTypes);
 
   return program;
 }

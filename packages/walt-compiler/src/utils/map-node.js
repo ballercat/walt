@@ -1,27 +1,32 @@
 // @flow
 import type { NodeType } from "../flow/types";
 
-type WalkerType = (node: NodeType) => NodeType;
+type WalkerType = (node: NodeType, childMapper?: any) => NodeType;
 type VisitorType = { [string]: WalkerType };
 
 export default function mapNode(visitor: VisitorType): WalkerType {
-  const impl = (node: NodeType): NodeType => {
+  const nodeMapper = (node: NodeType): NodeType => {
     if (node == null) {
       return node;
     }
 
-    const mappedNode = (() => {
+    const mappingFunction: WalkerType = (() => {
       if ("*" in visitor && typeof visitor["*"] === "function") {
-        return visitor["*"](node);
+        return visitor["*"];
       }
 
       if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-        return visitor[node.Type](node);
+        return visitor[node.Type];
       }
-      return node;
+      return identity => identity;
     })();
 
-    const params = mappedNode.params.map(impl);
+    if (mappingFunction.length === 2) {
+      return mappingFunction(node, nodeMapper);
+    }
+
+    const mappedNode = mappingFunction(node);
+    const params = mappedNode.params.map(nodeMapper);
 
     return {
       ...mappedNode,
@@ -29,5 +34,5 @@ export default function mapNode(visitor: VisitorType): WalkerType {
     };
   };
 
-  return impl;
+  return nodeMapper;
 }

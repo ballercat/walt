@@ -10,7 +10,7 @@ export default function generateExport(node: NodeType): IntermediateExportType {
 
   if (globalIndexMeta) {
     return {
-      index: globalIndexMeta.payload.index,
+      index: globalIndexMeta.payload,
       kind: EXTERN_GLOBAL,
       field: node.value,
     };
@@ -18,9 +18,7 @@ export default function generateExport(node: NodeType): IntermediateExportType {
 
   if (functionIndexMeta) {
     return {
-      get index() {
-        return functionIndexMeta.payload.functionIndex;
-      },
+      index: functionIndexMeta.payload,
       kind: EXTERN_FUNCTION,
       field: node.value,
     };

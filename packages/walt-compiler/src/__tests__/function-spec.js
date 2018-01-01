@@ -70,7 +70,7 @@ test("function names with numbers are supported", t =>
     t.is(typeof module.instance.exports.test1foo42bar, "function");
   }));
 
-test("function pointers", t => {
+test.only("function pointers", t => {
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
   return compileAndRun(
     `

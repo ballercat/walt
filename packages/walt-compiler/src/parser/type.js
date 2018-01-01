@@ -21,22 +21,24 @@ import {
 // here we _hoist_ it in the binary output by placing it literally before the
 // binary imports inside our Program.
 export const hoistTypeMaybe = (ctx: Context, node: NodeType) => {
+  debugger;
+  ctx.functionTypes[node.value] = node;
   // At this point we may have found a type which needs to hoist
-  let typeIndex = ctx.Program.Types.findIndex(({ id }) => id === node.value);
+  // let typeIndex = ctx.Program.Types.findIndex(({ id }) => id === node.value);
 
-  if (get(TYPE_OBJECT, node) == null) {
-    const typeNode = ctx.Program.Types[typeIndex];
+  // if (get(TYPE_OBJECT, node) == null) {
+  //   const typeNode = ctx.Program.Types[typeIndex];
 
-    if (typeNode == null) {
-      typeIndex = ctx.Program.Types.length;
-      ctx.Program.Types.push(generateType(node));
-    } else if (typeNode.hoist !== null) {
-      typeNode.hoist(node);
-    }
+  //   if (typeNode == null) {
+  //     typeIndex = ctx.Program.Types.length;
+  //     ctx.Program.Types.push(generateType(node));
+  //   } else if (typeNode.hoist !== null) {
+  //     typeNode.hoist(node);
+  //   }
 
-    node.meta.push(setMetaTypeIndex(typeIndex));
-    ctx.functionTypes[node.value] = node;
-  }
+  //   node.meta.push(setMetaTypeIndex(typeIndex));
+  //   ctx.functionTypes[node.value] = node;
+  // }
 };
 
 export const getByteOffsetsAndSize = (

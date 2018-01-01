@@ -67,7 +67,7 @@ export type ProgramType = {
   Exports: IntermediateExportType[],
   Imports: IntermediateImportType[],
   Globals: IntermediateVariableType[],
-  Element: [],
+  Element: Array<{ functionIndex: number }>,
   Functions: number[],
   Memory: IntermediateMemoryType[],
   Table: IntermediateTableType[],

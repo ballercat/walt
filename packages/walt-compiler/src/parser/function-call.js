@@ -12,11 +12,12 @@ const functionCall = (ctx: Context, op: Token, operands: NodeType[]) => {
   if (maybeArguments && maybeArguments.Type !== Syntax.FunctionIdentifier) {
     node.params = operands.splice(-1);
   }
-
   const identifier = operands.splice(-1)[0];
   const maybePointer = ctx.func
     ? findLocalVariable(ctx.func, identifier)
     : null;
+
+  node.value = identifier.value;
 
   if (maybePointer) {
     return ctx.endNode(

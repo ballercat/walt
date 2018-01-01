@@ -79,7 +79,6 @@ const expression = (
         // TODO: figure out a cleaner(?) way of doing this, maybe
         if (eatFunctionCall) {
           // definetly not immutable
-          last(operands).Type = Syntax.FunctionIdentifier;
           flushOperators(PRECEDENCE_FUNCTION_CALL);
           // Tokenizer does not generate function call tokens it is our job here
           // to generate a function call on the fly
