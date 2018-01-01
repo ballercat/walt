@@ -2,7 +2,7 @@
 import type Context from "./context";
 import precedence from "./precedence";
 import { generateImplicitFunctionType } from "../generator/type";
-import { get, LOCAL_INDEX_MAP, localIndex } from "./metadata";
+import { get, LOCAL_INDEX_MAP, localIndex } from "../metadata/metadata";
 import type { Token, NodeType } from "../flow/types";
 
 export const findTypeIndex = (functionNode: NodeType, ctx: Context): number => {

@@ -3,7 +3,12 @@ import opcode from "../emitter/opcode";
 import curry from "curry";
 import invariant from "invariant";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
-import { get, LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../parser/metadata";
+import {
+  get,
+  LOCAL_INDEX,
+  GLOBAL_INDEX,
+  TYPE_CONST,
+} from "../metadata/metadata";
 import type {
   IntermediateVariableType,
   IntermediateOpcodeType,
@@ -32,7 +37,7 @@ export const scopeOperation = curry((op, node) => {
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
 
-  const kind: RawOpcodeType = opcode[nodeType + "Const"];
+  const kind: RawOpcodeType = opcode[nodeType + "Const"] || opcode.i32Const;
   const params = [Number(node.value)];
 
   return {

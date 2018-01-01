@@ -22,6 +22,7 @@ const Syntax = {
   Constant: "Constant",
   Type: "Type",
   UserType: "UserType",
+  FunctionType: "FunctionType",
   Declaration: "Declaration",
   ImmutableDeclaration: "ImmutableDeclaration",
   FunctionDeclaration: "FunctionDeclaration",
@@ -33,6 +34,7 @@ const Syntax = {
   Assignment: "Assignment",
   Param: "Param",
   Typedef: "Typedef",
+  Struct: "Struct",
   ReturnStatement: "ReturnStatement",
   Sequence: "Sequence",
   ObjectLiteral: "ObjectLiteral",
@@ -40,6 +42,7 @@ const Syntax = {
   TypeCast: "TypeCast",
   Break: "Break",
   Comment: "Comment",
+  Sizeof: "Sizeof",
 
   Noop: "Noop",
 

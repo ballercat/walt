@@ -25,16 +25,15 @@ const forLoop = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(["for"]);
 
-  node.params = paramList(ctx);
+  const params = paramList(ctx);
 
   ctx.expect(["{"]);
 
-  const body = [];
   let stmt = null;
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
     if (stmt) {
-      body.push(stmt);
+      params.push(stmt);
     }
   }
   ctx.expect(["}"]);
@@ -42,7 +41,7 @@ const forLoop = (ctx: Context): NodeType => {
   return ctx.endNode(
     {
       ...node,
-      body,
+      params,
     },
     Syntax.Loop
   );

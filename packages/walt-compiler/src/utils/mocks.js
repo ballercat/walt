@@ -3,7 +3,7 @@ import Context from "../parser/context";
 import TokenStream from "../utils/token-stream";
 import Tokenizer from "../tokenizer";
 import Stream from "./stream";
-import { LOCAL_INDEX_MAP } from "../parser/metadata";
+import { LOCAL_INDEX_MAP } from "../metadata/metadata";
 
 export const mockContext = (code: string): Context => {
   const stream = new Stream(code);

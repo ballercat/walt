@@ -19,13 +19,10 @@ import {
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   TYPE_OBJECT,
-  localIndexMap,
-  tableIndex as setMetaTableIndex,
   typeIndex as setMetaTypeIndex,
-} from "../parser/metadata";
+} from "../metadata/metadata";
 
 import type { NodeType, ProgramType } from "./flow/types";
-import type { Metadata } from "../flow/types";
 import type {
   IntermediateOpcodeType,
   IntermediateVariableType,
@@ -115,6 +112,21 @@ export default function generator(ast: NodeType): ProgramType {
       const [nodeToExport] = node.params;
       program.Exports.push(generateExport(nodeToExport));
     },
+    [Syntax.ImmutableDeclaration]: node => {
+      const globalMeta = get(GLOBAL_INDEX, node);
+      if (globalMeta !== null) {
+        switch (node.type) {
+          case "Memory":
+            program.Memory.push(generateMemory(node));
+            break;
+          case "Table":
+            program.Table.push(generateTable(node));
+            break;
+          default:
+            program.Globals.push(generateInitializer(node));
+        }
+      }
+    },
     [Syntax.Declaration]: node => {
       const globalMeta = get(GLOBAL_INDEX, node);
       if (globalMeta !== null) {
@@ -147,7 +159,6 @@ export default function generator(ast: NodeType): ProgramType {
 
       const patched = mapNode({
         [Syntax.Type]: typeNode => {
-          debugger;
           const userDefinedType = typeMap[typeNode.value];
           if (userDefinedType != null) {
             return {
@@ -167,11 +178,6 @@ export default function generator(ast: NodeType): ProgramType {
               tableIndex = program.Element.length;
               program.Element.push(generateElement(functionIndex));
             }
-            // make meta an object, sheesh
-            return {
-              ...pointer,
-              meta: [...pointer.meta, setMetaTableIndex(tableIndex)],
-            };
           }
           return pointer;
         },

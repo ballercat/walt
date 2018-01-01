@@ -1,6 +1,7 @@
 import test from "ava";
 import generator from "..";
 import parser from "../../parser";
+import withMetadata from "../../metadata";
 // import printNode from "../../utils/print-node";
 
 test("returns a valid Program", t => {
@@ -34,7 +35,7 @@ test("generates globals", t => {
 
 test("generates memory declaration", t => {
   const ast = parser("const memory: Memory = {'initial': 1, 'max': 10};");
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });
 
@@ -42,19 +43,19 @@ test("generates table declaration", t => {
   const ast = parser(
     "const table: Table = {'initial': 1, 'max': 10, 'element': 'anyfunc'};"
   );
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });
 
 test("generates scalar exports", t => {
   const ast = parser("export const x: i32 = 42;");
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });
 
 test("generates scalar imports", t => {
   const ast = parser("import { foobar: i32 } from 'env';");
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });
 
@@ -62,7 +63,7 @@ test("function declaration", t => {
   const ast = parser(`function test(): i32 {
     return 42;
   }`);
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });
 
@@ -74,6 +75,6 @@ test("function calls", t => {
   function test(): i32 {
     return addTwo(2);
   }`);
-  const program = generator(ast);
+  const program = generator(withMetadata(ast));
   t.snapshot(program);
 });

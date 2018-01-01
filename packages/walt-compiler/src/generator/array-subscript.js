@@ -1,38 +1,32 @@
 // @flow
-import invariant from "invariant";
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
-import { nodeMetaType } from "../parser/array-subscript";
 import type { GeneratorType } from "./flow/types";
+import { get, TYPE_ARRAY } from "../metadata/metadata";
 import mapSyntax from "./map-syntax";
-import { TYPE_ARRAY } from "../parser/metadata";
 
 const generateArraySubscript: GeneratorType = (node, parent) => {
-  const metaType = nodeMetaType(node);
-  invariant(
-    metaType,
-    `Cannot generate subscript on an non-indexable node ${JSON.stringify(node)}`
-  );
+  const identifier = node.params[0];
+  const isArray = get(TYPE_ARRAY, identifier);
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+  let type = node.type;
 
-  if (metaType.type === TYPE_ARRAY) {
+  if (isArray != null) {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
       // TODO: fix this for user-defined types
       { kind: opcode.i32Const, params: [4] },
       { kind: opcode.i32Mul, params: [] },
     ]);
+    type = isArray.payload;
   }
 
   // The sequence of opcodes to perfrom a memory load is
   // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
   block.push({ kind: opcode.i32Add, params: [] });
 
-  // The last piece is the WASM opcode. Either load or store
-  const nodeType = node.type || "i32";
-
   block.push({
-    kind: opcode[nodeType + "Load"],
+    kind: opcode[(type || "i32") + "Load"],
     params: [
       // Alignment
       // TODO: make this extendible

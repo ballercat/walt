@@ -6,6 +6,7 @@ const formatMetadata = meta => {
     return "";
   }
   return meta
+    .filter(entry => entry != null)
     .map(({ type, payload }) => {
       let payloadString = "";
       if (typeof payload === "object") {

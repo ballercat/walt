@@ -1,10 +1,8 @@
 // @flow
 import Syntax from "../Syntax";
-import invariant from "invariant";
 import type Context from "./context";
 import functionCall from "./function-call";
-import { balanceTypesInMathExpression } from "./patch-typecasts";
-import { subscriptFromNode, getMetaType } from "./array-subscript";
+import { subscriptFromNode } from "./array-subscript";
 import type { Token, NodeType } from "../flow/types";
 
 function binary(ctx: Context, op: Token, params: NodeType[]) {
@@ -24,9 +22,7 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
       binary(ctx, { ...op, value }, [node.params[0], node.params[1]]),
     ];
   } else if (node.value === "[") {
-    const metaType = getMetaType(ctx, params[0]);
-    invariant(metaType, "Cannot parse array subscript");
-    return subscriptFromNode(ctx, node, metaType);
+    return subscriptFromNode(ctx, node);
   } else if (node.value === ":") {
     Type = Syntax.Pair;
   } else if (node.value === "||" || node.value === "&&") {
@@ -34,14 +30,13 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
   }
 
   return ctx.endNode(node, Type);
-  // return balanceTypesInMathExpression(ctx.endNode(node, Type));
 }
 
 const unary = (ctx: Context, op: Token, params: NodeType[]) => {
   const [target] = params;
   return {
     ...target,
-    Type: Syntax.BinaryExpression,
+    Type: Syntax.UnaryExpression,
     value: "-",
     params: [
       {

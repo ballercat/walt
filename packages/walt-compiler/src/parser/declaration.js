@@ -1,7 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
 import expression from "./expression";
-import metadata from "./metadata";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
 
@@ -20,30 +19,25 @@ const declaration = (ctx: Context): NodeType => {
   node.value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);
 
-  const userType = ctx.userTypes[ctx.token.value];
-  if (userType != null) {
-    node.type = "i32";
-    node.meta.push(metadata.userType(userType));
-    // Eat the identifier for the user defined type
-    ctx.eat(null, Syntax.Identifier);
-  } else {
-    node.type = ctx.expect(null, Syntax.Type).value;
+  let type = ctx.token.value;
+  if (!ctx.eat(null, Syntax.Type)) {
+    ctx.expect(null, Syntax.Identifier);
   }
 
   if (ctx.eat(["["]) && ctx.eat(["]"])) {
-    node.meta.push(metadata.array(node.type));
-    node.type = "i32";
+    type = type + "[]";
   }
 
+  const params = [];
   if (ctx.eat(["="])) {
-    node.params.push(expression(ctx));
+    params.push(expression(ctx));
   }
 
   if (node.const && !node.init) {
     throw ctx.syntaxError("Constant value must be initialized");
   }
 
-  return ctx.endNode(node, Type);
+  return ctx.endNode({ ...node, params, type }, Type);
 };
 
 export default declaration;

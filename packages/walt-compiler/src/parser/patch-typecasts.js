@@ -1,7 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
 import invariant from "invariant";
-import { typeCast } from "./metadata";
+import { typeCast } from "../metadata/metadata";
 import mapNode from "../utils/map-node";
 import printNode from "../utils/print-node";
 import type { NodeType } from "../flow/types";

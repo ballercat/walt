@@ -35,7 +35,8 @@ export const get = (type: string, node: NodeType): ?Metadata => {
     )}`
   );
   return node
-    ? node.meta.find(({ type: _type }) => _type === type) || null
+    ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) ||
+        null
     : null;
 };
 

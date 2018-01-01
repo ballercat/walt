@@ -1,11 +1,8 @@
 // @flow
 import Syntax from "../Syntax";
-import { handleUndefined } from "../utils/generate-error";
 import statement from "./statement";
 import declaration from "./declaration";
 import expression from "./expression";
-import mapNode from "../utils/map-node";
-import { make, FUNCTION_INDEX, userType as setMetaUserType } from "./metadata";
 import type { NodeType } from "../flow/types";
 import type Context from "./context";
 
@@ -13,7 +10,6 @@ const last = list => list[list.length - 1];
 
 export const parseArguments = (ctx: Context): NodeType => {
   ctx.expect(["("]);
-  ctx.handleUndefinedIdentifier = () => {};
   const argumentsNode = ctx.makeNode(
     {
       params: [expression(ctx)],
@@ -21,51 +17,50 @@ export const parseArguments = (ctx: Context): NodeType => {
     },
     Syntax.FunctionArguments
   );
-  ctx.handleUndefinedIdentifier = handleUndefined(ctx);
   ctx.expect([")"]);
+  return argumentsNode;
+  // return mapNode({
+  //   [Syntax.Pair]: pairNode => {
+  //     const [identifierNode, typeNode] = pairNode.params;
+  //     if (typeNode.Type !== Syntax.Type) {
+  //       const functionType = ctx.functionTypes[typeNode.value];
+  //       const userType = ctx.userTypes[typeNode.value];
+  //       const typePointer = functionType || userType;
+  //       const meta = [];
 
-  return mapNode({
-    [Syntax.Pair]: pairNode => {
-      const [identifierNode, typeNode] = pairNode.params;
-      if (typeNode.Type !== Syntax.Type) {
-        const functionType = ctx.functionTypes[typeNode.value];
-        const userType = ctx.userTypes[typeNode.value];
-        const typePointer = functionType || userType;
-        const meta = [];
+  //       if (typePointer == null) {
+  //         throw ctx.syntaxError("Undefined Type", typeNode.value);
+  //       }
+  //       if (userType) {
+  //         meta.push(setMetaUserType(userType));
+  //       }
 
-        if (typePointer == null) {
-          throw ctx.syntaxError("Undefined Type", typeNode.value);
-        }
-        if (userType) {
-          meta.push(setMetaUserType(userType));
-        }
+  //       return {
+  //         ...pairNode,
+  //         params: [
+  //           {
+  //             ...identifierNode,
+  //             type: typePointer.type,
+  //             meta,
+  //           },
+  //           {
+  //             ...typeNode,
+  //             ...typePointer,
+  //             // clear params so we don't recurse into object definition
+  //             params: [],
+  //             type: "i32",
+  //             Type: Syntax.Type,
+  //           },
+  //         ],
+  //       };
+  //     }
 
-        return {
-          ...pairNode,
-          params: [
-            {
-              ...identifierNode,
-              type: typePointer.type,
-              meta,
-            },
-            {
-              ...typeNode,
-              ...typePointer,
-              // clear params so we don't recurse into object definition
-              params: [],
-              type: "i32",
-              Type: Syntax.Type,
-            },
-          ],
-        };
-      }
-
-      return {
-        ...pairNode,
-        params: [{ ...identifierNode, type: typeNode.type }, typeNode],
-      };
-    },
-  })(argumentsNode);
+  //     return {
+  //       ...pairNode,
+  //       params: [{ ...identifierNode, type: typeNode.type }, typeNode],
+  //     };
+  //   },
+  // })(argumentsNode);
 };
 
 export const parseFunctionResult = (ctx: Context): NodeType => {
