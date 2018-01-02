@@ -3881,7 +3881,7 @@ const mapStruct = curry_1(({ userTypes }, node, _ignore) => {
 
 //      
 // import invariant from "invariant";
-function metadata$2(ast) {
+function semantics(ast) {
   const functions = {};
   const globals = {};
   const types = {};
@@ -3979,7 +3979,7 @@ const getAst = source => {
 
 const getIR = source => {
   const ast = getAst(source);
-  const semanticAST = metadata$2(ast);
+  const semanticAST = semantics(ast);
   const wasm = emit(generator(semanticAST));
   return wasm;
 };

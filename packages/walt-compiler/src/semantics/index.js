@@ -14,7 +14,7 @@ import {
 
 import type { NodeType } from "../flow/types";
 
-export default function metadata(ast: NodeType): NodeType {
+export default function semantics(ast: NodeType): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};
