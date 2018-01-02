@@ -35,7 +35,7 @@ Highlights:
 
 Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for `.wat` files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
 then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final WebAssembly binary. This is an
-attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without loosing readability.
+attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without losing readability.
 
 I feel like this is currently a problem. Most Web engineers are not familiar with the C family languages or Rust. It's a barrier for wide spread adoption of WebAssembly. A competent Front-end engineer
 should be able to edit WebAssembly as easily as any other systems programmer.
