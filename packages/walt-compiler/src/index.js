@@ -4,7 +4,10 @@ import emit from "./emitter";
 import generator from "./generator";
 import withMetadata from "./metadata";
 import _debug from "./utils/debug";
+import printNode from "./utils/print-node";
+
 export const debug = _debug;
+export const prettyPrintNode = printNode;
 
 // Used for deugging purposes
 export const getAst = (source: string) => {

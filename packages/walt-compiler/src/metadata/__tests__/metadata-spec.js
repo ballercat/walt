@@ -110,3 +110,14 @@ test("recursive functions", t => {
   const astWithMetadata = withMetadata(ast);
   t.snapshot(astWithMetadata);
 });
+
+test("ternaries", t => {
+  const ast = withMetadata(
+    parser(`
+  export function test(n: i32): i32 {
+    const x: i32 = n > 0 ? n : 0;
+    return x;
+  }`)
+  );
+  t.snapshot(ast);
+});

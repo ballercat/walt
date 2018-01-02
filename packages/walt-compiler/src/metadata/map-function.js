@@ -128,7 +128,10 @@ const mapFunctionNode = (options, node, _ignore) => {
         };
       }
 
-      return typeCastMaybe;
+      return {
+        ...typeCastMaybe,
+        params: typeCastMaybe.params.map(childMapper),
+      };
     },
     // Unary expressions need to be patched so that the LHS type matches the RHS
     [Syntax.UnaryExpression]: (unaryNode, childMapper) => {
