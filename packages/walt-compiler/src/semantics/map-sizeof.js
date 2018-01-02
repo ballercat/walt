@@ -2,11 +2,10 @@
 import invariant from "invariant";
 import curry from "curry";
 import Syntax from "../Syntax";
-import type { NodeType } from "../flow/types";
 import { get, OBJECT_SIZE } from "../semantics/metadata";
 
-const variableSize = (node: NodeType): string => {
-  switch (node.type) {
+const variableSize = (type: string): string => {
+  switch (type) {
     case "i64":
     case "f64":
       return "8";
@@ -25,7 +24,7 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
     userTypes[sizeof.value] || (local ? userTypes[local.type] : null);
   const func = functions[sizeof.value];
 
-  if (userType) {
+  if (userType != null) {
     const metaSize = get(OBJECT_SIZE, userType);
     invariant(metaSize, "Object size information is missing");
     return {
@@ -35,9 +34,11 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
     };
   }
 
+  const node = local || global || userType || func;
+
   return {
     ...sizeof,
-    value: variableSize(local || global || userType || func),
+    value: variableSize(node ? node.type : sizeof.value),
     Type: Syntax.Constant,
   };
 });
