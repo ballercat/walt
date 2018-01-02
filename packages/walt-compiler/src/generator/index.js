@@ -96,7 +96,7 @@ export default function generator(ast: NodeType): ProgramType {
 
         typeNode = {
           ...node,
-          meata: [...node.meta, setMetaTypeIndex(typeIndex)],
+          meta: [...node.meta, setMetaTypeIndex(typeIndex)],
         };
 
         typeMap[node.value] = { typeIndex, typeNode };
