@@ -5,7 +5,7 @@ import mapNode from "../utils/map-node";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
-import { balanceTypesInMathExpression } from "../parser/patch-typecasts";
+import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
   typeCast,
   array as setMetaArray,

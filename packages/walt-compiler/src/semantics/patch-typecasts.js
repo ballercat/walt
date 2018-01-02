@@ -1,8 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
 import invariant from "invariant";
-import { typeCast } from "../metadata/metadata";
-import mapNode from "../utils/map-node";
+import { typeCast } from "./metadata";
 import printNode from "../utils/print-node";
 import type { NodeType } from "../flow/types";
 
@@ -45,47 +44,13 @@ export const typeWeight = (typeString: ?string) => {
   }
 };
 
-function patchTypeCasts(node: NodeType): NodeType {
-  return mapNode({
-    [Syntax.Pair]: (typeCastMaybe: NodeType): NodeType => {
-      const { params: [targetNode, typeNode] } = typeCastMaybe;
-      const { type: from } = targetNode;
-      const { value: to } = typeNode;
-
-      // If both sides of a pair don't have types then it's not a typecast,
-      // more likely a string: value pair in an object for example
-      if (typeNode.Type === Syntax.Type && !!from && !!to) {
-        return {
-          ...typeCastMaybe,
-          type: to,
-          value: targetNode.value,
-          Type: Syntax.TypeCast,
-          meta: [...typeCastMaybe.meta, typeCast({ to, from })],
-          // We need to drop the typeNode here, because it's not something we can generate
-          params: [targetNode],
-        };
-      }
-
-      return typeCastMaybe;
-    },
-  })(node);
-}
-
 export const balanceTypesInMathExpression = (
   expression: NodeType
 ): NodeType => {
-  // For top-level pairs, just do a mapping to convert to a typecast
-  if (expression.Type === Syntax.Pair) {
-    return patchTypeCasts(expression);
-  }
-
   if (isBinaryMathExpression(expression)) {
-    // patch any existing type-casts
-    const patchedNode = patchTypeCasts(expression);
-
     // find the result type in the expression
     let type = null;
-    patchedNode.params.forEach(({ type: childType }) => {
+    expression.params.forEach(({ type: childType }) => {
       // The way we do that is by scanning the top-level nodes in our expression
       if (typeWeight(type) < typeWeight(childType)) {
         type = childType;
@@ -95,11 +60,11 @@ export const balanceTypesInMathExpression = (
     invariant(
       type,
       "Expression missing type parameters %s",
-      printNode(patchedNode)
+      printNode(expression)
     );
 
     // iterate again, this time, patching any mis-typed nodes
-    const params = patchedNode.params.map(paramNode => {
+    const params = expression.params.map(paramNode => {
       invariant(
         paramNode.type,
         "Undefiend type in expression %s",
@@ -125,7 +90,7 @@ export const balanceTypesInMathExpression = (
     });
 
     return {
-      ...patchedNode,
+      ...expression,
       params,
       type,
     };
@@ -133,5 +98,3 @@ export const balanceTypesInMathExpression = (
 
   return expression;
 };
-
-export default patchTypeCasts;

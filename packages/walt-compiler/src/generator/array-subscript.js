@@ -2,7 +2,7 @@
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
 import type { GeneratorType } from "./flow/types";
-import { get, TYPE_ARRAY } from "../metadata/metadata";
+import { get, TYPE_ARRAY } from "../semantics/metadata";
 import mapSyntax from "./map-syntax";
 
 const generateArraySubscript: GeneratorType = (node, parent) => {

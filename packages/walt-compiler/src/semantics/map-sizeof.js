@@ -3,7 +3,7 @@ import invariant from "invariant";
 import curry from "curry";
 import Syntax from "../Syntax";
 import type { NodeType } from "../flow/types";
-import { get, OBJECT_SIZE } from "../metadata/metadata";
+import { get, OBJECT_SIZE } from "../semantics/metadata";
 
 const variableSize = (node: NodeType): string => {
   switch (node.type) {

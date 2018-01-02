@@ -2,7 +2,7 @@
 import parser from "./parser";
 import emit from "./emitter";
 import generator from "./generator";
-import withMetadata from "./metadata";
+import semantics from "./semantics";
 import _debug from "./utils/debug";
 import printNode from "./utils/print-node";
 
@@ -17,8 +17,8 @@ export const getAst = (source: string) => {
 
 export const getIR = (source: string) => {
   const ast = getAst(source);
-  const astWithMetadata = withMetadata(ast);
-  const wasm = emit(generator(astWithMetadata));
+  const semanticAST = semantics(ast);
+  const wasm = emit(generator(semanticAST));
   return wasm;
 };
 

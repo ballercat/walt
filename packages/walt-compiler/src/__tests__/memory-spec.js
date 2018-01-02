@@ -2,7 +2,7 @@ import test from "ava";
 import compile from "..";
 import statement from "../parser/statement";
 import parseFunction from "../parser/maybe-function-declaration";
-import { TYPE_ARRAY, LOCAL_INDEX_MAP } from "../metadata/metadata";
+import { TYPE_ARRAY, LOCAL_INDEX_MAP } from "../semantics/metadata";
 import { mockContext } from "../utils/mocks";
 
 const compileAndRun = (src, imports) =>

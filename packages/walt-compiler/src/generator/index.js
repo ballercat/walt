@@ -20,7 +20,7 @@ import {
   FUNCTION_INDEX,
   TYPE_OBJECT,
   typeIndex as setMetaTypeIndex,
-} from "../metadata/metadata";
+} from "../semantics/metadata";
 
 import type { NodeType, ProgramType } from "./flow/types";
 import type {
@@ -85,25 +85,20 @@ export default function generator(ast: NodeType): ProgramType {
   const astWithTypes = mapNode({
     [Syntax.Typedef]: node => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
+      let typeNode = program.Types[typeIndex];
 
-      if (get(TYPE_OBJECT, node) == null) {
-        let typeNode = program.Types[typeIndex];
-
-        if (typeNode == null) {
-          typeIndex = program.Types.length;
-          program.Types.push(generateType(node));
-        }
-
-        typeNode = {
-          ...node,
-          meta: [...node.meta, setMetaTypeIndex(typeIndex)],
-        };
-
-        typeMap[node.value] = { typeIndex, typeNode };
-        return typeNode;
+      if (typeNode == null) {
+        typeIndex = program.Types.length;
+        program.Types.push(generateType(node));
       }
 
-      return node;
+      typeNode = {
+        ...node,
+        meta: [...node.meta, setMetaTypeIndex(typeIndex)],
+      };
+
+      typeMap[node.value] = { typeIndex, typeNode };
+      return typeNode;
     },
   })(ast);
 
@@ -130,16 +125,7 @@ export default function generator(ast: NodeType): ProgramType {
     [Syntax.Declaration]: node => {
       const globalMeta = get(GLOBAL_INDEX, node);
       if (globalMeta !== null) {
-        switch (node.type) {
-          case "Memory":
-            program.Memory.push(generateMemory(node));
-            break;
-          case "Table":
-            program.Table.push(generateTable(node));
-            break;
-          default:
-            program.Globals.push(generateInitializer(node));
-        }
+        program.Globals.push(generateInitializer(node));
       }
     },
     [Syntax.Import]: node => {

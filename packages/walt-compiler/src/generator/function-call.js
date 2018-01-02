@@ -4,7 +4,7 @@ import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
 import invariant from "invariant";
 import printNode from "../utils/print-node";
-import { get, FUNCTION_INDEX } from "../metadata/metadata";
+import { get, FUNCTION_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateFunctionCall: GeneratorType = (node, parent) => {

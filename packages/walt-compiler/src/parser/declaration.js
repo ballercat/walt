@@ -12,9 +12,7 @@ const declaration = (ctx: Context): NodeType => {
     Type = Syntax.ImmutableDeclaration;
   }
 
-  if (!ctx.eat(["const", "let", "function"])) {
-    throw ctx.unexpectedValue(["const", "let", "function"]);
-  }
+  ctx.eat(["const", "let", "function"]);
 
   node.value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect([":"]);

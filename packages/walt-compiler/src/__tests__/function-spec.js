@@ -1,8 +1,7 @@
 import test from "ava";
 import { mockContext } from "../utils/mocks";
-// import printNode from "../utils/print-node";
 import parseFunction from "../parser/maybe-function-declaration";
-import { OBJECT_KEY_TYPES, TYPE_OBJECT } from "../metadata/metadata";
+import { OBJECT_KEY_TYPES, TYPE_OBJECT } from "../semantics/metadata";
 import compile from "..";
 
 const compileAndRun = (src, imports) =>

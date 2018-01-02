@@ -1,5 +1,5 @@
 // @flow
-import { get, GLOBAL_INDEX, FUNCTION_INDEX } from "../metadata/metadata";
+import { get, GLOBAL_INDEX, FUNCTION_INDEX } from "../semantics/metadata";
 import { EXTERN_GLOBAL, EXTERN_FUNCTION } from "../emitter/external_kind";
 import invariant from "invariant";
 import type { NodeType, IntermediateExportType } from "./flow/types";

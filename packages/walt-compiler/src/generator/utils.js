@@ -8,7 +8,7 @@ import {
   LOCAL_INDEX,
   GLOBAL_INDEX,
   TYPE_CONST,
-} from "../metadata/metadata";
+} from "../semantics/metadata";
 import type {
   IntermediateVariableType,
   IntermediateOpcodeType,

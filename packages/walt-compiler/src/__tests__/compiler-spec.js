@@ -105,3 +105,6 @@ test("compiles math", t =>
       return 2 + 2 - 4;
     }
   `).then(result => t.is(result.instance.exports.test(), 0)));
+
+test("invalid imports throw", t =>
+  t.throws(() => compile("import foo from 'bar'")));

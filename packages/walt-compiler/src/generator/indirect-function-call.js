@@ -3,7 +3,7 @@ import invariant from "invariant";
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
-import { get, LOCAL_INDEX, TYPE_INDEX } from "../metadata/metadata";
+import { get, LOCAL_INDEX, TYPE_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateIndirectFunctionCall: GeneratorType = (node, parent) => {

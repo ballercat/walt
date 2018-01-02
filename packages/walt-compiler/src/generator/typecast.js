@@ -2,7 +2,7 @@
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import { getTypecastOpcode } from "../emitter/opcode";
-import { get, TYPE_CAST } from "../metadata/metadata";
+import { get, TYPE_CAST } from "../semantics/metadata";
 import invariant from "invariant";
 import type { GeneratorType } from "./flow/types";
 

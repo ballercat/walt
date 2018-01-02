@@ -2,7 +2,7 @@
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import opcode from "../emitter/opcode";
-import { get, TYPE_ARRAY } from "../metadata/metadata";
+import { get, TYPE_ARRAY } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateMemoryAssignment: GeneratorType = (node, parent) => {
