@@ -18,7 +18,6 @@ import {
   get,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
-  TYPE_OBJECT,
   typeIndex as setMetaTypeIndex,
 } from "../semantics/metadata";
 

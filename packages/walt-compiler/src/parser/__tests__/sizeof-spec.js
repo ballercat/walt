@@ -1,6 +1,4 @@
 import test from "ava";
-import sizeofParser from "../sizeof";
-import { mockContext } from "../../utils/mocks";
 import semantics from "../../semantics";
 import parser from "../../parser";
 
