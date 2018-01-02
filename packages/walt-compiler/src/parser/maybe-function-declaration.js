@@ -6,8 +6,6 @@ import expression from "./expression";
 import type { NodeType } from "../flow/types";
 import type Context from "./context";
 
-const last = list => list[list.length - 1];
-
 export const parseArguments = (ctx: Context): NodeType => {
   ctx.expect(["("]);
   const argumentsNode = ctx.makeNode(
@@ -19,48 +17,6 @@ export const parseArguments = (ctx: Context): NodeType => {
   );
   ctx.expect([")"]);
   return argumentsNode;
-  // return mapNode({
-  //   [Syntax.Pair]: pairNode => {
-  //     const [identifierNode, typeNode] = pairNode.params;
-  //     if (typeNode.Type !== Syntax.Type) {
-  //       const functionType = ctx.functionTypes[typeNode.value];
-  //       const userType = ctx.userTypes[typeNode.value];
-  //       const typePointer = functionType || userType;
-  //       const meta = [];
-
-  //       if (typePointer == null) {
-  //         throw ctx.syntaxError("Undefined Type", typeNode.value);
-  //       }
-  //       if (userType) {
-  //         meta.push(setMetaUserType(userType));
-  //       }
-
-  //       return {
-  //         ...pairNode,
-  //         params: [
-  //           {
-  //             ...identifierNode,
-  //             type: typePointer.type,
-  //             meta,
-  //           },
-  //           {
-  //             ...typeNode,
-  //             ...typePointer,
-  //             // clear params so we don't recurse into object definition
-  //             params: [],
-  //             type: "i32",
-  //             Type: Syntax.Type,
-  //           },
-  //         ],
-  //       };
-  //     }
-
-  //     return {
-  //       ...pairNode,
-  //       params: [{ ...identifierNode, type: typeNode.type }, typeNode],
-  //     };
-  //   },
-  // })(argumentsNode);
 };
 
 export const parseFunctionResult = (ctx: Context): NodeType => {
@@ -91,7 +47,7 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
   );
 };
 
-const maybeFunctionDeclaration = (ctx: Context) => {
+export default function maybeFunctionDeclaration(ctx: Context) {
   if (!ctx.eat(["function"])) {
     return declaration(ctx);
   }
@@ -101,19 +57,12 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
 
-  // NOTE: We need to write function into Program BEFORE
-  // we parse the body as the body may refer to the function
-  // itself recursively
-  // Either re-use an existing type or write a new one
-
   const emptyNode: NodeType = {
     ...baseNode,
     value,
     type: resultNode.type,
     params: [argumentsNode, resultNode],
   };
-  ctx.func = emptyNode;
-  ctx.functions.push(emptyNode);
 
   ctx.expect(["{"]);
   const statements = [];
@@ -125,20 +74,20 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   }
 
   // Sanity check the return statement
-  const ret = last(statements);
-  if (ret && resultNode.type) {
-    if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
-      throw ctx.syntaxError(
-        "Unexpected return value in a function with result : void"
-      );
-    }
-    if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
-      throw ctx.syntaxError(
-        "Expected a return value in a function with result : " +
-          JSON.stringify(resultNode.type)
-      );
-    }
-  }
+  // const ret = last(statements);
+  // if (ret && resultNode.type) {
+  //   if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
+  //     throw ctx.syntaxError(
+  //       "Unexpected return value in a function with result : void"
+  //     );
+  //   }
+  //   if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
+  //     throw ctx.syntaxError(
+  //       "Expected a return value in a function with result : " +
+  //         JSON.stringify(resultNode.type)
+  //     );
+  //   }
+  // }
 
   const node = {
     ...emptyNode,
@@ -146,9 +95,6 @@ const maybeFunctionDeclaration = (ctx: Context) => {
   };
 
   ctx.expect(["}"]);
-  ctx.func = null;
 
   return ctx.endNode(node, Syntax.FunctionDeclaration);
-};
-
-export default maybeFunctionDeclaration;
+}

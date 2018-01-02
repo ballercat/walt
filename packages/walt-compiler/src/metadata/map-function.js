@@ -157,6 +157,14 @@ const mapFunctionNode = (options, node, _ignore) => {
         params: binaryNode.params.map(childMapper),
       });
     },
+    [Syntax.TernaryExpression]: (ternaryNode, childMapper) => {
+      const params = ternaryNode.params.map(childMapper);
+      return {
+        ...ternaryNode,
+        type: params[0].type,
+        params,
+      };
+    },
     [Syntax.Select]: (binaryNode, childMapper) => {
       return balanceTypesInMathExpression({
         ...binaryNode,
