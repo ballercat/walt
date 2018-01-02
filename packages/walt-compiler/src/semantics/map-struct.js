@@ -24,14 +24,12 @@ export const getByteOffsetsAndSize = (
       keyTypeMap[key] = typeString;
       offsetsByKey[key] = size;
       switch (typeString) {
-        case "i32":
-        case "f32":
-          size += 4;
-          break;
         case "i64":
         case "f64":
           size += 8;
           break;
+        case "i32":
+        case "f32":
         default:
           size += 4;
       }

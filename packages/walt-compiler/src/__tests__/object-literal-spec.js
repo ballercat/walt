@@ -53,3 +53,13 @@ test("float types", t => {
     `
   ).then(outputIs(t, 2));
 });
+
+test("8 byte and 4 byte properties", t =>
+  compileAndRun(`
+  const memory: Memory = { 'initial': 1 };
+  type TestType = { 'foo': i32, 'bar': i64, 'foobaz': i32, 'baz': f64 };
+  export function test(): f32 {
+    const obj: TestType = 0;
+    obj['baz'] = (126: f64);
+    return obj['baz']: f32;
+  }`).then(outputIs(t, 126)));
