@@ -1,6 +1,5 @@
 // @flow
 import Syntax from "../Syntax";
-import { handleUndefined } from "../utils/generate-error";
 import expression from "./expression";
 
 import type Context from "./context";
@@ -14,9 +13,7 @@ export default function parseImport(ctx: Context): NodeType {
     throw ctx.syntaxError("expected {");
   }
 
-  ctx.handleUndefinedIdentifier = () => {};
   const fields = expression(ctx);
-  ctx.handleUndefinedIdentifier = handleUndefined(ctx);
 
   ctx.expect(["}"]);
   ctx.expect(["from"]);

@@ -1,10 +1,6 @@
 // @flow
 import type { Token } from "../flow/types";
 
-export const handleUndefined = (ctx: any) => (identifier: string) => {
-  throw ctx.syntaxError(`Undefined variable name ${identifier}`);
-};
-
 export default function generateErrorString(
   msg: string,
   error: string,

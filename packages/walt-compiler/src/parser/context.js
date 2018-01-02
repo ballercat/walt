@@ -1,75 +1,36 @@
 // @flow
 import type TokenStream from "../utils/token-stream";
-import generateErrorString, { handleUndefined } from "../utils/generate-error";
+import generateErrorString from "../utils/generate-error";
 import type { Token, NodeType } from "../flow/types";
 
 /**
- * Context is used to parse tokens into an AST and IR used by the generator.
+ * Context is used to parse tokens into the base AST.
  * Originally the parser was a giant class and the context was the 'this' pointer.
  * Maintaining a monolithic parser is rather difficult so it was broken up into a
  * collection of self-contained parsers for each syntactic construct. The context
  * is passed around between each one to generate the desired tree
  */
 type ContextOptions = {
-  body: NodeType[],
-  diAssoc: string,
   stream?: TokenStream,
   token?: Token,
-  globals: NodeType[],
-  functions: NodeType[],
   lines: string[],
 };
 
 class Context {
   token: Token;
   stream: TokenStream;
-  globals: NodeType[];
-  functions: NodeType[];
-  diAssoc: string;
-  body: NodeType[];
   filename: string;
-  func: NodeType | null;
-  object: NodeType;
-  userTypes: { [string]: NodeType };
-  functionTypes: { [string]: NodeType };
-  Program: any;
   lines: string[];
-  functionImports: NodeType[];
-  functionImportsLength: number;
-  handleUndefinedIdentifier: string => void;
 
   constructor(options: ContextOptions) {
     Object.assign(this, {
-      body: [],
-      diAssoc: "right",
-      globals: [],
-      functions: [],
       lines: [],
-      functionImports: [],
-      functionImportsLength: 0,
-      userTypes: {},
-      functionTypes: {},
-      handleUndefinedIdentifier: handleUndefined(this),
       ...options,
     });
-
-    this.Program = {
-      body: [],
-      // Setup keys needed for the emitter
-      Types: [],
-      Code: [],
-      Exports: [],
-      Imports: [],
-      Globals: [],
-      Element: [],
-      Functions: [],
-      Memory: [],
-      Table: [],
-    };
   }
 
   syntaxError(msg: string, error: any) {
-    const functionId = (this.func ? this.func.id : "global") || "unknown";
+    const functionId = "unknown";
     return new SyntaxError(
       generateErrorString(
         msg,
