@@ -1,5 +1,17 @@
 // @flow
-// import invariant from "invariant";
+/**
+ * Semantic Analysis
+ *
+ * The semantic analyzer below accepts a Walt AST and maps it, returning a new
+ * transformed AST which contains all necessary data to generate the final
+ * WebAssembly binary.
+ *
+ * The transformations may or may not create new nodes or attach metadata to
+ * existing nodes.
+ *
+ * Metadata is information necessary to generate a valid binary, like type info.
+ */
+
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";

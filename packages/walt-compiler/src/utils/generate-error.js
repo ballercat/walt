@@ -1,10 +1,10 @@
 // @flow
-import type { Token } from "../flow/types";
+import type { TokenType } from "../flow/types";
 
 export default function generateErrorString(
   msg: string,
   error: string,
-  token: Token,
+  token: TokenType,
   Line: string,
   filename: string,
   func: string

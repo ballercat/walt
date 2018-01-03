@@ -1,9 +1,9 @@
 // @flow
 import Syntax from "../Syntax";
 import type Context from "./context";
-import type { Token, NodeType } from "../flow/types";
+import type { TokenType, NodeType } from "../flow/types";
 
-const functionCall = (ctx: Context, op: Token, operands: NodeType[]) => {
+const functionCall = (ctx: Context, op: TokenType, operands: NodeType[]) => {
   const node = ctx.startNode(op);
   // If last operand is a sequence that means we have function arguments
   const maybeArguments = operands[operands.length - 1];

@@ -1,7 +1,7 @@
 // @flow
 import type TokenStream from "../utils/token-stream";
 import generateErrorString from "../utils/generate-error";
-import type { Token, NodeType } from "../flow/types";
+import type { TokenType, NodeType } from "../flow/types";
 
 /**
  * Context is used to parse tokens into the base AST.
@@ -12,12 +12,12 @@ import type { Token, NodeType } from "../flow/types";
  */
 type ContextOptions = {
   stream?: TokenStream,
-  token?: Token,
+  token?: TokenType,
   lines: string[],
 };
 
 class Context {
-  token: Token;
+  token: TokenType;
   stream: TokenStream;
   filename: string;
   lines: string[];
@@ -67,7 +67,7 @@ class Context {
     return this.syntaxError("Language feature not supported", this.token.value);
   }
 
-  expect(value: string[] | null, type?: string): Token {
+  expect(value: string[] | null, type?: string): TokenType {
     const token = this.token;
     if (!this.eat(value, type)) {
       throw value ? this.unexpectedValue(value) : this.unexpected(type);

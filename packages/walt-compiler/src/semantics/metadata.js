@@ -1,6 +1,6 @@
 // @flow
 import printNode from "../utils/print-node";
-import type { NodeType, Metadata } from "../flow/types";
+import type { NodeType, MetadataType } from "../flow/types";
 import invariant from "invariant";
 
 // All of the metadata options are used like redux actions
@@ -27,10 +27,10 @@ export const make = (payload: any, type: string) => ({
   payload,
 });
 
-export const get = (type: string, node: NodeType): ?Metadata => {
+export const get = (type: string, node: NodeType): ?MetadataType => {
   invariant(
     node.meta,
-    `Attemptend to access Metadata but it was undefined in node ${printNode(
+    `Attemptend to access MetadataType but it was undefined in node ${printNode(
       node
     )}`
   );
@@ -40,56 +40,59 @@ export const get = (type: string, node: NodeType): ?Metadata => {
     : null;
 };
 
-export const funcIndex = (payload: any): Metadata => ({
+export const funcIndex = (payload: any): MetadataType => ({
   payload,
   type: FUNCTION_INDEX,
 });
 
-export const localIndex = (payload: any): Metadata => ({
+export const localIndex = (payload: any): MetadataType => ({
   payload,
   type: LOCAL_INDEX,
 });
 
-export const globalIndex = (payload: any): Metadata => ({
+export const globalIndex = (payload: any): MetadataType => ({
   payload,
   type: GLOBAL_INDEX,
 });
 
-export const tableIndex = (payload: any): Metadata => ({
+export const tableIndex = (payload: any): MetadataType => ({
   payload,
   type: TABLE_INDEX,
 });
 
-export const postfix = (): Metadata => ({
+export const postfix = (): MetadataType => ({
   payload: true,
   type: POSTFIX,
 });
 
-export const prefix = (): Metadata => ({
+export const prefix = (): MetadataType => ({
   payload: true,
   type: PREFIX,
 });
 
-export const userType = (payload: any): Metadata => ({
+export const userType = (payload: any): MetadataType => ({
   payload,
   type: TYPE_USER,
 });
 
-export const objectType = (payload: any): Metadata => ({
+export const objectType = (payload: any): MetadataType => ({
   payload,
   type: TYPE_OBJECT,
 });
 
-export const objectSize = (payload: any): Metadata => ({
+export const objectSize = (payload: any): MetadataType => ({
   payload,
   type: OBJECT_SIZE,
 });
 
-export const array = (payload: any): Metadata => ({
+export const array = (payload: any): MetadataType => ({
   payload,
   type: TYPE_ARRAY,
 });
-export const constant = (): Metadata => ({ payload: true, type: TYPE_CONST });
+export const constant = (): MetadataType => ({
+  payload: true,
+  type: TYPE_CONST,
+});
 
 export const typeCast = (payload: { to: string, from: string }) => ({
   payload,
@@ -101,12 +104,12 @@ export const objectKeyTypes = (payload: { [string]: string }) => ({
   type: OBJECT_KEY_TYPES,
 });
 
-export const typeIndex = (payload: number): Metadata => ({
+export const typeIndex = (payload: number): MetadataType => ({
   payload,
   type: TYPE_INDEX,
 });
 
-export const localIndexMap = (payload: { [string]: number }): Metadata => ({
+export const localIndexMap = (payload: { [string]: number }): MetadataType => ({
   type: LOCAL_INDEX_MAP,
   payload,
 });

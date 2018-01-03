@@ -3,9 +3,9 @@ import Syntax from "../Syntax";
 import type Context from "./context";
 import functionCall from "./function-call";
 import { subscriptFromNode } from "./array-subscript";
-import type { Token, NodeType } from "../flow/types";
+import type { TokenType, NodeType } from "../flow/types";
 
-function binary(ctx: Context, op: Token, params: NodeType[]) {
+function binary(ctx: Context, op: TokenType, params: NodeType[]) {
   const node: NodeType = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = params;
@@ -32,7 +32,7 @@ function binary(ctx: Context, op: Token, params: NodeType[]) {
   return ctx.endNode(node, Type);
 }
 
-const unary = (ctx: Context, op: Token, params: NodeType[]) => {
+const unary = (ctx: Context, op: TokenType, params: NodeType[]) => {
   const [target] = params;
   return {
     ...target,
@@ -51,13 +51,17 @@ const unary = (ctx: Context, op: Token, params: NodeType[]) => {
   };
 };
 
-function objectLiteral(ctx: Context, op: Token, params: NodeType[]): NodeType {
+function objectLiteral(
+  ctx: Context,
+  op: TokenType,
+  params: NodeType[]
+): NodeType {
   const node = ctx.startNode(op);
   node.params = params;
   return ctx.endNode(node, Syntax.ObjectLiteral);
 }
 
-const ternary = (ctx: Context, op: Token, params: NodeType[]) => {
+const ternary = (ctx: Context, op: TokenType, params: NodeType[]) => {
   const node = ctx.startNode(params[0]);
   node.params = params;
   node.value = op.value;
@@ -80,7 +84,7 @@ const flattenSequence = (sequence: NodeType[]): NodeType[] => {
 
 // Sequence is a list of comma separated nodes. It's a slighlty special operator
 // in that it unrolls any other sequences into it's own params
-const sequence = (ctx: Context, op: Token, params: NodeType[]) => {
+const sequence = (ctx: Context, op: TokenType, params: NodeType[]) => {
   const node = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = flattenSequence(params);
@@ -88,7 +92,11 @@ const sequence = (ctx: Context, op: Token, params: NodeType[]) => {
 };
 
 // Abstraction for handling operations
-const operator = (ctx: Context, operators: Token[], operands: NodeType[]) => {
+const operator = (
+  ctx: Context,
+  operators: TokenType[],
+  operands: NodeType[]
+) => {
   const op = operators.pop();
   switch (op.value) {
     case "?":

@@ -1,10 +1,11 @@
 // @flow
 import precedence from "./precedence";
-import type { Token } from "../flow/types";
+import type { TokenType } from "../flow/types";
 
-export const getPrecedence = (token: Token): number => precedence[token.value];
+export const getPrecedence = (token: TokenType): number =>
+  precedence[token.value];
 
-export const getAssociativty = (token: Token): "left" | "right" => {
+export const getAssociativty = (token: TokenType): "left" | "right" => {
   switch (token.value) {
     case "=":
     case "-=":
