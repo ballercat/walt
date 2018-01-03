@@ -6,7 +6,7 @@ import { subscriptFromNode } from "./array-subscript";
 import type { TokenType, NodeType } from "../flow/types";
 
 function binary(ctx: Context, op: TokenType, params: NodeType[]) {
-  const node: NodeType = ctx.startNode(params[0]);
+  const node: NodeType = { ...params[0] };
   node.value = op.value;
   node.params = params;
 
