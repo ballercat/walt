@@ -15,33 +15,29 @@ let isMultiline: boolean = false;
 let previous: string;
 
 const isComment = (current: string) => {
-  let value = null;
   switch (`${previous}${current}`) {
     case MULTI_LINE_END: {
       isMultiline = false;
-      value = isComment;
-      break;
+      return isComment;
     }
     case MULTI_LINE_START: {
       isMultiline = true;
-      break;
+      return isComment;
     }
     case SINGLE_LINE: {
-      value = everything;
-      break;
+      return everything;
+    }
+    default: {
+      if (isMultiline) {
+        previous = current;
+        return isComment;
+      }
     }
   }
-
-  if (isMultiline) {
-    value = isComment;
-    previous = current;
-  }
-
-  return value;
 };
 
 const maybeComment = (current: string) => {
-  let buffer: string = previous;
+  const buffer: string = previous;
   previous = current;
   if (
     current === SLASH ||
