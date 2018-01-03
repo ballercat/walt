@@ -46,6 +46,24 @@ test("ignores comments", t => {
   t.snapshot(result);
 });
 
+test("ignores multiline comments", t => {
+  const stream = new Stream(`
+    /* multiline
+     *  comment
+     * */
+    2 * 2`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("ignores one-liner multiline comments", t => {
+  const stream = new Stream(`
+    /* comment  */
+    2`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
 test("parses basic strings", t => {
   const stream = new Stream("'this is a string' \"and so is this\"");
   const tokenizer = new Tokenizer(stream);
