@@ -1,8 +1,3 @@
-// @flow
-import type TokenStream from "../utils/token-stream";
-import generateErrorString from "../utils/generate-error";
-import type { TokenType, NodeType } from "../flow/types";
-
 /**
  * Context is used to parse tokens into the base AST.
  * Originally the parser was a giant class and the context was the 'this' pointer.
@@ -10,23 +5,30 @@ import type { TokenType, NodeType } from "../flow/types";
  * collection of self-contained parsers for each syntactic construct. The context
  * is passed around between each one to generate the desired tree
  */
-type ContextOptions = {
-  stream?: TokenStream,
-  token?: TokenType,
-  lines: string[],
-};
 
-class Context {
+// @flow
+import generateErrorString from "../utils/generate-error";
+import type TokenStream from "../utils/token-stream";
+import type { TokenType, NodeType } from "../flow/types";
+
+export default class Context {
   token: TokenType;
   stream: TokenStream;
   filename: string;
   lines: string[];
 
-  constructor(options: ContextOptions) {
-    Object.assign(this, {
-      lines: [],
-      ...options,
-    });
+  constructor({
+    stream,
+    token,
+    lines,
+  }: {
+    stream: TokenStream,
+    token: TokenType,
+    lines: string[],
+  }) {
+    this.token = token;
+    this.stream = stream;
+    this.lines = lines;
   }
 
   syntaxError(msg: string, error: any) {
@@ -131,5 +133,3 @@ class Context {
     );
   }
 }
-
-export default Context;

@@ -1,4 +1,3 @@
-// @flow
 /**
  * Semantic Analysis
  *
@@ -12,6 +11,7 @@
  * Metadata is information necessary to generate a valid binary, like type info.
  */
 
+// @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";

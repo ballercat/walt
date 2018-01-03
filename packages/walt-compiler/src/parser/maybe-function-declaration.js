@@ -47,22 +47,15 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
   );
 };
 
-export default function maybeFunctionDeclaration(ctx: Context) {
+export default function maybeFunctionDeclaration(ctx: Context): NodeType {
   if (!ctx.eat(["function"])) {
     return declaration(ctx);
   }
 
-  const baseNode = ctx.startNode();
+  const node = ctx.startNode();
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
-
-  const emptyNode: NodeType = {
-    ...baseNode,
-    value,
-    type: resultNode.type,
-    params: [argumentsNode, resultNode],
-  };
 
   ctx.expect(["{"]);
   const statements = [];
@@ -72,29 +65,14 @@ export default function maybeFunctionDeclaration(ctx: Context) {
       statements.push(stmt);
     }
   }
-
-  // Sanity check the return statement
-  // const ret = last(statements);
-  // if (ret && resultNode.type) {
-  //   if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
-  //     throw ctx.syntaxError(
-  //       "Unexpected return value in a function with result : void"
-  //     );
-  //   }
-  //   if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
-  //     throw ctx.syntaxError(
-  //       "Expected a return value in a function with result : " +
-  //         JSON.stringify(resultNode.type)
-  //     );
-  //   }
-  // }
-
-  const node = {
-    ...emptyNode,
-    params: [...emptyNode.params, ...statements],
-  };
-
   ctx.expect(["}"]);
 
-  return ctx.endNode(node, Syntax.FunctionDeclaration);
+  return ctx.endNode(
+    {
+      ...node,
+      value,
+      params: [argumentsNode, resultNode, ...statements],
+    },
+    Syntax.FunctionDeclaration
+  );
 }

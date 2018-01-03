@@ -1,3 +1,9 @@
+/**
+ * Syntax Analysis
+ *
+ * The parser below creates the "bare" Abstract Syntax Tree.
+ */
+
 // @flow
 import Syntax from "../Syntax";
 import statement from "./statement";
@@ -14,13 +20,9 @@ export default function parse(source: string): NodeType {
   const tokens = new TokenStream(tokenizer.parse());
 
   const ctx = new Context({
-    body: [],
-    diAssoc: "right",
     stream: tokens,
     token: tokens.next(),
     lines: stream.lines,
-    globals: [],
-    functions: [],
     filename: "unknown.walt",
   });
 

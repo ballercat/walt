@@ -1,4 +1,4 @@
-# Snapshot report for `src/metadata/__tests__/metadata-spec.js`
+# Snapshot report for `src/semantics/__tests__/metadata-spec.js`
 
 The actual snapshot is saved in `metadata-spec.js.snap`.
 
