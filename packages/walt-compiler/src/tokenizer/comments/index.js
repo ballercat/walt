@@ -11,10 +11,10 @@ import {
   everything,
 } from "./constants";
 
-let isMultiline = false;
-let previous = null;
+let isMultiline: boolean = false;
+let previous: string;
 
-const isComment = current => {
+const isComment = (current: string) => {
   let value = null;
   switch (`${previous}${current}`) {
     case MULTI_LINE_END: {
@@ -40,8 +40,8 @@ const isComment = current => {
   return value;
 };
 
-const maybeComment = current => {
-  let buffer = previous;
+const maybeComment = (current: string) => {
+  let buffer: string = previous;
   previous = current;
   if (
     current === SLASH ||
