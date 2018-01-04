@@ -1,5 +1,8 @@
 // @flow
 const Syntax = {
+  // Main Program
+  Program: "Program",
+
   // Syntax Nodes
   Keyword: "Keyword",
   Export: "Export",
@@ -19,17 +22,19 @@ const Syntax = {
   Constant: "Constant",
   Type: "Type",
   UserType: "UserType",
+  FunctionType: "FunctionType",
   Declaration: "Declaration",
+  ImmutableDeclaration: "ImmutableDeclaration",
   FunctionDeclaration: "FunctionDeclaration",
   ArrayDeclaration: "ArrayDeclaration",
   IndirectFunctionCall: "IndirectFunctionCall",
   FunctionCall: "FunctionCall",
   Loop: "Loop",
-  Program: "Program",
   MemoryAssignment: "MemoryAssignment",
   Assignment: "Assignment",
   Param: "Param",
   Typedef: "Typedef",
+  Struct: "Struct",
   ReturnStatement: "ReturnStatement",
   Sequence: "Sequence",
   ObjectLiteral: "ObjectLiteral",
@@ -37,6 +42,7 @@ const Syntax = {
   TypeCast: "TypeCast",
   Break: "Break",
   Comment: "Comment",
+  Sizeof: "Sizeof",
 
   Noop: "Noop",
 
@@ -46,6 +52,7 @@ const Syntax = {
   FunctionIndex: "FunctionIndex",
   FunctionIdentifier: "FunctionIdentifier",
   FunctionPointer: "FunctionPointer",
+  FunctionArguments: "FunctionArguments",
   FunctionResult: "FunctionResult",
   FunctionLocals: "FunctionLocals",
 };

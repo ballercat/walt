@@ -6,7 +6,7 @@ import type { NodeType } from "../flow/types";
 
 const field = (ctx: Context): NodeType => {
   const node = ctx.startNode();
-  node.id = ctx.expect(null, Syntax.StringLiteral).value;
+  node.value = ctx.expect(null, Syntax.StringLiteral).value;
   ctx.expect([":"]);
   node.params = [expression(ctx)];
   return ctx.endNode(node, Syntax.ObjectField);

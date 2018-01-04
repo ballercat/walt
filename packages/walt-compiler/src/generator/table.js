@@ -1,11 +1,9 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import type { NodeType } from "./flow/types";
+import type { NodeType, IntermediateTableType } from "./flow/types";
 
-export default function generateMemory(
-  node: NodeType
-): { max: number, initial: number, type: string } {
+export default function generateMemory(node: NodeType): IntermediateTableType {
   const table = { max: 0, initial: 0, type: "" };
 
   walkNode({

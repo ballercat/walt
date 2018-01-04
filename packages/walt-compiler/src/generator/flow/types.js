@@ -46,3 +46,29 @@ export type IntermediateImportType = {
   kind: number,
   typeIndex: number | null,
 };
+
+export type IntermediateExportType = {
+  index: number,
+  kind: number,
+  field: string,
+};
+
+export type IntermediateTableType = {
+  max: number,
+  initial: number,
+  type: string,
+};
+export type IntermediateMemoryType = { max: number, initial: number };
+
+export type ProgramType = {
+  // Setup keys needed for the emitter
+  Types: IntermediateTypeDefinitionType[],
+  Code: IntermediateFunctionType[],
+  Exports: IntermediateExportType[],
+  Imports: IntermediateImportType[],
+  Globals: IntermediateVariableType[],
+  Element: Array<{ functionIndex: number }>,
+  Functions: number[],
+  Memory: IntermediateMemoryType[],
+  Table: IntermediateTableType[],
+};

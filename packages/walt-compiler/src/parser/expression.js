@@ -8,23 +8,23 @@ import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
 import type Context from "./context";
-import type { NodeType, Token } from "../flow/types";
+import type { NodeType, TokenType } from "../flow/types";
 
-export type Predicate = (Token, number) => boolean;
-export type OperatorCheck = Token => boolean;
+export type Predicate = (TokenType, number) => boolean;
+export type OperatorCheck = TokenType => boolean;
 
 const last = (list: any[]): any => list[list.length - 1];
 
-const valueIs = (v: string) => (o: Token): boolean => o.value === v;
+const valueIs = (v: string) => (o: TokenType): boolean => o.value === v;
 
 const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
 const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
-export const isPunctuatorAndNotBracket = (t: ?Token) =>
+export const isPunctuatorAndNotBracket = (t: ?TokenType) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
-export const predicate = (token: Token, depth: number): boolean =>
+export const predicate = (token: TokenType, depth: number): boolean =>
   token.value !== ";" && depth > 0;
 
 // Shunting yard
@@ -35,7 +35,7 @@ const expression = (
   type: string = "i32",
   check: Predicate = predicate
 ) => {
-  const operators: Token[] = [];
+  const operators: TokenType[] = [];
   const operands: NodeType[] = [];
   // Depth is the nesting level of brackets in this expression. If we find a
   // closing bracket which causes our depth to fall below 1, then we know we
@@ -79,7 +79,6 @@ const expression = (
         // TODO: figure out a cleaner(?) way of doing this, maybe
         if (eatFunctionCall) {
           // definetly not immutable
-          last(operands).Type = Syntax.FunctionIdentifier;
           flushOperators(PRECEDENCE_FUNCTION_CALL);
           // Tokenizer does not generate function call tokens it is our job here
           // to generate a function call on the fly
