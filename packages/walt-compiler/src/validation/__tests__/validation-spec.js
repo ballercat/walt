@@ -4,9 +4,16 @@ import semantics from "../../semantics";
 import validate from "..";
 
 const parseAndValidate = source =>
-  validate(semantics(parser(source)), source.split("/n"), "spec.walt");
+  validate(semantics(parser(source)), {
+    lines: source.split("/n"),
+    filename: "spec.walt",
+  });
 
-test("typos throw", t =>
-  t.throws(() => parseAndValidate("expost const x: i32;")));
-test("const exports must have value", t =>
-  t.throws(() => parseAndValidate("export const x: i32;")));
+test("typos throw", t => {
+  const error = t.throws(() => parseAndValidate("expost const x: i32;"));
+  t.snapshot(error);
+});
+test("const exports must have value", t => {
+  const error = t.throws(() => parseAndValidate("export const x: i32;"));
+  t.snapshot(error);
+});

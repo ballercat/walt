@@ -10,9 +10,14 @@ const GLOBAL_LABEL = "global";
 
 export default function validate(
   ast: NodeType,
-  lines: string[],
-  filename: string = ""
-): NodeType {
+  {
+    lines,
+    filename,
+  }: {
+    lines: string[],
+    filename: string,
+  }
+) {
   walkNode({
     [Syntax.Pair]: pair => {
       const [start, end] = pair.range;
@@ -40,6 +45,11 @@ export default function validate(
         );
       }
     },
+    // All of the validators below need to be implemented
+    [Syntax.Struct]: (_, __) => {},
+    [Syntax.Import]: (_, __) => {},
+    [Syntax.ImmutableDeclaration]: (_, __) => {},
+    [Syntax.Declaration]: (_, __) => {},
+    [Syntax.FunctionDeclaration]: (_, __) => {},
   })(ast);
-  return ast;
 }

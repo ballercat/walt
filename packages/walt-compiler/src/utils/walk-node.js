@@ -1,25 +1,36 @@
 // @flow
 import type { NodeType } from "../flow/types";
 
-type WalkerType = (node: NodeType) => void;
+type WalkerType = (node: NodeType, childMapper?: any) => void;
+type VisitorType = { [string]: WalkerType };
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-function walker(visitor: { [string]: (NodeType) => void }): WalkerType {
+function walker(visitor: VisitorType): WalkerType {
   const walkNode = (node: NodeType) => {
     if (node == null) {
       return;
     }
     const { params } = node;
 
-    if ("*" in visitor && typeof visitor["*"] === "function") {
-      visitor["*"](node);
+    const mappingFunction: WalkerType = (() => {
+      if ("*" in visitor && typeof visitor["*"] === "function") {
+        return visitor["*"];
+      }
+
+      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+        return visitor[node.Type];
+      }
+
+      return () => {};
+    })();
+
+    if (mappingFunction.length === 2) {
+      mappingFunction(node, walkNode);
+      return;
     }
 
-    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-      visitor[node.Type](node);
-    }
-
+    mappingFunction(node);
     params.forEach(walkNode);
   };
 

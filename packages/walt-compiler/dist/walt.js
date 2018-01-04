@@ -121,7 +121,7 @@ const subscriptFromNode = (ctx, node) => {
 
 //      
 function binary(ctx, op, params) {
-  const node = ctx.startNode(params[0]);
+  const node = _extends({}, params[0]);
   node.value = op.value;
   node.params = params;
 
@@ -574,16 +574,10 @@ function maybeFunctionDeclaration(ctx) {
     return declaration(ctx);
   }
 
-  const baseNode = ctx.startNode();
+  const node = ctx.startNode();
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
-
-  const emptyNode = _extends({}, baseNode, {
-    value,
-    type: resultNode.type,
-    params: [argumentsNode, resultNode]
-  });
 
   ctx.expect(["{"]);
   const statements = [];
@@ -593,30 +587,12 @@ function maybeFunctionDeclaration(ctx) {
       statements.push(stmt);
     }
   }
-
-  // Sanity check the return statement
-  // const ret = last(statements);
-  // if (ret && resultNode.type) {
-  //   if (resultNode.type == null && ret.Type === Syntax.ReturnStatement) {
-  //     throw ctx.syntaxError(
-  //       "Unexpected return value in a function with result : void"
-  //     );
-  //   }
-  //   if (resultNode.type != null && ret.Type !== Syntax.ReturnStatement) {
-  //     throw ctx.syntaxError(
-  //       "Expected a return value in a function with result : " +
-  //         JSON.stringify(resultNode.type)
-  //     );
-  //   }
-  // }
-
-  const node = _extends({}, emptyNode, {
-    params: [...emptyNode.params, ...statements]
-  });
-
   ctx.expect(["}"]);
 
-  return ctx.endNode(node, Syntax.FunctionDeclaration);
+  return ctx.endNode(_extends({}, node, {
+    value,
+    params: [argumentsNode, resultNode, ...statements]
+  }), Syntax.FunctionDeclaration);
 }
 
 //      
@@ -748,10 +724,9 @@ const whileLoop = ctx => {
 
 //      
 
-
-function generateErrorString(msg, error, token, Line, filename, func) {
-  const { line, col } = token.start;
-  const { col: end } = token.end;
+function generateErrorString(msg, error, marker, Line, filename, func) {
+  const { line, col } = marker.start;
+  const { col: end } = marker.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
   return `
@@ -761,8 +736,6 @@ ${msg}
   at ${func} (${filename}:${line}:${col})`;
 }
 
-//      
-
 /**
  * Context is used to parse tokens into the base AST.
  * Originally the parser was a giant class and the context was the 'this' pointer.
@@ -771,17 +744,22 @@ ${msg}
  * is passed around between each one to generate the desired tree
  */
 
+//      
 class Context {
 
-  constructor(options) {
-    Object.assign(this, _extends({
-      lines: []
-    }, options));
+  constructor({
+    stream,
+    token,
+    lines
+  }) {
+    this.token = token;
+    this.stream = stream;
+    this.lines = lines;
   }
 
-  syntaxError(msg, error) {
+  syntaxError(msg, error$$1) {
     const functionId = "unknown";
-    return new SyntaxError(generateErrorString(msg, error || "", this.token, this.lines[this.token.start.line - 1], this.filename || "unknown", functionId));
+    return new SyntaxError(generateErrorString(msg, error$$1 || "", this.token, this.lines[this.token.start.line - 1], this.filename || "unknown", functionId));
   }
 
   unexpectedValue(value) {
@@ -1464,6 +1442,12 @@ class TokenStream {
   }
 }
 
+/**
+ * Syntax Analysis
+ *
+ * The parser below creates the "bare" Abstract Syntax Tree.
+ */
+
 //      
 function parse(source) {
   const stream = new Stream(source);
@@ -1471,13 +1455,9 @@ function parse(source) {
   const tokens = new TokenStream(tokenizer.parse());
 
   const ctx = new Context({
-    body: [],
-    diAssoc: "right",
     stream: tokens,
     token: tokens.next(),
     lines: stream.lines,
-    globals: [],
-    functions: [],
     filename: "unknown.walt"
   });
 
@@ -2491,7 +2471,7 @@ const OBJECT_KEY_TYPES = "object/key-types";
 
 
 const get$2 = (type, node) => {
-  invariant_1(node.meta, `Attemptend to access Metadata but it was undefined in node ${printNode(node)}`);
+  invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
   return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
 };
 
@@ -2532,7 +2512,10 @@ const array = payload => ({
   payload,
   type: TYPE_ARRAY
 });
-const constant$1 = () => ({ payload: true, type: TYPE_CONST });
+const constant$1 = () => ({
+  payload: true,
+  type: TYPE_CONST
+});
 
 const typeCast = payload => ({
   payload,
@@ -2954,31 +2937,34 @@ const generateMemoryAssignment = (node, parent) => {
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
 function walker(visitor) {
-  const impl = (node, patch = () => {}) => {
+  const walkNode = node => {
     if (node == null) {
       return;
     }
     const { params } = node;
 
-    const paramCount = params.length;
+    const mappingFunction = (() => {
+      if ("*" in visitor && typeof visitor["*"] === "function") {
+        return visitor["*"];
+      }
 
-    if ("*" in visitor && typeof visitor["*"] === "function") {
-      visitor["*"](node, patch);
+      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+        return visitor[node.Type];
+      }
+
+      return () => {};
+    })();
+
+    if (mappingFunction.length === 2) {
+      mappingFunction(node, walkNode);
+      return;
     }
 
-    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-      visitor[node.Type](node, patch);
-    }
-
-    for (let i = 0; i < paramCount; i++) {
-      const currentIndex = i;
-      impl(params[i], newNode => {
-        node.params = [...params.slice(0, currentIndex), newNode, ...params.slice(currentIndex + 1)];
-      });
-    }
+    mappingFunction(node);
+    params.forEach(walkNode);
   };
 
-  return impl;
+  return walkNode;
 }
 
 //      
@@ -3393,7 +3379,7 @@ const generateCode = func => {
   return block;
 };
 
-function generator(ast) {
+function generator$1(ast) {
   const program = {
     Types: [],
     Code: [],
@@ -3851,14 +3837,12 @@ const getByteOffsetsAndSize = objectLiteralNode => {
       keyTypeMap[key] = typeString;
       offsetsByKey[key] = size;
       switch (typeString) {
-        case "i32":
-        case "f32":
-          size += 4;
-          break;
         case "i64":
         case "f64":
           size += 8;
           break;
+        case "i32":
+        case "f32":
         default:
           size += 4;
       }
@@ -3879,9 +3863,21 @@ const mapStruct = curry_1(({ userTypes }, node, _ignore) => {
   return struct;
 });
 
+/**
+ * Semantic Analysis
+ *
+ * The semantic analyzer below accepts a Walt AST and maps it, returning a new
+ * transformed AST which contains all necessary data to generate the final
+ * WebAssembly binary.
+ *
+ * The transformations may or may not create new nodes or attach metadata to
+ * existing nodes.
+ *
+ * Metadata is information necessary to generate a valid binary, like type info.
+ */
+
 //      
-// import invariant from "invariant";
-function semantics(ast) {
+function semantics$1(ast) {
   const functions = {};
   const globals = {};
   const types = {};
@@ -3951,6 +3947,35 @@ function semantics(ast) {
 }
 
 //      
+const GLOBAL_LABEL = "global";
+
+function validate$1(ast, {
+  lines,
+  filename
+}) {
+  walker({
+    [Syntax.Pair]: pair => {
+      const [start, end] = pair.range;
+      throw generateErrorString(`Unexpected expression ${pair.Type}`, "", { start, end }, lines[start.line - 1], filename, GLOBAL_LABEL);
+    },
+    [Syntax.Export]: _export => {
+      const target = _export.params[0];
+      const [start, end] = target.range;
+      const globalIndex$$1 = get$2(GLOBAL_INDEX, target);
+      if (globalIndex$$1 != null && !target.params.length) {
+        throw generateErrorString("Global exports must have a value", "", { start, end }, lines[start.line - 1], filename, GLOBAL_LABEL);
+      }
+    },
+    // All of the validators below need to be implemented
+    [Syntax.Struct]: (_, __) => {},
+    [Syntax.Import]: (_, __) => {},
+    [Syntax.ImmutableDeclaration]: (_, __) => {},
+    [Syntax.Declaration]: (_, __) => {},
+    [Syntax.FunctionDeclaration]: (_, __) => {}
+  })(ast);
+}
+
+//      
 const _debug = (stream, begin = 0, end) => {
   let pc = 0;
   return stream.data.slice(begin, end).map(({ type, value, debug }) => {
@@ -3970,31 +3995,39 @@ const _debug = (stream, begin = 0, end) => {
 //      
 const debug = _debug;
 const prettyPrintNode = printNode;
+const semantics = semantics$1;
+const generator = generator$1;
+const validate = validate$1;
+const emitter = emit;
 
 // Used for deugging purposes
-const getAst = source => {
-  const ast = parse(source);
-  return ast;
-};
-
 const getIR = source => {
-  const ast = getAst(source);
-  const semanticAST = semantics(ast);
-  const wasm = emit(generator(semanticAST));
+  const ast = semantics(parse(source));
+  validate(ast,
+  // this will eventually be a config
+  {
+    lines: source ? source.split("\n") : [],
+    filename: "walt-source"
+  });
+  const intermediateCode = generator(ast);
+  const wasm = emitter(intermediateCode);
   return wasm;
 };
 
 // Compiles a raw binary wasm buffer
-const compile = source => {
+function compileWalt(source) {
   const wasm = getIR(source);
   return wasm.buffer();
-};
+}
 
 exports.debug = debug;
 exports.prettyPrintNode = prettyPrintNode;
-exports.getAst = getAst;
+exports.semantics = semantics;
+exports.generator = generator;
+exports.validate = validate;
+exports.emitter = emitter;
 exports.getIR = getIR;
-exports['default'] = compile;
+exports['default'] = compileWalt;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
