@@ -66,7 +66,6 @@ const expression = (
       if (value === "," && previous.type === Syntax.FunctionCall) {
         break;
       }
-      // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
   };

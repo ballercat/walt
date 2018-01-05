@@ -5,6 +5,7 @@ import mapNode from "../utils/map-node";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
+import makeAssignment from "./map-assignment";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
   typeCast,
@@ -34,6 +35,7 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapIdentifier = makeMapIdentifier({ ...options, locals });
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
+  const mapAssignment = makeAssignment({ ...options, locals });
 
   const mapDeclaration = isConst => declaration => {
     const index = Object.keys(locals).length;
@@ -171,6 +173,7 @@ const mapFunctionNode = (options, node, _ignore) => {
         params: binaryNode.params.map(childMapper),
       });
     },
+    [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, childMapper) => {
       const params = inputNode.params.map(childMapper);
       const { type } = params[0];

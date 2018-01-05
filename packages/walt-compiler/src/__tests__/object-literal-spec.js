@@ -63,3 +63,13 @@ test("8 byte and 4 byte properties", t =>
     obj['baz'] = (126: f64);
     return obj['baz']: f32;
   }`).then(outputIs(t, 126)));
+
+test("compound assign", t =>
+  compileAndRun(`
+  const memory: Memory = { 'initial': 1 };
+  type TestType = { x: i32, y: i32, z: i32 };
+  export function test(): i32 {
+    const obj: TestType = 0;
+    obj = { x: 2, y: 2 };
+    return obj['x'] + obj['y'];
+  }`).then(outputIs(t, 4)));

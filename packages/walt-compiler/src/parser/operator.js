@@ -102,7 +102,7 @@ const operator = (
     case "?":
       return ternary(ctx, op, operands.splice(-2));
     case ",":
-      return sequence(ctx, op, operands.slice(-2));
+      return sequence(ctx, op, operands.splice(-2));
     case "{":
       return objectLiteral(ctx, op, operands.splice(-1));
     case "--":
