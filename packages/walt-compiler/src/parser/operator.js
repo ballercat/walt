@@ -32,22 +32,33 @@ function binary(ctx: Context, op: TokenType, params: NodeType[]) {
   return ctx.endNode(node, Type);
 }
 
-const unary = (ctx: Context, op: TokenType, params: NodeType[]) => {
+const unary = (ctx: Context, op: TokenType, params: NodeType[]): NodeType => {
   const [target] = params;
+  if (op.value === "--") {
+    return {
+      ...target,
+      Type: Syntax.UnaryExpression,
+      value: "-",
+      meta: [],
+      params: [
+        {
+          ...target,
+          value: "0",
+          Type: Syntax.Constant,
+          params: [],
+          meta: [],
+        },
+        target,
+      ],
+    };
+  }
+
   return {
-    ...target,
-    Type: Syntax.UnaryExpression,
-    value: "-",
-    params: [
-      {
-        ...target,
-        value: "0",
-        Type: Syntax.Constant,
-        params: [],
-        meta: [],
-      },
-      target,
-    ],
+    ...op,
+    range: [op.start, target.range[1]],
+    meta: [],
+    Type: Syntax.Spread,
+    params: [target],
   };
 };
 
@@ -106,6 +117,8 @@ const operator = (
     case "{":
       return objectLiteral(ctx, op, operands.splice(-1));
     case "--":
+    case "...":
+    case "sizeof":
       return unary(ctx, op, operands.splice(-1));
     default:
       if (op.type === Syntax.FunctionCall) {

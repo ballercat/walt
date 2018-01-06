@@ -73,3 +73,15 @@ test("compound assign", t =>
     obj = { x: 2, y: 2 };
     return obj['x'] + obj['y'];
   }`).then(outputIs(t, 4)));
+
+test("object spread", t =>
+  compileAndRun(`
+  const memory: Memory = { 'initial': 1 };
+  type TestType = { x: i32, y: i32, z: i32 };
+  export function test(): i32 {
+    const obj: TestType = 0;
+    const obj2: TestType = sizeof(TestType);
+    obj2 = { x: 2, y: 2 };
+    obj = { ...obj2, z: 2 };
+    return obj['x'] + obj['y'] + obj['z'];
+  }`).then(outputIs(t, 6)));

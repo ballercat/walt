@@ -16,16 +16,19 @@ export const emitter = emit;
 
 // Used for deugging purposes
 export const getIR = (source: string) => {
-  const ast = semantics(parser(source));
+  const ast = parser(source);
+  // console.log(printNode(ast));
+  const semanticAST = semantics(ast);
+  // console.log(printNode(semanticAST));
   validate(
-    ast,
+    semanticAST,
     // this will eventually be a config
     {
       lines: source ? source.split("\n") : [],
       filename: "walt-source",
     }
   );
-  const intermediateCode = generator(ast);
+  const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
   return wasm;
 };

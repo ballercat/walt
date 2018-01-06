@@ -9,7 +9,6 @@ import forLoop from "./for-loop";
 import whileLoop from "./while-loop";
 import returnStatement from "./return-statement";
 import ifThenElse from "./if-then-else";
-import sizeof from "./sizeof";
 import Context from "./context";
 
 const keyword = (ctx: Context) => {
@@ -33,8 +32,6 @@ const keyword = (ctx: Context) => {
       return whileLoop(ctx);
     case "return":
       return returnStatement(ctx);
-    case "sizeof":
-      return sizeof(ctx);
     case "break":
       return _break(ctx);
     default:

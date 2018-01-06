@@ -61,6 +61,19 @@ export const getType = (str: ?string): number => {
       return I32;
   }
 };
+
+export const isBuiltinType = (type: ?string): boolean => {
+  switch (type) {
+    case "i32":
+    case "f32":
+    case "i64":
+    case "f64":
+      return true;
+    default:
+      return false;
+  }
+};
+
 export const generateValueType = (
   node: NodeType
 ): IntermediateVariableType => ({

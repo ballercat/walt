@@ -37,7 +37,7 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapSizeof = makeSizeof({ ...options, locals });
   const mapAssignment = makeAssignment({ ...options, locals });
 
-  const mapDeclaration = isConst => declaration => {
+  const mapDeclaration = isConst => (declaration, mapChildren) => {
     const index = Object.keys(locals).length;
     const isArray = declaration.type.slice(-2) === "[]";
     const type = isArray ? "i32" : declaration.type;
@@ -53,6 +53,7 @@ const mapFunctionNode = (options, node, _ignore) => {
       ...declaration,
       type,
       meta,
+      params: declaration.params.map(mapChildren),
       Type: Syntax.Declaration,
     };
     return locals[declaration.value];
@@ -81,6 +82,9 @@ const mapFunctionNode = (options, node, _ignore) => {
     [Syntax.ImmutableDeclaration]: mapDeclaration(true),
     [Syntax.Identifier]: mapIdentifier,
     [Syntax.FunctionCall]: call => {
+      if (call.value === "sizeof") {
+        return mapSizeof(call);
+      }
       if (functions[call.value] != null) {
         const index = Object.keys(functions).indexOf(call.value);
         return {

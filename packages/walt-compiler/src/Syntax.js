@@ -43,6 +43,7 @@ const Syntax = {
   Break: "Break",
   Comment: "Comment",
   Sizeof: "Sizeof",
+  Spread: "Spread",
 
   Noop: "Noop",
 

@@ -30,6 +30,8 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
     return {
       ...sizeof,
       value: metaSize.payload,
+      params: [],
+      type: "i32",
       Type: Syntax.Constant,
     };
   }
@@ -39,6 +41,8 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
   return {
     ...sizeof,
     value: variableSize(node ? node.type : sizeof.value),
+    type: "i32",
+    params: [],
     Type: Syntax.Constant,
   };
 });
