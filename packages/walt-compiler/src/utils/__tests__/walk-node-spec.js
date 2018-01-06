@@ -33,19 +33,3 @@ test("wildcards are called for all nodes", t => {
 
   t.deepEqual(walkedTypes, expectedTypes);
 });
-
-test("nodes can be patched", t => {
-  const node = JSON.parse(mockNodeString);
-  walkNode({
-    [Syntax.Constant]: (constNode, patch) => {
-      if (constNode.value === "5") {
-        patch({
-          ...constNode,
-          value: 42,
-        });
-      }
-    },
-  })(node);
-
-  t.snapshot(node);
-});

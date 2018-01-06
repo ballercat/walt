@@ -1,43 +1,40 @@
 // @flow
 import type { NodeType } from "../flow/types";
 
-type PatchType = NodeType => void;
-type WalkerType = (node: NodeType) => void;
+type WalkerType = (node: NodeType, childMapper?: any) => void;
+type VisitorType = { [string]: WalkerType };
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-function walker(visitor: {
-  [string]: (NodeType, PatchType) => void,
-}): WalkerType {
-  const impl = (node: NodeType, patch = () => {}) => {
+function walker(visitor: VisitorType): WalkerType {
+  const walkNode = (node: NodeType) => {
     if (node == null) {
       return;
     }
     const { params } = node;
 
-    const paramCount = params.length;
+    const mappingFunction: WalkerType = (() => {
+      if ("*" in visitor && typeof visitor["*"] === "function") {
+        return visitor["*"];
+      }
 
-    if ("*" in visitor && typeof visitor["*"] === "function") {
-      visitor["*"](node, patch);
+      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+        return visitor[node.Type];
+      }
+
+      return () => {};
+    })();
+
+    if (mappingFunction.length === 2) {
+      mappingFunction(node, walkNode);
+      return;
     }
 
-    if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-      visitor[node.Type](node, patch);
-    }
-
-    for (let i = 0; i < paramCount; i++) {
-      const currentIndex = i;
-      impl(params[i], (newNode: NodeType) => {
-        node.params = [
-          ...params.slice(0, currentIndex),
-          newNode,
-          ...params.slice(currentIndex + 1),
-        ];
-      });
-    }
+    mappingFunction(node);
+    params.forEach(walkNode);
   };
 
-  return impl;
+  return walkNode;
 }
 
 export default walker;

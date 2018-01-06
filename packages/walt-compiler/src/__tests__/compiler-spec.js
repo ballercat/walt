@@ -60,7 +60,7 @@ test("function locals", t =>
     t.is(result.instance.exports.echo(), 42);
   }));
 
-test("exports must have a value", t =>
+test.skip("exports must have a value", t =>
   t.throws(() =>
     compileAndRun(`
   export const x: i32;
@@ -105,3 +105,6 @@ test("compiles math", t =>
       return 2 + 2 - 4;
     }
   `).then(result => t.is(result.instance.exports.test(), 0)));
+
+test("invalid imports throw", t =>
+  t.throws(() => compile("import foo from 'bar'")));

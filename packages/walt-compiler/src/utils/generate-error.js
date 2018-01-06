@@ -1,20 +1,18 @@
 // @flow
-import type { Token } from "../flow/types";
-
-export const handleUndefined = (ctx: any) => (identifier: string) => {
-  throw ctx.syntaxError(`Undefined variable name ${identifier}`);
-};
 
 export default function generateErrorString(
   msg: string,
   error: string,
-  token: Token,
+  marker: {
+    start: { line: number, col: number },
+    end: { line: number, col: number },
+  },
   Line: string,
   filename: string,
   func: string
 ): string {
-  const { line, col } = token.start;
-  const { col: end } = token.end;
+  const { line, col } = marker.start;
+  const { col: end } = marker.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
   return `

@@ -4,7 +4,7 @@ import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
 import invariant from "invariant";
 import printNode from "../utils/print-node";
-import { get, FUNCTION_INDEX } from "../parser/metadata";
+import { get, FUNCTION_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateFunctionCall: GeneratorType = (node, parent) => {
@@ -17,7 +17,7 @@ const generateFunctionCall: GeneratorType = (node, parent) => {
 
   block.push({
     kind: opcode.Call,
-    params: [metaFunctionIndex.payload.functionIndex],
+    params: [metaFunctionIndex.payload],
   });
 
   return block;

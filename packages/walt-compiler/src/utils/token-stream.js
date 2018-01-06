@@ -1,28 +1,26 @@
 // @flow
-import type { Token } from "../flow/types";
+import type { TokenType } from "../flow/types";
 
-class TokenStream {
+export default class TokenStream {
   length: number;
-  tokens: Token[];
+  tokens: TokenType[];
   pos: number;
 
-  constructor(tokens: Token[] = []) {
+  constructor(tokens: TokenType[] = []) {
     this.length = tokens.length;
     this.tokens = tokens;
     this.pos = 0;
   }
 
-  next(): Token {
+  next(): TokenType {
     return this.tokens[this.pos++];
   }
 
-  peek(): Token {
+  peek(): TokenType {
     return this.tokens[this.pos];
   }
 
-  last(): Token {
+  last(): TokenType {
     return this.tokens[this.length - 1];
   }
 }
-
-export default TokenStream;

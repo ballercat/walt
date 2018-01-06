@@ -3,7 +3,7 @@ import invariant from "invariant";
 import generateExpression from "./expression";
 import { generateValueType } from "./utils";
 import opcode from "../emitter/opcode";
-import { get, LOCAL_INDEX } from "../parser/metadata";
+import { get, LOCAL_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateDeclaration: GeneratorType = (
