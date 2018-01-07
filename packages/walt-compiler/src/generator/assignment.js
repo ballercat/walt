@@ -5,12 +5,10 @@ import mergeBlock from "./merge-block";
 import type { GeneratorType } from "./flow/types";
 
 const generateAssignment: GeneratorType = node => {
-  const block = node.params
-    .slice(1)
-    .map(mapSyntax(null))
-    .reduce(mergeBlock, []);
+  const [target, value] = node.params;
+  const block = [value].map(mapSyntax(null)).reduce(mergeBlock, []);
 
-  block.push(setInScope(node.params[0]));
+  block.push(setInScope(target));
 
   return block;
 };

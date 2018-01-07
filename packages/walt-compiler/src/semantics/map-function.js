@@ -38,25 +38,28 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapAssignment = makeAssignment({ ...options, locals });
 
   const mapDeclaration = isConst => (declaration, mapChildren) => {
-    const index = Object.keys(locals).length;
-    const isArray = declaration.type.slice(-2) === "[]";
-    const type = isArray ? "i32" : declaration.type;
-    const metaArray = isArray
-      ? setMetaArray(declaration.type.slice(0, -2))
-      : null;
-    const meta = [
-      setMetaLocalIndex(index),
-      metaArray,
-      isConst ? setMetaConst() : null,
-    ];
-    locals[declaration.value] = {
-      ...declaration,
-      type,
-      meta,
-      params: declaration.params.map(mapChildren),
-      Type: Syntax.Declaration,
-    };
-    return locals[declaration.value];
+    if (locals[declaration.value] == null) {
+      const index = Object.keys(locals).length;
+      const isArray = declaration.type.slice(-2) === "[]";
+      const type = isArray ? "i32" : declaration.type;
+      const metaArray = isArray
+        ? setMetaArray(declaration.type.slice(0, -2))
+        : null;
+      const meta = [
+        setMetaLocalIndex(index),
+        metaArray,
+        isConst ? setMetaConst() : null,
+      ];
+      locals[declaration.value] = {
+        ...declaration,
+        type,
+        meta,
+        params: declaration.params.map(mapChildren),
+        Type: Syntax.Declaration,
+      };
+      return locals[declaration.value];
+    }
+    return declaration;
   };
 
   return mapNode({

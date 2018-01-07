@@ -1,71 +1,42 @@
 import test from "ava";
-import parseContstant from "../parser/constant";
-import parseExpression from "../parser/expression";
-import { mockContext } from "../utils/mocks";
-import compile from "..";
+import compile, { debug, getIR } from "..";
+import compose from "../utils/compose";
 
-const compileAndRun = src => WebAssembly.instantiate(compile(src));
+const walt = `export function constant(): f32 {
+  return 0.5;
+}
+export function variableTypecast(): f32 {
+  const x: i32 = 1;
+  return (x: f32) + 5.0;
+}
+export function _32IntTypecast(): i32 {
+  return (2.0: i32) + 2;
+}
+export function _32FloatTypecast(): f32 {
+  return 2.5 + (2: f32) + 0.5;
+}
+export function _64IntTypecast(): i32 {
+  const x: i64 = 2;
+  return 2 + (x: i32);
+}
+export function _64FloatTypecast(x: f64): f32 {
+  return 2 * (x : f32);
+}
+export function promotions(): f32 {
+  return 2.5 + 2 + 0.5 * (10/ 5);
+}`;
 
-test("types of constants", t => {
-  const ctx = mockContext("0.5");
-  const node = parseContstant(ctx);
-  t.snapshot(node);
-});
-
-test("typecasts are patched in binary expressions", t => {
-  const ctx = mockContext("(x: f32) + 5.0");
-  ctx.globals = [
-    {
-      value: "x",
-      type: "i32",
-    },
-  ];
-
-  // The Pair of (x: f32) should become a TypeCast (to, from)
-  const node = parseExpression(ctx);
-  t.snapshot(node);
-});
-
-test("correct typecasts for constants", t => {
-  const ctx = mockContext("(2.0: i32) + 2");
-  const node = parseExpression(ctx);
-  t.snapshot(node);
-});
-
-test("correct typecasts for float constants", t => {
-  const ctx = mockContext("2.5 + (2: f32) + 0.5");
-  const node = parseExpression(ctx);
-  t.snapshot(node);
-});
-
-test("float to int typecasts are compiled", t =>
-  compileAndRun(`
-      export function echo() : i32 {
-        return (2.5 : i32) + 2;
-      }
-    `).then(result => {
-    t.is(result.instance.exports.echo(), 4);
-  }));
-
-test("int to float typecasts are compiled", t =>
-  compileAndRun(`
-      export function echo() : f32 {
-        return 2.5 + (2 : f32) + 0.5;
-      }
-    `).then(result => {
-    t.is(result.instance.exports.echo(), 5);
-  }));
-
-test("binary expressions, are type promoted when necessary", t => {
-  const ctx = mockContext("2.5 + 2 + 0.5 * (10 / 5);");
-  ctx.globals = [{ value: "x", type: "i32" }];
-  const node = parseExpression(ctx);
-  t.snapshot(node);
-});
-
-test("binary expression results can be typecast", t => {
-  const ctx = mockContext("(10 + 5): f32");
-  ctx.globals = [{ value: "x", type: "i32" }];
-  const node = parseExpression(ctx);
-  t.snapshot(node);
+test("typecasts work", t => {
+  const getWasm = compose(debug, getIR);
+  const wasm = getWasm(walt);
+  t.snapshot(wasm);
+  return WebAssembly.instantiate(compile(walt)).then(result => {
+    t.is(result.instance.exports.constant(), 0.5);
+    t.is(result.instance.exports.variableTypecast(), 6);
+    t.is(result.instance.exports._32IntTypecast(), 4);
+    t.is(result.instance.exports._32FloatTypecast(), 5);
+    t.is(result.instance.exports._64IntTypecast(), 4);
+    t.is(result.instance.exports._64FloatTypecast(2), 4);
+    t.is(result.instance.exports.promotions(), 5.5);
+  });
 });

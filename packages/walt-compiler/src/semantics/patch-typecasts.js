@@ -5,30 +5,6 @@ import { typeCast } from "./metadata";
 import printNode from "../utils/print-node";
 import type { NodeType } from "../flow/types";
 
-export const isBinaryMathExpression = (node: NodeType): boolean => {
-  switch (node.value) {
-    case "&&":
-    case "||":
-    case "+":
-    case "-":
-    case "/":
-    case "*":
-    case "%":
-    case "==":
-    case ">":
-    case "<":
-    case ">=":
-    case "<=":
-    case "!=":
-    case "&":
-    case "|":
-    case "^":
-      return true;
-    default:
-      return false;
-  }
-};
-
 export const typeWeight = (typeString: ?string) => {
   switch (typeString) {
     case "i32":
@@ -47,54 +23,47 @@ export const typeWeight = (typeString: ?string) => {
 export const balanceTypesInMathExpression = (
   expression: NodeType
 ): NodeType => {
-  if (isBinaryMathExpression(expression)) {
-    // find the result type in the expression
-    let type = null;
-    expression.params.forEach(({ type: childType }) => {
-      // The way we do that is by scanning the top-level nodes in our expression
-      if (typeWeight(type) < typeWeight(childType)) {
-        type = childType;
-      }
-    });
+  // find the result type in the expression
+  let type = null;
+  expression.params.forEach(({ type: childType }) => {
+    // The way we do that is by scanning the top-level nodes in our expression
+    if (typeWeight(type) < typeWeight(childType)) {
+      type = childType;
+    }
+  });
 
+  invariant(
+    type,
+    "Expression missing type parameters %s",
+    printNode(expression)
+  );
+
+  // iterate again, this time, patching any mis-typed nodes
+  const params = expression.params.map(paramNode => {
     invariant(
-      type,
-      "Expression missing type parameters %s",
-      printNode(expression)
+      paramNode.type,
+      "Undefiend type in expression %s",
+      printNode(paramNode)
     );
 
-    // iterate again, this time, patching any mis-typed nodes
-    const params = expression.params.map(paramNode => {
-      invariant(
-        paramNode.type,
-        "Undefiend type in expression %s",
-        printNode(paramNode)
-      );
+    if (paramNode.type !== type && type != null) {
+      // last check is for flow
+      return {
+        ...paramNode,
+        type,
+        value: paramNode.value,
+        Type: Syntax.TypeCast,
+        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
+        params: [paramNode],
+      };
+    }
 
-      if (paramNode.type !== type && type != null) {
-        // last check is for flow
-        return {
-          ...paramNode,
-          type,
-          value: paramNode.value,
-          Type: Syntax.TypeCast,
-          meta: [
-            ...paramNode.meta,
-            typeCast({ to: type, from: paramNode.type }),
-          ],
-          params: [paramNode],
-        };
-      }
+    return paramNode;
+  });
 
-      return paramNode;
-    });
-
-    return {
-      ...expression,
-      params,
-      type,
-    };
-  }
-
-  return expression;
+  return {
+    ...expression,
+    params,
+    type,
+  };
 };

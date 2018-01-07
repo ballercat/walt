@@ -1,6 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
 import curry from "curry";
+import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { get, TYPE_OBJECT } from "./metadata";
 import walkNode from "../utils/walk-node";
 
@@ -77,8 +78,14 @@ export default curry(function mapAssignment(options, node, mapChildren) {
     };
   }
 
-  return {
+  // FIXME
+  // @ballercat:
+  // These extra typecasts are added because 64 bit Constant values are not
+  // encoded correctly, apparently they need to literrally be 64 bits wided in the
+  // binary, which is different form variable length 32 bit Ints/floats. The type-cast
+  // is easier to encode and perform at this point. Please fix the encoding.
+  return balanceTypesInMathExpression({
     ...node,
     params: node.params.map(mapChildren),
-  };
+  });
 });

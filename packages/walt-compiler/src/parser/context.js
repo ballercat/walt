@@ -8,7 +8,7 @@
 
 // @flow
 import generateErrorString from "../utils/generate-error";
-import type TokenStream from "../utils/token-stream";
+import type { TokenStream } from "../utils/token-stream";
 import type { TokenType, NodeType } from "../flow/types";
 
 export default class Context {
