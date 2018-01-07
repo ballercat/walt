@@ -96,10 +96,6 @@ test("function pointers", t => {
   ).then(outputIs(t, 42));
 });
 
-test("table max can be set", () =>
-  compileAndRun(
-    "const table: Table = { 'element': 'anyfunc', 'initial': 1, 'max': 2 };"
-  ));
 test("function pointers, multiple, with table declared", t =>
   compileAndRun(
     `

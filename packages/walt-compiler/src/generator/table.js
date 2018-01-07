@@ -14,6 +14,8 @@ export default function generateMemory(node: NodeType): IntermediateTableType {
         table.initial = parseInt(value);
       } else if (key === "element") {
         table.type = value;
+      } else if (key === "max") {
+        table.max = parseInt(value);
       }
     },
   })(node);
