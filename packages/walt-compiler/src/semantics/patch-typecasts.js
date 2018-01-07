@@ -1,8 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
-import invariant from "invariant";
 import { typeCast } from "./metadata";
-import printNode from "../utils/print-node";
+import generateErrorString from "../utils/generate-error";
 import type { NodeType } from "../flow/types";
 
 export const typeWeight = (typeString: ?string) => {
@@ -32,19 +31,33 @@ export const balanceTypesInMathExpression = (
     }
   });
 
-  invariant(
-    type,
-    "Expression missing type parameters %s",
-    printNode(expression)
-  );
+  if (type == null) {
+    const [start, end] = expression.range;
+    throw new SyntaxError(
+      generateErrorString(
+        "Cannot generate expression, missing type information",
+        "Missing type information",
+        { start, end },
+        "",
+        ""
+      )
+    );
+  }
 
   // iterate again, this time, patching any mis-typed nodes
   const params = expression.params.map(paramNode => {
-    invariant(
-      paramNode.type,
-      "Undefiend type in expression %s",
-      printNode(paramNode)
-    );
+    if (paramNode.type == null) {
+      const [start, end] = paramNode.range;
+      throw new SyntaxError(
+        generateErrorString(
+          "Could not infer a type in binary expression",
+          `${paramNode.value} has no defined type`,
+          { start, end },
+          "",
+          ""
+        )
+      );
+    }
 
     if (paramNode.type !== type && type != null) {
       // last check is for flow

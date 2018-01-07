@@ -38,7 +38,6 @@ export default class Context {
         msg,
         error || "",
         this.token,
-        this.lines[this.token.start.line - 1],
         this.filename || "unknown",
         functionId
       )

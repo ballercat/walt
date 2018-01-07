@@ -15,6 +15,19 @@ export default curry(function mapAssignment(options, node, mapChildren) {
     // We have to walk the nodes twice, once for regular prop keys and then again
     // for ...(spread)
     walkNode({
+      // Top level Identifiers _inside_ an object literal === shorthand
+      // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
+      // only way this is hit is if the identifier is TOP LEVEL
+      [Syntax.Identifier]: (identifier, _) => {
+        individualKeys[identifier.value] = {
+          ...lhs,
+          Type: Syntax.MemoryAssignment,
+          params: [
+            { ...lhs, Type: Syntax.ArraySubscript, params: [lhs, identifier] },
+            identifier,
+          ],
+        };
+      },
       [Syntax.Pair]: (pair, _) => {
         const [property, value] = pair.params;
         individualKeys[property.value] = {

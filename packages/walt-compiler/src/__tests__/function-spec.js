@@ -39,11 +39,11 @@ test("functions", t => {
   const wasm = getIR(walt);
 
   t.snapshot(debug(wasm));
-  return WebAssembly.instantiate(wasm.buffer(), result => {
+  return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
     t.is(exports.testParams(2, 2), 4, "function params");
-    t.is(exports.testGlobalScope(), 32, "global scope");
-    t.is(exports.testVoidIsOptional(), null);
+    t.is(exports.testGlobalScope(), 42, "local scope > global scope");
+    t.is(exports.testVoidIsOptional() == null, true);
     t.is(exports.test0FunctionNames1(), 2, "numbers in function names");
     t.is(exports.testPointerArguments(), 5, "object pointer arguments");
     t.is(exports.testFunctionPointers(), 4, "plain function pointers");
