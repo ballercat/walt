@@ -18,6 +18,10 @@ export function userDefinedObject(): i32 {
   const x: Type;
   return sizeof(x);
 }
+
+export function userDefinedTypeName(): i32 {
+  return sizeof(Type);
+}
 `;
 
 test("type sizes", t => {
@@ -28,5 +32,6 @@ test("type sizes", t => {
     t.is(result.instance.exports._32BitSizes(), 8, "32 bit sizes combined");
     t.is(result.instance.exports._64BitSizes(), 16, "64 bit sizes combined");
     t.is(result.instance.exports.userDefinedObject(), 16, "object types");
+    t.is(result.instance.exports.userDefinedTypeName(), 16, "type-name");
   });
 });

@@ -17,7 +17,6 @@ const variableSize = (type: string): string => {
 };
 
 const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
-  // Not a function call or pointer, look-up variables
   const [target] = sizeof.params;
   const local = locals[target.value];
   const global = globals[target.value];
