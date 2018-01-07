@@ -103,7 +103,7 @@ test("table max can be set", () =>
 test("function pointers, multiple, with table declared", t =>
   compileAndRun(
     `
-      const table: Table = { 'element': 'anyfunc', 'initial': 10 };
+      const table: Table = { element: anyfunc, initial: 10, max: 10 };
       type Test = () => i32;
 
       function callback(pointer: Test): i32 {
