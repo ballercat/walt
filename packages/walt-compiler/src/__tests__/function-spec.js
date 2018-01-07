@@ -49,3 +49,21 @@ test("functions", t => {
     t.is(exports.testFunctionPointers(), 4, "plain function pointers");
   });
 });
+
+test.only("closures", t => {
+  const walt = `
+  import { table: Table } from 'env';
+
+  type ClosureType = () => i32;
+
+  function getClosure(): ClosureType {
+    let x: i32 = 0;
+    return (): i32 => {
+      const y: il2 = x;
+      x += 1;
+      return y;
+    };
+  }`;
+
+  const wasm = getIR(walt);
+});

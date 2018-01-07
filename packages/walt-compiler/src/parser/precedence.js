@@ -23,6 +23,7 @@ export const PRECEDENCE_KEY_VALUE_PAIR = -1;
 export const PRECEDENCE_PARAMS = -99;
 
 const precedence = {
+  "=>": PRECEDENCE_FUNCTION_CALL,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,
   "+": PRECEDENCE_ADDITION,

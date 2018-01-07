@@ -5,7 +5,7 @@
 import invariant from "invariant";
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import printNode from "../utils/print-node";
+import generateError from "../utils/generate-error";
 import { I32, F32, F64, I64 } from "../emitter/value_type";
 import type { IntermediateTypeDefinitionType, NodeType } from "./flow/types";
 
@@ -59,11 +59,18 @@ export default function generateType(
   );
 
   const typeExpression = node.params[0];
-  invariant(
-    typeExpression && typeExpression.Type === Syntax.BinaryExpression,
-    "Generator: A function type must be of form (<type>, ...) <type> node:" +
-      `${printNode(node)}`
-  );
+  if (typeExpression.Type !== Syntax.Closure) {
+    const [start, end] = node.range;
+    throw new SyntaxError(
+      generateError(
+        "Invalid type syntax",
+        "A function type must be of form (<type>, ...) <type>",
+        { start, end },
+        "",
+        ""
+      )
+    );
+  }
 
   // Collect the function params and result by walking the tree of nodes
   const params = [];

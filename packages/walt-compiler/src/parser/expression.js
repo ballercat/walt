@@ -4,6 +4,7 @@ import operator from "./operator";
 import constant from "./constant";
 import stringLiteral from "./string-literal";
 import builtInType from "./builtin-type";
+import block from "./block";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
@@ -72,6 +73,13 @@ const expression = (
 
   const processPunctuator = () => {
     switch (ctx.token.value) {
+      case "=>":
+        operators.push(ctx.token);
+        ctx.next();
+        if (ctx.token.value === "{") {
+          operands.push(block(ctx));
+        }
+        return false;
       case "(":
         depth++;
         // Function call.

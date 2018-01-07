@@ -31,6 +31,10 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
             return value === "void" ? null : value;
           }
 
+          if (ctx.eat(null, Syntax.Identifier)) {
+            return "i32";
+          }
+
           return "i32";
         })(),
       },

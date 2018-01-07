@@ -2,6 +2,7 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import functionCall from "./function-call";
+import closure from "./closure";
 import { subscriptFromNode } from "./array-subscript";
 import type { TokenType, NodeType } from "../flow/types";
 
@@ -110,6 +111,8 @@ const operator = (
 ) => {
   const op = operators.pop();
   switch (op.value) {
+    case "=>":
+      return closure(ctx, op, operands);
     case "?":
       return ternary(ctx, op, operands.splice(-2));
     case ",":
@@ -124,6 +127,7 @@ const operator = (
       if (op.type === Syntax.FunctionCall) {
         return functionCall(ctx, op, operands);
       }
+
       return binary(ctx, op, operands.splice(-2));
   }
 };

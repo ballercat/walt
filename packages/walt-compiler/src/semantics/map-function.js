@@ -6,6 +6,7 @@ import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
+import makeClosure from "./map-closure";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
   typeCast,
@@ -36,6 +37,7 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
   const mapAssignment = makeAssignment({ ...options, locals });
+  const mapClosure = makeClosure({ ...options, locals });
 
   const mapDeclaration = isConst => (declaration, mapChildren) => {
     if (locals[declaration.value] == null) {
@@ -120,6 +122,10 @@ const mapFunctionNode = (options, node, _ignore) => {
     },
     [Syntax.Pair]: (typeCastMaybe: NodeType, childMapper): NodeType => {
       const [targetNode, typeNode] = typeCastMaybe.params.map(childMapper);
+
+      if (targetNode.Type === Syntax.Closure) {
+        return mapClosure(targetNode, childMapper);
+      }
       const { type: from } = targetNode;
       const { value: to } = typeNode;
 
