@@ -1,38 +1,37 @@
 import test from "ava";
-import semantics from "../../semantics";
-import parser from "../../parser";
+import compose from "../../utils/compose";
+import compile, { debug, getIR } from "../..";
 
-test("sizeof parser, built-in type", t => {
-  const ast = semantics(parser("function test() { const x: i32; sizeof(x); }"));
-  t.snapshot(ast);
-});
+const walt = `export function _32BitSizes(): i32 {
+  const x: i32;
+  const y: f32;
+  return sizeof(x) + sizeof(y);
+}
 
-test("sizeof parser, user-defined object types", t => {
-  const ast = semantics(
-    parser(`
-    type Type = { 'a': i32, 'b': i32, 'c': i32, 'd': i32 };
-    function test() {
-      const x: Type; sizeof(x);
-    }`)
-  );
-  t.snapshot(ast);
-});
+export function _64BitSizes(): i32 {
+  const x: i64;
+  const y: f64;
+  return sizeof(x) + sizeof(y);
+}
+type Type = { a: i32, b: i32, c: i32, d: i32 };
+export function userDefinedObject(): i32 {
+  const x: Type;
+  return sizeof(x);
+}
 
-test("sizeof parser, 64 bit variables", t => {
-  const ast = semantics(parser("function test() { const x: i64; sizeof(x); }"));
-  t.snapshot(ast);
-});
+export function userDefinedTypeName(): i32 {
+  return sizeof(Type);
+}
+`;
 
-test("sizeof parser, built-in word types", t => {
-  const ast = semantics(
-    parser("function test() { sizeof(i32); sizeof(f32); }")
-  );
-  t.snapshot(ast);
-});
-
-test("sizeof parser, built-in double word types", t => {
-  const ast = semantics(
-    parser("function test() { sizeof(i64); sizeof(f64); }")
-  );
-  t.snapshot(ast);
+test("type sizes", t => {
+  const getWasm = compose(debug, getIR);
+  const wasm = getWasm(walt);
+  t.snapshot(wasm);
+  return WebAssembly.instantiate(compile(walt)).then(result => {
+    t.is(result.instance.exports._32BitSizes(), 8, "32 bit sizes combined");
+    t.is(result.instance.exports._64BitSizes(), 16, "64 bit sizes combined");
+    t.is(result.instance.exports.userDefinedObject(), 16, "object types");
+    t.is(result.instance.exports.userDefinedTypeName(), 16, "type-name");
+  });
 });

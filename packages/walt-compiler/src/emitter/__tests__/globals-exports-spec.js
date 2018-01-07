@@ -3,9 +3,6 @@ import { I32, F32 } from "../value_type";
 import { EXTERN_GLOBAL } from "../external_kind";
 import emit from "..";
 
-// TODO:
-// the only way we can test output of globals is by exporting them
-// should build in some assert() into the binary :)
 const init = 42;
 const ast = {
   Exports: [{ kind: EXTERN_GLOBAL, field: "meaningOfLife", index: 0 }],

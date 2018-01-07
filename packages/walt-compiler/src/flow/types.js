@@ -1,6 +1,7 @@
 // @flow
 
 export type Marker = {
+  sourceLine: string,
   line: number,
   col: number,
 };

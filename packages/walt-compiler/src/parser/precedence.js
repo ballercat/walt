@@ -12,6 +12,7 @@ export const PRECEDENCE_ADDITION = 0;
 export const PRECEDENCE_SUBTRACTION = 0;
 export const PRECEDENCE_COMMA = -2;
 export const PRECEDENCE_BITWISE_XOR = -2;
+export const PRECEDENCE_SPREAD = -1;
 export const PRECEDENCE_BITWISE_AND = -1;
 export const PRECEDENCE_BITWISE_OR = -3;
 export const PRECEDENCE_LOGICAL_AND = -4;
@@ -42,5 +43,6 @@ const precedence = {
   "|": PRECEDENCE_BITWISE_OR,
   "&&": PRECEDENCE_LOGICAL_AND,
   "||": PRECEDENCE_LOGICAL_OR,
+  "...": PRECEDENCE_SPREAD,
 };
 export default precedence;

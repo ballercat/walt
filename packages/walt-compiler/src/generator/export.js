@@ -16,13 +16,10 @@ export default function generateExport(node: NodeType): IntermediateExportType {
     };
   }
 
-  if (functionIndexMeta) {
-    return {
-      index: functionIndexMeta.payload,
-      kind: EXTERN_FUNCTION,
-      field: node.value,
-    };
-  }
-
-  invariant(false, "Unknown Export");
+  invariant(functionIndexMeta, "Unknown Export");
+  return {
+    index: functionIndexMeta.payload,
+    kind: EXTERN_FUNCTION,
+    field: node.value,
+  };
 }

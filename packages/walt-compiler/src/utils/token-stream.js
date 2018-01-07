@@ -1,26 +1,20 @@
 // @flow
 import type { TokenType } from "../flow/types";
 
-export default class TokenStream {
-  length: number;
-  tokens: TokenType[];
-  pos: number;
+export type TokenStream = {
+  next: () => TokenType,
+  peek: () => TokenType,
+  last: () => TokenType,
+  tokens: TokenType[],
+};
 
-  constructor(tokens: TokenType[] = []) {
-    this.length = tokens.length;
-    this.tokens = tokens;
-    this.pos = 0;
-  }
+export default function tokenStream(tokens: TokenType[]): TokenStream {
+  const length = tokens.length;
+  let pos = 0;
 
-  next(): TokenType {
-    return this.tokens[this.pos++];
-  }
+  const next = () => tokens[pos++];
+  const peek = () => tokens[pos];
+  const last = () => tokens[length - 1];
 
-  peek(): TokenType {
-    return this.tokens[this.pos];
-  }
-
-  last(): TokenType {
-    return this.tokens[this.length - 1];
-  }
+  return { tokens, next, peek, last, length };
 }

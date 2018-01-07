@@ -4,14 +4,13 @@ export default function generateErrorString(
   msg: string,
   error: string,
   marker: {
-    start: { line: number, col: number },
-    end: { line: number, col: number },
+    start: { sourceLine: string, line: number, col: number },
+    end: { sourceLine: string, line: number, col: number },
   },
-  Line: string,
   filename: string,
   func: string
 ): string {
-  const { line, col } = marker.start;
+  const { sourceLine: Line, line, col } = marker.start;
   const { col: end } = marker.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");

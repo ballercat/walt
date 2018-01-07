@@ -10,18 +10,18 @@ import statement from "./statement";
 import Context from "./context";
 import Tokenizer from "../tokenizer";
 import Stream from "../utils/stream";
-import TokenStream from "../utils/token-stream";
+import tokenStream from "../utils/token-stream";
 
 import type { NodeType } from "../flow/types";
 
 export default function parse(source: string): NodeType {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream);
-  const tokens = new TokenStream(tokenizer.parse());
+  const tokens = tokenStream(tokenizer.parse());
 
   const ctx = new Context({
     stream: tokens,
-    token: tokens.next(),
+    token: tokens.tokens[0],
     lines: stream.lines,
     filename: "unknown.walt",
   });
@@ -38,6 +38,8 @@ export default function parse(source: string): NodeType {
   if (!ctx.stream || !ctx.stream.length) {
     return node;
   }
+
+  ctx.token = tokens.next();
 
   while (ctx.stream.peek()) {
     const child = statement(ctx);
