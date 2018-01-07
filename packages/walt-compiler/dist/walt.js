@@ -49,6 +49,7 @@ const Syntax = {
   Break: "Break",
   Comment: "Comment",
   Sizeof: "Sizeof",
+  Spread: "Spread",
 
   Noop: "Noop",
 
@@ -146,15 +147,25 @@ function binary(ctx, op, params) {
 
 const unary = (ctx, op, params) => {
   const [target] = params;
-  return _extends({}, target, {
-    Type: Syntax.UnaryExpression,
-    value: "-",
-    params: [_extends({}, target, {
-      value: "0",
-      Type: Syntax.Constant,
-      params: [],
-      meta: []
-    }), target]
+  if (op.value === "--") {
+    return _extends({}, target, {
+      Type: Syntax.UnaryExpression,
+      value: "-",
+      meta: [],
+      params: [_extends({}, target, {
+        value: "0",
+        Type: Syntax.Constant,
+        params: [],
+        meta: []
+      }), target]
+    });
+  }
+
+  return _extends({}, op, {
+    range: [op.start, target.range[1]],
+    meta: [],
+    Type: Syntax.Spread,
+    params: [target]
   });
 };
 
@@ -201,10 +212,12 @@ const operator = (ctx, operators, operands) => {
     case "?":
       return ternary(ctx, op, operands.splice(-2));
     case ",":
-      return sequence(ctx, op, operands.slice(-2));
+      return sequence(ctx, op, operands.splice(-2));
     case "{":
       return objectLiteral(ctx, op, operands.splice(-1));
     case "--":
+    case "...":
+    case "sizeof":
       return unary(ctx, op, operands.splice(-1));
     default:
       if (op.type === Syntax.FunctionCall) {
@@ -251,6 +264,7 @@ const PRECEDENCE_ADDITION = 0;
 const PRECEDENCE_SUBTRACTION = 0;
 const PRECEDENCE_COMMA = -2;
 const PRECEDENCE_BITWISE_XOR = -2;
+const PRECEDENCE_SPREAD = -1;
 const PRECEDENCE_BITWISE_AND = -1;
 const PRECEDENCE_BITWISE_OR = -3;
 const PRECEDENCE_LOGICAL_AND = -4;
@@ -280,7 +294,8 @@ const precedence = {
   "&": PRECEDENCE_BITWISE_AND,
   "|": PRECEDENCE_BITWISE_OR,
   "&&": PRECEDENCE_LOGICAL_AND,
-  "||": PRECEDENCE_LOGICAL_OR
+  "||": PRECEDENCE_LOGICAL_OR,
+  "...": PRECEDENCE_SPREAD
 };
 
 //      
@@ -357,7 +372,6 @@ type = "i32", check = predicate) => {
       if (value === "," && previous.type === Syntax.FunctionCall) {
         break;
       }
-      // if (value === ":" && previous.type === Syntax.Pair) break;
       consume();
     }
   };
@@ -724,8 +738,8 @@ const whileLoop = ctx => {
 
 //      
 
-function generateErrorString(msg, error, marker, Line, filename, func) {
-  const { line, col } = marker.start;
+function generateErrorString(msg, error, marker, filename, func) {
+  const { sourceLine: Line, line, col } = marker.start;
   const { col: end } = marker.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
@@ -759,7 +773,7 @@ class Context {
 
   syntaxError(msg, error$$1) {
     const functionId = "unknown";
-    return new SyntaxError(generateErrorString(msg, error$$1 || "", this.token, this.lines[this.token.start.line - 1], this.filename || "unknown", functionId));
+    return new SyntaxError(generateErrorString(msg, error$$1 || "", this.token, this.filename || "unknown", functionId));
   }
 
   unexpectedValue(value) {
@@ -884,25 +898,6 @@ function parseIfStatement(ctx) {
 }
 
 //      
-function sizeof(ctx) {
-  const node = ctx.startNode();
-
-  ctx.eat(["sizeof"]);
-  ctx.eat(["("]);
-
-  const value = ctx.token.value;
-  if (!ctx.eat(null, Syntax.Identifier)) {
-    ctx.eat(null, Syntax.Type);
-  }
-  // All sizes are 32-bit
-  node.type = "i32";
-
-  ctx.eat([")"]);
-
-  return ctx.endNode(_extends({}, node, { value }), Syntax.Sizeof);
-}
-
-//      
 const keyword = ctx => {
   switch (ctx.token.value) {
     case "let":
@@ -924,8 +919,6 @@ const keyword = ctx => {
       return whileLoop(ctx);
     case "return":
       return returnStatement(ctx);
-    case "sizeof":
-      return sizeof(ctx);
     case "break":
       return breakParser(ctx);
     default:
@@ -1003,7 +996,6 @@ function maybeAssignment(ctx) {
   if (nextValue === "[") {
     return memoryStore(ctx);
   }
-
   return expression(ctx);
 }
 
@@ -1162,7 +1154,7 @@ const wrap = (predicate, type, supported) => {
 var token = wrap;
 
 //      
-const supported = ["+", "++", "-", "--", "=", "==", "+=", "-=", "=>", "<=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}"];
+const supported = ["+", "++", "-", "--", "=", "==", "+=", "-=", "=>", "<=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
 
 const trie = new trie$1(supported);
 var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
@@ -1264,14 +1256,7 @@ const supported$1 = [
 "function",
 
 // s-expression
-"global", "module", "type",
-
-// specials/asserts
-"invoke", "assert", "assert_return",
-
-// additional syntax
-// statically replaced with consant value at compile time
-"sizeof"];
+"global", "module", "type"];
 
 
 
@@ -1329,6 +1314,7 @@ class Tokenizer {
     let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
+      sourceLine: this.stream.lines[this.stream.line - 1],
       line: this.stream.line,
       col: this.stream.col
     };
@@ -1350,6 +1336,7 @@ class Tokenizer {
     const token = this.token(value, matchers);
     token.start = start;
     token.end = {
+      sourceLine: this.stream.lines[this.stream.line - 1],
       line: this.stream.line,
       col: this.stream.col
     };
@@ -1421,25 +1408,15 @@ class Tokenizer {
 //      
 
 
-class TokenStream {
+function tokenStream(tokens) {
+  const length = tokens.length;
+  let pos = 0;
 
-  constructor(tokens = []) {
-    this.length = tokens.length;
-    this.tokens = tokens;
-    this.pos = 0;
-  }
+  const next = () => tokens[pos++];
+  const peek = () => tokens[pos];
+  const last = () => tokens[length - 1];
 
-  next() {
-    return this.tokens[this.pos++];
-  }
-
-  peek() {
-    return this.tokens[this.pos];
-  }
-
-  last() {
-    return this.tokens[this.length - 1];
-  }
+  return { tokens, next, peek, last, length };
 }
 
 /**
@@ -1452,11 +1429,11 @@ class TokenStream {
 function parse(source) {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream);
-  const tokens = new TokenStream(tokenizer.parse());
+  const tokens = tokenStream(tokenizer.parse());
 
   const ctx = new Context({
     stream: tokens,
-    token: tokens.next(),
+    token: tokens.tokens[0],
     lines: stream.lines,
     filename: "unknown.walt"
   });
@@ -1470,6 +1447,8 @@ function parse(source) {
   if (!ctx.stream || !ctx.stream.length) {
     return node;
   }
+
+  ctx.token = tokens.next();
 
   while (ctx.stream.peek()) {
     const child = statement(ctx);
@@ -1512,7 +1491,7 @@ const u64 = 1 << 12;
 // In _bytes_
 const word = 4;
 
-const sizeof$1 = {
+const sizeof = {
   [i32]: word,
   [i64]: word * 2,
   [f32]: word,
@@ -1608,7 +1587,7 @@ var index = {
   u64,
   set: set$1,
   get: get$1,
-  sizeof: sizeof$1
+  sizeof
 };
 
 var index_1 = index.i32;
@@ -1783,7 +1762,7 @@ const EXTERN_MEMORY = 2;
 const EXTERN_GLOBAL = 3;
 
 //      
-function emitString(stream, string, debug = "string length") {
+function emitString(stream, string, debug) {
   stream.push(varuint32, string.length, debug);
   for (let i = 0; i < string.length; i++) {
     stream.push(index_9, string.charCodeAt(i), string[i]);
@@ -2344,7 +2323,7 @@ const typeBytecodes = {
 
 const emitEntry$1 = (payload, entry) => {
   payload.push(varint7, typeBytecodes[entry.type], entry.type);
-  payload.push(varint1, entry.max ? 1 : 0, "has no max");
+  payload.push(varint1, entry.max ? 1 : 0, "has max");
   payload.push(varuint32, entry.initial, "initial table size");
   if (entry.max) {
     payload.push(varuint32, entry.max, "max table size");
@@ -2571,7 +2550,7 @@ const generateBinaryExpression = (node, parent) => {
   // Map the operator last
   block.push({
     kind: opcodeFromOperator(_extends({}, node, {
-      type: node.type || "i32"
+      type: node.type
     })),
     params: []
   });
@@ -2753,6 +2732,19 @@ const getType = str => {
       return I32;
   }
 };
+
+const isBuiltinType = type => {
+  switch (type) {
+    case "i32":
+    case "f32":
+    case "i64":
+    case "f64":
+      return true;
+    default:
+      return false;
+  }
+};
+
 const generateValueType = node => ({
   mutable: get$2(TYPE_CONST, node) ? 0 : 1,
   type: getType(node.type)
@@ -2848,7 +2840,10 @@ const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
   if (initNode) {
     const metaIndex = get$2(LOCAL_INDEX, node);
     invariant_1(metaIndex, "Local Index is undefined. Cannot generate declaration");
-    return [...generateExpression(_extends({}, initNode, { type: node.type }), parent), { kind: def.SetLocal, params: [metaIndex.payload] }];
+
+    const type = isBuiltinType(node.type) ? node.type : "i32";
+
+    return [...generateExpression(_extends({}, initNode, { type }), parent), { kind: def.SetLocal, params: [metaIndex.payload] }];
   }
 
   return [];
@@ -2888,9 +2883,10 @@ const generateArraySubscript = (node, parent) => {
 
 //      
 const generateAssignment = node => {
-  const block = node.params.slice(1).map(mapSyntax(null)).reduce(mergeBlock, []);
+  const [target, value] = node.params;
+  const block = [value].map(mapSyntax(null)).reduce(mergeBlock, []);
 
-  block.push(setInScope(node.params[0]));
+  block.push(setInScope(target));
 
   return block;
 };
@@ -3216,15 +3212,12 @@ function generateExport(node) {
     };
   }
 
-  if (functionIndexMeta) {
-    return {
-      index: functionIndexMeta.payload,
-      kind: EXTERN_FUNCTION,
-      field: node.value
-    };
-  }
-
-  invariant_1(false, "Unknown Export");
+  invariant_1(functionIndexMeta, "Unknown Export");
+  return {
+    index: functionIndexMeta.payload,
+    kind: EXTERN_FUNCTION,
+    field: node.value
+  };
 }
 
 //      
@@ -3254,6 +3247,8 @@ function generateMemory$2(node) {
         table.initial = parseInt(value);
       } else if (key === "element") {
         table.type = value;
+      } else if (key === "max") {
+        table.max = parseInt(value);
       }
     }
   })(node);
@@ -3578,17 +3573,19 @@ const variableSize = type => {
 };
 
 const mapSizeof = curry_1(({ locals, globals, functions, userTypes }, sizeof) => {
-  // Not a function call or pointer, look-up variables
-  const local = locals[sizeof.value];
-  const global = globals[sizeof.value];
-  const userType$$1 = userTypes[sizeof.value] || (local ? userTypes[local.type] : null);
-  const func = functions[sizeof.value];
+  const [target] = sizeof.params;
+  const local = locals[target.value];
+  const global = globals[target.value];
+  const userType$$1 = userTypes[target.value] || (local ? userTypes[local.type] : null);
+  const func = functions[target.value];
 
   if (userType$$1 != null) {
     const metaSize = get$2(OBJECT_SIZE, userType$$1);
     invariant_1(metaSize, "Object size information is missing");
     return _extends({}, sizeof, {
       value: metaSize.payload,
+      params: [],
+      type: "i32",
       Type: Syntax.Constant
     });
   }
@@ -3596,36 +3593,14 @@ const mapSizeof = curry_1(({ locals, globals, functions, userTypes }, sizeof) =>
   const node = local || global || userType$$1 || func;
 
   return _extends({}, sizeof, {
-    value: variableSize(node ? node.type : sizeof.value),
+    value: variableSize(node ? node.type : target.value),
+    type: "i32",
+    params: [],
     Type: Syntax.Constant
   });
 });
 
 //      
-const isBinaryMathExpression = node => {
-  switch (node.value) {
-    case "&&":
-    case "||":
-    case "+":
-    case "-":
-    case "/":
-    case "*":
-    case "%":
-    case "==":
-    case ">":
-    case "<":
-    case ">=":
-    case "<=":
-    case "!=":
-    case "&":
-    case "|":
-    case "^":
-      return true;
-    default:
-      return false;
-  }
-};
-
 const typeWeight = typeString => {
   switch (typeString) {
     case "i32":
@@ -3642,44 +3617,123 @@ const typeWeight = typeString => {
 };
 
 const balanceTypesInMathExpression = expression => {
-  if (isBinaryMathExpression(expression)) {
-    // find the result type in the expression
-    let type = null;
-    expression.params.forEach(({ type: childType }) => {
-      // The way we do that is by scanning the top-level nodes in our expression
-      if (typeWeight(type) < typeWeight(childType)) {
-        type = childType;
-      }
-    });
+  // find the result type in the expression
+  let type = null;
+  expression.params.forEach(({ type: childType }) => {
+    // The way we do that is by scanning the top-level nodes in our expression
+    if (typeWeight(type) < typeWeight(childType)) {
+      type = childType;
+    }
+  });
 
-    invariant_1(type, "Expression missing type parameters %s", printNode(expression));
+  if (type == null) {
+    const [start, end] = expression.range;
+    throw new SyntaxError(generateErrorString("Cannot generate expression, missing type information", "Missing type information", { start, end }, "", ""));
+  }
 
-    // iterate again, this time, patching any mis-typed nodes
-    const params = expression.params.map(paramNode => {
-      invariant_1(paramNode.type, "Undefiend type in expression %s", printNode(paramNode));
+  // iterate again, this time, patching any mis-typed nodes
+  const params = expression.params.map(paramNode => {
+    if (paramNode.type == null) {
+      const [start, end] = paramNode.range;
+      throw new SyntaxError(generateErrorString("Could not infer a type in binary expression", `${paramNode.value} has no defined type`, { start, end }, "", ""));
+    }
 
-      if (paramNode.type !== type && type != null) {
-        // last check is for flow
-        return _extends({}, paramNode, {
-          type,
-          value: paramNode.value,
-          Type: Syntax.TypeCast,
-          meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
-          params: [paramNode]
+    if (paramNode.type !== type && type != null) {
+      // last check is for flow
+      return _extends({}, paramNode, {
+        type,
+        value: paramNode.value,
+        Type: Syntax.TypeCast,
+        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
+        params: [paramNode]
+      });
+    }
+
+    return paramNode;
+  });
+
+  return _extends({}, expression, {
+    params,
+    type
+  });
+};
+
+//      
+var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) {
+  const [lhs, rhs] = node.params;
+
+  // id = { <param>: <value> };
+  if (rhs && rhs.Type === Syntax.ObjectLiteral) {
+    const individualKeys = {};
+    const spreadKeys = {};
+    // We have to walk the nodes twice, once for regular prop keys and then again
+    // for ...(spread)
+    walker({
+      // Top level Identifiers _inside_ an object literal === shorthand
+      // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
+      // only way this is hit is if the identifier is TOP LEVEL
+      [Syntax.Identifier]: (identifier, _) => {
+        individualKeys[identifier.value] = _extends({}, lhs, {
+          Type: Syntax.MemoryAssignment,
+          params: [_extends({}, lhs, { Type: Syntax.ArraySubscript, params: [lhs, identifier] }), identifier]
         });
+      },
+      [Syntax.Pair]: (pair, _) => {
+        const [property, value] = pair.params;
+        individualKeys[property.value] = _extends({}, lhs, {
+          Type: Syntax.MemoryAssignment,
+          params: [_extends({}, lhs, { Type: Syntax.ArraySubscript, params: [lhs, property] }), value]
+        });
+      },
+      [Syntax.Spread]: (spread, _) => {
+        // find userType
+        const { locals, userTypes } = options;
+        const [target] = spread.params;
+        const userType$$1 = userTypes[locals[target.value].type];
+        const keyOffsetMap = get$2(TYPE_OBJECT, userType$$1);
+        if (keyOffsetMap != null) {
+          // map over the keys
+          Object.keys(keyOffsetMap.payload).forEach(key => {
+            const offsetNode = _extends({}, target, {
+              Type: Syntax.Identifier,
+              value: key,
+              params: []
+            });
+            // profit
+            spreadKeys[key] = _extends({}, lhs, {
+              Type: Syntax.MemoryAssignment,
+              params: [_extends({}, lhs, {
+                Type: Syntax.ArraySubscript,
+                params: [lhs, _extends({}, offsetNode)]
+              }), _extends({}, target, {
+                Type: Syntax.ArraySubscript,
+                params: [target, _extends({}, offsetNode)]
+              })]
+            });
+          });
+        }
       }
+    })(rhs);
 
-      return paramNode;
-    });
-
-    return _extends({}, expression, {
-      params,
-      type
+    const params = Object.values(_extends({}, spreadKeys, individualKeys));
+    return _extends({}, lhs, {
+      Type: Syntax.Block,
+      // We just created a bunch of MemoryAssignment nodes, map over them so that
+      // the correct metadata is applied to everything
+      params: params.map(mapChildren)
     });
   }
 
-  return expression;
-};
+  // FIXME
+  // @ballercat:
+  // These extra typecasts are added because 64 bit Constant values are not
+  // encoded correctly, apparently they need to literrally be 64 bits wided in the
+  // binary, which is different form variable length 32 bit Ints/floats. The type-cast
+  // is easier to encode and perform at this point. Please fix the encoding.
+  return balanceTypesInMathExpression(_extends({}, node, {
+    params: node.params.map(mapChildren)
+  }));
+});
 
 //      
 const mapFunctionNode = (options, node, _ignore) => {
@@ -3698,19 +3752,24 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapIdentifier$$1 = mapIdentifier(_extends({}, options, { locals }));
   const mapArraySubscript$$1 = mapArraySubscript(_extends({}, options, { locals }));
   const mapSizeof$$1 = mapSizeof(_extends({}, options, { locals }));
+  const mapAssignment = makeAssignment(_extends({}, options, { locals }));
 
-  const mapDeclaration = isConst => declaration => {
-    const index = Object.keys(locals).length;
-    const isArray = declaration.type.slice(-2) === "[]";
-    const type = isArray ? "i32" : declaration.type;
-    const metaArray = isArray ? array(declaration.type.slice(0, -2)) : null;
-    const meta = [localIndex(index), metaArray, isConst ? constant$1() : null];
-    locals[declaration.value] = _extends({}, declaration, {
-      type,
-      meta,
-      Type: Syntax.Declaration
-    });
-    return locals[declaration.value];
+  const mapDeclaration = isConst => (declaration, mapChildren) => {
+    if (locals[declaration.value] == null) {
+      const index = Object.keys(locals).length;
+      const isArray = declaration.type.slice(-2) === "[]";
+      const type = isArray ? "i32" : declaration.type;
+      const metaArray = isArray ? array(declaration.type.slice(0, -2)) : null;
+      const meta = [localIndex(index), metaArray, isConst ? constant$1() : null];
+      locals[declaration.value] = _extends({}, declaration, {
+        type,
+        meta,
+        params: declaration.params.map(mapChildren),
+        Type: Syntax.Declaration
+      });
+      return locals[declaration.value];
+    }
+    return declaration;
   };
 
   return mapNode({
@@ -3734,6 +3793,9 @@ const mapFunctionNode = (options, node, _ignore) => {
     [Syntax.ImmutableDeclaration]: mapDeclaration(true),
     [Syntax.Identifier]: mapIdentifier$$1,
     [Syntax.FunctionCall]: call => {
+      if (call.value === "sizeof") {
+        return mapSizeof$$1(call);
+      }
       if (functions[call.value] != null) {
         const index = Object.keys(functions).indexOf(call.value);
         return _extends({}, call, {
@@ -3811,6 +3873,7 @@ const mapFunctionNode = (options, node, _ignore) => {
         params: binaryNode.params.map(childMapper)
       }));
     },
+    [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, childMapper) => {
       const params = inputNode.params.map(childMapper);
       const { type } = params[0];
@@ -3903,6 +3966,7 @@ function semantics$1(ast) {
             const typeIndex$$1 = Object.keys(types).indexOf(typeNode.value);
             const functionNode = _extends({}, identifierNode, {
               id: identifierNode.value,
+              type: types[typeNode.value].type,
               meta: [funcIndex(functionIndex), typeIndex(typeIndex$$1)]
             });
             functions[identifierNode.value] = functionNode;
@@ -3950,20 +4014,19 @@ function semantics$1(ast) {
 const GLOBAL_LABEL = "global";
 
 function validate$1(ast, {
-  lines,
   filename
 }) {
   walker({
     [Syntax.Pair]: pair => {
       const [start, end] = pair.range;
-      throw generateErrorString(`Unexpected expression ${pair.Type}`, "", { start, end }, lines[start.line - 1], filename, GLOBAL_LABEL);
+      throw generateErrorString(`Unexpected expression ${pair.Type}`, "", { start, end }, filename, GLOBAL_LABEL);
     },
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
       const globalIndex$$1 = get$2(GLOBAL_INDEX, target);
       if (globalIndex$$1 != null && !target.params.length) {
-        throw generateErrorString("Global exports must have a value", "", { start, end }, lines[start.line - 1], filename, GLOBAL_LABEL);
+        throw generateErrorString("Global exports must have a value", "", { start, end }, filename, GLOBAL_LABEL);
       }
     },
     // All of the validators below need to be implemented
@@ -4002,14 +4065,16 @@ const emitter = emit;
 
 // Used for deugging purposes
 const getIR = source => {
-  const ast = semantics(parse(source));
-  validate(ast,
+  const ast = parse(source);
+  const semanticAST = semantics(ast);
+  // console.log(printNode(semanticAST));
+  validate(semanticAST,
   // this will eventually be a config
   {
     lines: source ? source.split("\n") : [],
     filename: "walt-source"
   });
-  const intermediateCode = generator(ast);
+  const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
   return wasm;
 };

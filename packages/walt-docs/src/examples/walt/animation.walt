@@ -9,13 +9,13 @@ type FillType = (i32, i32, i32, i32) => void;
 type LogType = (f32) => void;
 type GetSizeType = () => i32;
 type ParticleType = {
-  'x': f32,
-  'y': f32,
-  'vx': f32,
-  'vy': f32
+  x: f32,
+  y: f32,
+  vx: f32,
+  vy: f32
 };
 
-const memory: Memory = { 'initial': 1 };
+const memory: Memory = { initial: 1 };
 const particleByteSize: i32 = 16;
 
 let total: i32 = 0;
@@ -31,32 +31,42 @@ export function onInit(totalParticles: i32) {
 
   for (i = 0; i < total; i += 1) {
     particle = i * particleByteSize;
-    particle['x'] = width / 2.0;
-    particle['y'] = height / 2.0;
-    particle['vx'] = ((i * 7 % 200) - 100) / 100.0;
-    particle['vy'] = ((i * 19 % 200) - 100) / 100.0;
+    particle = {
+      x: width / 2.0,
+      y: height / 2.0,
+      vx: ((i * 7 % 200) - 100) / 100.0,
+      vy: ((i * 19 % 200) - 100) / 100.0
+    };
   }
 }
 
 function bounce(particle: ParticleType, min: f32) {
   const maxHeight: f32 = height - min;
   const maxWidth: f32 = width - min;
+  // destructuring assignment is WIP
+  let y: f32 = particle['y'];
+  let vy: f32 = particle['vy'];
+  let x: f32 = particle['x'];
+  let vx: f32 = particle['vx'];
 
-  if (particle['y'] > maxHeight) {
-    particle['y'] -= particle['y'] - maxHeight;
-    particle['vy'] = -particle['vy'];
-  } else if (particle['y'] < min) {
-    particle['y'] = min + (min - particle['y']);
-    particle['vy'] = -particle['vy'];
+  if (y > maxHeight) {
+    y -= y - maxHeight;
+    vy = -vy;
+  } else if (y < min) {
+    y = min + (min - y);
+    vy = -vy;
   }
 
-  if (particle['x'] > maxWidth) {
-    particle['x'] -= particle['x'] - maxWidth;
-    particle['vx'] = -particle['vx'];
-  } else if (particle['x'] < min) {
-    particle['x'] = min + (min - particle['x']);
-    particle['vx'] = -particle['vx'];
+  if (x > maxWidth) {
+    x -= x - maxWidth;
+    vx = -vx;
+  } else if (x < min) {
+    x = min + (min - x);
+    vx = -vx;
   }
+
+  // Object assign syntax sugar, NOTE: this does not create a new object
+  particle = { y, vy, x, vx };
 }
 
 let previous: i32 = 0;
@@ -80,7 +90,6 @@ export function onAnimationFrame(timestamp: i32): i32 {
     particle['y'] += particle['vy'] * delta;
 
     bounce(particle, 10.0);
-
 
     fillRect((particle['x'] + 0.5) : i32, (particle['y'] + 0.5): i32, 10, 10);
   }
