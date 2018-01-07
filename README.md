@@ -79,3 +79,12 @@ See [Wiki](https://github.com/ballercat/walt/wiki) for detailed design decisions
 ## Prior Art
 * [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
 * [mini-c](https://github.com/maierfelix/mini-c) - Experimental C to WebAssembly compiler
+
+## Contributors
+
+[<img alt="balajmarius" src="https://avatars3.githubusercontent.com/u/5159921?v=4&s=117" width="117">](https://github.com/balajmarius)[<img alt="whitecrownclown" src="https://avatars0.githubusercontent.com/u/8309417?v=4&s=117" width="117">](https://github.com/whitecrownclown)[<img alt="ForsakenHarmony" src="https://avatars3.githubusercontent.com/u/8845940?v=4&s=117" width="117">](https://github.com/ForsakenHarmony)[<img alt="hamlim" src="https://avatars2.githubusercontent.com/u/5579638?v=4&s=117" width="117">](https://github.com/hamlim)[<img alt="petetnt" src="https://avatars2.githubusercontent.com/u/7641760?v=4&s=117" width="117">](https://github.com/petetnt)
+
+[<img alt="novoselrok" src="https://avatars2.githubusercontent.com/u/6417322?v=4&s=117" width="117">](https://github.com/novoselrok)[<img alt="Baransu" src="https://avatars2.githubusercontent.com/u/9558691?v=4&s=117" width="117">](https://github.com/Baransu)[<img alt="hlaaftana" src="https://avatars0.githubusercontent.com/u/10591326?v=4&s=117" width="117">](https://github.com/hlaaftana)[<img alt="tbroadley" src="https://avatars0.githubusercontent.com/u/8731922?v=4&s=117" width="117">](https://github.com/tbroadley)[<img alt="ballercat" src="https://avatars2.githubusercontent.com/u/743990?v=4&s=117" width="117">](https://github.com/ballercat)
+
+
+
