@@ -18,11 +18,12 @@ const variableSize = (type: string): string => {
 
 const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
   // Not a function call or pointer, look-up variables
-  const local = locals[sizeof.value];
-  const global = globals[sizeof.value];
+  const [target] = sizeof.params;
+  const local = locals[target.value];
+  const global = globals[target.value];
   const userType =
-    userTypes[sizeof.value] || (local ? userTypes[local.type] : null);
-  const func = functions[sizeof.value];
+    userTypes[target.value] || (local ? userTypes[local.type] : null);
+  const func = functions[target.value];
 
   if (userType != null) {
     const metaSize = get(OBJECT_SIZE, userType);
@@ -40,7 +41,7 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
 
   return {
     ...sizeof,
-    value: variableSize(node ? node.type : sizeof.value),
+    value: variableSize(node ? node.type : target.value),
     type: "i32",
     params: [],
     Type: Syntax.Constant,
