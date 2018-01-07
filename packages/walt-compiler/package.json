@@ -4,7 +4,7 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
-    "test": "nyc ava",
+    "test": "nyc ava --no-color",
     "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
