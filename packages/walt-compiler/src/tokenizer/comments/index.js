@@ -1,7 +1,7 @@
 // @flow
 import token from "../token";
 import Syntax from "../../Syntax";
-import Stream from "../../utils/Stream";
+import Stream from "../../utils/stream";
 
 import {
   SLASH,
