@@ -11,5 +11,3 @@ export const COMMENT_IDENTIFIERS = [
   MULTI_LINE_START,
   MULTI_LINE_END,
 ];
-
-export const everything = () => everything;

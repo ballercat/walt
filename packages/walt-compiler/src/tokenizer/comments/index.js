@@ -1,6 +1,7 @@
 // @flow
 import token from "../token";
 import Syntax from "../../Syntax";
+import Stream from "../../utils/Stream";
 
 import {
   SLASH,
@@ -8,15 +9,19 @@ import {
   MULTI_LINE_START,
   MULTI_LINE_END,
   COMMENT_IDENTIFIERS,
-  everything,
 } from "./constants";
 
-const parser = () => {
+const parser = char => {
   let isMultiline: boolean = false;
+  let isSingleLine: boolean = false;
   let previous: string;
 
-  const isComment = (char: string) => {
-    switch (`${previous}${char}`) {
+  const isComment = (current: string) => {
+    if (Stream.eol(current)) {
+      isSingleLine = false;
+    }
+
+    switch (`${previous}${current}`) {
       case MULTI_LINE_END: {
         isMultiline = false;
         return isComment;
@@ -26,11 +31,12 @@ const parser = () => {
         return isComment;
       }
       case SINGLE_LINE: {
-        return everything;
+        isSingleLine = true;
+        return isComment;
       }
       default: {
-        if (isMultiline) {
-          previous = char;
+        if (isMultiline || isSingleLine) {
+          previous = current;
           return isComment;
         }
       }
@@ -52,8 +58,7 @@ const parser = () => {
     return null;
   };
 
-  return token(maybeComment, Syntax.Comment);
+  return maybeComment(char);
 };
 
-const commentParser = parser();
-export default commentParser;
+export default token(parser, Syntax.Comment);

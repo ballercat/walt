@@ -69,6 +69,15 @@ test("ignores one-liner multiline comments", t => {
   t.snapshot(tokenizer.parse());
 });
 
+test("ignores singleline tokens within multiline and vice-versa", t => {
+  const stream = new Stream(`
+    /* // multiline comment /*
+    // /* */ 4 single line
+  `);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
 test("ignores multiline comments and compiles correctly", t => {
   const content = `
     /* comment  */
