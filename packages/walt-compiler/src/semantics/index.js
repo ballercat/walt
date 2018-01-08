@@ -53,6 +53,7 @@ export default function semantics(ast: NodeType): NodeType {
             const functionNode = {
               ...identifierNode,
               id: identifierNode.value,
+              type: types[typeNode.value].type,
               meta: [
                 setMetaFunctionIndex(functionIndex),
                 setMetaTypeIndex(typeIndex),

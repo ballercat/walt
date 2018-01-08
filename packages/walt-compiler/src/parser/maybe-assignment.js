@@ -11,7 +11,6 @@ function maybeAssignment(ctx: Context): NodeType {
   if (nextValue === "[") {
     return memoryStore(ctx);
   }
-
   return expression(ctx);
 }
 

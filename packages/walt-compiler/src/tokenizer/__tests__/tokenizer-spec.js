@@ -14,10 +14,12 @@ test("next reads tokens, ignoring whitespace", t => {
     type: Syntax.Keyword,
     value: "global",
     end: {
+      sourceLine: "     global",
       col: 11,
       line: 1,
     },
     start: {
+      sourceLine: "     global",
       col: 5,
       line: 1,
     },

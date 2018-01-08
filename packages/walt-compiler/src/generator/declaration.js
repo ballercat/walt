@@ -1,7 +1,7 @@
 // @flow
 import invariant from "invariant";
 import generateExpression from "./expression";
-import { generateValueType } from "./utils";
+import { generateValueType, isBuiltinType } from "./utils";
 import opcode from "../emitter/opcode";
 import { get, LOCAL_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
@@ -22,8 +22,11 @@ const generateDeclaration: GeneratorType = (
       metaIndex,
       "Local Index is undefined. Cannot generate declaration"
     );
+
+    const type = isBuiltinType(node.type) ? node.type : "i32";
+
     return [
-      ...generateExpression({ ...initNode, type: node.type }, parent),
+      ...generateExpression({ ...initNode, type }, parent),
       { kind: opcode.SetLocal, params: [metaIndex.payload] },
     ];
   }

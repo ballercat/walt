@@ -49,6 +49,7 @@ class Tokenizer {
     let next;
     let nextMatchers = this.match(char, matchers);
     let start = {
+      sourceLine: this.stream.lines[this.stream.line - 1],
       line: this.stream.line,
       col: this.stream.col,
     };
@@ -70,6 +71,7 @@ class Tokenizer {
     const token = this.token(value, matchers);
     token.start = start;
     token.end = {
+      sourceLine: this.stream.lines[this.stream.line - 1],
       line: this.stream.line,
       col: this.stream.col,
     };

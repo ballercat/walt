@@ -29,15 +29,6 @@ const supported = [
   "global",
   "module",
   "type",
-
-  // specials/asserts
-  "invoke",
-  "assert",
-  "assert_return",
-
-  // additional syntax
-  // statically replaced with consant value at compile time
-  "sizeof",
 ];
 
 export const nosupport = [

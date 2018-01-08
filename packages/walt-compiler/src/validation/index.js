@@ -11,10 +11,8 @@ const GLOBAL_LABEL = "global";
 export default function validate(
   ast: NodeType,
   {
-    lines,
     filename,
   }: {
-    lines: string[],
     filename: string,
   }
 ) {
@@ -25,7 +23,6 @@ export default function validate(
         `Unexpected expression ${pair.Type}`,
         "",
         { start, end },
-        lines[start.line - 1],
         filename,
         GLOBAL_LABEL
       );
@@ -39,7 +36,6 @@ export default function validate(
           "Global exports must have a value",
           "",
           { start, end },
-          lines[start.line - 1],
           filename,
           GLOBAL_LABEL
         );

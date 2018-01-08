@@ -5,6 +5,7 @@ import mapNode from "../utils/map-node";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
+import makeAssignment from "./map-assignment";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
   typeCast,
@@ -34,26 +35,31 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapIdentifier = makeMapIdentifier({ ...options, locals });
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
+  const mapAssignment = makeAssignment({ ...options, locals });
 
-  const mapDeclaration = isConst => declaration => {
-    const index = Object.keys(locals).length;
-    const isArray = declaration.type.slice(-2) === "[]";
-    const type = isArray ? "i32" : declaration.type;
-    const metaArray = isArray
-      ? setMetaArray(declaration.type.slice(0, -2))
-      : null;
-    const meta = [
-      setMetaLocalIndex(index),
-      metaArray,
-      isConst ? setMetaConst() : null,
-    ];
-    locals[declaration.value] = {
-      ...declaration,
-      type,
-      meta,
-      Type: Syntax.Declaration,
-    };
-    return locals[declaration.value];
+  const mapDeclaration = isConst => (declaration, mapChildren) => {
+    if (locals[declaration.value] == null) {
+      const index = Object.keys(locals).length;
+      const isArray = declaration.type.slice(-2) === "[]";
+      const type = isArray ? "i32" : declaration.type;
+      const metaArray = isArray
+        ? setMetaArray(declaration.type.slice(0, -2))
+        : null;
+      const meta = [
+        setMetaLocalIndex(index),
+        metaArray,
+        isConst ? setMetaConst() : null,
+      ];
+      locals[declaration.value] = {
+        ...declaration,
+        type,
+        meta,
+        params: declaration.params.map(mapChildren),
+        Type: Syntax.Declaration,
+      };
+      return locals[declaration.value];
+    }
+    return declaration;
   };
 
   return mapNode({
@@ -79,6 +85,9 @@ const mapFunctionNode = (options, node, _ignore) => {
     [Syntax.ImmutableDeclaration]: mapDeclaration(true),
     [Syntax.Identifier]: mapIdentifier,
     [Syntax.FunctionCall]: call => {
+      if (call.value === "sizeof") {
+        return mapSizeof(call);
+      }
       if (functions[call.value] != null) {
         const index = Object.keys(functions).indexOf(call.value);
         return {
@@ -171,6 +180,7 @@ const mapFunctionNode = (options, node, _ignore) => {
         params: binaryNode.params.map(childMapper),
       });
     },
+    [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, childMapper) => {
       const params = inputNode.params.map(childMapper);
       const { type } = params[0];

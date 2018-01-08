@@ -1,10 +1,10 @@
 {
   "name": "walt-compiler",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
-    "test": "nyc ava",
+    "test": "nyc ava --no-color --no-power-assert --tap",
     "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
@@ -75,7 +75,6 @@
     "source": [
       "src/**/*.js"
     ],
-    "concurrency": 10,
     "failFast": true,
     "failWithoutAssertions": false,
     "tap": false,
