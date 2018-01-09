@@ -3,7 +3,7 @@ import token from "../token";
 import Syntax from "../../Syntax";
 
 const { isNaN, parseInt } = Number;
-const isNumber = char => !isNaN(parseInt(char));
+export const isNumber = char => !isNaN(parseInt(char));
 const isDot = char => char === ".";
 const number = char => (isNumber(char) ? number : null);
 const numberOrDot = char => {

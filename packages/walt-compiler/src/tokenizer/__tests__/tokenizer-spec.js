@@ -73,7 +73,7 @@ test("ignores one-liner multiline comments", t => {
 
 test("ignores singleline tokens within multiline and vice-versa", t => {
   const stream = new Stream(`
-    /* // multiline comment /*
+    /* // multiline comment */
     // /* */ 4 single line
   `);
   const tokenizer = new Tokenizer(stream);

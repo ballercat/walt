@@ -19,7 +19,13 @@
     "type": "git",
     "url": "git+https://github.com/ballercat/walt.git"
   },
-  "keywords": ["wasm", "wast", "javascript", "webassembly", "compiler"],
+  "keywords": [
+    "wasm",
+    "wast",
+    "javascript",
+    "webassembly",
+    "compiler"
+  ],
   "author": "Arthur Buldauskas",
   "license": "MIT",
   "bugs": {
@@ -63,16 +69,26 @@
     "trailingComma": "es5"
   },
   "ava": {
-    "files": ["src/**/*[sS]pec.js", "!**/utils.js"],
-    "source": ["src/**/*.js"],
+    "files": [
+      "src/**/*[sS]pec.js",
+      "!**/utils.js"
+    ],
+    "source": [
+      "src/**/*.js"
+    ],
     "failFast": true,
     "failWithoutAssertions": false,
     "tap": false,
     "powerAssert": false,
-    "require": ["babel-register"],
+    "require": [
+      "babel-register"
+    ],
     "babel": "inherit"
   },
   "lint-staged": {
-    "src/**/*.js": ["prettier --write", "git add"]
+    "src/**/*.js": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
