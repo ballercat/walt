@@ -41,6 +41,7 @@ export default function semantics(ast: NodeType): NodeType {
   })(ast);
 
   return mapNode({
+    [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
     [Syntax.Import]: (node, _ignore) => {
       return mapNode({
@@ -54,7 +55,7 @@ export default function semantics(ast: NodeType): NodeType {
               ...identifierNode,
               id: identifierNode.value,
               type: types[typeNode.value].type,
-              meta: [
+              jeta: [
                 setMetaFunctionIndex(functionIndex),
                 setMetaTypeIndex(typeIndex),
               ],

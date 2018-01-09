@@ -7,6 +7,7 @@ import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
 import makeClosure from "./map-closure";
+import walkNode from "../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
   typeCast,
@@ -19,7 +20,13 @@ import {
 
 import type { NodeType } from "../flow/types";
 
-const mapFunctionNode = (options, node, _ignore) => {
+let closureCount = 0;
+const getClosureId = enclosingName => {
+  closureCount += 1;
+  return `__${enclosingName}_Closure_${closureCount}`;
+};
+
+const mapFunctionNode = (options, node, _topLevelTransform) => {
   const { types, functions } = options;
 
   const functionIndex = Object.keys(functions).length;
@@ -30,6 +37,9 @@ const mapFunctionNode = (options, node, _ignore) => {
     meta: [...node.meta, setMetaFunctionIndex(functionIndex)],
   };
   const locals = {};
+  const closures: {
+    [string]: { variables: { [string]: NodeType } },
+  } = {};
 
   functions[node.value] = patchedNode;
 
@@ -37,9 +47,32 @@ const mapFunctionNode = (options, node, _ignore) => {
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
   const mapAssignment = makeAssignment({ ...options, locals });
-  const mapClosure = makeClosure({ ...options, locals });
+  const mapClosure = makeClosure({ ...options, locals, closures });
 
-  const mapDeclaration = isConst => (declaration, mapChildren) => {
+  walkNode({
+    [Syntax.Closure]: (closure, _) => {
+      const variables = {};
+      const closureLocals = {};
+      const closureIdentifier = (id, __) => {
+        closureLocals[id.value] = id;
+      };
+      walkNode({
+        [Syntax.Declaration]: closureIdentifier,
+        [Syntax.ImmutableDeclaration]: closureIdentifier,
+        [Syntax.Identifier]: identifier => {
+          if (closureLocals[identifier.value] == null) {
+            variables[identifier.value] = identifier;
+          }
+        },
+      })(closure);
+
+      closures[getClosureId(node.value)] = { variables };
+    },
+  })(patchedNode);
+
+  console.log(closures);
+
+  const mapDeclaration = isConst => (declaration, transform) => {
     if (locals[declaration.value] == null) {
       const index = Object.keys(locals).length;
       const isArray = declaration.type.slice(-2) === "[]";
@@ -56,7 +89,7 @@ const mapFunctionNode = (options, node, _ignore) => {
         ...declaration,
         type,
         meta,
-        params: declaration.params.map(mapChildren),
+        params: declaration.params.map(transform),
         Type: Syntax.Declaration,
       };
       return locals[declaration.value];
@@ -120,11 +153,11 @@ const mapFunctionNode = (options, node, _ignore) => {
 
       return call;
     },
-    [Syntax.Pair]: (typeCastMaybe: NodeType, childMapper): NodeType => {
-      const [targetNode, typeNode] = typeCastMaybe.params.map(childMapper);
+    [Syntax.Pair]: (typeCastMaybe: NodeType, transform): NodeType => {
+      const [targetNode, typeNode] = typeCastMaybe.params.map(transform);
 
       if (targetNode.Type === Syntax.Closure) {
-        return mapClosure(targetNode, childMapper);
+        return mapClosure(targetNode, transform);
       }
       const { type: from } = targetNode;
       const { value: to } = typeNode;
@@ -145,14 +178,14 @@ const mapFunctionNode = (options, node, _ignore) => {
 
       return {
         ...typeCastMaybe,
-        params: typeCastMaybe.params.map(childMapper),
+        params: typeCastMaybe.params.map(transform),
       };
     },
     // Unary expressions need to be patched so that the LHS type matches the RHS
-    [Syntax.UnaryExpression]: (unaryNode, childMapper) => {
+    [Syntax.UnaryExpression]: (unaryNode, transform) => {
       const lhs = unaryNode.params[0];
       // Recurse into RHS and determine types
-      const rhs = childMapper(unaryNode.params[1]);
+      const rhs = transform(unaryNode.params[1]);
       return {
         ...unaryNode,
         type: rhs.type,
@@ -166,29 +199,29 @@ const mapFunctionNode = (options, node, _ignore) => {
         Type: Syntax.BinaryExpression,
       };
     },
-    [Syntax.BinaryExpression]: (binaryNode, childMapper) => {
+    [Syntax.BinaryExpression]: (binaryNode, transform) => {
       return balanceTypesInMathExpression({
         ...binaryNode,
-        params: binaryNode.params.map(childMapper),
+        params: binaryNode.params.map(transform),
       });
     },
-    [Syntax.TernaryExpression]: (ternaryNode, childMapper) => {
-      const params = ternaryNode.params.map(childMapper);
+    [Syntax.TernaryExpression]: (ternaryNode, transform) => {
+      const params = ternaryNode.params.map(transform);
       return {
         ...ternaryNode,
         type: params[0].type,
         params,
       };
     },
-    [Syntax.Select]: (binaryNode, childMapper) => {
+    [Syntax.Select]: (binaryNode, transform) => {
       return balanceTypesInMathExpression({
         ...binaryNode,
-        params: binaryNode.params.map(childMapper),
+        params: binaryNode.params.map(transform),
       });
     },
     [Syntax.Assignment]: mapAssignment,
-    [Syntax.MemoryAssignment]: (inputNode, childMapper) => {
-      const params = inputNode.params.map(childMapper);
+    [Syntax.MemoryAssignment]: (inputNode, transform) => {
+      const params = inputNode.params.map(transform);
       const { type } = params[0];
       return { ...inputNode, params, type };
     },

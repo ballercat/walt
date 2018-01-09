@@ -75,22 +75,17 @@ export default function generateType(
   // Collect the function params and result by walking the tree of nodes
   const params = [];
   let result = null;
-  const left = typeExpression.params[0];
-  const right = typeExpression.params[1];
-
-  // if we do not have a right node, then we do not have any params for this function
-  // type, so we just skip this.
-  if (right != null) {
-    walkNode({
-      [Syntax.Type]: ({ value: typeValue }) => params.push(getType(typeValue)),
-    })(left);
-  }
 
   walkNode({
-    [Syntax.Type]: ({ value: typeValue }) => {
-      result = typeValue && typeValue !== "void" ? getType(typeValue) : null;
+    [Syntax.FunctionArguments]: (args, _visit) => {
+      args.params.forEach(({ value: typeValue }) =>
+        params.push(getType(typeValue))
+      );
     },
-  })(right || left);
+    [Syntax.FunctionResult]: (res, _visit) => {
+      result = res.value && res.value !== "void" ? getType(res.value) : null;
+    },
+  })(typeExpression);
 
   return {
     id,

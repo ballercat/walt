@@ -1,5 +1,5 @@
 import test from "ava";
-import { getIR, debug } from "..";
+import { getIR, debug, buildProgram } from "..";
 
 test("functions", t => {
   const walt = `
@@ -65,5 +65,6 @@ test.only("closures", t => {
     };
   }`;
 
-  const wasm = getIR(walt);
+  const program = buildProgram(walt);
+  console.log(program);
 });

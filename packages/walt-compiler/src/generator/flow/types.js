@@ -71,4 +71,5 @@ export type ProgramType = {
   Functions: number[],
   Memory: IntermediateMemoryType[],
   Table: IntermediateTableType[],
+  Artifacts: NodeType[],
 };

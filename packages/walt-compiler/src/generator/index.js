@@ -61,6 +61,7 @@ export default function generator(ast: NodeType): ProgramType {
     Functions: [],
     Memory: [],
     Table: [],
+    Artifacts: [],
   };
 
   const findTypeIndex = (functionNode: NodeType): number => {
@@ -82,7 +83,7 @@ export default function generator(ast: NodeType): ProgramType {
 
   const typeMap = {};
   const astWithTypes = mapNode({
-    [Syntax.Typedef]: node => {
+    [Syntax.Typedef]: (node, _ignore) => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
       let typeNode = program.Types[typeIndex];
 
@@ -102,6 +103,7 @@ export default function generator(ast: NodeType): ProgramType {
   })(ast);
 
   const nodeMap = {
+    [Syntax.Typedef]: (_, __) => _,
     [Syntax.Export]: node => {
       const [nodeToExport] = node.params;
       program.Exports.push(generateExport(nodeToExport));
@@ -165,6 +167,15 @@ export default function generator(ast: NodeType): ProgramType {
             }
           }
           return pointer;
+        },
+        [Syntax.Closure]: closure => {
+          return {
+            ...closure,
+            meta: [],
+            Type: Syntax.Constant,
+            params: [],
+            value: -1,
+          };
         },
       })(node);
 

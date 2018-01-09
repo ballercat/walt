@@ -14,11 +14,26 @@ export const generator = codeGenerator;
 export const validate = astValidator;
 export const emitter = emit;
 
+export const buildProgram = (source: string) => {
+  const ast = parser(source);
+  const semanticAST = semantics(ast);
+  console.log(printNode(semanticAST));
+  validate(
+    semanticAST,
+    // this will eventually be a config
+    {
+      lines: source ? source.split("\n") : [],
+      filename: "walt-source",
+    }
+  );
+  return generator(semanticAST);
+};
+
 // Used for deugging purposes
 export const getIR = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
+  console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config
