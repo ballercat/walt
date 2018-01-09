@@ -61,7 +61,7 @@ class Tokenizer {
       this.stream.next();
       next = this.stream.peek();
       nextMatchers = this.match(next, matchers);
-    } while (!Stream.eol(next) && !Stream.eof(next) && nextMatchers.length > 0);
+    } while (!Stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) {
