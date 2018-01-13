@@ -32,6 +32,7 @@ export default function semantics(ast: NodeType): NodeType {
   const types: { [string]: NodeType } = {};
   const userTypes: { [string]: NodeType } = {};
   const table: { [string]: NodeType } = {};
+  const hoist: NodeType[] = [];
 
   // Types have to be pre-parsed before the rest of the program
   walkNode({
@@ -40,7 +41,7 @@ export default function semantics(ast: NodeType): NodeType {
     },
   })(ast);
 
-  return mapNode({
+  const patched = mapNode({
     [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
     [Syntax.Import]: (node, _ignore) => {
@@ -55,7 +56,7 @@ export default function semantics(ast: NodeType): NodeType {
               ...identifierNode,
               id: identifierNode.value,
               type: types[typeNode.value].type,
-              jeta: [
+              meta: [
                 setMetaFunctionIndex(functionIndex),
                 setMetaTypeIndex(typeIndex),
               ],
@@ -93,6 +94,7 @@ export default function semantics(ast: NodeType): NodeType {
     },
     [Syntax.Struct]: mapStructNode({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode({
+      hoist,
       types,
       globals,
       functions,
@@ -100,4 +102,9 @@ export default function semantics(ast: NodeType): NodeType {
       table,
     }),
   })(ast);
+
+  return {
+    ...patched,
+    params: [...patched.params, ...hoist],
+  };
 }

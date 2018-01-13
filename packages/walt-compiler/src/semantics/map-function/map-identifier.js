@@ -1,7 +1,7 @@
 // @flow
+import Syntax from "../../Syntax";
 import curry from "curry";
-import Syntax from "../Syntax";
-import { funcIndex as setMetaFunctionIndex } from "./metadata";
+import { funcIndex as setMetaFunctionIndex } from "../metadata";
 
 const mapIdentifier = curry(
   ({ locals, globals, functions, table, userTypes }, identifier) => {

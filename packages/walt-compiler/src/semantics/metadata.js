@@ -21,6 +21,7 @@ export const TYPE_INDEX = "type/index";
 export const OBJECT_SIZE = "object/size";
 export const TYPE_CAST = "type/cast";
 export const OBJECT_KEY_TYPES = "object/key-types";
+export const CLOSURE_TYPE = "closure/type";
 
 export const make = (payload: any, type: string) => ({
   type,
@@ -78,6 +79,11 @@ export const userType = (payload: any): MetadataType => ({
 export const objectType = (payload: any): MetadataType => ({
   payload,
   type: TYPE_OBJECT,
+});
+
+export const closureType = (payload: any): MetadataType => ({
+  payload,
+  type: CLOSURE_TYPE,
 });
 
 export const objectSize = (payload: any): MetadataType => ({

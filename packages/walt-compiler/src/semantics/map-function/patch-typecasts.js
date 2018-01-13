@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../Syntax";
-import { typeCast } from "./metadata";
-import generateErrorString from "../utils/generate-error";
-import type { NodeType } from "../flow/types";
+import Syntax from "../../Syntax";
+import { typeCast } from "../metadata";
+import generateErrorString from "../../utils/generate-error";
+import type { NodeType } from "../../flow/types";
 
 export const typeWeight = (typeString: ?string) => {
   switch (typeString) {

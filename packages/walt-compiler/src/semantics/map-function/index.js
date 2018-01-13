@@ -1,32 +1,24 @@
 // @flow
-import Syntax from "../Syntax";
+import Syntax from "../../Syntax";
 import curry from "curry";
-import mapNode from "../utils/map-node";
+import mapNode from "../../utils/map-node";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
 import makeClosure from "./map-closure";
-import walkNode from "../utils/walk-node";
+import makePair from "./map-pair";
+import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
-  typeCast,
   array as setMetaArray,
   constant as setMetaConst,
   localIndex as setMetaLocalIndex,
   funcIndex as setMetaFunctionIndex,
   typeIndex as setMetaTypeIndex,
-} from "./metadata";
+} from "../metadata";
 
-import type { NodeType } from "../flow/types";
-
-let closureCount = 0;
-const getClosureId = enclosingName => {
-  closureCount += 1;
-  return `__${enclosingName}_Closure_${closureCount}`;
-};
-
-const mapFunctionNode = (options, node, _topLevelTransform) => {
+const mapFunctionNode = (options, node, topLevelTransform) => {
   const { types, functions } = options;
 
   const functionIndex = Object.keys(functions).length;
@@ -37,9 +29,7 @@ const mapFunctionNode = (options, node, _topLevelTransform) => {
     meta: [...node.meta, setMetaFunctionIndex(functionIndex)],
   };
   const locals = {};
-  const closures: {
-    [string]: { variables: { [string]: NodeType } },
-  } = {};
+  const closures = new WeakMap([]);
 
   functions[node.value] = patchedNode;
 
@@ -47,8 +37,24 @@ const mapFunctionNode = (options, node, _topLevelTransform) => {
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
   const mapAssignment = makeAssignment({ ...options, locals });
-  const mapClosure = makeClosure({ ...options, locals, closures });
+  const mapClosure = makeClosure({
+    ...options,
+    func: patchedNode,
+    locals,
+    closures,
+  });
+  const mapPair = makePair({
+    ...options,
+    mapIdentifier,
+    mapClosure,
+    topLevelTransform,
+  });
 
+  let closureCount = 0;
+  const getClosureId = enclosingName => {
+    closureCount += 1;
+    return `__${enclosingName}_Closure_${closureCount}`;
+  };
   walkNode({
     [Syntax.Closure]: (closure, _) => {
       const variables = {};
@@ -66,11 +72,9 @@ const mapFunctionNode = (options, node, _topLevelTransform) => {
         },
       })(closure);
 
-      closures[getClosureId(node.value)] = { variables };
+      closures.set(closure, { id: getClosureId(node.value), variables });
     },
   })(patchedNode);
-
-  console.log(closures);
 
   const mapDeclaration = isConst => (declaration, transform) => {
     if (locals[declaration.value] == null) {
@@ -153,34 +157,7 @@ const mapFunctionNode = (options, node, _topLevelTransform) => {
 
       return call;
     },
-    [Syntax.Pair]: (typeCastMaybe: NodeType, transform): NodeType => {
-      const [targetNode, typeNode] = typeCastMaybe.params.map(transform);
-
-      if (targetNode.Type === Syntax.Closure) {
-        return mapClosure(targetNode, transform);
-      }
-      const { type: from } = targetNode;
-      const { value: to } = typeNode;
-
-      // If both sides of a pair don't have types then it's not a typecast,
-      // more likely a string: value pair in an object for example
-      if (typeNode.Type === Syntax.Type && !!from && !!to) {
-        return {
-          ...typeCastMaybe,
-          type: to,
-          value: targetNode.value,
-          Type: Syntax.TypeCast,
-          meta: [...typeCastMaybe.meta, typeCast({ to, from })],
-          // We need to drop the typeNode here, because it's not something we can generate
-          params: [targetNode],
-        };
-      }
-
-      return {
-        ...typeCastMaybe,
-        params: typeCastMaybe.params.map(transform),
-      };
-    },
+    [Syntax.Pair]: mapPair,
     // Unary expressions need to be patched so that the LHS type matches the RHS
     [Syntax.UnaryExpression]: (unaryNode, transform) => {
       const lhs = unaryNode.params[0];

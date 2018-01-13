@@ -9,9 +9,8 @@ export default function parseClosure(
   operands: NodeType[]
 ): NodeType {
   const [block] = operands.splice(-1);
-  const [resultNode] = operands.splice(-2);
-  const [argumentsNode] = operands.splice(-3);
-  // const [valueNode] = operands.splice(-4);
+  const [resultNode] = operands.splice(-1);
+  const [argumentsNode] = operands.splice(-1);
 
   const func = {
     ...block,

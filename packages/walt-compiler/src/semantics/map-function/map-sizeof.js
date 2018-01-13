@@ -1,8 +1,8 @@
 // @flow
 import invariant from "invariant";
 import curry from "curry";
-import Syntax from "../Syntax";
-import { get, OBJECT_SIZE } from "../semantics/metadata";
+import Syntax from "../../Syntax";
+import { get, OBJECT_SIZE } from "../../semantics/metadata";
 
 const variableSize = (type: string): string => {
   switch (type) {

@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../Syntax";
+import Syntax from "../../Syntax";
 import curry from "curry";
-import type { NodeType } from "../flow/types";
-import { get, TYPE_OBJECT, OBJECT_KEY_TYPES } from "./metadata";
+import type { NodeType } from "../../flow/types";
+import { get, TYPE_OBJECT, OBJECT_KEY_TYPES } from "../metadata";
 
 const patchStringSubscript = (
   metaObject: any,

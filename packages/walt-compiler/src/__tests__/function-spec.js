@@ -1,5 +1,5 @@
 import test from "ava";
-import { getIR, debug, buildProgram } from "..";
+import { getIR, debug, buildProgram, emitter } from "..";
 
 test("functions", t => {
   const walt = `
@@ -56,15 +56,16 @@ test.only("closures", t => {
 
   type ClosureType = () => i32;
 
-  function getClosure(): ClosureType {
+  export function getClosure(): ClosureType {
     let x: i32 = 0;
-    return (): i32 => {
-      const y: il2 = x;
+    return (z: i32): i32 => {
+      const y: i32 = x;
       x += 1;
       return y;
     };
   }`;
 
   const program = buildProgram(walt);
-  console.log(program);
+  const wasm = emitter(program);
+  t.truthy(wasm);
 });
