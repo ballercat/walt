@@ -33,6 +33,7 @@ export default function semantics(ast: NodeType): NodeType {
   const userTypes: { [string]: NodeType } = {};
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
+  const hoistImports: NodeType[] = [];
 
   // Types have to be pre-parsed before the rest of the program
   walkNode({
@@ -48,6 +49,7 @@ export default function semantics(ast: NodeType): NodeType {
       return mapNode({
         [Syntax.Pair]: pairNode => {
           const [identifierNode, typeNode] = pairNode.params;
+
           if (types[typeNode.value] != null) {
             // crate a new type
             const functionIndex = Object.keys(functions).length;
@@ -95,6 +97,7 @@ export default function semantics(ast: NodeType): NodeType {
     [Syntax.Struct]: mapStructNode({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode({
       hoist,
+      hoistImports,
       types,
       globals,
       functions,
@@ -105,6 +108,6 @@ export default function semantics(ast: NodeType): NodeType {
 
   return {
     ...patched,
-    params: [...patched.params, ...hoist],
+    params: [...hoistImports, ...patched.params, ...hoist],
   };
 }

@@ -295,6 +295,10 @@ export const opcodeFromOperator = ({
       return def[type + "Or"];
     case "^":
       return def[type + "Xor"];
+    case ">>":
+      return def[type + "ShrS"];
+    case "<<":
+      return def[type + "Shl"];
     default:
       throw new Error(`No mapping from operator to opcode ${value}`);
   }

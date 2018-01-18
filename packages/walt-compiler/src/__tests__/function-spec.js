@@ -51,21 +51,62 @@ test("functions", t => {
 });
 
 test.only("closures", t => {
+  // const walt = `
+  // import {
+  //   'closure--get': ClosureGetType,
+  //   'closure--get-i32': ClosureGetType,
+  //   'closure--set-i32': ClosureSetType
+  // } from 'closure';
+  // import { table: Table } from 'env';
+
+  // type ClosureGetType = (i32) => i32;
+  // type ClosureSetType = (i32) => void;
+  // type Type = () => i32;
+
+  // function getClosure(): Type<> {
+  //   let x: i32 = 0;
+  //   return (z: i32): i32 => {
+  //     const y: i32 = x;
+  //     x += 1;
+  //     return y;
+  //   };
+  // }
+  // export function test(): i32 {
+  //   const closure: Type<> = getClosure();
+  //   closure();
+  //   closure();
+  //   return closure();
+  // }
+  // `;
   const walt = `
-  import { table: Table } from 'env';
+import {
+  'closure--get': ClosureGetType,
+  'closure--get-i32': ClosureGetType,
+  'closure--set-i32': ClosureSetType
+} from 'closure';
+import { table: Table } from 'env';
 
-  type ClosureType = () => i32;
+type ClosureGetType = (i32) => i32;
+type ClosureSetType = (i32) => void;
+type Type = () => i32;
 
-  export function getClosure(): ClosureType {
-    let x: i32 = 0;
-    return (z: i32): i32 => {
-      const y: i32 = x;
-      x += 1;
-      return y;
-    };
-  }`;
+function getClosure(): Type<> {
+  let x: i32 = 1;
+  return (): i32 => {
+    return x;
+  }
+}
 
+export function test(): i32 {
+  const closure: Type<> = getClosure();
+  return closure();
+}
+`;
   const program = buildProgram(walt);
   const wasm = emitter(program);
   t.truthy(wasm);
+
+  return WebAssembly.instantiate(wasm.buffer()).then(result => {
+    console.log(result);
+  });
 });

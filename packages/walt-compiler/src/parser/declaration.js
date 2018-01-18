@@ -18,12 +18,15 @@ const declaration = (ctx: Context): NodeType => {
   ctx.expect([":"]);
 
   let type = ctx.token.value;
+
   if (!ctx.eat(null, Syntax.Type)) {
     ctx.expect(null, Syntax.Identifier);
   }
 
   if (ctx.eat(["["]) && ctx.eat(["]"])) {
     type = type + "[]";
+  } else if (ctx.eat(["<"]) && ctx.eat([">"])) {
+    type = type + "<>";
   }
 
   const params = [];

@@ -2,34 +2,39 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
+import { parseDeclaration } from "./declaration";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
-import makeClosure from "./map-closure";
+import makeFunctionCall from "./map-function-call";
+import makeClosure, {
+  bootstrapClosure,
+  mapIdentifierToOffset,
+  CLOSURE_BASE,
+  CLOSURE_GET,
+  CLOSURE_SET,
+} from "../closure";
 import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import {
-  array as setMetaArray,
-  constant as setMetaConst,
   localIndex as setMetaLocalIndex,
   funcIndex as setMetaFunctionIndex,
-  typeIndex as setMetaTypeIndex,
 } from "../metadata";
 
 const mapFunctionNode = (options, node, topLevelTransform) => {
-  const { types, functions } = options;
+  const { functions } = options;
 
   const functionIndex = Object.keys(functions).length;
   const resultNode = node.params[1];
   const patchedNode = {
     ...node,
-    type: resultNode.type,
+    type: resultNode.type.indexOf("<>") > 0 ? "i64" : resultNode.type,
     meta: [...node.meta, setMetaFunctionIndex(functionIndex)],
   };
   const locals = {};
-  const closures = new WeakMap([]);
+  const closures = { variables: {}, offsets: {}, size: 0 };
 
   functions[node.value] = patchedNode;
 
@@ -45,61 +50,96 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
   });
   const mapPair = makePair({
     ...options,
+    locals,
     mapIdentifier,
     mapClosure,
     topLevelTransform,
   });
+  const mapFunctonCall = makeFunctionCall({
+    ...options,
+    locals,
+    mapIdentifier,
+    mapSizeof,
+  });
 
-  let closureCount = 0;
-  const getClosureId = enclosingName => {
-    closureCount += 1;
-    return `__${enclosingName}_Closure_${closureCount}`;
-  };
   walkNode({
     [Syntax.Closure]: (closure, _) => {
+      const args = {};
       const variables = {};
       const closureLocals = {};
       const closureIdentifier = (id, __) => {
         closureLocals[id.value] = id;
       };
       walkNode({
+        [Syntax.FunctionArguments]: (fnArgs, __) => {
+          walkNode({
+            [Syntax.Pair]: pair => {
+              args[pair.params[0].value] = true;
+            },
+          })(fnArgs);
+        },
         [Syntax.Declaration]: closureIdentifier,
         [Syntax.ImmutableDeclaration]: closureIdentifier,
         [Syntax.Identifier]: identifier => {
-          if (closureLocals[identifier.value] == null) {
+          if (
+            closureLocals[identifier.value] == null &&
+            variables[identifier.value] == null &&
+            !args[identifier.value]
+          ) {
             variables[identifier.value] = identifier;
+            closures.size += 4;
           }
         },
       })(closure);
 
-      closures.set(closure, { id: getClosureId(node.value), variables });
+      closures.variables = { ...closures.variables, ...variables };
     },
   })(patchedNode);
 
-  const mapDeclaration = isConst => (declaration, transform) => {
-    if (locals[declaration.value] == null) {
-      const index = Object.keys(locals).length;
-      const isArray = declaration.type.slice(-2) === "[]";
-      const type = isArray ? "i32" : declaration.type;
-      const metaArray = isArray
-        ? setMetaArray(declaration.type.slice(0, -2))
-        : null;
-      const meta = [
-        setMetaLocalIndex(index),
-        metaArray,
-        isConst ? setMetaConst() : null,
-      ];
-      locals[declaration.value] = {
-        ...declaration,
-        type,
-        meta,
-        params: declaration.params.map(transform),
+  if (Object.keys(closures.variables).length) {
+    bootstrapClosure(options);
+    patchedNode.params = [
+      ...patchedNode.params.slice(0, 2),
+      {
+        ...patchedNode.params[2],
+        value: CLOSURE_BASE,
+        type: "i32",
         Type: Syntax.Declaration,
-      };
-      return locals[declaration.value];
-    }
-    return declaration;
-  };
+        params: [
+          mapFunctonCall({
+            ...patchedNode.params[2],
+            value: CLOSURE_GET,
+            type: "i32",
+            meta: [],
+            Type: Syntax.FunctionCall,
+            params: [
+              {
+                ...patchedNode.params[2],
+                params: [],
+                type: "i32",
+                value: closures.size,
+                Type: Syntax.Constant,
+              },
+            ],
+          }),
+        ],
+      },
+      ...patchedNode.params.slice(2),
+    ];
+  }
+
+  walkNode({
+    [Syntax.Declaration]: parseDeclaration(false, {
+      ...options,
+      locals,
+      closures,
+    }),
+    [Syntax.ImmutableDeclaration]: parseDeclaration(true, {
+      ...options,
+      locals,
+      closures,
+    }),
+  })(patchedNode);
 
   return mapNode({
     [Syntax.FunctionArguments]: (args, _) => {
@@ -120,43 +160,33 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         },
       })(args);
     },
-    [Syntax.Declaration]: mapDeclaration(false),
-    [Syntax.ImmutableDeclaration]: mapDeclaration(true),
-    [Syntax.Identifier]: mapIdentifier,
-    [Syntax.FunctionCall]: call => {
-      if (call.value === "sizeof") {
-        return mapSizeof(call);
+    [Syntax.Declaration]: (decl, transform) => {
+      const [init] = decl.params;
+      if (init && closures.variables[decl.value] != null) {
+        const { offsets } = closures;
+        return transform({
+          ...init,
+          value: `${CLOSURE_SET}-${decl.type}`,
+          params: [
+            {
+              ...mapIdentifierToOffset(
+                { ...init, value: CLOSURE_BASE },
+                offsets[decl.value]
+              ),
+            },
+            init,
+          ],
+          meta: [],
+          Type: Syntax.FunctionCall,
+        });
       }
-      if (functions[call.value] != null) {
-        const index = Object.keys(functions).indexOf(call.value);
-        return {
-          ...call,
-          type: functions[call.value].type,
-          meta: [setMetaFunctionIndex(index)],
-        };
-      }
-
-      if (locals[call.value] != null) {
-        const local = locals[call.value];
-        const global = locals[call.value];
-        const typeIndex = Object.keys(types).indexOf(
-          global ? global.type : local.type
-        );
-        const identifier = {
-          ...mapIdentifier(call),
-          Type: Syntax.Identifier,
-        };
-        const meta = [...identifier.meta, setMetaTypeIndex(typeIndex)];
-        return {
-          ...call,
-          meta,
-          params: [...call.params, identifier],
-          Type: Syntax.IndirectFunctionCall,
-        };
-      }
-
-      return call;
+      return locals[decl.value];
     },
+    [Syntax.ImmutableDeclaration]: decl => {
+      return locals[decl.value];
+    },
+    [Syntax.Identifier]: mapIdentifier,
+    [Syntax.FunctionCall]: mapFunctonCall,
     [Syntax.Pair]: mapPair,
     // Unary expressions need to be patched so that the LHS type matches the RHS
     [Syntax.UnaryExpression]: (unaryNode, transform) => {

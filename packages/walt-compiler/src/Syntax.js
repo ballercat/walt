@@ -49,6 +49,7 @@ const Syntax = {
   Noop: "Noop",
 
   // Semantic Nodes
+  ClosureType: "ClosureType",
   Block: "Block",
   ObjectField: "ObjectField",
   FunctionIndex: "FunctionIndex",
