@@ -7,7 +7,20 @@ import {
   localIndex as setMetaLocalIndex,
   closureType as setClosure,
   typeIndex as setMetaTypeIndex,
+  globalIndex as setMetaGlobalIndex,
 } from "../metadata";
+
+const getTypeSize = typeString => {
+  switch (typeString) {
+    case "i64":
+    case "f64":
+      return 8;
+    case "i32":
+    case "f32":
+    default:
+      return 4;
+  }
+};
 
 export const parseDeclaration = curry((isConst, options, declaration) => {
   const { types, locals, closures } = options;
@@ -44,9 +57,24 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
     const { variables } = closures;
     if (variables[declaration.value] != null && declaration.params[0]) {
       const { offsets } = closures;
-      const values = Object.values(offsets);
-      const offset: number = values.length ? Number(values.pop()) : -4;
-      offsets[declaration.value] = offset + 4;
+      offsets[declaration.value] = closures.envSize;
+      closures.envSize += getTypeSize(declaration.type);
     }
   }
+});
+
+export const parseGlobalDeclaration = curry((isConst, options, node) => {
+  const { globals } = options;
+
+  if (node.type !== "Table" && node.type !== "Memory") {
+    const globalIndex = Object.keys(globals).length;
+    const meta = [
+      setMetaGlobalIndex(globalIndex),
+      isConst ? setMetaConst() : null,
+    ];
+    globals[node.value] = { ...node, meta, Type: Syntax.Declaration };
+
+    return globals[node.value];
+  }
+  return { ...node, meta: [setMetaGlobalIndex(-1)] };
 });

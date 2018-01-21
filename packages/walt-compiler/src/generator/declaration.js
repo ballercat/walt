@@ -18,10 +18,7 @@ const generateDeclaration: GeneratorType = (
 
   if (initNode) {
     const metaIndex = get(LOCAL_INDEX, node);
-    invariant(
-      metaIndex,
-      "Local Index is undefined. Cannot generate declaration"
-    );
+    invariant(metaIndex, `Local Index is undefined. Node: ${node.value}`);
 
     const type = isBuiltinType(node.type) ? node.type : "i32";
 

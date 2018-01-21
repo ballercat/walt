@@ -9,10 +9,9 @@ import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
 import makeFunctionCall from "./map-function-call";
 import makeClosure, {
-  mapIdentifierToOffset,
-  CLOSURE_BASE,
-  CLOSURE_GET,
-  CLOSURE_SET,
+  injectEnvironmentMaybe,
+  transformClosedDeclaration,
+  getEnclosedVariables,
 } from "../closure";
 import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
@@ -22,28 +21,70 @@ import {
   funcIndex as setMetaFunctionIndex,
 } from "../metadata";
 
-const mapFunctionNode = (options, node, topLevelTransform) => {
+/**
+ * Initialize function node and patch it's type and meta
+ */
+const initialize = (options, node) => {
   const { functions } = options;
-
-  const functionIndex = Object.keys(functions).length;
-  const resultNode = node.params[1];
-  const patchedNode = {
-    ...node,
-    type: resultNode.type.indexOf("<>") > 0 ? "i64" : resultNode.type,
-    meta: [...node.meta, setMetaFunctionIndex(functionIndex)],
-  };
+  // All of the local variables need to be mapped
   const locals = {};
-  const closures = { variables: {}, offsets: {}, size: 0 };
+  const closures = {
+    // Capture all enclosed variables if any
+    variables: getEnclosedVariables(node),
+    // All of the closure offsets need to be tracked
+    offsets: {},
+    envSize: 0,
+  };
 
-  functions[node.value] = patchedNode;
+  // Walk the node and calculate closure env size and closure offsets
+  const fun = walkNode({
+    [Syntax.Declaration]: parseDeclaration(false, {
+      ...options,
+      locals,
+      closures,
+    }),
+    [Syntax.ImmutableDeclaration]: parseDeclaration(true, {
+      ...options,
+      locals,
+      closures,
+    }),
+  })({
+    ...node,
+    type: node.params[1].type.indexOf("<>") > 0 ? "i64" : node.params[1].type,
+    meta: [...node.meta, setMetaFunctionIndex(Object.keys(functions).length)],
+    // If we are generating closures for this function, then we need to inject a
+    // declaration for the environment local. This local cannot be referenced or
+    // changed via source code.
+    params: injectEnvironmentMaybe(
+      {
+        mapFunctionCall: makeFunctionCall({
+          ...options,
+          locals,
+          mapIdentifier: makeMapIdentifier({ locals, ...options }),
+          mapSizeof: makeSizeof({ locals, ...options }),
+        }),
+        ...closures,
+      },
+      node.params
+    ),
+  });
+  functions[node.value] = fun;
 
+  return [fun, locals, closures];
+};
+
+const mapFunctionNode = (options, node, topLevelTransform) => {
+  // Initialize our function node
+  const [fun, locals, closures] = initialize(options, node);
+
+  // Construct all the mapping functions
   const mapIdentifier = makeMapIdentifier({ ...options, locals });
   const mapArraySubscript = makeArraySubscript({ ...options, locals });
   const mapSizeof = makeSizeof({ ...options, locals });
   const mapAssignment = makeAssignment({ ...options, locals });
   const mapClosure = makeClosure({
     ...options,
-    func: patchedNode,
+    fun,
     locals,
     closures,
   });
@@ -60,85 +101,6 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     mapIdentifier,
     mapSizeof,
   });
-
-  walkNode({
-    [Syntax.Closure]: (closure, _) => {
-      const args = {};
-      const variables = {};
-      const closureLocals = {};
-      const closureIdentifier = (id, __) => {
-        closureLocals[id.value] = id;
-      };
-      walkNode({
-        [Syntax.FunctionArguments]: (fnArgs, __) => {
-          walkNode({
-            [Syntax.Pair]: pair => {
-              args[pair.params[0].value] = true;
-            },
-          })(fnArgs);
-        },
-        [Syntax.Declaration]: closureIdentifier,
-        [Syntax.ImmutableDeclaration]: closureIdentifier,
-        [Syntax.Identifier]: identifier => {
-          if (
-            closureLocals[identifier.value] == null &&
-            variables[identifier.value] == null &&
-            !args[identifier.value]
-          ) {
-            variables[identifier.value] = identifier;
-            closures.size += 4;
-          }
-        },
-      })(closure);
-
-      closures.variables = { ...closures.variables, ...variables };
-    },
-  })(patchedNode);
-
-  console.log("OFFSETS ", closures.offsets);
-  if (Object.keys(closures.variables).length) {
-    patchedNode.params = [
-      ...patchedNode.params.slice(0, 2),
-      {
-        ...patchedNode.params[2],
-        value: CLOSURE_BASE,
-        type: "i32",
-        Type: Syntax.Declaration,
-        params: [
-          mapFunctonCall({
-            ...patchedNode.params[2],
-            value: CLOSURE_GET,
-            type: "i32",
-            meta: [],
-            Type: Syntax.FunctionCall,
-            params: [
-              {
-                ...patchedNode.params[2],
-                params: [],
-                type: "i32",
-                value: closures.size,
-                Type: Syntax.Constant,
-              },
-            ],
-          }),
-        ],
-      },
-      ...patchedNode.params.slice(2),
-    ];
-  }
-
-  walkNode({
-    [Syntax.Declaration]: parseDeclaration(false, {
-      ...options,
-      locals,
-      closures,
-    }),
-    [Syntax.ImmutableDeclaration]: parseDeclaration(true, {
-      ...options,
-      locals,
-      closures,
-    }),
-  })(patchedNode);
 
   return mapNode({
     [Syntax.FunctionArguments]: (args, _) => {
@@ -159,31 +121,16 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         },
       })(args);
     },
-    [Syntax.Declaration]: (decl, transform) => {
-      const [init] = decl.params;
-      if (init && closures.variables[decl.value] != null) {
-        const { offsets } = closures;
-        return transform({
-          ...init,
-          value: `${CLOSURE_SET}-${decl.type}`,
-          params: [
-            {
-              ...mapIdentifierToOffset(
-                { ...init, value: CLOSURE_BASE },
-                offsets[decl.value]
-              ),
-            },
-            init,
-          ],
-          meta: [],
-          Type: Syntax.FunctionCall,
-        });
-      }
-      return locals[decl.value];
-    },
-    [Syntax.ImmutableDeclaration]: decl => {
-      return locals[decl.value];
-    },
+    [Syntax.Declaration]: transformClosedDeclaration({
+      ...options,
+      locals,
+      closures,
+    }),
+    [Syntax.ImmutableDeclaration]: transformClosedDeclaration({
+      ...options,
+      locals,
+      closures,
+    }),
     [Syntax.Identifier]: mapIdentifier,
     [Syntax.FunctionCall]: mapFunctonCall,
     [Syntax.Pair]: mapPair,
@@ -205,6 +152,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         Type: Syntax.BinaryExpression,
       };
     },
+    // All binary expressions are patched
     [Syntax.BinaryExpression]: (binaryNode, transform) => {
       return balanceTypesInMathExpression({
         ...binaryNode,
@@ -233,7 +181,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     },
     [Syntax.ArraySubscript]: mapArraySubscript,
     [Syntax.Sizeof]: mapSizeof,
-  })(patchedNode);
+  })(fun);
 };
 
 export default curry(mapFunctionNode);

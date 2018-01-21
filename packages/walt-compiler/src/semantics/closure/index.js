@@ -2,6 +2,7 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
+import walkNode from "../../utils/walk-node";
 import { funcIndex as setMetaFunctionIndex } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
@@ -193,17 +194,153 @@ export const mapIdentifierToOffset = (base: NodeType, offset: number) => {
   };
 };
 
+/**
+ * Walks over a function ndoe and finds any enclosed variables in any closure in
+ * its body. This is used to create an environment object for all of the closures
+ */
+export const getEnclosedVariables = (fun: NodeType): { [string]: NodeType } => {
+  const variables = {};
+  const encloseMaybe = curry((locals, identifier, _) => {
+    if (locals[identifier.value] == null) {
+      variables[identifier.value] = identifier;
+    }
+  });
+  const ignore = curry((locals, identifier, _) => {
+    locals[identifier.value] = identifier;
+  });
+  walkNode({
+    // Only map over closures, ignore everything else
+    [Syntax.Closure]: (closure, _) => {
+      const locals = {};
+      const ignoreLocals = ignore(locals);
+      // Walk over the closure body enclose upper scope variables if necessary
+      walkNode({
+        // All arguments and local declarations are ignored. This means that
+        // variable name shadowing does not enclose upper scope vars
+        [Syntax.FunctionArguments]: (fnArgs, __) => {
+          walkNode({
+            [Syntax.Pair]: pair => {
+              const { identifier } = pair.params;
+              ignoreLocals(identifier, null);
+            },
+          })(fnArgs);
+        },
+        [Syntax.Declaration]: ignoreLocals,
+        [Syntax.ImmutableDeclaration]: ignoreLocals,
+        // Maybe enclose over an upper scope identifier
+        [Syntax.Identifier]: encloseMaybe(locals),
+      })(closure);
+    },
+  })(fun);
+
+  return variables;
+};
+
+/**
+ * Modifies a function parameter list and injects an environment declaration if
+ * necessary
+ */
+export const injectEnvironmentMaybe = (
+  {
+    mapFunctionCall,
+    variables,
+  }: {
+    mapFunctionCall: NodeType => NodeType,
+    variables: { [string]: NodeType },
+  },
+  params: NodeType[]
+): NodeType[] => {
+  if (Object.keys(variables).length > 0) {
+    const start: NodeType = params[2];
+    return [
+      ...params.slice(0, 2),
+      {
+        ...start,
+        value: CLOSURE_BASE,
+        type: "i32",
+        Type: Syntax.Declaration,
+        params: [
+          mapFunctionCall({
+            ...start,
+            type: "i32",
+            meta: [],
+            value: CLOSURE_GET,
+            Type: Syntax.FunctionCall,
+            params: [
+              {
+                ...start,
+                params: [],
+                type: "i32",
+                value: 0,
+                Type: Syntax.Constant,
+              },
+            ],
+          }),
+        ],
+      },
+      ...params.slice(2),
+    ];
+  }
+
+  return params;
+};
+
+export const transformClosedDeclaration = curry((options, decl, transform) => {
+  const { closures, locals } = options;
+  const [init] = decl.params;
+
+  // We don't know the size of the environment until all locals are walked. This
+  // means we need to patch in the size of the env here where we can map nodes
+  if (decl.value === CLOSURE_BASE) {
+    return {
+      ...locals[decl.value],
+      params: [
+        {
+          ...init,
+          value: closures.envSize,
+        },
+      ].map(transform),
+    };
+  }
+
+  // If the value is enclosed and has an initializer we need to transform it into
+  // a memory operation. AKA a function call to the closure plugin
+  if (init && closures.variables[decl.value] != null) {
+    const { offsets } = closures;
+    return transform({
+      ...init,
+      value: `${CLOSURE_SET}-${decl.type}`,
+      params: [
+        {
+          ...mapIdentifierToOffset(
+            { ...init, value: CLOSURE_BASE },
+            offsets[decl.value]
+          ),
+        },
+        init,
+      ],
+      meta: [],
+      Type: Syntax.FunctionCall,
+    });
+  }
+
+  // Not a closure of any kind, return the local
+  return {
+    ...locals[decl.value],
+    params: locals[decl.value].params.map(transform),
+  };
+});
+
 export default curry(function mapClosure(options, node, topLevelTransform) {
-  const { locals, closures, func } = options;
+  const { locals, closures, fun } = options;
   const { variables, offsets } = closures;
 
-  console.log(offsets);
   const patched = mapNode({
     [Syntax.FunctionDeclaration]: decl => {
       // add a name
       return {
         ...decl,
-        value: `internalClosure--${func.value}`,
+        value: `internalClosure--${fun.value}`,
       };
     },
     [Syntax.FunctionArguments]: (args, _) => {

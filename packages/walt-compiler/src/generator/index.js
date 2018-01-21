@@ -171,18 +171,20 @@ export default function generator(ast: NodeType): ProgramType {
         },
       })(node);
 
+      // Quick fix for shifting around function indices. These don't necessarily
+      // get written in the order they appear in the source code.
       const index = get(FUNCTION_INDEX, node);
       invariant(index, "Function index must be set");
       program.Functions[index.payload] = typeIndex;
+      // We will need to filter out the empty slots later
       program.Code[index.payload] = generateCode(patched);
     },
   };
 
   walkNode(nodeMap)(astWithTypes);
 
-  // program.Functions = program.Functions.filter(Boolean);
+  // Unlike function indexes we need function bodies to be exact
   program.Code = program.Code.filter(Boolean);
 
-  console.log(program.Element);
   return program;
 }

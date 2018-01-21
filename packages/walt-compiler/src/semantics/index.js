@@ -15,15 +15,10 @@
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
+import { mapImport } from "./map-import";
 import mapFunctionNode from "./map-function";
+import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
-import {
-  constant as setMetaConst,
-  globalIndex as setMetaGlobalIndex,
-  funcIndex as setMetaFunctionIndex,
-  typeIndex as setMetaTypeIndex,
-} from "./metadata";
-
 import type { NodeType } from "../flow/types";
 
 export default function semantics(ast: NodeType): NodeType {
@@ -45,55 +40,9 @@ export default function semantics(ast: NodeType): NodeType {
   const patched = mapNode({
     [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
-    [Syntax.Import]: (node, _ignore) => {
-      return mapNode({
-        [Syntax.Pair]: pairNode => {
-          const [identifierNode, typeNode] = pairNode.params;
-
-          if (types[typeNode.value] != null) {
-            // crate a new type
-            const functionIndex = Object.keys(functions).length;
-            const typeIndex = Object.keys(types).indexOf(typeNode.value);
-            const functionNode = {
-              ...identifierNode,
-              id: identifierNode.value,
-              type: types[typeNode.value].type,
-              meta: [
-                setMetaFunctionIndex(functionIndex),
-                setMetaTypeIndex(typeIndex),
-              ],
-            };
-            functions[identifierNode.value] = functionNode;
-            return {
-              ...pairNode,
-              params: [functionNode, types[typeNode.value]],
-            };
-          }
-
-          return pairNode;
-        },
-      })(node);
-    },
-    [Syntax.Declaration]: node => {
-      if (node.type !== "Table" && node.type !== "Memory") {
-        const globalIndex = Object.keys(globals).length;
-        const meta = [setMetaGlobalIndex(globalIndex)];
-        globals[node.value] = { ...node, meta };
-
-        return globals[node.value];
-      }
-      return { ...node, meta: [setMetaGlobalIndex(-1)] };
-    },
-    [Syntax.ImmutableDeclaration]: node => {
-      if (node.type !== "Table" && node.type !== "Memory") {
-        const globalIndex = Object.keys(globals).length;
-        const meta = [setMetaGlobalIndex(globalIndex), setMetaConst()];
-        globals[node.value] = { ...node, meta, Type: Syntax.Declaration };
-
-        return globals[node.value];
-      }
-      return { ...node, meta: [setMetaGlobalIndex(-1)] };
-    },
+    [Syntax.Import]: mapImport({ functions, types }),
+    [Syntax.Declaration]: parseGlobalDeclaration(false, { globals }),
+    [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, { globals }),
     [Syntax.Struct]: mapStructNode({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode({
       hoist,
