@@ -30,7 +30,7 @@ export default function parseClosure(
           if (resultNode && resultNode.Type === Syntax.Sequence) {
             return resultNode.params;
           }
-          if (block.Type !== Syntax.Block && resultNode) {
+          if (block.Type !== Syntax.Block) {
             return [{ ...result, Type: Syntax.Type }];
           }
           return [];

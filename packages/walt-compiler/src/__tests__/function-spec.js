@@ -51,14 +51,11 @@ test("functions", t => {
 });
 
 const closurePlugin = `
-  import { log: LogType } from 'env';
-  type LogType = (i32) => void;
   const memory: Memory = { initial: 1 };
   let heapPointer: i32 = 0;
   export function make(size: i32): i32 {
     const ptr: i32 = heapPointer;
     heapPointer += 8;
-    log(size);
     return ptr;
   }
 
@@ -67,10 +64,9 @@ const closurePlugin = `
     return view[0];
   }
 
-  export function seti32(ptr: i32, value: i32): i32 {
+  export function seti32(ptr: i32, value: i32) {
     const view: i32[] = ptr;
     ptr[0] = value;
-    return value;
   }
 `;
 
@@ -117,23 +113,14 @@ export function test(): i32 {
   const wasm = emitter(program);
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
 
-  return WebAssembly.instantiate(compile(closurePlugin), {
-    env: { log: console.log },
-  })
+  return WebAssembly.instantiate(compile(closurePlugin))
     .then(plugin => {
       const { make, geti32, seti32 } = plugin.instance.exports;
       return WebAssembly.instantiate(wasm.buffer(), {
         closure: {
-          "closure--get": size => {
-            const res = make(size);
-            console.log(`Make size: ${size} result ${res}`);
-            return res;
-          },
+          "closure--get": make,
           "closure--get-i32": geti32,
-          "closure--set-i32": (ptr, val) => {
-            console.log(`Set ptr: ${ptr} val: ${val}`);
-            return seti32(ptr, val);
-          },
+          "closure--set-i32": seti32,
         },
         env: { table },
       });
