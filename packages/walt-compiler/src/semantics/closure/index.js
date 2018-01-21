@@ -297,7 +297,12 @@ export const transformClosedDeclaration = curry((options, decl, transform) => {
       params: [
         {
           ...init,
-          value: closures.envSize,
+          params: [
+            {
+              ...init.params[0],
+              value: closures.envSize,
+            },
+          ],
         },
       ].map(transform),
     };
@@ -357,7 +362,13 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
                 params: [],
                 Type: Syntax.Identifier,
               },
-              { ...args, value: "i32", params: [], Type: Syntax.Type },
+              {
+                ...args,
+                value: "i32",
+                type: "i32",
+                params: [],
+                Type: Syntax.Type,
+              },
             ],
             Type: Syntax.Pair,
           },

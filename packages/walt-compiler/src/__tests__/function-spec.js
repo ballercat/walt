@@ -1,5 +1,5 @@
 import test from "ava";
-import { getIR, debug, buildProgram, emitter } from "..";
+import compile, { getIR, debug, buildProgram, emitter } from "..";
 
 test("functions", t => {
   const walt = `
@@ -50,6 +50,30 @@ test("functions", t => {
   });
 });
 
+const closurePlugin = `
+  import { log: LogType } from 'env';
+  type LogType = (i32) => void;
+  const memory: Memory = { initial: 1 };
+  let heapPointer: i32 = 0;
+  export function make(size: i32): i32 {
+    const ptr: i32 = heapPointer;
+    heapPointer += 8;
+    log(size);
+    return ptr;
+  }
+
+  export function geti32(ptr: i32): i32 {
+    const view: i32[] = ptr;
+    return view[0];
+  }
+
+  export function seti32(ptr: i32, value: i32): i32 {
+    const view: i32[] = ptr;
+    ptr[0] = value;
+    return value;
+  }
+`;
+
 test.only("closures", t => {
   const walt = `
 import {
@@ -88,28 +112,34 @@ export function test(): i32 {
   return x + y;
 }
 `;
+
   const program = buildProgram(walt);
   const wasm = emitter(program);
   const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
-  const mem = [];
-  let heapPointer = 0;
-  return WebAssembly.instantiate(wasm.buffer(), {
-    closure: {
-      "closure--get": size => {
-        const ptr = heapPointer;
-        heapPointer += size;
-        return ptr;
-      },
-      "closure--get-i32": ptr => {
-        return mem[ptr];
-      },
-      "closure--set-i32": (ptr, val) => {
-        mem[ptr] = val;
-      },
-    },
-    env: { table },
-  }).then(result => {
-    const test = result.instance.exports.test;
-    t.is(test(), 7);
-  });
+
+  return WebAssembly.instantiate(compile(closurePlugin), {
+    env: { log: console.log },
+  })
+    .then(plugin => {
+      const { make, geti32, seti32 } = plugin.instance.exports;
+      return WebAssembly.instantiate(wasm.buffer(), {
+        closure: {
+          "closure--get": size => {
+            const res = make(size);
+            console.log(`Make size: ${size} result ${res}`);
+            return res;
+          },
+          "closure--get-i32": geti32,
+          "closure--set-i32": (ptr, val) => {
+            console.log(`Set ptr: ${ptr} val: ${val}`);
+            return seti32(ptr, val);
+          },
+        },
+        env: { table },
+      });
+    })
+    .then(result => {
+      const fn = result.instance.exports.test;
+      t.is(fn(), 7);
+    });
 });

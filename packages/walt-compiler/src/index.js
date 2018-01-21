@@ -33,6 +33,7 @@ export const buildProgram = (source: string) => {
 export const getIR = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
+  // console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config
@@ -43,6 +44,7 @@ export const getIR = (source: string) => {
   );
   const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
+  console.log(debug(wasm));
   return wasm;
 };
 

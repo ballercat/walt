@@ -16,15 +16,13 @@ import makeClosure, {
 import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
-import {
-  localIndex as setMetaLocalIndex,
-  funcIndex as setMetaFunctionIndex,
-} from "../metadata";
+import { funcIndex as setMetaFunctionIndex } from "../metadata";
+import type { NodeType } from "../../flow/types";
 
 /**
  * Initialize function node and patch it's type and meta
  */
-const initialize = (options, node) => {
+const initialize = (options, node: NodeType) => {
   const { functions } = options;
   // All of the local variables need to be mapped
   const locals = {};
@@ -38,6 +36,24 @@ const initialize = (options, node) => {
 
   // Walk the node and calculate closure env size and closure offsets
   const fun = walkNode({
+    // Function arguments need to be accounted for as well
+    [Syntax.FunctionArguments]: (args, _) => {
+      walkNode({
+        [Syntax.Pair]: pairNode => {
+          const [identifierNode, typeNode] = pairNode.params;
+          const withTypeApplied = {
+            ...identifierNode,
+            type: typeNode.value,
+          };
+          parseDeclaration(
+            false,
+            { ...options, locals, closures },
+            withTypeApplied,
+            _
+          );
+        },
+      })(args);
+    },
     [Syntax.Declaration]: parseDeclaration(false, {
       ...options,
       locals,
@@ -50,7 +66,10 @@ const initialize = (options, node) => {
     }),
   })({
     ...node,
-    type: node.params[1].type.indexOf("<>") > 0 ? "i64" : node.params[1].type,
+    type:
+      node.params[1].type && node.params[1].type.indexOf("<>") > 0
+        ? "i64"
+        : node.params[1].type,
     meta: [...node.meta, setMetaFunctionIndex(Object.keys(functions).length)],
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
@@ -103,20 +122,14 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
   });
 
   return mapNode({
+    // Patch function arguments so that they mirror locals
     [Syntax.FunctionArguments]: (args, _) => {
       return mapNode({
         [Syntax.Pair]: pairNode => {
           const [identifierNode, typeNode] = pairNode.params;
-          const meta = [setMetaLocalIndex(Object.keys(locals).length)];
-          const withTypeApplied = {
-            ...identifierNode,
-            type: typeNode.value,
-            meta,
-          };
-          locals[identifierNode.value] = withTypeApplied;
           return {
             ...pairNode,
-            params: [withTypeApplied, typeNode],
+            params: [locals[identifierNode.value], typeNode],
           };
         },
       })(args);
