@@ -44,7 +44,7 @@ export const getIR = (source: string) => {
   );
   const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
-  console.log(debug(wasm));
+  // console.log(debug(wasm));
   return wasm;
 };
 

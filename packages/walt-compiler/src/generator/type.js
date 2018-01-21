@@ -89,7 +89,7 @@ export default function generateType(
       })(args);
     },
     [Syntax.FunctionResult]: (res, _visit) => {
-      result = res.value && res.value !== "void" ? getType(res.value) : null;
+      result = res.type && res.type !== "void" ? getType(res.type) : null;
     },
   })(typeExpression);
 

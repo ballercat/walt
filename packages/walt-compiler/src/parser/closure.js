@@ -10,29 +10,33 @@ export default function parseClosure(
 ): NodeType {
   const [block] = operands.splice(-1);
   const [resultNode] = operands.splice(-1);
-  const [argumentsNode] = operands.splice(-1);
+  const maybeResult = block || resultNode;
+
   const result = {
-    type: "void",
-    ...(resultNode || block),
+    ...maybeResult,
+    type: maybeResult.type || "void",
     meta: [],
     value: "FUNCTION_RESULT",
     Type: Syntax.FunctionResult,
   };
+
   const func = {
     ...block,
     Type: Syntax.FunctionDeclaration,
     params: [
       {
-        ...result,
+        ...resultNode,
         params: (() => {
           if (resultNode && resultNode.Type === Syntax.Sequence) {
-            return result.params;
+            return resultNode.params;
           }
-          if (block.Type !== Syntax.Block) {
+          if (block.Type !== Syntax.Block && resultNode) {
             return [{ ...result, Type: Syntax.Type }];
           }
           return [];
         })(),
+        meta: [],
+        range: result.range,
         value: "FUNCTION_ARGUMENTS",
         Type: Syntax.FunctionArguments,
       },
