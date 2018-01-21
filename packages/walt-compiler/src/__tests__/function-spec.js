@@ -51,33 +51,6 @@ test("functions", t => {
 });
 
 test.only("closures", t => {
-  // const walt = `
-  // import {
-  //   'closure--get': ClosureGetType,
-  //   'closure--get-i32': ClosureGetType,
-  //   'closure--set-i32': ClosureSetType
-  // } from 'closure';
-  // import { table: Table } from 'env';
-
-  // type ClosureGetType = (i32) => i32;
-  // type ClosureSetType = (i32) => void;
-  // type Type = () => i32;
-
-  // function getClosure(): Type<> {
-  //   let x: i32 = 0;
-  //   return (z: i32): i32 => {
-  //     const y: i32 = x;
-  //     x += 1;
-  //     return y;
-  //   };
-  // }
-  // export function test(): i32 {
-  //   const closure: Type<> = getClosure();
-  //   closure();
-  //   closure();
-  //   return closure();
-  // }
-  // `;
   const walt = `
 import {
   'closure--get': ClosureGetType,
@@ -87,26 +60,56 @@ import {
 import { table: Table } from 'env';
 
 type ClosureGetType = (i32) => i32;
-type ClosureSetType = (i32) => void;
+type ClosureSetType = (i32, i32) => void;
 type Type = () => i32;
 
 function getClosure(): Type<> {
+  // close over two locals
   let x: i32 = 1;
+  let y: i32 = 1;
   return (): i32 => {
+    x += y;
     return x;
   }
 }
 
 export function test(): i32 {
   const closure: Type<> = getClosure();
-  return closure();
+  closure();
+  closure();
+  closure();
+  // should be 5
+  const x: i32 = closure();
+  const closure2: Type<> = getClosure();
+  // should be 2
+  const y: i32 = closure2();
+
+  // should be 7
+  return x + y;
 }
 `;
   const program = buildProgram(walt);
   const wasm = emitter(program);
-  t.truthy(wasm);
-
-  return WebAssembly.instantiate(wasm.buffer()).then(result => {
-    console.log(result);
+  const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
+  const mem = [];
+  let heapPointer = 0;
+  return WebAssembly.instantiate(wasm.buffer(), {
+    closure: {
+      "closure--get": size => {
+        const ptr = heapPointer;
+        heapPointer += size;
+        return ptr;
+      },
+      "closure--get-i32": ptr => {
+        return mem[ptr];
+      },
+      "closure--set-i32": (ptr, val) => {
+        mem[ptr] = val;
+      },
+    },
+    env: { table },
+  }).then(result => {
+    const test = result.instance.exports.test;
+    t.is(test(), 7);
   });
 });

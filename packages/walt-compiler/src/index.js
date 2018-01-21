@@ -17,7 +17,7 @@ export const emitter = emit;
 export const buildProgram = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  console.log(printNode(semanticAST));
+  // console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config

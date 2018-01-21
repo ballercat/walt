@@ -9,7 +9,6 @@ import makeSizeof from "./map-sizeof";
 import makeAssignment from "./map-assignment";
 import makeFunctionCall from "./map-function-call";
 import makeClosure, {
-  bootstrapClosure,
   mapIdentifierToOffset,
   CLOSURE_BASE,
   CLOSURE_GET,
@@ -96,8 +95,8 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     },
   })(patchedNode);
 
+  console.log("OFFSETS ", closures.offsets);
   if (Object.keys(closures.variables).length) {
-    bootstrapClosure(options);
     patchedNode.params = [
       ...patchedNode.params.slice(0, 2),
       {

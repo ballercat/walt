@@ -38,6 +38,7 @@ export const generateCode = (
   const block = {
     code: [],
     locals: [],
+    debug: `Function ${func.value}`,
   };
 
   // NOTE: Declarations have a side-effect of changing the local count
@@ -168,23 +169,20 @@ export default function generator(ast: NodeType): ProgramType {
           }
           return pointer;
         },
-        [Syntax.Closure]: closure => {
-          return {
-            ...closure,
-            meta: [],
-            Type: Syntax.Constant,
-            params: [],
-            value: -1,
-          };
-        },
       })(node);
 
-      program.Functions.push(typeIndex);
-      program.Code.push(generateCode(patched));
+      const index = get(FUNCTION_INDEX, node);
+      invariant(index, "Function index must be set");
+      program.Functions[index.payload] = typeIndex;
+      program.Code[index.payload] = generateCode(patched);
     },
   };
 
   walkNode(nodeMap)(astWithTypes);
 
+  // program.Functions = program.Functions.filter(Boolean);
+  program.Code = program.Code.filter(Boolean);
+
+  console.log(program.Element);
   return program;
 }

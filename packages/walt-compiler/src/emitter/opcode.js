@@ -296,7 +296,7 @@ export const opcodeFromOperator = ({
     case "^":
       return def[type + "Xor"];
     case ">>":
-      return def[type + "ShrS"];
+      return def[type + "ShrU"];
     case "<<":
       return def[type + "Shl"];
     default:

@@ -11,6 +11,10 @@ import type { IntermediateTypeDefinitionType, NodeType } from "./flow/types";
 
 // clean this up
 export const getType = (str: string): number => {
+  if (str.slice(-2) === "<>") {
+    return I64;
+  }
+
   switch (str) {
     case "f32":
       return F32;
@@ -77,10 +81,12 @@ export default function generateType(
   let result = null;
 
   walkNode({
-    [Syntax.FunctionArguments]: (args, _visit) => {
-      args.params.forEach(({ value: typeValue }) =>
-        params.push(getType(typeValue))
-      );
+    [Syntax.FunctionArguments]: (args, _) => {
+      walkNode({
+        [Syntax.Type]: (t, __) => {
+          params.push(getType(t.value));
+        },
+      })(args);
     },
     [Syntax.FunctionResult]: (res, _visit) => {
       result = res.value && res.value !== "void" ? getType(res.value) : null;

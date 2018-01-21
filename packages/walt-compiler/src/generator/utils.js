@@ -31,7 +31,11 @@ export const scopeOperation = curry((op, node) => {
   const kind = local ? op + "Local" : op + "Global";
   const params = [Number(index.payload)];
 
-  return { kind: opcode[kind], params };
+  return {
+    kind: opcode[kind],
+    params,
+    debug: `${node.value}<${node.type ? node.type : "?"}>`,
+  };
 });
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {

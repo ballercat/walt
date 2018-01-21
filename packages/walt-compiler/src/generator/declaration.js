@@ -27,7 +27,11 @@ const generateDeclaration: GeneratorType = (
 
     return [
       ...generateExpression({ ...initNode, type }, parent),
-      { kind: opcode.SetLocal, params: [metaIndex.payload] },
+      {
+        kind: opcode.SetLocal,
+        params: [metaIndex.payload],
+        debug: `${node.value}<${node.type ? node.type : "?"}>`,
+      },
     ];
   }
 

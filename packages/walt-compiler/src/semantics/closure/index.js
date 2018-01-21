@@ -80,6 +80,22 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
     {
       ...identifier,
       value: ":",
+      meta: [],
+      Type: Syntax.Pair,
+      params: [
+        identifier,
+        {
+          ...identifier,
+          value: "i32",
+          type: "i32",
+          meta: [],
+          Type: Syntax.Type,
+        },
+      ],
+    },
+    {
+      ...identifier,
+      value: ":",
       Type: Syntax.Pair,
       meta: [],
       params: [
@@ -108,28 +124,12 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
         },
       ],
     },
-    {
-      ...identifier,
-      value: ":",
-      meta: [],
-      Type: Syntax.Pair,
-      params: [
-        identifier,
-        {
-          ...identifier,
-          value: "i32",
-          type: "i32",
-          meta: [],
-          Type: Syntax.Type,
-        },
-      ],
-    },
   ];
 };
 
 export const collapseClosureIdentifier = (
-  pointer: NodeType,
-  closure: NodeType
+  closure: NodeType,
+  pointer: NodeType
 ): NodeType => {
   return {
     ...closure,
@@ -142,7 +142,7 @@ export const collapseClosureIdentifier = (
         meta: [],
         Type: Syntax.Pair,
         params: [
-          closure,
+          { ...closure, Type: Syntax.Identifier, params: [] },
           {
             ...closure,
             value: "i64",
@@ -197,6 +197,7 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
   const { locals, closures, func } = options;
   const { variables, offsets } = closures;
 
+  console.log(offsets);
   const patched = mapNode({
     [Syntax.FunctionDeclaration]: decl => {
       // add a name
@@ -251,7 +252,6 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
     // Every lookup becomes a get function call
     [Syntax.Identifier]: (identifier, _) => {
       if (variables[identifier.value] != null) {
-        debugger;
         const local = locals[identifier.value];
         return {
           ...identifier,

@@ -12,13 +12,13 @@ const emitLocal = (stream, local) => {
   }
 };
 
-const emitFunctionBody = (stream, { locals, code }) => {
+const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
 
-  code.forEach(({ kind, params, valueType }) => {
+  code.forEach(({ kind, params, valueType, debug }) => {
     // There is a much nicer way of doing this
-    body.push(u8, kind.code, kind.text);
+    body.push(u8, kind.code, `${kind.text}  ${debug ? debug : ""}`);
 
     if (valueType) {
       body.push(u8, valueType.type, "result type");
@@ -65,11 +65,7 @@ const emitFunctionBody = (stream, { locals, code }) => {
   locals.forEach(local => emitLocal(localsStream, local));
 
   // body size is
-  stream.push(
-    varuint32,
-    body.size + localsStream.size + 2,
-    "body size in bytes"
-  );
+  stream.push(varuint32, body.size + localsStream.size + 2, functionName);
   stream.push(varuint32, locals.length, "locals count");
 
   stream.write(localsStream);

@@ -11,28 +11,38 @@ export default function parseClosure(
   const [block] = operands.splice(-1);
   const [resultNode] = operands.splice(-1);
   const [argumentsNode] = operands.splice(-1);
-
+  const result = {
+    type: "void",
+    ...(resultNode || block),
+    meta: [],
+    value: "FUNCTION_RESULT",
+    Type: Syntax.FunctionResult,
+  };
   const func = {
     ...block,
     Type: Syntax.FunctionDeclaration,
     params: [
       {
-        params: [],
-        meta: [],
-        ...argumentsNode,
+        ...result,
+        params: (() => {
+          if (resultNode && resultNode.Type === Syntax.Sequence) {
+            return result.params;
+          }
+          if (block.Type !== Syntax.Block) {
+            return [{ ...result, Type: Syntax.Type }];
+          }
+          return [];
+        })(),
         value: "FUNCTION_ARGUMENTS",
         Type: Syntax.FunctionArguments,
       },
-      {
-        value: "FUNCTION_RESULT",
-        ...(resultNode || block),
-        params: [],
-        meta: [],
-        Type: Syntax.FunctionResult,
-      },
-      block,
+      { ...result, params: [] },
     ],
   };
+
+  if (block.Type === Syntax.Block) {
+    func.params.push(block);
+  }
 
   return {
     ...op,

@@ -44,7 +44,8 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
     const { variables } = closures;
     if (variables[declaration.value] != null && declaration.params[0]) {
       const { offsets } = closures;
-      const offset: number = Object.values(offsets).pop() || -4;
+      const values = Object.values(offsets);
+      const offset: number = values.length ? Number(values.pop()) : -4;
       offsets[declaration.value] = offset + 4;
     }
   }
