@@ -13,6 +13,7 @@ export const semantics = semanticAnalyzer;
 export const generator = codeGenerator;
 export const validate = astValidator;
 export const emitter = emit;
+export { parser, printNode };
 
 export const buildProgram = (source: string) => {
   const ast = parser(source);
@@ -33,7 +34,7 @@ export const buildProgram = (source: string) => {
 export const getIR = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
+  console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config

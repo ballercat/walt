@@ -1,5 +1,6 @@
 import test from "ava";
-import { debug, getIR } from "../..";
+import { mockContext } from "../../utils/mocks";
+import { debug, getIR, parser, printNode } from "../..";
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
@@ -48,4 +49,10 @@ test("type parsing", t => {
       t.is(run(), 2);
     });
   });
+});
+
+test("closure parser", t => {
+  console.log(
+    printNode(parser("function t() { return (): i32 => { return 2; }; }"))
+  );
 });

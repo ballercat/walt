@@ -8,39 +8,29 @@ export default function parseClosure(
   op: TokenType,
   operands: NodeType[]
 ): NodeType {
-  const [block] = operands.splice(-1);
-  const [resultNode] = operands.splice(-1);
-  const maybeResult = block || resultNode;
-
-  const result = {
-    ...maybeResult,
-    type: maybeResult.type || "void",
-    meta: [],
-    value: "FUNCTION_RESULT",
-    Type: Syntax.FunctionResult,
-  };
+  debugger;
+  const block = operands.pop();
+  const resultNode = operands.pop();
+  const args = operands.pop();
 
   const func = {
     ...block,
     Type: Syntax.FunctionDeclaration,
     params: [
       {
-        ...resultNode,
-        params: (() => {
-          if (resultNode && resultNode.Type === Syntax.Sequence) {
-            return resultNode.params;
-          }
-          if (block.Type !== Syntax.Block) {
-            return [{ ...result, Type: Syntax.Type }];
-          }
-          return [];
-        })(),
+        params: [],
+        ...args,
         meta: [],
-        range: result.range,
         value: "FUNCTION_ARGUMENTS",
         Type: Syntax.FunctionArguments,
       },
-      { ...result, params: [] },
+      {
+        params: [],
+        meta: [],
+        ...resultNode,
+        Type: Syntax.FunctionResult,
+        value: "FUNCTION_RESULT",
+      },
     ],
   };
 
