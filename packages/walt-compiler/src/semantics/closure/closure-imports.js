@@ -1,5 +1,3 @@
-// @flow
-
 // Pre-built static AST for injected closure imports
 export default [
   {
