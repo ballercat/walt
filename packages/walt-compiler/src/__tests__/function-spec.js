@@ -34,7 +34,6 @@ test("functions", t => {
     return callback(result) + callback(result);
   }
 `;
-
   t.throws(() => getIR("function test() { return y; }"));
   const wasm = getIR(walt);
 
@@ -70,7 +69,7 @@ const closurePlugin = `
   }
 `;
 
-test.only("closures", t => {
+test("closures", t => {
   const walt = `
 import { table: Table } from 'env';
 

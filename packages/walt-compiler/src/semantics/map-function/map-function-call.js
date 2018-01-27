@@ -4,12 +4,13 @@ import curry from "curry";
 import { expandClosureIdentifier } from "../closure";
 import {
   funcIndex as setMetaFunctionIndex,
+  typeIndex as setMetaTypeIndex,
   get,
   CLOSURE_TYPE,
 } from "../metadata";
 
 export default curry(function mapFunctonCall(options, call) {
-  const { functions, locals, mapIdentifier, mapSizeof } = options;
+  const { functions, types, locals, mapIdentifier, mapSizeof } = options;
 
   // sizeof(<target>) calls
   if (call.value === "sizeof") {
@@ -46,6 +47,9 @@ export default curry(function mapFunctonCall(options, call) {
         params: expandClosureIdentifier(identifier),
       };
     }
+
+    const typeIndex = Object.keys(types).indexOf(identifier.type);
+    meta.push(setMetaTypeIndex(typeIndex));
 
     return {
       ...call,

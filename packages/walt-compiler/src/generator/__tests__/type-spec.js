@@ -11,14 +11,6 @@ test("type generator, type sequence params", t => {
   t.snapshot(typeDef);
 });
 
-test("type generator, single type param", t => {
-  // Thanks to the expression parser parens around params are optional
-  const ctx = mockContext("type TestFunctionType = i32 => i32;");
-  const node = typeParser(ctx);
-  const typeDef = typeGenerator(node);
-  t.snapshot(typeDef);
-});
-
 test("type generator, void return", t => {
   const ctx = mockContext("type VoidFuncType = (i32) => void;");
   const node = typeParser(ctx);
