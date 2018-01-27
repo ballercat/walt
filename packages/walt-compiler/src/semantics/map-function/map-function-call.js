@@ -44,7 +44,7 @@ export default curry(function mapFunctonCall(options, call) {
         ...call,
         meta,
         Type: Syntax.IndirectFunctionCall,
-        params: expandClosureIdentifier(identifier),
+        params: [...expandClosureIdentifier(identifier)],
       };
     }
 

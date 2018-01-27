@@ -25,8 +25,6 @@ const declaration = (ctx: Context): NodeType => {
 
   if (ctx.eat(["["]) && ctx.eat(["]"])) {
     type = type + "[]";
-  } else if (ctx.eat(["<"]) && ctx.eat([">"])) {
-    type = type + "<>";
   }
 
   const params = [];

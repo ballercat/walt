@@ -19,6 +19,7 @@ export const bootstrapClosure = () => closureImports;
  *
  */
 export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
+  const bareIdentifier = () => ({ ...identifier, params: [] });
   // regular params, we APPEND function pointer math to list of params
   return [
     {
@@ -27,16 +28,18 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
       meta: [],
       Type: Syntax.Pair,
       params: [
-        identifier,
+        bareIdentifier(),
         {
           ...identifier,
           value: "i32",
           type: "i32",
           meta: [],
+          params: [],
           Type: Syntax.Type,
         },
       ],
     },
+    ...identifier.params,
     {
       ...identifier,
       value: ":",
@@ -49,12 +52,13 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
           meta: [],
           Type: Syntax.BinaryExpression,
           params: [
-            identifier,
+            bareIdentifier(),
             {
               ...identifier,
               value: "32",
               type: "i32",
               meta: [],
+              params: [],
               Type: Syntax.Constant,
             },
           ],
@@ -64,6 +68,7 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
           meta: [],
           value: "i32",
           type: "i32",
+          params: [],
           Type: Syntax.Type,
         },
       ],
@@ -162,8 +167,8 @@ export const getEnclosedVariables = (fun: NodeType): { [string]: NodeType } => {
         // variable name shadowing does not enclose upper scope vars
         [Syntax.FunctionArguments]: (fnArgs, __) => {
           walkNode({
-            [Syntax.Pair]: pair => {
-              const { identifier } = pair.params;
+            [Syntax.Pair]: (pair: NodeType) => {
+              const [identifier] = pair.params;
               ignoreLocals(identifier, null);
             },
           })(fnArgs);
