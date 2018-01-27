@@ -2,33 +2,10 @@
 import curry from "curry";
 import Syntax from "../../Syntax";
 import { typeCast } from "../metadata";
-import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
 import type { NodeType } from "../../flow/types";
 
 export default curry(
   (options, typeCastMaybe: NodeType, transform): NodeType => {
-    // Pairs can be closures of form (<args>): <return_type> => { <block> }
-    const [closureMaybe] = typeCastMaybe.params;
-    const { locals, mapClosure, topLevelTransform, mapIdentifier } = options;
-
-    if (closureMaybe.Type === Syntax.Closure) {
-      const [decl] = mapClosure(closureMaybe, topLevelTransform).params;
-      options.hoist.push(decl);
-
-      return transform(
-        collapseClosureIdentifier(
-          { ...locals[CLOSURE_BASE], meta: [] },
-          mapIdentifier({
-            ...decl,
-            params: [],
-            type: "i32",
-            Type: Syntax.Identifier,
-            meta: [],
-          })
-        )
-      );
-    }
-
     const [targetNode, typeNode] = typeCastMaybe.params.map(transform);
 
     const { type: from } = targetNode;

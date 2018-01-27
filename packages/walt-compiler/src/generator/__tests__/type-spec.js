@@ -1,7 +1,6 @@
 import test from "ava";
 import typeGenerator from "../type";
 import typeParser from "../../parser/type";
-// import printNode from "../../utils/print-node";
 import { mockContext } from "../../utils/mocks";
 
 test("type generator, type sequence params", t => {

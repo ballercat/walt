@@ -5,9 +5,6 @@ import { funcIndex as setMetaFunctionIndex } from "../metadata";
 
 const mapIdentifier = curry(
   ({ locals, globals, functions, table, userTypes }, identifier) => {
-    if (identifier.value === "closureBase") {
-      identifier.value = "closure-base";
-    }
     // Not a function call or pointer, look-up variables
     const local = locals[identifier.value];
     const global = globals[identifier.value];
