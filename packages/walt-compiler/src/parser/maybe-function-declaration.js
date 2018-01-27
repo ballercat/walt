@@ -22,24 +22,10 @@ export const parseArguments = (ctx: Context): NodeType => {
 export const parseFunctionResult = (ctx: Context): NodeType => {
   const baseNode: NodeType = ctx.startNode();
   if (ctx.eat([":"])) {
-    if (ctx.stream.peek().value === "<") {
-      const typedef = ctx.endNode(ctx.startNode(), Syntax.Identifier);
-      ctx.eat(null, Syntax.Identifier);
-      ctx.eat(["<"]);
-      ctx.expect([">"]);
-      ctx.eat(null, Syntax.Identifier);
-      return ctx.endNode(
-        {
-          ...baseNode,
-          type: typedef.value + "<>",
-          value: typedef.value,
-        },
-        Syntax.FunctionResult
-      );
-    }
     return ctx.endNode(
       {
         ...baseNode,
+        value: ctx.token.value,
         type: (() => {
           const value = ctx.token.value;
           if (ctx.eat(null, Syntax.Type)) {

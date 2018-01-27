@@ -2,6 +2,8 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import {
+  get,
+  CLOSURE_TYPE,
   array as setMetaArray,
   constant as setMetaConst,
   localIndex as setMetaLocalIndex,
@@ -22,14 +24,18 @@ const getTypeSize = typeString => {
   }
 };
 
+const isClosureType = (types, type): boolean => {
+  return types[type] != null && !!get(CLOSURE_TYPE, types[type]);
+};
+
 export const parseDeclaration = curry((isConst, options, declaration) => {
   const { types, locals, closures } = options;
   if (locals[declaration.value] == null) {
     const index = Object.keys(locals).length;
-    const base = declaration.type.slice(0, -2);
+    const typeString = declaration.type;
     const modifier = declaration.type.slice(-2);
     const isArray = modifier === "[]";
-    const isClosure = modifier === "<>";
+    const isClosure = isClosureType(types, typeString);
     const type = (() => {
       if (isArray) {
         return "i32";
@@ -38,14 +44,16 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
       }
       return declaration.type;
     })();
-    const metaArray = isArray ? setMetaArray(base) : null;
+    const metaArray = isArray ? setMetaArray(typeString.slice(0, -2)) : null;
     const metaClosure = isClosure ? setClosure(true) : null;
     const meta = [
       setMetaLocalIndex(index),
       metaArray,
       metaClosure,
       isConst ? setMetaConst() : null,
-      isClosure ? setMetaTypeIndex(Object.keys(types).indexOf(base)) : null,
+      isClosure
+        ? setMetaTypeIndex(Object.keys(types).indexOf(typeString))
+        : null,
     ];
     locals[declaration.value] = {
       ...declaration,

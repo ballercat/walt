@@ -32,8 +32,8 @@ export const getType = (str: string): number => {
 export const generateImplicitFunctionType = (
   functionNode: NodeType
 ): IntermediateTypeDefinitionType => {
-  const [argsNode, resultNode] = functionNode.params;
-  const resultType = resultNode.type ? getType(resultNode.type) : null;
+  const [argsNode] = functionNode.params;
+  const resultType = functionNode.type ? getType(functionNode.type) : null;
 
   const params = [];
   walkNode({

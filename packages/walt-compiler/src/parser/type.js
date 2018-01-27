@@ -2,34 +2,45 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
+import { closureType } from "../semantics/metadata";
 import type { NodeType } from "../flow/types";
 
 export default function typeParser(ctx: Context): NodeType {
   const node: NodeType = ctx.startNode();
   ctx.eat(["type"]);
+  const meta = [];
+  const isClosure = ctx.eat(["lambda"]);
+  if (isClosure) {
+    meta.push(closureType(true));
+  }
 
   const value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
 
   // Regular function type definition
   if (ctx.eat(["("])) {
-    const params = [];
     // Arguments are optional
-    const args = expression(ctx);
-    if (args != null) {
-      params.push({
-        ...args,
-        value: "FUNCTION_ARGUMENTS",
-        Type: Syntax.FunctionArguments,
-        params: [args],
-      });
-    } else {
-      params.push({
-        ...node,
-        value: "FUNCTION_ARGUMENTS",
-        Type: Syntax.FunctionArguments,
-        params: [],
-      });
+    const argsExpression = expression(ctx);
+    const args =
+      argsExpression != null
+        ? {
+            ...argsExpression,
+            value: "FUNCTION_ARGUMENTS",
+            Type: Syntax.FunctionArguments,
+            params: [argsExpression],
+          }
+        : {
+            ...node,
+            value: "FUNCTION_ARGUMENTS",
+            Type: Syntax.FunctionArguments,
+            params: [],
+          };
+
+    if (isClosure) {
+      args.params = [
+        { ...args, params: [], type: "i32", value: "i32", Type: Syntax.Type },
+        ...args.params,
+      ];
     }
 
     ctx.expect([")"]);
@@ -43,9 +54,10 @@ export default function typeParser(ctx: Context): NodeType {
     return ctx.endNode(
       {
         ...node,
+        meta,
         value,
         type: result.type,
-        params: [...params, result],
+        params: [args, result],
       },
       Syntax.Typedef
     );

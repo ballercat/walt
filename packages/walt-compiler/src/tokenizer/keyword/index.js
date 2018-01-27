@@ -29,6 +29,7 @@ const supported = [
   "global",
   "module",
   "type",
+  "lambda",
 ];
 
 export const nosupport = [
