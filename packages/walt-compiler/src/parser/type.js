@@ -11,27 +11,54 @@ export default function typeParser(ctx: Context): NodeType {
   const value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
 
-  // Quick way to figure out if we are looking at an object to follow or a function definition.
-  const isObjectType = ctx.token.value === "{";
+  // Regular function type definition
+  if (ctx.eat(["("])) {
+    const params = [];
+    // Arguments are optional
+    const args = expression(ctx);
+    if (args != null) {
+      params.push({
+        ...args,
+        value: "FUNCTION_ARGUMENTS",
+        Type: Syntax.FunctionArguments,
+        params: [args],
+      });
+    } else {
+      params.push({
+        ...node,
+        value: "FUNCTION_ARGUMENTS",
+        Type: Syntax.FunctionArguments,
+        params: [],
+      });
+    }
 
-  // All typedefs should be valid expressions
-  const params = [expression(ctx)];
-
-  if (isObjectType) {
+    ctx.expect([")"]);
+    ctx.expect(["=>"]);
+    // Result is not optional
+    const result = {
+      ...expression(ctx),
+      value: "FUNCTION_RESULT",
+      Type: Syntax.FunctionResult,
+    };
     return ctx.endNode(
       {
         ...node,
         value,
-        params,
-        type: "i32",
+        type: result.type,
+        params: [...params, result],
       },
-      Syntax.Struct
+      Syntax.Typedef
     );
   }
-  const resultNode = params[0].params[1] || params[0].params[0];
 
+  // Struct type definition
   return ctx.endNode(
-    { ...node, value, params, type: resultNode.type },
-    Syntax.Typedef
+    {
+      ...node,
+      value,
+      params: [expression(ctx)],
+      type: "i32",
+    },
+    Syntax.Struct
   );
 }

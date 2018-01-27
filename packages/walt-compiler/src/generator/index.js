@@ -175,6 +175,7 @@ export default function generator(ast: NodeType): ProgramType {
       // get written in the order they appear in the source code.
       const index = get(FUNCTION_INDEX, node);
       invariant(index, "Function index must be set");
+
       program.Functions[index.payload] = typeIndex;
       // We will need to filter out the empty slots later
       program.Code[index.payload] = generateCode(patched);

@@ -62,8 +62,11 @@ export default function generateType(
     )}`
   );
 
-  const typeExpression = node.params[0];
-  if (typeExpression.Type !== Syntax.Closure) {
+  const [args, result] = node.params;
+  if (
+    args.Type !== Syntax.FunctionArguments ||
+    result.Type !== Syntax.FunctionResult
+  ) {
     const [start, end] = node.range;
     throw new SyntaxError(
       generateError(
@@ -78,24 +81,16 @@ export default function generateType(
 
   // Collect the function params and result by walking the tree of nodes
   const params = [];
-  let result = null;
 
   walkNode({
-    [Syntax.FunctionArguments]: (args, _) => {
-      walkNode({
-        [Syntax.Type]: (t, __) => {
-          params.push(getType(t.value));
-        },
-      })(args);
+    [Syntax.Type]: (t, __) => {
+      params.push(getType(t.value));
     },
-    [Syntax.FunctionResult]: (res, _visit) => {
-      result = res.type && res.type !== "void" ? getType(res.type) : null;
-    },
-  })(typeExpression);
+  })(args);
 
   return {
     id,
     params,
-    result,
+    result: result.type && result.type !== "void" ? getType(result.type) : null,
   };
 }

@@ -16,6 +16,7 @@ import makeClosure, {
 import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
+import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
 import { funcIndex as setMetaFunctionIndex } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
@@ -194,6 +195,24 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     },
     [Syntax.ArraySubscript]: mapArraySubscript,
     [Syntax.Sizeof]: mapSizeof,
+    [Syntax.Closure]: (closure, transform) => {
+      const mappedClosure = mapClosure(closure, topLevelTransform);
+      const [decl] = mappedClosure.params;
+      options.hoist.push(decl);
+
+      return transform(
+        collapseClosureIdentifier(
+          { ...locals[CLOSURE_BASE], meta: [] },
+          mapIdentifier({
+            ...decl,
+            params: [],
+            type: "i32",
+            Type: Syntax.Identifier,
+            meta: [],
+          })
+        )
+      );
+    },
   })(fun);
 };
 

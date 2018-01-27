@@ -74,6 +74,7 @@ const expression = (
   const processPunctuator = () => {
     switch (ctx.token.value) {
       case "=>":
+        flushOperators(getPrecedence(ctx.token), ctx.token.value);
         operators.push(ctx.token);
         ctx.next();
         if (ctx.token.value === "{") {

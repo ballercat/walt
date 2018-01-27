@@ -3,71 +3,14 @@ import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
 import walkNode from "../../utils/walk-node";
-import { funcIndex as setMetaFunctionIndex } from "../metadata";
+import closureImports from "./closure-imports";
 import type { NodeType } from "../../flow/types";
 
 export const CLOSURE_BASE = "closure-base";
 export const CLOSURE_INNER = "closure-inner";
 export const CLOSURE_GET = "closure--get";
 export const CLOSURE_SET = "closure--set";
-
-const CLOSURE_DEFINITIONS = [
-  { type: "i32", value: CLOSURE_GET },
-  { type: "i32", value: `${CLOSURE_GET}-i32` },
-  { type: null, value: `${CLOSURE_SET}-i32` },
-];
-
-export const bootstrapClosure = (options: {
-  functions: { [string]: NodeType },
-  hoist: NodeType[],
-}) => {
-  const { hoistImports, functions } = options;
-  if (functions[CLOSURE_GET] == null) {
-    let index = Object.keys(functions).length;
-    const template: NodeType = {
-      type: "i32",
-      value: "",
-      params: [],
-      range: [],
-      meta: [],
-      Type: Syntax.FunctionDeclaration,
-    };
-
-    CLOSURE_DEFINITIONS.forEach(def => {
-      // functions[def.value] = {
-      //   ...template,
-      //   ...def,
-      //   meta: [setMetaFunctionIndex(index++)],
-      // };
-      // hoistImports.push({
-      //   ...template,
-      //   params: [
-      //     {
-      //       ...template,
-      //       params: [
-      //         {
-      //           ...template,
-      //           ...def,
-      //           params: [],
-      //           type: null,
-      //           Type: Syntax.Identifier,
-      //         },
-      //         {
-      //           ...template,
-      //           ...def,
-      //           params: [],
-      //           type: null,
-      //           Type: Syntax.Type,
-      //         },
-      //       ],
-      //       Type: Syntax.Pair,
-      //     },
-      //   ],
-      //   Type: Syntax.Import,
-      // });
-    });
-  }
-};
+export const bootstrapClosure = () => closureImports;
 
 /**
  * "expand" an identifier Node into two nodes, the least significant word which
@@ -271,7 +214,7 @@ export const injectEnvironmentMaybe = (
                 ...start,
                 params: [],
                 type: "i32",
-                value: 0,
+                value: "0",
                 Type: Syntax.Constant,
               },
             ],

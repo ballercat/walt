@@ -72,16 +72,9 @@ const closurePlugin = `
 
 test.only("closures", t => {
   const walt = `
-import {
-  'closure--get': ClosureGetType,
-  'closure--get-i32': ClosureGetType,
-  'closure--set-i32': ClosureSetType
-} from 'closure';
 import { table: Table } from 'env';
 
-type ClosureGetType = (i32) => i32;
-type ClosureSetType = (i32, i32) => void;
-type Type = () => i32;
+type Type = (i32) => i32;
 
 function getClosure(): Type<> {
   // close over two locals
