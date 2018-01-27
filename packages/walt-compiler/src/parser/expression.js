@@ -20,7 +20,6 @@ const valueIs = (v: string) => (o: TokenType): boolean => o.value === v;
 
 const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
-const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
 export const isPunctuatorAndNotBracket = (t: ?TokenType) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
@@ -43,7 +42,6 @@ const expression = (
   // should exit the expression.
   let depth: number = 1;
   let eatFunctionCall = false;
-  let inTernary = false;
   let previousToken = null;
 
   const consume = () => operands.push(operator(ctx, operators, operands));
