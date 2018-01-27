@@ -7,7 +7,7 @@ import compile from "..";
 const compileAndRun = (src, importsObj = {}) =>
   WebAssembly.instantiate(compile(src), importsObj);
 
-test.skip("function typed imports", t => {
+test("function typed imports", t => {
   // What is happening here:
   // We are creating a module which takes an import of console.log
   // we provide this import to the module in the second param. We
@@ -34,7 +34,7 @@ test.skip("function typed imports", t => {
   });
 });
 
-test.skip("function pointers", t =>
+test("function pointers", t =>
   new Promise(resolve => {
     const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
     compileAndRun(

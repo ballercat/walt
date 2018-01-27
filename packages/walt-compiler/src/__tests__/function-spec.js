@@ -1,5 +1,6 @@
 import test from "ava";
-import compile, { getIR, debug, buildProgram, emitter } from "..";
+import compile, { getIR, debug } from "..";
+import closurePlugin from "../closure-plugin";
 
 test("functions", t => {
   const walt = `
@@ -49,30 +50,11 @@ test("functions", t => {
   });
 });
 
-const closurePlugin = `
-  const memory: Memory = { initial: 1 };
-  let heapPointer: i32 = 0;
-  export function make(size: i32): i32 {
-    const ptr: i32 = heapPointer;
-    heapPointer += 8;
-    return ptr;
-  }
-
-  export function geti32(ptr: i32): i32 {
-    const view: i32[] = ptr;
-    return view[0];
-  }
-
-  export function seti32(ptr: i32, value: i32) {
-    const view: i32[] = ptr;
-    ptr[0] = value;
-  }
-`;
-
 test("closures", t => {
-  const walt = `
-import { table: Table } from 'env';
-
+  const source = `
+const table: Table = { element: anyfunc, initial: 1 };
+// TODO: This may seem like a typemismatch but it's actually what the closure
+// is compiled to a function which takes an additonal i32 argument
 type Type = (i32) => i32;
 
 function getClosure(): Type<> {
@@ -101,20 +83,15 @@ export function test(): i32 {
 }
 `;
 
-  const program = buildProgram(walt);
-  const wasm = emitter(program);
-  const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
-
-  return WebAssembly.instantiate(compile(closurePlugin))
+  return WebAssembly.instantiate(closurePlugin())
     .then(plugin => {
       const { make, geti32, seti32 } = plugin.instance.exports;
-      return WebAssembly.instantiate(wasm.buffer(), {
+      return WebAssembly.instantiate(compile(source), {
         closure: {
           "closure--get": make,
           "closure--get-i32": geti32,
           "closure--set-i32": seti32,
         },
-        env: { table },
       });
     })
     .then(result => {

@@ -6,6 +6,7 @@ import semanticAnalyzer from "./semantics";
 import astValidator from "./validation";
 import _debug from "./utils/debug";
 import printNode from "./utils/print-node";
+import closurePlugin from "./closure-plugin";
 
 export const debug = _debug;
 export const prettyPrintNode = printNode;
@@ -13,21 +14,7 @@ export const semantics = semanticAnalyzer;
 export const generator = codeGenerator;
 export const validate = astValidator;
 export const emitter = emit;
-export { parser, printNode };
-
-export const buildProgram = (source: string) => {
-  const ast = parser(source);
-  const semanticAST = semantics(ast);
-  validate(
-    semanticAST,
-    // this will eventually be a config
-    {
-      lines: source ? source.split("\n") : [],
-      filename: "walt-source",
-    }
-  );
-  return generator(semanticAST);
-};
+export { parser, printNode, closurePlugin };
 
 // Used for deugging purposes
 export const getIR = (source: string) => {
