@@ -1,5 +1,5 @@
 import test from "ava";
-import { debug, getIR } from "../..";
+import compile, { debug, getIR } from "../..";
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
@@ -48,4 +48,9 @@ test("type parsing", t => {
       t.is(run(), 2);
     });
   });
+});
+
+test("invalid type definition", t => {
+  const error = t.throws(() => compile("type Type = i32 => void;"));
+  t.snapshot(error);
 });

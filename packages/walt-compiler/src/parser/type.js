@@ -2,6 +2,7 @@
 import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
+import generateError from "../utils/generate-error";
 import { closureType } from "../semantics/metadata";
 import type { NodeType } from "../flow/types";
 
@@ -60,6 +61,21 @@ export default function typeParser(ctx: Context): NodeType {
         params: [args, result],
       },
       Syntax.Typedef
+    );
+  }
+
+  // Sanity check definition
+  if (ctx.token.value !== "{") {
+    const start = node.range[0];
+    const end = ctx.token.end;
+    throw new SyntaxError(
+      generateError(
+        "Invalid type syntax",
+        "A function type must be of form (<type>, ...) <type>",
+        { start, end },
+        "",
+        ""
+      )
     );
   }
 
