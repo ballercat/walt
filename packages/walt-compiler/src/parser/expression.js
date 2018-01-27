@@ -101,9 +101,7 @@ const expression = (
           }
           return false;
         }
-        if (ctx.token.value === "?") {
-          inTernary = true;
-        }
+
         operators.push(ctx.token);
 
         break;
@@ -147,12 +145,6 @@ const expression = (
         consume();
         break;
       default: {
-        if (ctx.token.value === ":" && inTernary) {
-          eatUntil(isTStart);
-          inTernary = false;
-          break;
-        }
-
         const token = (t => {
           if (
             (t.value === "-" && previousToken == null) ||
@@ -190,11 +182,6 @@ const expression = (
       case Syntax.Type:
         eatFunctionCall = false;
         operands.push(builtInType(ctx));
-        break;
-      case Syntax.UnaryExpression:
-        eatFunctionCall = false;
-        flushOperators(getPrecedence(ctx.token), ctx.token.value);
-        operators.push(ctx.token);
         break;
       case Syntax.Punctuator:
         const punctuatorResult = processPunctuator();
