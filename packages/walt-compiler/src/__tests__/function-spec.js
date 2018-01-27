@@ -52,12 +52,19 @@ test("functions", t => {
 
 test("closures", t => {
   const source = `
-const table: Table = { element: anyfunc, initial: 1 };
-// TODO: This may seem like a typemismatch but it's actually what the closure
-// is compiled to a function which takes an additonal i32 argument
-type lambda LambdaType = (i32, i32) => i32;
+const table: Table = { element: anyfunc, initial: 2 };
+type lambda Lambda = (i32, i32) => i32;
+type lambda SimpleLambda = () => i32;
 
-function getClosure(): LambdaType {
+function getSimpleLambda(): SimpleLambda {
+  let x: i32 = 0;
+  return (): i32 => {
+    x += 1;
+    return x;
+  }
+}
+
+function getLambda(): Lambda {
   // close over two locals
   let x: i32 = 0;
   return (xx: i32, yy: i32): i32 => {
@@ -67,12 +74,15 @@ function getClosure(): LambdaType {
 }
 
 export function test(): i32 {
-  const closure: LambdaType = getClosure();
+  const closure: Lambda = getLambda();
   // should be 5
   const x: i32 = closure(2, 3);
-  const closure2: LambdaType = getClosure();
+
+  const closure2: SimpleLambda = getSimpleLambda();
+  // should be 1
+  closure2();
   // should be 2
-  const y: i32 = closure2(1, 1);
+  const y: i32 = closure2();
 
   // should be 7
   return x + y;

@@ -10,17 +10,6 @@ const maybeIdentifier = (ctx: Context): NodeType => {
   const Type =
     nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
   const node = ctx.startNode();
-  if (node.value === "Closure" && ctx.eat(["<"])) {
-    const typedef = ctx.endNode(ctx.startNode(), Syntax.Identifier);
-    ctx.expect([">"]);
-    return ctx.endNode(
-      {
-        ...node,
-        params: [typedef],
-      },
-      Syntax.ClosureType
-    );
-  }
 
   return ctx.endNode(node, Type);
 };
