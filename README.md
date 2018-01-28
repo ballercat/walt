@@ -23,6 +23,8 @@ Highlights:
 
 :construction: **currently under heavy construction** :construction:
 
+:book: Read the [Quick Start Guide](https://github.com/ballercat/walt/wiki/Walt-In-5-Minutes)
+
 :rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
 
 :pray: Contributions are welcomed! [Contributing guide](https://github.com/ballercat/walt/blob/master/CONTRIBUTING.md).
