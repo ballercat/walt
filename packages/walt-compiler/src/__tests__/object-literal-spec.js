@@ -17,9 +17,9 @@ test("objects", t => {
 
   export function testSubscript() : i32 {
     const obj: TestType = malloc(sizeof(TestType));
-    obj['x'] = 2;
-    obj['y'] = 2;
-    return obj['x'] + obj['y'];
+    obj.x = 2;
+    obj.y = 2;
+    return obj.x + obj.y;
   }
 
   export function testAlignment(): i32 {
@@ -31,13 +31,13 @@ test("objects", t => {
     lens[1] = 2;
     lens[2] = 2;
 
-    return obj['x'] + obj['y'] + obj['z'];
+    return obj.x + obj.y + obj.z;
   }
   export function testMixedTypeProperties(): f32 {
     const obj: MixedType = malloc(sizeof(MixedType));
 
     obj = { z: (4: i64), w: (4: f64) };
-    return (obj['z'] + obj['w']) : f32;
+    return (obj.z + obj.w) : f32;
   }
   export function testObjectSyntaxSugar(z: i32, x: i32): i32 {
     const obj: TestType = malloc(sizeof(TestType));
@@ -50,7 +50,7 @@ test("objects", t => {
     // spread works
     obj = { ...obj2, z };
 
-    return obj['x'] + obj['y'] + obj['z'];
+    return obj.x + obj.y + obj.z;
   }
 `;
 
