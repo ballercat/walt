@@ -17,7 +17,6 @@ import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
 import { mapImport } from "./map-import";
 import mapFunctionNode from "./map-function";
-// import { bootstrapClosure } from "./closure";
 import closureImports from "../closure-plugin/imports";
 import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
