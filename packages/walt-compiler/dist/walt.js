@@ -3961,6 +3961,8 @@ var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) 
 });
 
 //      
+const CLOSURE_FREE = "closure-free";
+const CLOSURE_MALLOC = "closure-malloc";
 const CLOSURE_BASE = "closure-base";
 const CLOSURE_INNER = "closure-inner";
 const CLOSURE_GET = "closure--get";
@@ -4113,7 +4115,7 @@ const injectEnvironmentMaybe = ({
       params: [mapFunctionCall(_extends({}, start, {
         type: "i32",
         meta: [],
-        value: CLOSURE_GET,
+        value: CLOSURE_MALLOC,
         Type: Syntax.FunctionCall,
         params: [_extends({}, start, {
           params: [],
@@ -4475,16 +4477,18 @@ var mapFunctionNode$1 = curry_1(mapFunctionNode);
 function imports$1() {
   return parse(`
     import {
-      'closure--get': ClosureGeti32,
-      'closure--get-i32': ClosureGeti32,
-      'closure--get-f32': ClosureGetf32,
-      'closure--get-i64': ClosureGeti64,
-      'closure--get-f64': ClosureGetf64,
-      'closure--set-i32': ClosureSeti32,
-      'closure--set-f32': ClosureSetf32,
-      'closure--set-i64': ClosureSeti64,
-      'closure--set-f64': ClosureSetf64
+      '${CLOSURE_MALLOC}': ClosureGeti32,
+      '${CLOSURE_FREE}': ClosureFree,
+      '${CLOSURE_GET}-i32': ClosureGeti32,
+      '${CLOSURE_GET}-f32': ClosureGetf32,
+      '${CLOSURE_GET}-i64': ClosureGeti64,
+      '${CLOSURE_GET}-f64': ClosureGetf64,
+      '${CLOSURE_SET}-i32': ClosureSeti32,
+      '${CLOSURE_SET}-f32': ClosureSetf32,
+      '${CLOSURE_SET}-i64': ClosureSeti64,
+      '${CLOSURE_SET}-f64': ClosureSetf64
     } from 'walt-plugin-closure';
+    type ClosureFree = (i32) => void;
     type ClosureGeti32 = (i32) => i32;
     type ClosureGetf32 = (i32) => f32;
     type ClosureGeti64 = (i32) => i64;
@@ -4660,10 +4664,13 @@ const _debug = (stream, begin = 0, end) => {
 const source = `
   const memory: Memory = { initial: 1 };
   let heapPointer: i32 = 0;
-  export function make(size: i32): i32 {
+  export function malloc(size: i32): i32 {
     const ptr: i32 = heapPointer;
     heapPointer += 8;
     return ptr;
+  }
+
+  export function free(ptr: i32) {
   }
 
   // Getters
@@ -4711,7 +4718,8 @@ const source = `
 
 const mapToImports = plugin => {
   const {
-    make,
+    malloc,
+    free,
     geti32,
     getf32,
     geti64,
@@ -4723,15 +4731,16 @@ const mapToImports = plugin => {
   } = plugin.instance.exports;
 
   return {
-    "closure--get": make,
-    "closure--get-i32": geti32,
-    "closure--get-f32": getf32,
-    "closure--get-i64": geti64,
-    "closure--get-f64": getf64,
-    "closure--set-i32": seti32,
-    "closure--set-f32": setf32,
-    "closure--set-i64": seti64,
-    "closure--set-f64": setf64
+    [CLOSURE_MALLOC]: malloc,
+    [CLOSURE_FREE]: free,
+    [`${CLOSURE_GET}-i32`]: geti32,
+    [`${CLOSURE_GET}-f32`]: getf32,
+    [`${CLOSURE_GET}-i64`]: geti64,
+    [`${CLOSURE_GET}-f64`]: getf64,
+    [`${CLOSURE_SET}-i32`]: seti32,
+    [`${CLOSURE_SET}-f32`]: setf32,
+    [`${CLOSURE_SET}-i64`]: seti64,
+    [`${CLOSURE_SET}-f64`]: setf64
   };
 };
 

@@ -5,6 +5,8 @@ import mapNode from "../../utils/map-node";
 import walkNode from "../../utils/walk-node";
 import type { NodeType } from "../../flow/types";
 
+export const CLOSURE_FREE = "closure-free";
+export const CLOSURE_MALLOC = "closure-malloc";
 export const CLOSURE_BASE = "closure-base";
 export const CLOSURE_INNER = "closure-inner";
 export const CLOSURE_GET = "closure--get";
@@ -210,7 +212,7 @@ export const injectEnvironmentMaybe = (
             ...start,
             type: "i32",
             meta: [],
-            value: CLOSURE_GET,
+            value: CLOSURE_MALLOC,
             Type: Syntax.FunctionCall,
             params: [
               {

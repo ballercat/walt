@@ -1,15 +1,24 @@
 // @flow
 import compile from "..";
+import {
+  CLOSURE_SET,
+  CLOSURE_GET,
+  CLOSURE_FREE,
+  CLOSURE_MALLOC,
+} from "../semantics/closure";
 import type { WebAssemblyModuleType } from "../flow/types";
 
 // Make this a .walt file or pre-parse into an ast.
 const source = `
   const memory: Memory = { initial: 1 };
   let heapPointer: i32 = 0;
-  export function make(size: i32): i32 {
+  export function malloc(size: i32): i32 {
     const ptr: i32 = heapPointer;
     heapPointer += 8;
     return ptr;
+  }
+
+  export function free(ptr: i32) {
   }
 
   // Getters
@@ -57,7 +66,8 @@ const source = `
 
 export const mapToImports = (plugin: WebAssemblyModuleType) => {
   const {
-    make,
+    malloc,
+    free,
     geti32,
     getf32,
     geti64,
@@ -69,15 +79,16 @@ export const mapToImports = (plugin: WebAssemblyModuleType) => {
   } = plugin.instance.exports;
 
   return {
-    "closure--get": make,
-    "closure--get-i32": geti32,
-    "closure--get-f32": getf32,
-    "closure--get-i64": geti64,
-    "closure--get-f64": getf64,
-    "closure--set-i32": seti32,
-    "closure--set-f32": setf32,
-    "closure--set-i64": seti64,
-    "closure--set-f64": setf64,
+    [CLOSURE_MALLOC]: malloc,
+    [CLOSURE_FREE]: free,
+    [`${CLOSURE_GET}-i32`]: geti32,
+    [`${CLOSURE_GET}-f32`]: getf32,
+    [`${CLOSURE_GET}-i64`]: geti64,
+    [`${CLOSURE_GET}-f64`]: getf64,
+    [`${CLOSURE_SET}-i32`]: seti32,
+    [`${CLOSURE_SET}-f32`]: setf32,
+    [`${CLOSURE_SET}-i64`]: seti64,
+    [`${CLOSURE_SET}-f64`]: setf64,
   };
 };
 
