@@ -1466,19 +1466,17 @@ const maybeQuote = char => {
 const stringParser = token(maybeQuote, Syntax.StringLiteral);
 
 //      
+const isValidIdentifier = char => {
+  // Don't allow these
+  return !stringParser(char) && !punctuator(char) && !Stream.eol(char) && char !== " ";
+};
+
 const supportAny = char => {
-  if (!stringParser(char) && !punctuator(char) && char !== " ") {
-    return supportAny;
-  }
-  return null;
+  return isValidIdentifier(char) ? supportAny : null;
 };
 
 const parse$1 = char => {
-  // Don't allow these
-  if (!stringParser(char) && !punctuator(char) && !constant$1(char) && char !== " ") {
-    return supportAny;
-  }
-  return null;
+  return isValidIdentifier(char) && !constant$1(char) ? supportAny : null;
 };
 const tokenParser = token(parse$1, Syntax.Identifier);
 
@@ -1501,23 +1499,67 @@ const root$1 = trie$2.fsearch;
 var keyword$2 = token(root$1, Syntax.Keyword, supported$1);
 
 //      
-const everything = () => everything;
+const SLASH = "/";
+const ASTERIX = "*";
 
-const slash = char => {
-  if (char === "/") {
-    return everything;
-  }
+const SINGLE_LINE = `${SLASH}${SLASH}`;
+const MULTI_LINE_START = `${SLASH}${ASTERIX}`;
+const MULTI_LINE_END = `${ASTERIX}${SLASH}`;
+
+const COMMENT_IDENTIFIERS = [SINGLE_LINE, MULTI_LINE_START, MULTI_LINE_END];
+
+//      
+const parser = char => {
+  let isMultiline = false;
+  let isSingleLine = false;
+  let previous;
+
+  const isComment = current => {
+    if (Stream.eol(current)) {
+      isSingleLine = false;
+    }
+
+    switch (`${previous}${current}`) {
+      case MULTI_LINE_END:
+        {
+          isMultiline = false;
+          return isComment;
+        }
+      case MULTI_LINE_START:
+        {
+          isMultiline = true;
+          return isComment;
+        }
+      case SINGLE_LINE:
+        {
+          isSingleLine = true;
+          return isComment;
+        }
+      default:
+        {
+          if (isMultiline || isSingleLine) {
+            previous = current;
+            return isComment;
+          }
+        }
+    }
+  };
+
+  const maybeComment = current => {
+    const buffer = previous;
+    previous = current;
+
+    if (current === SLASH || isMultiline || COMMENT_IDENTIFIERS.indexOf(`${buffer}${current}`) > -1) {
+      return isComment;
+    }
+
+    return null;
+  };
+
+  return maybeComment(char);
 };
 
-const maybeComment = char => {
-  if (char === "/") {
-    return slash;
-  }
-
-  return null;
-};
-
-const commentParser = token(maybeComment, Syntax.Comment);
+var comments = token(parser, Syntax.Comment);
 
 //      
 const supported$2 = ["i32", "i64", "f32", "f64", "Function", "Memory", "Table", "void"];
@@ -1527,7 +1569,7 @@ var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 //      
 class Tokenizer {
 
-  constructor(stream, parsers = [punctuator, constant$1, tokenParser, keyword$2, stringParser, type, commentParser]) {
+  constructor(stream, parsers = [punctuator, constant$1, tokenParser, keyword$2, stringParser, type, comments]) {
     if (!(stream instanceof Stream)) {
       this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
@@ -1561,7 +1603,7 @@ class Tokenizer {
       this.stream.next();
       next = this.stream.peek();
       nextMatchers = this.match(next, matchers);
-    } while (!Stream.eol(next) && !Stream.eof(next) && nextMatchers.length > 0);
+    } while (!Stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
     if (Stream.eof(value)) {
@@ -1576,7 +1618,7 @@ class Tokenizer {
       col: this.stream.col
     };
     // Comments are ignored for now
-    if (token.type !== commentParser.type) {
+    if (token.type !== comments.type) {
       this.tokens.push(token);
     }
 
@@ -4571,7 +4613,6 @@ function hasNode(Type, ast) {
  */
 
 //      
-// import { bootstrapClosure } from "./closure";
 function semantics$1(ast) {
   const functions = {};
   const globals = {};
