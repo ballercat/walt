@@ -18,6 +18,7 @@ const declaration = (ctx: Context): NodeType => {
   ctx.expect([":"]);
 
   let type = ctx.token.value;
+
   if (!ctx.eat(null, Syntax.Type)) {
     ctx.expect(null, Syntax.Identifier);
   }

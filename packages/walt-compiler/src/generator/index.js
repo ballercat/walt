@@ -38,6 +38,7 @@ export const generateCode = (
   const block = {
     code: [],
     locals: [],
+    debug: `Function ${func.value}`,
   };
 
   // NOTE: Declarations have a side-effect of changing the local count
@@ -61,6 +62,7 @@ export default function generator(ast: NodeType): ProgramType {
     Functions: [],
     Memory: [],
     Table: [],
+    Artifacts: [],
   };
 
   const findTypeIndex = (functionNode: NodeType): number => {
@@ -82,7 +84,7 @@ export default function generator(ast: NodeType): ProgramType {
 
   const typeMap = {};
   const astWithTypes = mapNode({
-    [Syntax.Typedef]: node => {
+    [Syntax.Typedef]: (node, _ignore) => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
       let typeNode = program.Types[typeIndex];
 
@@ -102,6 +104,7 @@ export default function generator(ast: NodeType): ProgramType {
   })(ast);
 
   const nodeMap = {
+    [Syntax.Typedef]: (_, __) => _,
     [Syntax.Export]: node => {
       const [nodeToExport] = node.params;
       program.Exports.push(generateExport(nodeToExport));
@@ -168,12 +171,21 @@ export default function generator(ast: NodeType): ProgramType {
         },
       })(node);
 
-      program.Functions.push(typeIndex);
-      program.Code.push(generateCode(patched));
+      // Quick fix for shifting around function indices. These don't necessarily
+      // get written in the order they appear in the source code.
+      const index = get(FUNCTION_INDEX, node);
+      invariant(index, "Function index must be set");
+
+      program.Functions[index.payload] = typeIndex;
+      // We will need to filter out the empty slots later
+      program.Code[index.payload] = generateCode(patched);
     },
   };
 
   walkNode(nodeMap)(astWithTypes);
+
+  // Unlike function indexes we need function bodies to be exact
+  program.Code = program.Code.filter(Boolean);
 
   return program;
 }

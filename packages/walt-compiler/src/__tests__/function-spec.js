@@ -1,5 +1,6 @@
 import test from "ava";
-import { getIR, debug } from "..";
+import compile, { getIR, debug, withPlugins } from "..";
+import closurePlugin from "../closure-plugin";
 
 test("functions", t => {
   const walt = `
@@ -34,7 +35,6 @@ test("functions", t => {
     return callback(result) + callback(result);
   }
 `;
-
   t.throws(() => getIR("function test() { return y; }"));
   const wasm = getIR(walt);
 
@@ -48,4 +48,58 @@ test("functions", t => {
     t.is(exports.testPointerArguments(), 5, "object pointer arguments");
     t.is(exports.testFunctionPointers(), 4, "plain function pointers");
   });
+});
+
+test("closures", t => {
+  const source = `
+const table: Table = { element: anyfunc, initial: 2 };
+type lambda Lambda = (i32, i32) => i32;
+type lambda SimpleLambda = () => i32;
+
+function getSimpleLambda(): SimpleLambda {
+  let x: i32 = 0;
+  return (): i32 => {
+    x += 1;
+    return x;
+  }
+}
+
+function getLambda(): Lambda {
+  // close over two locals
+  let x: i32 = 0;
+  return (xx: i32, yy: i32): i32 => {
+    x += yy;
+    return x + xx;
+  }
+}
+
+export function test(): i32 {
+  const closure: Lambda = getLambda();
+  // should be 5
+  const x: i32 = closure(2, 3);
+
+  const closure2: SimpleLambda = getSimpleLambda();
+  // should be 1
+  closure2();
+  // should be 2
+  const y: i32 = closure2();
+
+  // should be 7
+  return x + y;
+}
+`;
+
+  return WebAssembly.instantiate(closurePlugin())
+    .then(closure =>
+      WebAssembly.instantiate(
+        compile(source),
+        withPlugins({
+          closure,
+        })
+      )
+    )
+    .then(result => {
+      const fn = result.instance.exports.test;
+      t.is(fn(), 7);
+    });
 });

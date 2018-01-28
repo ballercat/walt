@@ -4,6 +4,7 @@ import operator from "./operator";
 import constant from "./constant";
 import stringLiteral from "./string-literal";
 import builtInType from "./builtin-type";
+import block from "./block";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
 import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
@@ -19,7 +20,6 @@ const valueIs = (v: string) => (o: TokenType): boolean => o.value === v;
 
 const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
-const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
 export const isPunctuatorAndNotBracket = (t: ?TokenType) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
@@ -42,7 +42,6 @@ const expression = (
   // should exit the expression.
   let depth: number = 1;
   let eatFunctionCall = false;
-  let inTernary = false;
   let previousToken = null;
 
   const consume = () => operands.push(operator(ctx, operators, operands));
@@ -72,6 +71,14 @@ const expression = (
 
   const processPunctuator = () => {
     switch (ctx.token.value) {
+      case "=>":
+        flushOperators(getPrecedence(ctx.token), ctx.token.value);
+        operators.push(ctx.token);
+        ctx.next();
+        if (ctx.token.value === "{") {
+          operands.push(block(ctx));
+        }
+        return false;
       case "(":
         depth++;
         // Function call.
@@ -92,9 +99,7 @@ const expression = (
           }
           return false;
         }
-        if (ctx.token.value === "?") {
-          inTernary = true;
-        }
+
         operators.push(ctx.token);
 
         break;
@@ -138,12 +143,6 @@ const expression = (
         consume();
         break;
       default: {
-        if (ctx.token.value === ":" && inTernary) {
-          eatUntil(isTStart);
-          inTernary = false;
-          break;
-        }
-
         const token = (t => {
           if (
             (t.value === "-" && previousToken == null) ||
@@ -181,11 +180,6 @@ const expression = (
       case Syntax.Type:
         eatFunctionCall = false;
         operands.push(builtInType(ctx));
-        break;
-      case Syntax.UnaryExpression:
-        eatFunctionCall = false;
-        flushOperators(getPrecedence(ctx.token), ctx.token.value);
-        operators.push(ctx.token);
         break;
       case Syntax.Punctuator:
         const punctuatorResult = processPunctuator();

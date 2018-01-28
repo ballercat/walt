@@ -23,3 +23,11 @@ export type NodeType = {
   meta: MetadataType[],
   params: NodeType[],
 };
+
+export type WebAssemblyModuleType = {
+  instance: {
+    exports: {
+      [string]: any,
+    },
+  },
+};

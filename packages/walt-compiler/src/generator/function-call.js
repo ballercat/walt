@@ -18,6 +18,7 @@ const generateFunctionCall: GeneratorType = (node, parent) => {
   block.push({
     kind: opcode.Call,
     params: [metaFunctionIndex.payload],
+    debug: `${node.value}<${node.type ? node.type : "void"}>`,
   });
 
   return block;

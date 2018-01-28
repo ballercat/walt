@@ -36,7 +36,7 @@ test("remainder", t =>
   ));
 
 // ** is not supported, use Math.pow(). Look into this
-// test.skip('exponentiation', t =>
+// test'exponentiation', t =>
 //   compileAndRun('export function test(): i32 { return 2 ** 2; }').then(outputIs(t, 1))
 // );
 

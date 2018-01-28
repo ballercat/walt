@@ -44,10 +44,12 @@ const Syntax = {
   Comment: "Comment",
   Sizeof: "Sizeof",
   Spread: "Spread",
+  Closure: "Closure",
 
   Noop: "Noop",
 
   // Semantic Nodes
+  ClosureType: "ClosureType",
   Block: "Block",
   ObjectField: "ObjectField",
   FunctionIndex: "FunctionIndex",

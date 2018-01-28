@@ -25,10 +25,15 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
     return ctx.endNode(
       {
         ...baseNode,
+        value: ctx.token.value,
         type: (() => {
           const value = ctx.token.value;
           if (ctx.eat(null, Syntax.Type)) {
             return value === "void" ? null : value;
+          }
+
+          if (ctx.eat(null, Syntax.Identifier)) {
+            return "i32";
           }
 
           return "i32";
