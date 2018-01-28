@@ -24,6 +24,7 @@ export const PRECEDENCE_KEY_VALUE_PAIR = -1;
 export const PRECEDENCE_PARAMS = -99;
 
 const precedence = {
+  ".": PRECEDENCE_MEMBER_ACCESS,
   "=>": PRECEDENCE_PARAMS,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,

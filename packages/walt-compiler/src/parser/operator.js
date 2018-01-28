@@ -22,7 +22,7 @@ function binary(ctx: Context, op: TokenType, params: NodeType[]) {
       node.params[0],
       binary(ctx, { ...op, value }, [node.params[0], node.params[1]]),
     ];
-  } else if (node.value === "[") {
+  } else if (node.value === "[" || node.value === ".") {
     return subscriptFromNode(ctx, node);
   } else if (node.value === ":") {
     Type = Syntax.Pair;
