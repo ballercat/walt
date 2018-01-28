@@ -34,10 +34,20 @@ test("functions", t => {
   export function testFunctionPointers(): i32 {
     return callback(result) + callback(result);
   }
+
+  function addArray(arr: i32[], x: i32, y: i32): i32 {
+    return arr[x] + arr[y];
+  }
+
+  export function testArrayArguments(): i32 {
+    const arr: i32[] = 24;
+    arr[0] = 2;
+    arr[4] = 3;
+    return addArray(arr, 0, 4);
+  };
 `;
   t.throws(() => getIR("function test() { return y; }"));
   const wasm = getIR(walt);
-
   t.snapshot(debug(wasm));
   return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
@@ -47,6 +57,7 @@ test("functions", t => {
     t.is(exports.test0FunctionNames1(), 2, "numbers in function names");
     t.is(exports.testPointerArguments(), 5, "object pointer arguments");
     t.is(exports.testFunctionPointers(), 4, "plain function pointers");
+    t.is(exports.testArrayArguments(), 5, "array arguments");
   });
 });
 
