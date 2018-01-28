@@ -6,7 +6,8 @@ import semanticAnalyzer from "./semantics";
 import astValidator from "./validation";
 import _debug from "./utils/debug";
 import printNode from "./utils/print-node";
-import closurePlugin from "./closure-plugin";
+import closurePlugin, { mapToImports } from "./closure-plugin";
+import type { WebAssemblyModuleType } from "./flow/types";
 
 export const debug = _debug;
 export const prettyPrintNode = printNode;
@@ -20,7 +21,6 @@ export { parser, printNode, closurePlugin };
 export const getIR = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config
@@ -31,8 +31,23 @@ export const getIR = (source: string) => {
   );
   const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
-  // console.log(debug(wasm));
   return wasm;
+};
+
+export const withPlugins = (
+  plugins: { [string]: WebAssemblyModuleType },
+  importsObj?: { [string]: any }
+) => {
+  const { closure } = plugins;
+  const resultImports = {};
+  if (closure != null) {
+    resultImports["walt-plugin-closure"] = mapToImports(closure);
+  }
+
+  return {
+    ...resultImports,
+    ...importsObj,
+  };
 };
 
 // Compiles a raw binary wasm buffer

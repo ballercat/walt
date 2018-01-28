@@ -1,5 +1,5 @@
 import test from "ava";
-import compile, { getIR, debug } from "..";
+import compile, { getIR, debug, withPlugins } from "..";
 import closurePlugin from "../closure-plugin";
 
 test("functions", t => {
@@ -90,16 +90,14 @@ export function test(): i32 {
 `;
 
   return WebAssembly.instantiate(closurePlugin())
-    .then(plugin => {
-      const { make, geti32, seti32 } = plugin.instance.exports;
-      return WebAssembly.instantiate(compile(source), {
-        closure: {
-          "closure--get": make,
-          "closure--get-i32": geti32,
-          "closure--set-i32": seti32,
-        },
-      });
-    })
+    .then(closure =>
+      WebAssembly.instantiate(
+        compile(source),
+        withPlugins({
+          closure,
+        })
+      )
+    )
     .then(result => {
       const fn = result.instance.exports.test;
       t.is(fn(), 7);

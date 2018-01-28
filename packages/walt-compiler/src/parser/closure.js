@@ -27,7 +27,7 @@ export const makeArgs = (node: NodeType | null) => ({
   Type: Syntax.FunctionArguments,
 });
 
-export default function parseClosure(
+export default function parselambda(
   ctx: Context,
   op: TokenType,
   operands: NodeType[]
@@ -38,7 +38,7 @@ export default function parseClosure(
   operands.splice(-3);
 
   let params = [];
-  const base = {
+  const lambda = {
     ...op,
     type: "i32",
     range: [ctx.token.start, ctx.token.end],
@@ -46,6 +46,8 @@ export default function parseClosure(
     Type: Syntax.Closure,
     params: [],
   };
+  // The reason why this is so tricky to parse is because there are too many
+  // optional parts of a coluse definition, like arguments and return type
   if (args.Type === Syntax.Pair) {
     const [lhs, rhs] = args.params;
     if (lhs != null && rhs != null) {
@@ -57,10 +59,10 @@ export default function parseClosure(
               makeResult(rhs.Type === Syntax.Type ? rhs : null),
             ];
       return {
-        ...base,
+        ...lambda,
         params: [
           {
-            ...base,
+            ...lambda,
             Type: Syntax.FunctionDeclaration,
             params: [...params, block],
           },
@@ -69,10 +71,10 @@ export default function parseClosure(
     }
 
     return {
-      ...base,
+      ...lambda,
       params: [
         {
-          ...base,
+          ...lambda,
           Type: Syntax.FunctionDeclaration,
           params: [makeArgs(null), makeResult(lhs), block],
         },
@@ -80,10 +82,10 @@ export default function parseClosure(
     };
   } else if (args.Type === Syntax.Sequence) {
     return {
-      ...base,
+      ...lambda,
       params: [
         {
-          ...base,
+          ...lambda,
           Type: Syntax.FunctionDeclaration,
 
           params: [
@@ -96,5 +98,5 @@ export default function parseClosure(
     };
   }
 
-  return base;
+  return lambda;
 }

@@ -3,14 +3,12 @@ import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
 import walkNode from "../../utils/walk-node";
-import closureImports from "./closure-imports";
 import type { NodeType } from "../../flow/types";
 
 export const CLOSURE_BASE = "closure-base";
 export const CLOSURE_INNER = "closure-inner";
 export const CLOSURE_GET = "closure--get";
 export const CLOSURE_SET = "closure--set";
-export const bootstrapClosure = () => closureImports;
 
 /**
  * "expand" an identifier Node into two nodes, the least significant word which

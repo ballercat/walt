@@ -17,7 +17,8 @@ import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
 import { mapImport } from "./map-import";
 import mapFunctionNode from "./map-function";
-import { bootstrapClosure } from "./closure";
+// import { bootstrapClosure } from "./closure";
+import closureImports from "../closure-plugin/imports";
 import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
 import hasNode from "../utils/has-node";
@@ -33,7 +34,7 @@ export default function semantics(ast: NodeType): NodeType {
   const hoistImports: NodeType[] = [];
 
   if (hasNode(Syntax.Closure, ast)) {
-    ast = { ...ast, params: [...bootstrapClosure(), ...ast.params] };
+    ast = { ...ast, params: [...closureImports(), ...ast.params] };
   }
   // Types have to be pre-parsed before the rest of the program
   walkNode({

@@ -140,41 +140,43 @@ const makeArgs = node => _extends({
   Type: Syntax.FunctionArguments
 });
 
-function parseClosure(ctx, op, operands) {
+function parselambda(ctx, op, operands) {
   const args = operands[0];
   const result = operands[1];
   const block = operands[2] || result || args;
   operands.splice(-3);
 
   let params = [];
-  const base = _extends({}, op, {
+  const lambda = _extends({}, op, {
     type: "i32",
     range: [ctx.token.start, ctx.token.end],
     meta: [],
     Type: Syntax.Closure,
     params: []
   });
+  // The reason why this is so tricky to parse is because there are too many
+  // optional parts of a coluse definition, like arguments and return type
   if (args.Type === Syntax.Pair) {
     const [lhs, rhs] = args.params;
     if (lhs != null && rhs != null) {
       params = lhs.Type === Syntax.Pair ? [makeArgs(lhs), makeResult(rhs)] : [makeArgs(lhs.Type === Syntax.Sequence ? lhs : args), makeResult(rhs.Type === Syntax.Type ? rhs : null)];
-      return _extends({}, base, {
-        params: [_extends({}, base, {
+      return _extends({}, lambda, {
+        params: [_extends({}, lambda, {
           Type: Syntax.FunctionDeclaration,
           params: [...params, block]
         })]
       });
     }
 
-    return _extends({}, base, {
-      params: [_extends({}, base, {
+    return _extends({}, lambda, {
+      params: [_extends({}, lambda, {
         Type: Syntax.FunctionDeclaration,
         params: [makeArgs(null), makeResult(lhs), block]
       })]
     });
   } else if (args.Type === Syntax.Sequence) {
-    return _extends({}, base, {
-      params: [_extends({}, base, {
+    return _extends({}, lambda, {
+      params: [_extends({}, lambda, {
         Type: Syntax.FunctionDeclaration,
 
         params: [makeArgs(args), makeResult(result.Type === Syntax.Type ? result : null), block]
@@ -182,7 +184,7 @@ function parseClosure(ctx, op, operands) {
     });
   }
 
-  return base;
+  return lambda;
 }
 
 //      
@@ -282,7 +284,7 @@ const operator = (ctx, operators, operands) => {
   const op = operators.pop();
   switch (op.value) {
     case "=>":
-      return parseClosure(ctx, op, operands);
+      return parselambda(ctx, op, operands);
     case "?":
       return ternary(ctx, op, operands.splice(-2));
     case ",":
@@ -403,13 +405,6 @@ const maybeIdentifier = ctx => {
   const nextToken = ctx.stream.peek();
   const Type = nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
   const node = ctx.startNode();
-  if (node.value === "Closure" && ctx.eat(["<"])) {
-    const typedef = ctx.endNode(ctx.startNode(), Syntax.Identifier);
-    ctx.expect([">"]);
-    return ctx.endNode(_extends({}, node, {
-      params: [typedef]
-    }), Syntax.ClosureType);
-  }
 
   return ctx.endNode(node, Type);
 };
@@ -421,7 +416,6 @@ const valueIs = v => o => o.value === v;
 
 const isLBracket = valueIs("(");
 const isLSqrBracket = valueIs("[");
-const isTStart = valueIs("?");
 const isBlockStart = valueIs("{");
 const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
@@ -439,7 +433,6 @@ type = "i32", check = predicate) => {
   // should exit the expression.
   let depth = 1;
   let eatFunctionCall = false;
-  let inTernary = false;
   let previousToken = null;
 
   const consume = () => operands.push(operator(ctx, operators, operands));
@@ -491,9 +484,7 @@ type = "i32", check = predicate) => {
           }
           return false;
         }
-        if (ctx.token.value === "?") {
-          inTernary = true;
-        }
+
         operators.push(ctx.token);
 
         break;
@@ -539,12 +530,6 @@ type = "i32", check = predicate) => {
         break;
       default:
         {
-          if (ctx.token.value === ":" && inTernary) {
-            eatUntil(isTStart);
-            inTernary = false;
-            break;
-          }
-
           const token = (t => {
             if (t.value === "-" && previousToken == null || t.value === "-" && isPunctuatorAndNotBracket(previousToken)) {
               return _extends({}, t, {
@@ -578,11 +563,6 @@ type = "i32", check = predicate) => {
       case Syntax.Type:
         eatFunctionCall = false;
         operands.push(builtInType(ctx));
-        break;
-      case Syntax.UnaryExpression:
-        eatFunctionCall = false;
-        flushOperators(getPrecedence(ctx.token), ctx.token.value);
-        operators.push(ctx.token);
         break;
       case Syntax.Punctuator:
         const punctuatorResult = processPunctuator();
@@ -633,8 +613,6 @@ const declaration = ctx => {
 
   if (ctx.eat(["["]) && ctx.eat(["]"])) {
     type = type + "[]";
-  } else if (ctx.eat(["<"]) && ctx.eat([">"])) {
-    type = type + "<>";
   }
 
   const params = [];
@@ -663,18 +641,8 @@ const parseArguments = ctx => {
 const parseFunctionResult = ctx => {
   const baseNode = ctx.startNode();
   if (ctx.eat([":"])) {
-    if (ctx.stream.peek().value === "<") {
-      const typedef = ctx.endNode(ctx.startNode(), Syntax.Identifier);
-      ctx.eat(null, Syntax.Identifier);
-      ctx.eat(["<"]);
-      ctx.expect([">"]);
-      ctx.eat(null, Syntax.Identifier);
-      return ctx.endNode(_extends({}, baseNode, {
-        type: typedef.value + "<>",
-        value: typedef.value
-      }), Syntax.FunctionResult);
-    }
     return ctx.endNode(_extends({}, baseNode, {
+      value: ctx.token.value,
       type: (() => {
         const value = ctx.token.value;
         if (ctx.eat(null, Syntax.Type)) {
@@ -758,30 +726,217 @@ function breakParser(ctx) {
 }
 
 //      
+
+function generateErrorString(msg, error, marker, filename, func) {
+  const { sourceLine: Line, line, col } = marker.start;
+  const { col: end } = marker.end;
+
+  const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
+  return `
+${Line}
+${highlight} ${error}
+${msg}
+  at ${func} (${filename}:${line}:${col})`;
+}
+
+//      
+
+
+const formatMetadata = meta => {
+  return meta.filter(entry => entry != null).map(({ type, payload }) => {
+    let payloadString = "";
+    if (typeof payload === "object") {
+      payloadString = "...";
+    } else {
+      payloadString = JSON.stringify(payload);
+    }
+
+    return `${type}(${payloadString})`;
+  }).join(",");
+};
+
+const printNode = (node, level = 0) => {
+  if (node == null) {
+    return "";
+  }
+  const typeString = `${node.type ? "<" + node.type + ">" : ""}`;
+  const metaString = formatMetadata(node.meta);
+  let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
+  out = out.padStart(out.length + level * 2);
+  node.params.forEach(p => {
+    out += printNode(p, level + 1);
+  });
+  return out;
+};
+
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
+var NODE_ENV = undefined;
+
+var invariant = function (condition, format, a, b, c, d, e, f) {
+  if (NODE_ENV !== 'production') {
+    if (format === undefined) {
+      throw new Error('invariant requires an error message argument');
+    }
+  }
+
+  if (!condition) {
+    var error;
+    if (format === undefined) {
+      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
+    } else {
+      var args = [a, b, c, d, e, f];
+      var argIndex = 0;
+      error = new Error(format.replace(/%s/g, function () {
+        return args[argIndex++];
+      }));
+      error.name = 'Invariant Violation';
+    }
+
+    error.framesToPop = 1; // we don't care about invariant's own frame
+    throw error;
+  }
+};
+
+var invariant_1 = invariant;
+
+//      
+// All of the metadata options are used like redux actions
+// this is intentional but only for the purposes of a common
+// flexible api.
+const FUNCTION_INDEX = "function/index";
+
+
+
+const LOCAL_INDEX = "local/index";
+const GLOBAL_INDEX = "global/index";
+
+const TYPE_CONST = "type/const";
+const TYPE_ARRAY = "type/array";
+
+const TYPE_OBJECT = "type/object";
+const TYPE_INDEX = "type/index";
+const OBJECT_SIZE = "object/size";
+const TYPE_CAST = "type/cast";
+const OBJECT_KEY_TYPES = "object/key-types";
+const CLOSURE_TYPE = "closure/type";
+
+
+
+const get$1 = (type, node) => {
+  invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
+  return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
+};
+
+const funcIndex = payload => ({
+  payload,
+  type: FUNCTION_INDEX
+});
+
+const localIndex = payload => ({
+  payload,
+  type: LOCAL_INDEX
+});
+
+const globalIndex = payload => ({
+  payload,
+  type: GLOBAL_INDEX
+});
+
+
+
+
+
+
+
+
+
+const objectType = payload => ({
+  payload,
+  type: TYPE_OBJECT
+});
+
+const closureType = payload => ({
+  payload,
+  type: CLOSURE_TYPE
+});
+
+const objectSize = payload => ({
+  payload,
+  type: OBJECT_SIZE
+});
+
+const array = payload => ({
+  payload,
+  type: TYPE_ARRAY
+});
+const constant = () => ({
+  payload: true,
+  type: TYPE_CONST
+});
+
+const typeCast = payload => ({
+  payload,
+  type: TYPE_CAST
+});
+
+const objectKeyTypes = payload => ({
+  payload,
+  type: OBJECT_KEY_TYPES
+});
+
+const typeIndex = payload => ({
+  payload,
+  type: TYPE_INDEX
+});
+
+//      
 function typeParser(ctx) {
   const node = ctx.startNode();
   ctx.eat(["type"]);
+  const meta = [];
+  const isClosure = ctx.eat(["lambda"]);
+  if (isClosure) {
+    meta.push(closureType(true));
+  }
 
   const value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
 
   // Regular function type definition
   if (ctx.eat(["("])) {
-    const params = [];
     // Arguments are optional
-    const args = expression(ctx);
-    if (args != null) {
-      params.push(_extends({}, args, {
-        value: "FUNCTION_ARGUMENTS",
-        Type: Syntax.FunctionArguments,
-        params: [args]
-      }));
-    } else {
-      params.push(_extends({}, node, {
-        value: "FUNCTION_ARGUMENTS",
-        Type: Syntax.FunctionArguments,
-        params: []
-      }));
+    const argsExpression = expression(ctx);
+    const args = argsExpression != null ? _extends({}, argsExpression, {
+      value: "FUNCTION_ARGUMENTS",
+      Type: Syntax.FunctionArguments,
+      params: [argsExpression]
+    }) : _extends({}, node, {
+      value: "FUNCTION_ARGUMENTS",
+      Type: Syntax.FunctionArguments,
+      params: []
+    });
+
+    if (isClosure) {
+      args.params = [_extends({}, args, { params: [], type: "i32", value: "i32", Type: Syntax.Type }), ...args.params];
     }
 
     ctx.expect([")"]);
@@ -792,10 +947,18 @@ function typeParser(ctx) {
       Type: Syntax.FunctionResult
     });
     return ctx.endNode(_extends({}, node, {
+      meta,
       value,
       type: result.type,
-      params: [...params, result]
+      params: [args, result]
     }), Syntax.Typedef);
+  }
+
+  // Sanity check definition
+  if (ctx.token.value !== "{") {
+    const start = node.range[0];
+    const end = ctx.token.end;
+    throw new SyntaxError(generateErrorString("Invalid type syntax", "A function type must be of form (<type>, ...) <type>", { start, end }, "", ""));
   }
 
   // Struct type definition
@@ -871,20 +1034,6 @@ const whileLoop = ctx => {
   }), Syntax.Loop);
 };
 
-//      
-
-function generateErrorString(msg, error, marker, filename, func) {
-  const { sourceLine: Line, line, col } = marker.start;
-  const { col: end } = marker.end;
-
-  const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
-  return `
-${Line}
-${highlight} ${error}
-${msg}
-  at ${func} (${filename}:${line}:${col})`;
-}
-
 /**
  * Context is used to parse tokens into the base AST.
  * Originally the parser was a giant class and the context was the 'this' pointer.
@@ -906,9 +1055,9 @@ class Context {
     this.lines = lines;
   }
 
-  syntaxError(msg, error$$1) {
+  syntaxError(msg, error) {
     const functionId = "unknown";
-    return new SyntaxError(generateErrorString(msg, error$$1 || "", this.token, this.filename || "unknown", functionId));
+    return new SyntaxError(generateErrorString(msg, error || "", this.token, this.filename || "unknown", functionId));
   }
 
   unexpectedValue(value) {
@@ -1060,55 +1209,6 @@ const keyword = ctx => {
       throw ctx.unsupported();
   }
 };
-
-/**
- * Copyright 2013-2015, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var NODE_ENV = undefined;
-
-var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (NODE_ENV !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-};
-
-var invariant_1 = invariant;
 
 //      
 // Parse the expression and set the appropriate Type for the generator
@@ -1324,7 +1424,7 @@ const root = char => {
 
 // TODO: split constants into literals String vs Numbers with Types
 // TODO: figure out what above means??
-var constant = token(root, Syntax.Constant);
+var constant$1 = token(root, Syntax.Constant);
 
 //      
 const quoteOK = quoteCheck => () => quoteCheck;
@@ -1375,7 +1475,7 @@ const supportAny = char => {
 
 const parse$1 = char => {
   // Don't allow these
-  if (!stringParser(char) && !punctuator(char) && !constant(char) && char !== " ") {
+  if (!stringParser(char) && !punctuator(char) && !constant$1(char) && char !== " ") {
     return supportAny;
   }
   return null;
@@ -1391,7 +1491,7 @@ const supported$1 = [
 "function",
 
 // s-expression
-"global", "module", "type"];
+"global", "module", "type", "lambda"];
 
 
 
@@ -1427,7 +1527,7 @@ var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 //      
 class Tokenizer {
 
-  constructor(stream, parsers = [punctuator, constant, tokenParser, keyword$2, stringParser, type, commentParser]) {
+  constructor(stream, parsers = [punctuator, constant$1, tokenParser, keyword$2, stringParser, type, commentParser]) {
     if (!(stream instanceof Stream)) {
       this.die(`Tokenizer expected instance of Stream in constructor.
                 Instead received ${JSON.stringify(stream)}`);
@@ -1644,7 +1744,7 @@ const sizeof = {
 // TODO: Make this configurable.
 const LITTLE_ENDIAN = true;
 
-const get$1 = (type, index, dataView) => {
+const get$2 = (type, index, dataView) => {
   switch (type) {
     case i32:
       return dataView.getInt32(index, LITTLE_ENDIAN);
@@ -1721,7 +1821,7 @@ var index = {
   u32,
   u64,
   set: set$1,
-  get: get$1,
+  get: get$2,
   sizeof
 };
 
@@ -2537,129 +2637,9 @@ const mergeBlock = (block, v) => {
 };
 
 //      
-
-
-const formatMetadata = meta => {
-  return meta.filter(entry => entry != null).map(({ type, payload }) => {
-    let payloadString = "";
-    if (typeof payload === "object") {
-      payloadString = "...";
-    } else {
-      payloadString = JSON.stringify(payload);
-    }
-
-    return `${type}(${payloadString})`;
-  }).join(",");
-};
-
-const printNode = (node, level = 0) => {
-  if (node == null) {
-    return "";
-  }
-  const typeString = `${node.type ? "<" + node.type + ">" : ""}`;
-  const metaString = formatMetadata(node.meta);
-  let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
-  out = out.padStart(out.length + level * 2);
-  node.params.forEach(p => {
-    out += printNode(p, level + 1);
-  });
-  return out;
-};
-
-//      
-// All of the metadata options are used like redux actions
-// this is intentional but only for the purposes of a common
-// flexible api.
-const FUNCTION_INDEX = "function/index";
-
-
-
-const LOCAL_INDEX = "local/index";
-const GLOBAL_INDEX = "global/index";
-
-const TYPE_CONST = "type/const";
-const TYPE_ARRAY = "type/array";
-
-const TYPE_OBJECT = "type/object";
-const TYPE_INDEX = "type/index";
-const OBJECT_SIZE = "object/size";
-const TYPE_CAST = "type/cast";
-const OBJECT_KEY_TYPES = "object/key-types";
-const CLOSURE_TYPE = "closure/type";
-
-
-
-const get$2 = (type, node) => {
-  invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
-  return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
-};
-
-const funcIndex = payload => ({
-  payload,
-  type: FUNCTION_INDEX
-});
-
-const localIndex = payload => ({
-  payload,
-  type: LOCAL_INDEX
-});
-
-const globalIndex = payload => ({
-  payload,
-  type: GLOBAL_INDEX
-});
-
-
-
-
-
-
-
-
-
-const objectType = payload => ({
-  payload,
-  type: TYPE_OBJECT
-});
-
-const closureType = payload => ({
-  payload,
-  type: CLOSURE_TYPE
-});
-
-const objectSize = payload => ({
-  payload,
-  type: OBJECT_SIZE
-});
-
-const array = payload => ({
-  payload,
-  type: TYPE_ARRAY
-});
-const constant$1 = () => ({
-  payload: true,
-  type: TYPE_CONST
-});
-
-const typeCast = payload => ({
-  payload,
-  type: TYPE_CAST
-});
-
-const objectKeyTypes = payload => ({
-  payload,
-  type: OBJECT_KEY_TYPES
-});
-
-const typeIndex = payload => ({
-  payload,
-  type: TYPE_INDEX
-});
-
-//      
 const generateFunctionCall = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  const metaFunctionIndex = get$2(FUNCTION_INDEX, node);
+  const metaFunctionIndex = get$1(FUNCTION_INDEX, node);
   invariant_1(metaFunctionIndex, "Undefined function index for node \n" + `${printNode(node)}`);
 
   block.push({
@@ -2674,8 +2654,8 @@ const generateFunctionCall = (node, parent) => {
 //      
 const generateIndirectFunctionCall = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  const localIndex$$1 = get$2(LOCAL_INDEX, node);
-  const typeIndexMeta = get$2(TYPE_INDEX, node);
+  const localIndex$$1 = get$1(LOCAL_INDEX, node);
+  const typeIndexMeta = get$1(TYPE_INDEX, node);
   invariant_1(localIndex$$1, "Undefined local index, not a valid function pointer");
   invariant_1(typeIndexMeta, "Variable is not of a valid function pointer type");
 
@@ -2839,8 +2819,8 @@ var curry_1 = curry;
 
 //      
 const scopeOperation = curry_1((op, node) => {
-  const local = get$2(LOCAL_INDEX, node);
-  const _global = get$2(GLOBAL_INDEX, node);
+  const local = get$1(LOCAL_INDEX, node);
+  const _global = get$1(GLOBAL_INDEX, node);
   const index = local || _global;
 
   invariant_1(index, `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(op)} node: ${JSON.stringify(node, null, 2)}`);
@@ -2896,7 +2876,7 @@ const isBuiltinType = type => {
 };
 
 const generateValueType = node => ({
-  mutable: get$2(TYPE_CONST, node) ? 0 : 1,
+  mutable: get$1(TYPE_CONST, node) ? 0 : 1,
   type: getType(node.type)
 });
 const setInScope = scopeOperation("Set");
@@ -2988,7 +2968,7 @@ const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
   }
 
   if (initNode) {
-    const metaIndex = get$2(LOCAL_INDEX, node);
+    const metaIndex = get$1(LOCAL_INDEX, node);
     invariant_1(metaIndex, `Local Index is undefined. Node: ${node.value}`);
 
     const type = isBuiltinType(node.type) ? node.type : "i32";
@@ -3006,7 +2986,7 @@ const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
 //      
 const generateArraySubscript = (node, parent) => {
   const identifier = node.params[0];
-  const isArray = get$2(TYPE_ARRAY, identifier);
+  const isArray = get$1(TYPE_ARRAY, identifier);
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   let type = node.type;
 
@@ -3048,7 +3028,7 @@ const generateAssignment = node => {
 //      
 const generateMemoryAssignment = (node, parent) => {
   const targetNode = node.params[0];
-  const isArray = get$2(TYPE_ARRAY, targetNode.params[0]);
+  const isArray = get$1(TYPE_ARRAY, targetNode.params[0]);
   let type = node.type;
 
   const block = node.params[0].params.map(mapSyntax(parent)).reduce(mergeBlock, []);
@@ -3149,7 +3129,7 @@ function generateImportFromNode(node) {
       const { value: importTypeValue } = typeOrIdentifierNode;
       const kind = getKindConstant(importTypeValue);
       const typeIndex$$1 = (() => {
-        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
+        const typeIndexMeta = get$1(TYPE_INDEX, typeOrIdentifierNode);
         if (typeIndexMeta) {
           return typeIndexMeta.payload;
         }
@@ -3213,7 +3193,7 @@ const generateSequence = (node, parent) => {
 
 //      
 const generateTypecast = (node, parent) => {
-  const metaTypecast = get$2(TYPE_CAST, node);
+  const metaTypecast = get$1(TYPE_CAST, node);
   invariant_1(metaTypecast, `Cannot generate typecast for node: ${JSON.stringify(node)}`);
 
   const { to, from } = metaTypecast.payload;
@@ -3357,8 +3337,8 @@ const generateElement = functionIndex => {
 
 //      
 function generateExport(node) {
-  const functionIndexMeta = get$2(FUNCTION_INDEX, node);
-  const globalIndexMeta = get$2(GLOBAL_INDEX, node);
+  const functionIndexMeta = get$1(FUNCTION_INDEX, node);
+  const globalIndexMeta = get$1(GLOBAL_INDEX, node);
 
   if (globalIndexMeta) {
     return {
@@ -3440,10 +3420,6 @@ const generateInit = node => {
  **/
 // clean this up
 const getType$1 = str => {
-  if (str.slice(-2) === "<>") {
-    return I64;
-  }
-
   switch (str) {
     case "f32":
       return F32;
@@ -3459,8 +3435,8 @@ const getType$1 = str => {
 };
 
 const generateImplicitFunctionType = functionNode => {
-  const [argsNode, resultNode] = functionNode.params;
-  const resultType = resultNode.type ? getType$1(resultNode.type) : null;
+  const [argsNode] = functionNode.params;
+  const resultType = functionNode.type ? getType$1(functionNode.type) : null;
 
   const params = [];
   walker({
@@ -3483,10 +3459,6 @@ function generateType(node) {
   invariant_1(typeof id === "string", `Generator: A type must have a valid string identifier, node: ${JSON.stringify(node)}`);
 
   const [args, result] = node.params;
-  if (args.Type !== Syntax.FunctionArguments || result.Type !== Syntax.FunctionResult) {
-    const [start, end] = node.range;
-    throw new SyntaxError(generateErrorString("Invalid type syntax", "A function type must be of form (<type>, ...) <type>", { start, end }, "", ""));
-  }
 
   // Collect the function params and result by walking the tree of nodes
   const params = [];
@@ -3582,7 +3554,7 @@ function generator$1(ast) {
       program.Exports.push(generateExport(nodeToExport));
     },
     [Syntax.ImmutableDeclaration]: node => {
-      const globalMeta = get$2(GLOBAL_INDEX, node);
+      const globalMeta = get$1(GLOBAL_INDEX, node);
       if (globalMeta !== null) {
         switch (node.type) {
           case "Memory":
@@ -3597,7 +3569,7 @@ function generator$1(ast) {
       }
     },
     [Syntax.Declaration]: node => {
-      const globalMeta = get$2(GLOBAL_INDEX, node);
+      const globalMeta = get$1(GLOBAL_INDEX, node);
       if (globalMeta !== null) {
         program.Globals.push(generateInit(node));
       }
@@ -3629,7 +3601,7 @@ function generator$1(ast) {
           return typeNode;
         },
         [Syntax.FunctionPointer]: pointer => {
-          const metaFunctionIndex = get$2(FUNCTION_INDEX, pointer);
+          const metaFunctionIndex = get$1(FUNCTION_INDEX, pointer);
           if (metaFunctionIndex) {
             const functionIndex = metaFunctionIndex.payload;
             let tableIndex$$1 = findTableIndex(functionIndex);
@@ -3644,7 +3616,7 @@ function generator$1(ast) {
 
       // Quick fix for shifting around function indices. These don't necessarily
       // get written in the order they appear in the source code.
-      const index = get$2(FUNCTION_INDEX, node);
+      const index = get$1(FUNCTION_INDEX, node);
       invariant_1(index, "Function index must be set");
 
       program.Functions[index.payload] = typeIndex$$1;
@@ -3699,14 +3671,18 @@ const getTypeSize = typeString => {
   }
 };
 
+const isClosureType = (types, type) => {
+  return types[type] != null && !!get$1(CLOSURE_TYPE, types[type]);
+};
+
 const parseDeclaration = curry_1((isConst, options, declaration) => {
   const { types, locals, closures } = options;
   if (locals[declaration.value] == null) {
     const index = Object.keys(locals).length;
-    const base = declaration.type.slice(0, -2);
+    const typeString = declaration.type;
     const modifier = declaration.type.slice(-2);
     const isArray = modifier === "[]";
-    const isClosure = modifier === "<>";
+    const isClosure = isClosureType(types, typeString);
     const type = (() => {
       if (isArray) {
         return "i32";
@@ -3715,9 +3691,9 @@ const parseDeclaration = curry_1((isConst, options, declaration) => {
       }
       return declaration.type;
     })();
-    const metaArray = isArray ? array(base) : null;
+    const metaArray = isArray ? array(typeString.slice(0, -2)) : null;
     const metaClosure = isClosure ? closureType(true) : null;
-    const meta = [localIndex(index), metaArray, metaClosure, isConst ? constant$1() : null, isClosure ? typeIndex(Object.keys(types).indexOf(base)) : null];
+    const meta = [localIndex(index), metaArray, metaClosure, isConst ? constant() : null, isClosure ? typeIndex(Object.keys(types).indexOf(typeString)) : null];
     locals[declaration.value] = _extends({}, declaration, {
       type,
       meta,
@@ -3738,7 +3714,7 @@ const parseGlobalDeclaration = curry_1((isConst, options, node) => {
 
   if (node.type !== "Table" && node.type !== "Memory") {
     const globalIndex$$1 = Object.keys(globals).length;
-    const meta = [globalIndex(globalIndex$$1), isConst ? constant$1() : null];
+    const meta = [globalIndex(globalIndex$$1), isConst ? constant() : null];
     globals[node.value] = _extends({}, node, { meta, Type: Syntax.Declaration });
 
     return globals[node.value];
@@ -3759,8 +3735,8 @@ const mapArraySubscript = curry_1(({ userTypes }, node, mapChildren) => {
   const [identifier, field] = params;
   const userType$$1 = userTypes[identifier.type];
   if (userType$$1 != null) {
-    const metaObject = get$2(TYPE_OBJECT, userType$$1);
-    const objectKeyTypeMap = get$2(OBJECT_KEY_TYPES, userType$$1);
+    const metaObject = get$1(TYPE_OBJECT, userType$$1);
+    const objectKeyTypeMap = get$1(OBJECT_KEY_TYPES, userType$$1);
     return _extends({}, node, {
       type: objectKeyTypeMap ? objectKeyTypeMap.payload[field.value] : "i32",
       params: patchStringSubscript(metaObject, params)
@@ -3829,7 +3805,7 @@ const mapSizeof = curry_1(({ locals, globals, functions, userTypes }, sizeof) =>
   const func = functions[target.value];
 
   if (userType$$1 != null) {
-    const metaSize = get$2(OBJECT_SIZE, userType$$1);
+    const metaSize = get$1(OBJECT_SIZE, userType$$1);
     invariant_1(metaSize, "Object size information is missing");
     return _extends({}, sizeof, {
       value: metaSize.payload,
@@ -3939,7 +3915,7 @@ var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) 
         const { locals, userTypes } = options;
         const [target] = spread.params;
         const userType$$1 = userTypes[locals[target.value].type];
-        const keyOffsetMap = get$2(TYPE_OBJECT, userType$$1);
+        const keyOffsetMap = get$1(TYPE_OBJECT, userType$$1);
         if (keyOffsetMap != null) {
           // map over the keys
           Object.keys(keyOffsetMap.payload).forEach(key => {
@@ -3985,314 +3961,10 @@ var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) 
 });
 
 //      
-
-// Pre-built static AST for injected closure imports
-var closureImports = [{
-  Type: "Import",
-  value: "import",
-  range: [{ sourceLine: "import {", line: 2, col: 0 }, { sourceLine: "} from 'closure';", line: 6, col: 17 }],
-  meta: [],
-  params: [{
-    Type: "Sequence",
-    value: ",",
-    range: [null, { sourceLine: "} from 'closure';", line: 6, col: 1 }],
-    meta: [],
-    params: [{
-      Type: "Pair",
-      value: ":",
-      range: [{
-        sourceLine: "  'closure--get': ClosureGetType,",
-        line: 3,
-        col: 2
-      }, {
-        sourceLine: "  'closure--get': ClosureGetType,",
-        line: 3,
-        col: 16
-      }, {
-        sourceLine: "  'closure--get': ClosureGetType,",
-        line: 3,
-        col: 33
-      }],
-      meta: [],
-      params: [{
-        Type: "StringLiteral",
-        value: "closure--get",
-        range: [{
-          sourceLine: "  'closure--get': ClosureGetType,",
-          line: 3,
-          col: 2
-        }, {
-          sourceLine: "  'closure--get': ClosureGetType,",
-          line: 3,
-          col: 16
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }, {
-        Type: "Identifier",
-        value: "ClosureGetType",
-        range: [{
-          sourceLine: "  'closure--get': ClosureGetType,",
-          line: 3,
-          col: 18
-        }, {
-          sourceLine: "  'closure--get': ClosureGetType,",
-          line: 3,
-          col: 32
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }],
-      type: null
-    }, {
-      Type: "Pair",
-      value: ":",
-      range: [{
-        sourceLine: "  'closure--get-i32': ClosureGetType,",
-        line: 4,
-        col: 2
-      }, {
-        sourceLine: "  'closure--get-i32': ClosureGetType,",
-        line: 4,
-        col: 20
-      }, {
-        sourceLine: "  'closure--get-i32': ClosureGetType,",
-        line: 4,
-        col: 37
-      }],
-      meta: [],
-      params: [{
-        Type: "StringLiteral",
-        value: "closure--get-i32",
-        range: [{
-          sourceLine: "  'closure--get-i32': ClosureGetType,",
-          line: 4,
-          col: 2
-        }, {
-          sourceLine: "  'closure--get-i32': ClosureGetType,",
-          line: 4,
-          col: 20
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }, {
-        Type: "Identifier",
-        value: "ClosureGetType",
-        range: [{
-          sourceLine: "  'closure--get-i32': ClosureGetType,",
-          line: 4,
-          col: 22
-        }, {
-          sourceLine: "  'closure--get-i32': ClosureGetType,",
-          line: 4,
-          col: 36
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }],
-      type: null
-    }, {
-      Type: "Pair",
-      value: ":",
-      range: [{
-        sourceLine: "  'closure--set-i32': ClosureSetType",
-        line: 5,
-        col: 2
-      }, {
-        sourceLine: "  'closure--set-i32': ClosureSetType",
-        line: 5,
-        col: 20
-      }, { sourceLine: "} from 'closure';", line: 6, col: 1 }],
-      meta: [],
-      params: [{
-        Type: "StringLiteral",
-        value: "closure--set-i32",
-        range: [{
-          sourceLine: "  'closure--set-i32': ClosureSetType",
-          line: 5,
-          col: 2
-        }, {
-          sourceLine: "  'closure--set-i32': ClosureSetType",
-          line: 5,
-          col: 20
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }, {
-        Type: "Identifier",
-        value: "ClosureSetType",
-        range: [{
-          sourceLine: "  'closure--set-i32': ClosureSetType",
-          line: 5,
-          col: 22
-        }, {
-          sourceLine: "  'closure--set-i32': ClosureSetType",
-          line: 5,
-          col: 36
-        }],
-        meta: [],
-        params: [],
-        type: null
-      }],
-      type: null
-    }],
-    type: null
-  }, {
-    Type: "StringLiteral",
-    value: "closure",
-    range: [{ sourceLine: "} from 'closure';", line: 6, col: 7 }, { sourceLine: "} from 'closure';", line: 6, col: 16 }],
-    meta: [],
-    params: [],
-    type: null
-  }],
-  type: null
-}, {
-  Type: "Typedef",
-  value: "ClosureGetType",
-  range: [{ sourceLine: "type ClosureGetType = (i32) => i32;", line: 7, col: 0 }, { sourceLine: "type ClosureGetType = (i32) => i32;", line: 7, col: 35 }],
-  meta: [],
-  params: [{
-    Type: "FunctionArguments",
-    value: "FUNCTION_ARGUMENTS",
-    range: [{
-      sourceLine: "type ClosureGetType = (i32) => i32;",
-      line: 7,
-      col: 23
-    }, {
-      sourceLine: "type ClosureGetType = (i32) => i32;",
-      line: 7,
-      col: 26
-    }],
-    meta: [],
-    params: [{
-      Type: "Type",
-      value: "i32",
-      range: [{
-        sourceLine: "type ClosureGetType = (i32) => i32;",
-        line: 7,
-        col: 23
-      }, {
-        sourceLine: "type ClosureGetType = (i32) => i32;",
-        line: 7,
-        col: 26
-      }],
-      meta: [],
-      params: [],
-      type: "i32"
-    }],
-    type: "i32"
-  }, {
-    Type: "FunctionResult",
-    value: "FUNCTION_RESULT",
-    range: [{
-      sourceLine: "type ClosureGetType = (i32) => i32;",
-      line: 7,
-      col: 31
-    }, {
-      sourceLine: "type ClosureGetType = (i32) => i32;",
-      line: 7,
-      col: 34
-    }],
-    meta: [],
-    params: [],
-    type: "i32"
-  }],
-  type: "i32"
-}, {
-  Type: "Typedef",
-  value: "ClosureSetType",
-  range: [{
-    sourceLine: "type ClosureSetType = (i32, i32) => void;",
-    line: 8,
-    col: 0
-  }, {
-    sourceLine: "type ClosureSetType = (i32, i32) => void;",
-    line: 8,
-    col: 41
-  }],
-  meta: [],
-  params: [{
-    Type: "FunctionArguments",
-    value: "FUNCTION_ARGUMENTS",
-    range: [null, {
-      sourceLine: "type ClosureSetType = (i32, i32) => void;",
-      line: 8,
-      col: 32
-    }],
-    meta: [],
-    params: [{
-      Type: "Sequence",
-      value: ",",
-      range: [null, {
-        sourceLine: "type ClosureSetType = (i32, i32) => void;",
-        line: 8,
-        col: 32
-      }],
-      meta: [],
-      params: [{
-        Type: "Type",
-        value: "i32",
-        range: [{
-          sourceLine: "type ClosureSetType = (i32, i32) => void;",
-          line: 8,
-          col: 23
-        }, {
-          sourceLine: "type ClosureSetType = (i32, i32) => void;",
-          line: 8,
-          col: 26
-        }],
-        meta: [],
-        params: [],
-        type: "i32"
-      }, {
-        Type: "Type",
-        value: "i32",
-        range: [{
-          sourceLine: "type ClosureSetType = (i32, i32) => void;",
-          line: 8,
-          col: 28
-        }, {
-          sourceLine: "type ClosureSetType = (i32, i32) => void;",
-          line: 8,
-          col: 31
-        }],
-        meta: [],
-        params: [],
-        type: "i32"
-      }],
-      type: null
-    }],
-    type: null
-  }, {
-    Type: "FunctionResult",
-    value: "FUNCTION_RESULT",
-    range: [{
-      sourceLine: "type ClosureSetType = (i32, i32) => void;",
-      line: 8,
-      col: 36
-    }, {
-      sourceLine: "type ClosureSetType = (i32, i32) => void;",
-      line: 8,
-      col: 40
-    }],
-    meta: [],
-    params: [],
-    type: "void"
-  }],
-  type: "void"
-}];
-
-//      
 const CLOSURE_BASE = "closure-base";
 const CLOSURE_INNER = "closure-inner";
 const CLOSURE_GET = "closure--get";
 const CLOSURE_SET = "closure--set";
-const bootstrapClosure = () => closureImports;
 
 /**
  * "expand" an identifier Node into two nodes, the least significant word which
@@ -4301,18 +3973,20 @@ const bootstrapClosure = () => closureImports;
  *
  */
 const expandClosureIdentifier = identifier => {
+  const bareIdentifier = () => _extends({}, identifier, { params: [] });
   // regular params, we APPEND function pointer math to list of params
   return [_extends({}, identifier, {
     value: ":",
     meta: [],
     Type: Syntax.Pair,
-    params: [identifier, _extends({}, identifier, {
+    params: [bareIdentifier(), _extends({}, identifier, {
       value: "i32",
       type: "i32",
       meta: [],
+      params: [],
       Type: Syntax.Type
     })]
-  }), _extends({}, identifier, {
+  }), ...identifier.params, _extends({}, identifier, {
     value: ":",
     Type: Syntax.Pair,
     meta: [],
@@ -4320,16 +3994,18 @@ const expandClosureIdentifier = identifier => {
       value: ">>",
       meta: [],
       Type: Syntax.BinaryExpression,
-      params: [identifier, _extends({}, identifier, {
+      params: [bareIdentifier(), _extends({}, identifier, {
         value: "32",
         type: "i32",
         meta: [],
+        params: [],
         Type: Syntax.Constant
       })]
     }), _extends({}, identifier, {
       meta: [],
       value: "i32",
       type: "i32",
+      params: [],
       Type: Syntax.Type
     })]
   })];
@@ -4404,7 +4080,7 @@ const getEnclosedVariables = fun => {
         [Syntax.FunctionArguments]: (fnArgs, __) => {
           walker({
             [Syntax.Pair]: pair => {
-              const { identifier } = pair.params;
+              const [identifier] = pair.params;
               ignoreLocals(identifier, null);
             }
           })(fnArgs);
@@ -4577,11 +4253,11 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
 
     // Expand the 64-bit identifier into an additional 32-bit argument for closure
     // base pointer and table index.
-    if (get$2(CLOSURE_TYPE, identifier) != null) {
+    if (get$1(CLOSURE_TYPE, identifier) != null) {
       return _extends({}, call, {
         meta,
         Type: Syntax.IndirectFunctionCall,
-        params: expandClosureIdentifier(identifier)
+        params: [...expandClosureIdentifier(identifier)]
       });
     }
 
@@ -4628,7 +4304,7 @@ var makePair = curry_1((options, typeCastMaybe, transform) => {
  * Initialize function node and patch it's type and meta
  */
 const initialize = (options, node) => {
-  const { functions } = options;
+  const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
   const closures = {
@@ -4662,7 +4338,17 @@ const initialize = (options, node) => {
       closures
     }))
   })(_extends({}, node, {
-    type: node.params[1].type && node.params[1].type.indexOf("<>") > 0 ? "i64" : node.params[1].type,
+    type: (() => {
+      const typeDef = node.params[1];
+      // Identifier, can match Struct type, Function Type or Lambda. Check lambda
+      if (types[typeDef.value] != null && get$1(CLOSURE_TYPE, types[typeDef.value])) {
+        // Lmbdas are 64-bit Integers when used in source
+        return "i64";
+      }
+
+      // Everything non-lambda just return the type
+      return typeDef.type;
+    })(),
     meta: [...node.meta, funcIndex(Object.keys(functions).length)],
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
@@ -4786,6 +4472,31 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
 var mapFunctionNode$1 = curry_1(mapFunctionNode);
 
 //      
+function imports$1() {
+  return parse(`
+    import {
+      'closure--get': ClosureGeti32,
+      'closure--get-i32': ClosureGeti32,
+      'closure--get-f32': ClosureGetf32,
+      'closure--get-i64': ClosureGeti64,
+      'closure--get-f64': ClosureGetf64,
+      'closure--set-i32': ClosureSeti32,
+      'closure--set-f32': ClosureSetf32,
+      'closure--set-i64': ClosureSeti64,
+      'closure--set-f64': ClosureSetf64
+    } from 'walt-plugin-closure';
+    type ClosureGeti32 = (i32) => i32;
+    type ClosureGetf32 = (i32) => f32;
+    type ClosureGeti64 = (i32) => i64;
+    type ClosureGetf64 = (i32) => f64;
+    type ClosureSeti32 = (i32, i32) => void;
+    type ClosureSetf32 = (i32, f32) => void;
+    type ClosureSeti64 = (i32, i64) => void;
+    type ClosureSetf64 = (i32, f64) => void;
+  `).params;
+}
+
+//      
 const getByteOffsetsAndSize = objectLiteralNode => {
   const offsetsByKey = {};
   const keyTypeMap = {};
@@ -4856,6 +4567,7 @@ function hasNode(Type, ast) {
  */
 
 //      
+// import { bootstrapClosure } from "./closure";
 function semantics$1(ast) {
   const functions = {};
   const globals = {};
@@ -4866,7 +4578,7 @@ function semantics$1(ast) {
   const hoistImports = [];
 
   if (hasNode(Syntax.Closure, ast)) {
-    ast = _extends({}, ast, { params: [...bootstrapClosure(), ...ast.params] });
+    ast = _extends({}, ast, { params: [...imports$1(), ...ast.params] });
   }
   // Types have to be pre-parsed before the rest of the program
   walker({
@@ -4912,7 +4624,7 @@ function validate$1(ast, {
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
-      const globalIndex$$1 = get$2(GLOBAL_INDEX, target);
+      const globalIndex$$1 = get$1(GLOBAL_INDEX, target);
       if (globalIndex$$1 != null && !target.params.length) {
         throw generateErrorString("Global exports must have a value", "", { start, end }, filename, GLOBAL_LABEL);
       }
@@ -4954,18 +4666,76 @@ const source = `
     return ptr;
   }
 
+  // Getters
   export function geti32(ptr: i32): i32 {
     const view: i32[] = ptr;
     return view[0];
   }
 
+  export function getf32(ptr: i32): f32 {
+    const view: f32[] = ptr;
+    return view[0];
+  }
+
+  export function geti64(ptr: i32): i64 {
+    const view: i64[] = ptr;
+    return view[0];
+  }
+
+  export function getf64(ptr: i32): f64 {
+    const view: f64[] = ptr;
+    return view[0];
+  }
+
+  // Setters
   export function seti32(ptr: i32, value: i32) {
     const view: i32[] = ptr;
-    ptr[0] = value;
+    view[0] = value;
+  }
+
+  export function setf32(ptr: i32, value: f32) {
+    const view: f32[] = ptr;
+    view[0] = value;
+  }
+
+  export function seti64(ptr: i32, value: i64) {
+    const view: i64[] = ptr;
+    view[0] = value;
+  }
+
+  export function setf64(ptr: i32, value: f64) {
+    const view: f64[] = ptr;
+    view[0] = value;
   }
 `;
 
-function make$1() {
+const mapToImports = plugin => {
+  const {
+    make,
+    geti32,
+    getf32,
+    geti64,
+    getf64,
+    seti32,
+    setf32,
+    seti64,
+    setf64
+  } = plugin.instance.exports;
+
+  return {
+    "closure--get": make,
+    "closure--get-i32": geti32,
+    "closure--get-f32": getf32,
+    "closure--get-i64": geti64,
+    "closure--get-f64": getf64,
+    "closure--set-i32": seti32,
+    "closure--set-f32": setf32,
+    "closure--set-i64": seti64,
+    "closure--set-f64": setf64
+  };
+};
+
+function closurePlugin$$1() {
   return compileWalt(source);
 }
 
@@ -4980,7 +4750,6 @@ const emitter = emit;
 const getIR = source => {
   const ast = parse(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
   validate(semanticAST,
   // this will eventually be a config
   {
@@ -4989,8 +4758,17 @@ const getIR = source => {
   });
   const intermediateCode = generator(semanticAST);
   const wasm = emitter(intermediateCode);
-  // console.log(debug(wasm));
   return wasm;
+};
+
+const withPlugins = (plugins, importsObj) => {
+  const { closure } = plugins;
+  const resultImports = {};
+  if (closure != null) {
+    resultImports["walt-plugin-closure"] = mapToImports(closure);
+  }
+
+  return _extends({}, resultImports, importsObj);
 };
 
 // Compiles a raw binary wasm buffer
@@ -5007,8 +4785,9 @@ exports.validate = validate;
 exports.emitter = emitter;
 exports.parser = parse;
 exports.printNode = printNode;
-exports.closurePlugin = make$1;
+exports.closurePlugin = closurePlugin$$1;
 exports.getIR = getIR;
+exports.withPlugins = withPlugins;
 exports['default'] = compileWalt;
 
 Object.defineProperty(exports, '__esModule', { value: true });
