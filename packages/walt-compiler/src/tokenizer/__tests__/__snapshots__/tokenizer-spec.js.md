@@ -1,4 +1,4 @@
-# Snapshot report for `src\tokenizer\__tests__\tokenizer-spec.js`
+# Snapshot report for `src/tokenizer/__tests__/tokenizer-spec.js`
 
 The actual snapshot is saved in `tokenizer-spec.js.snap`.
 
