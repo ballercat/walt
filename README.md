@@ -1,17 +1,18 @@
-[![Build Status](https://travis-ci.org/ballercat/walt.svg?branch=master)](https://travis-ci.org/ballercat/walt)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/ballercat/walt/issues)
-[![Coverage Status](https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master)](https://coveralls.io/github/ballercat/walt?branch=master)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/walt-js-wasm/Lobby)
-
 <p align="center">
   <img src="walt.png" width="117" height="74"><br><br>
   <b>Walt</b> |
   <i>Alternative Syntax for WebAssembly</i> |
   <a href="https://ballercat.github.io/walt/">Demo</a>
 </p>
+<p align="center">
+  <a href="https://travis-ci.org/ballercat/walt"><img src="https://travis-ci.org/ballercat/walt.svg?branch=master" alt="Build Status"></a>
+  <a href="https://github.com/ballercat/walt/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contributions welcome"></a>
+  <a href="https://coveralls.io/github/ballercat/walt?branch=master"><img src="https://coveralls.io/repos/github/ballercat/walt/badge.svg?branch=master" alt="Coverage Status"></a>
+  <a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square" alt="code style: prettier"></a>
+  <a href="https://gitter.im/walt-js-wasm/Lobby"><img src="https://badges.gitter.im/gitterHQ/gitter.png" alt="Gitter chat"></a>
+</p>
 
-:zap: **WAlt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
+:zap: **Walt** is an alternative syntax for WebAssembly text format. It's an experiment for using JavaScript syntax to write to as 'close to the metal' as possible. _It's JavaScript with rules._ `.walt` files compile directly to WebAssembly binary format.
 
 Highlights:
 
@@ -21,6 +22,8 @@ Highlights:
 * Fast compilation, integrates into webpack!
 
 :construction: **currently under heavy construction** :construction:
+
+:book: Read the [Quick Start Guide](https://github.com/ballercat/walt/wiki/Walt-In-5-Minutes)
 
 :rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
 
@@ -34,7 +37,7 @@ Highlights:
 
 Writing zero-overhead, optimized WebAssembly is pretty tough to do. The syntax for `.wat` files is terse and difficult to work with directly. If you do not wish to use a systems language like C or Rust,
 then you're kind of out of luck. Your best bet (currently) is to write very plain C code, compile that to .wast and then optimize that result. Then you're ready to compile that into the final WebAssembly binary. This is an
-attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without loosing readability.
+attempt to take C/Rust out of the equation and write 'as close to the metal' as possible without losing readability.
 
 I feel like this is currently a problem. Most Web engineers are not familiar with the C family languages or Rust. It's a barrier for wide spread adoption of WebAssembly. A competent Front-end engineer
 should be able to edit WebAssembly as easily as any other systems programmer.
@@ -55,6 +58,7 @@ export function fibonacci(n: i32): i32 {
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 ```
+
 
 When this code is ran through the walt compiler you end up with a buffer which can be used to create a WebAssembly module with a `fibonacci` export just as you would expect. All done with familiar JS syntax and without any external binary toolkits! A working demo of this exists in the `fibonacci-spec.js` [unit test file](https://github.com/ballercat/walt/blob/master/src/__tests__/fibonacci-spec.js).
 
@@ -77,3 +81,14 @@ See [Wiki](https://github.com/ballercat/walt/wiki) for detailed design decisions
 ## Prior Art
 * [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
 * [mini-c](https://github.com/maierfelix/mini-c) - Experimental C to WebAssembly compiler
+
+## Contributors
+
+[<img alt="ballercat" src="https://avatars2.githubusercontent.com/u/743990?v=4&s=117" width="117">](https://github.com/ballercat) |[<img alt="tbroadley" src="https://avatars0.githubusercontent.com/u/8731922?v=4&s=117" width="117">](https://github.com/tbroadley) |[<img alt="whitecrownclown" src="https://avatars0.githubusercontent.com/u/8309417?v=4&s=117" width="117">](https://github.com/whitecrownclown) |[<img alt="balajmarius" src="https://avatars3.githubusercontent.com/u/5159921?v=4&s=117" width="117">](https://github.com/balajmarius) |[<img alt="ForsakenHarmony" src="https://avatars3.githubusercontent.com/u/8845940?v=4&s=117" width="117">](https://github.com/ForsakenHarmony) |[<img alt="hlaaftana" src="https://avatars0.githubusercontent.com/u/10591326?v=4&s=117" width="117">](https://github.com/hlaaftana) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[ballercat](https://github.com/ballercat) |[tbroadley](https://github.com/tbroadley) |[whitecrownclown](https://github.com/whitecrownclown) |[balajmarius](https://github.com/balajmarius) |[ForsakenHarmony](https://github.com/ForsakenHarmony) |[hlaaftana](https://github.com/hlaaftana) |
+
+[<img alt="petetnt" src="https://avatars2.githubusercontent.com/u/7641760?v=4&s=117" width="117">](https://github.com/petetnt) |[<img alt="novoselrok" src="https://avatars2.githubusercontent.com/u/6417322?v=4&s=117" width="117">](https://github.com/novoselrok) |[<img alt="thomassturm" src="https://avatars3.githubusercontent.com/u/276995?v=4&s=117" width="117">](https://github.com/thomassturm) |[<img alt="Baransu" src="https://avatars2.githubusercontent.com/u/9558691?v=4&s=117" width="117">](https://github.com/Baransu) |[<img alt="hamlim" src="https://avatars2.githubusercontent.com/u/5579638?v=4&s=117" width="117">](https://github.com/hamlim) |
+:---: |:---: |:---: |:---: |:---: |
+[petetnt](https://github.com/petetnt) |[novoselrok](https://github.com/novoselrok) |[thomassturm](https://github.com/thomassturm) |[Baransu](https://github.com/Baransu) |[hamlim](https://github.com/hamlim) |
+

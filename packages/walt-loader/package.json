@@ -1,0 +1,61 @@
+{
+  "name": "walt-loader",
+  "version": "1.0.6",
+  "description": "Webpack loader for Walt(WebAssembly)",
+  "main": "index.js",
+  "scripts": {
+    "test": "ava",
+    "debug": "node --inspect-brk node_modules/ava/profile.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ballercat/walt.git"
+  },
+  "keywords": [
+    "walt",
+    "wasm",
+    "webassembly",
+    "webpack",
+    "loader",
+    "compiler",
+    "js",
+    "javascript"
+  ],
+  "peerDependencies": {
+    "walt-compiler": "^0.2.9"
+  },
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ballercat/walt/issues"
+  },
+  "homepage": "https://github.com/ballercat/walt#readme",
+  "ava": {
+    "files": [
+      "__tests__/**/*[sS]pec.js"
+    ],
+    "source": [
+      "index.js"
+    ],
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false,
+    "require": [
+      "babel-register"
+    ]
+  },
+  "devDependencies": {
+    "ava": "^0.24.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.1",
+    "prettier": "^1.9.2",
+    "walt-compiler": "^0.2.9"
+  },
+  "dependencies": {
+    "wasm-loader": "^1.1.0"
+  }
+}

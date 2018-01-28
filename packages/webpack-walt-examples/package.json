@@ -1,0 +1,64 @@
+{
+  "name": "webpack-walt-examples",
+  "version": "1.0.6",
+  "description": "Examples with Webpack",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server -d --hot --inline",
+    "build": "webpack"
+  },
+  "keywords": [
+    "walt",
+    "wasm",
+    "webassembly",
+    "javascript"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "private": true,
+  "babel": {
+    "presets": [
+      "react",
+      [
+        "env",
+        {
+          "modules": false,
+          "targets": {
+            "chrome": "60.0.0"
+          }
+        }
+      ]
+    ],
+    "plugins": [
+      "transform-object-rest-spread",
+      "transform-class-properties"
+    ]
+  },
+  "devDependencies": {
+    "babel-core": "6.26.0",
+    "babel-loader": "7.1.2",
+    "babel-plugin-transform-class-properties": "6.24.1",
+    "babel-plugin-transform-object-rest-spread": "6.26.0",
+    "babel-preset-env": "1.6.0",
+    "babel-preset-react": "6.24.1",
+    "css-loader": "0.28.7",
+    "file-loader": "0.11.2",
+    "node-sass": "4.5.3",
+    "react-hot-loader": "1.3.1",
+    "sass-loader": "6.0.6",
+    "style-loader": "0.18.2",
+    "url-loader": "0.5.9",
+    "walt-compiler": "^0.2.9",
+    "walt-loader": "^1.0.6",
+    "webpack": "3.6.0",
+    "webpack-dev-server": "2.8.2"
+  },
+  "dependencies": {
+    "prop-types": "15.5.10",
+    "react": "15.6.1",
+    "react-dom": "15.6.1",
+    "react-router-dom": "^4.2.2",
+    "semantic-ui-css": "2.2.12",
+    "semantic-ui-react": "0.73.1"
+  }
+}
