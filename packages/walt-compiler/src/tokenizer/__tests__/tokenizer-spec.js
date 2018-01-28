@@ -1,7 +1,12 @@
 import Tokenizer from "..";
+import compile from "../../";
 import Stream from "../../utils/stream";
 import Syntax from "../../Syntax";
 import test from "ava";
+
+const compileAndRun = src => WebAssembly.instantiate(compile(src));
+const outputIs = (t, value) => result =>
+  t.is(result.instance.exports.test(), value);
 
 test("next reads tokens, ignoring whitespace", t => {
   const tokenizer = new Tokenizer(new Stream("     global"));
@@ -46,6 +51,47 @@ test("ignores comments", t => {
   const tokenizer = new Tokenizer(stream);
   const result = tokenizer.parse();
   t.snapshot(result);
+});
+
+test("ignores multiline comments", t => {
+  const stream = new Stream(`
+    /* multiline
+     *  comment
+     * */
+    2 * 2`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("ignores one-liner multiline comments", t => {
+  const stream = new Stream(`
+    /* comment  */
+    2`);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("ignores singleline tokens within multiline and vice-versa", t => {
+  const stream = new Stream(`
+    /* // multiline comment */
+    // /* */ 4 single line
+  `);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("ignores multiline comments and compiles correctly", t => {
+  const content = `
+    /* comment  */
+    export function test() {
+      return 2/* inline comment */ * 2;
+    }`;
+
+  const stream = new Stream(content);
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+
+  compileAndRun(content).then(outputIs(t, 4));
 });
 
 test("parses basic strings", t => {
