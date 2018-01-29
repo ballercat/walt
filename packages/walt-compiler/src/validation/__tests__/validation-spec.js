@@ -9,6 +9,11 @@ const parseAndValidate = source =>
     filename: "spec.walt",
   });
 
+test("ast must have metadata attached", t => {
+  const error = t.throws(() => validate({ meta: [] }, { filename: "test" }));
+  t.snapshot(error);
+});
+
 test("typos throw", t => {
   const error = t.throws(() => parseAndValidate("expost const x: i32;"));
   t.snapshot(error);
@@ -18,7 +23,7 @@ test("const exports must have value", t => {
   t.snapshot(error);
 });
 
-test.only("undefined types throw", t => {
+test("undefined types throw", t => {
   // Memory and Tables are fine
   parseAndValidate("import { memory: Memory, table: Table } from 'env';");
   const error = t.throws(() =>
