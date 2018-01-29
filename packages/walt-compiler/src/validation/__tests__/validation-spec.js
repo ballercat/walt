@@ -17,3 +17,12 @@ test("const exports must have value", t => {
   const error = t.throws(() => parseAndValidate("export const x: i32;"));
   t.snapshot(error);
 });
+
+test.only("undefined types throw", t => {
+  // Memory and Tables are fine
+  parseAndValidate("import { memory: Memory, table: Table } from 'env';");
+  const error = t.throws(() =>
+    parseAndValidate("import { foo: Type } from 'env';")
+  );
+  t.snapshot(error);
+});

@@ -22,6 +22,7 @@ export const OBJECT_SIZE = "object/size";
 export const TYPE_CAST = "type/cast";
 export const OBJECT_KEY_TYPES = "object/key-types";
 export const CLOSURE_TYPE = "closure/type";
+export const AST_METADATA = "@@global/ast";
 
 export const make = (payload: any, type: string) => ({
   type,
@@ -40,6 +41,11 @@ export const get = (type: string, node: NodeType): ?MetadataType => {
         null
     : null;
 };
+
+export const astMeta = (payload: any): MetadataType => ({
+  payload,
+  type: FUNCTION_INDEX,
+});
 
 export const funcIndex = (payload: any): MetadataType => ({
   payload,
