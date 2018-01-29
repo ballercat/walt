@@ -1,7 +1,6 @@
 import test from "ava";
 import parser from "../../parser";
 import withMetadata from "..";
-// import printNode from "../../utils/print-node";
 
 test("function declarations", t => {
   const ast = parser(`

@@ -72,6 +72,8 @@ export const isBuiltinType = (type: ?string): boolean => {
     case "f32":
     case "i64":
     case "f64":
+    case "Memory":
+    case "Table":
       return true;
     default:
       return false;

@@ -21,6 +21,7 @@ import closureImports from "../closure-plugin/imports";
 import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
 import hasNode from "../utils/has-node";
+import { astMeta } from "./metadata";
 import type { NodeType } from "../flow/types";
 
 export default function semantics(ast: NodeType): NodeType {
@@ -62,6 +63,10 @@ export default function semantics(ast: NodeType): NodeType {
 
   return {
     ...patched,
+    meta: [
+      // Attach information collected to the AST
+      astMeta({ functions, globals, types, userTypes }),
+    ],
     params: [...hoistImports, ...patched.params, ...hoist],
   };
 }
