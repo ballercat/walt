@@ -68,3 +68,15 @@ test("unterminated assignment statements", t => {
   );
   t.snapshot(error);
 });
+
+test("undefined object properties", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    type T = { x: i32 };
+    function test() {
+      const obj: T = 0;
+      obj.y = 5;
+    }`)
+  );
+  t.snapshot(error);
+});

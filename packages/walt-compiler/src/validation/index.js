@@ -1,14 +1,17 @@
 // @flow
+// AST Validator
 import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from "../Syntax";
 import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
-import { get, GLOBAL_INDEX, TYPE_CONST } from "../semantics/metadata";
+import { get, GLOBAL_INDEX, TYPE_CONST, ALIAS } from "../semantics/metadata";
 
 import type { NodeType } from "../flow/types";
 
 const GLOBAL_LABEL = "global";
 
+// We walk the the entire tree and perform syntax validation before we continue
+// onto the generator. This may throw sometimes
 export default function validate(
   ast: NodeType,
   {
@@ -121,6 +124,24 @@ export default function validate(
               error(
                 `Cannot reassign a const variable ${identifier.value}`,
                 "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.",
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
+        [Syntax.ArraySubscript]: (node, _transform) => {
+          const [identifier, offset] = node.params;
+          const [start, end] = node.range;
+          if (offset.value == null) {
+            const alias = get(ALIAS, offset);
+            problems.push(
+              error(
+                "Cannot generate memory offset",
+                `Undefined key ${
+                  alias ? alias.payload : offset.value
+                } for type ${identifier.type}`,
                 { start, end },
                 filename,
                 functionName

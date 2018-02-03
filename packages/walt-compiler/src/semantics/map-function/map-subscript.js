@@ -2,7 +2,12 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import type { NodeType } from "../../flow/types";
-import { get, TYPE_OBJECT, OBJECT_KEY_TYPES } from "../metadata";
+import {
+  get,
+  TYPE_OBJECT,
+  OBJECT_KEY_TYPES,
+  alias as setMetaAlias,
+} from "../metadata";
 
 const patchStringSubscript = (
   metaObject: any,
@@ -13,7 +18,13 @@ const patchStringSubscript = (
   const absoluteByteOffset = byteOffsetsByKey[field.value];
   return [
     params[0],
-    { ...field, value: absoluteByteOffset, type: "i32", Type: Syntax.Constant },
+    {
+      ...field,
+      meta: [setMetaAlias(field.value)],
+      value: absoluteByteOffset,
+      type: "i32",
+      Type: Syntax.Constant,
+    },
   ];
 };
 
