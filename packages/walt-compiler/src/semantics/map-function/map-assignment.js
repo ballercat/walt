@@ -92,6 +92,7 @@ export default curry(function mapAssignment(options, node, mapChildren) {
     };
   }
 
+  debugger;
   // FIXME
   // @ballercat:
   // These extra typecasts are added because 64 bit Constant values are not

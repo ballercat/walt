@@ -12,7 +12,7 @@ export const handleUndefinedField = (ctx: any) => (
 You're trying to access field ${field} but the ${type} definitions looks like:
 
 ${JSON.stringify(keyTypes.payload, null, 2)}
-    
+
 Hint: It looks like an object is missing the field ${field}`;
 
   throw ctx.typeError(
@@ -35,9 +35,14 @@ export default function generateErrorString(
   const { col: end } = marker.end;
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
-  return `
-${Line}
-${highlight} ${error}
-${msg}
-  at ${func} (${filename}:${line}:${col})`;
+  return (
+    Line +
+    "\n" +
+    highlight +
+    ` ${error}` +
+    "\n" +
+    msg +
+    "\n" +
+    `  at ${func} (${filename}:${line}:${col})`
+  );
 }
