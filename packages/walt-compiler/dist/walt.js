@@ -5,65 +5,150 @@
 }(this, (function (exports) { 'use strict';
 
 //      
-const Syntax = {
+
+// Main Program
+const Program = "Program";
+const Keyword = "Keyword";
+const Export = "Export";
+const Import = "Import";
+const Statement = "Statement";
+const IfThenElse = "IfThenElse";
+const Select = "Select";
+const Else = "Else";
+const UnaryExpression = "UnaryExpression";
+const BinaryExpression = "BinaryExpression";
+const TernaryExpression = "TernaryExpression";
+const NumberLiteral = "NumberLiteral";
+const StringLiteral = "StringLiteral";
+const Punctuator = "Punctuator";
+const Identifier = "Identifier";
+const ArraySubscript = "ArraySubscript";
+const Constant = "Constant";
+const Type = "Type";
+const UserType = "UserType";
+const FunctionType = "FunctionType";
+const Declaration = "Declaration";
+const ImmutableDeclaration = "ImmutableDeclaration";
+const FunctionDeclaration = "FunctionDeclaration";
+const ArrayDeclaration = "ArrayDeclaration";
+const IndirectFunctionCall = "IndirectFunctionCall";
+const FunctionCall = "FunctionCall";
+const Loop = "Loop";
+const MemoryAssignment = "MemoryAssignment";
+const Assignment = "Assignment";
+const Param = "Param";
+const Typedef = "Typedef";
+const Struct = "Struct";
+const ReturnStatement = "ReturnStatement";
+const Sequence = "Sequence";
+const ObjectLiteral = "ObjectLiteral";
+const Pair = "Pair";
+const TypeCast = "TypeCast";
+const Break = "Break";
+const Comment = "Comment";
+const Sizeof = "Sizeof";
+const Spread = "Spread";
+const Closure = "Closure";
+const Noop = "Noop";
+const ClosureType = "ClosureType";
+const Block = "Block";
+const ObjectField = "ObjectField";
+const FunctionIndex = "FunctionIndex";
+const FunctionIdentifier = "FunctionIdentifier";
+const FunctionPointer = "FunctionPointer";
+const FunctionArguments = "FunctionArguments";
+const FunctionResult = "FunctionResult";
+const FunctionLocals = "FunctionLocals";
+
+const statements = {
   // Main Program
-  Program: "Program",
+  Program,
 
   // Syntax Nodes
-  Keyword: "Keyword",
-  Export: "Export",
-  Import: "Import",
-  Statement: "Statement",
-  IfThenElse: "IfThenElse",
-  Select: "Select",
-  Else: "Else",
-  UnaryExpression: "UnaryExpression",
-  BinaryExpression: "BinaryExpression",
-  TernaryExpression: "TernaryExpression",
-  NumberLiteral: "NumberLiteral",
-  StringLiteral: "StringLiteral",
-  Punctuator: "Punctuator",
-  Identifier: "Identifier",
-  ArraySubscript: "ArraySubscript",
-  Constant: "Constant",
-  Type: "Type",
-  UserType: "UserType",
-  FunctionType: "FunctionType",
-  Declaration: "Declaration",
-  ImmutableDeclaration: "ImmutableDeclaration",
-  FunctionDeclaration: "FunctionDeclaration",
-  ArrayDeclaration: "ArrayDeclaration",
-  IndirectFunctionCall: "IndirectFunctionCall",
-  FunctionCall: "FunctionCall",
-  Loop: "Loop",
-  MemoryAssignment: "MemoryAssignment",
-  Assignment: "Assignment",
-  Param: "Param",
-  Typedef: "Typedef",
-  Struct: "Struct",
-  ReturnStatement: "ReturnStatement",
-  Sequence: "Sequence",
-  ObjectLiteral: "ObjectLiteral",
-  Pair: "Pair",
-  TypeCast: "TypeCast",
-  Break: "Break",
-  Comment: "Comment",
-  Sizeof: "Sizeof",
-  Spread: "Spread",
-  Closure: "Closure",
+  Export,
+  Import,
+  IfThenElse,
+  Else,
+  Declaration,
+  ImmutableDeclaration,
+  FunctionDeclaration,
+  ArrayDeclaration,
+  Loop,
+  MemoryAssignment,
+  Assignment,
+  Typedef,
+  Struct,
+  ReturnStatement,
+  Sequence,
+  ObjectLiteral,
+  Pair,
+  Break,
+  Comment,
+  Sizeof,
+  Spread,
+  Noop,
+  Block
+};
 
-  Noop: "Noop",
+var Syntax = {
+  // Main Program
+  Program,
+
+  // Syntax Nodes
+  Keyword,
+  Export,
+  Import,
+  Statement,
+  IfThenElse,
+  Select,
+  Else,
+  UnaryExpression,
+  BinaryExpression,
+  TernaryExpression,
+  NumberLiteral,
+  StringLiteral,
+  Punctuator,
+  Identifier,
+  ArraySubscript,
+  Constant,
+  Type,
+  UserType,
+  FunctionType,
+  Declaration,
+  ImmutableDeclaration,
+  FunctionDeclaration,
+  ArrayDeclaration,
+  IndirectFunctionCall,
+  FunctionCall,
+  Loop,
+  MemoryAssignment,
+  Assignment,
+  Param,
+  Typedef,
+  Struct,
+  ReturnStatement,
+  Sequence,
+  ObjectLiteral,
+  Pair,
+  TypeCast,
+  Break,
+  Comment,
+  Sizeof,
+  Spread,
+  Closure,
+
+  Noop,
 
   // Semantic Nodes
-  ClosureType: "ClosureType",
-  Block: "Block",
-  ObjectField: "ObjectField",
-  FunctionIndex: "FunctionIndex",
-  FunctionIdentifier: "FunctionIdentifier",
-  FunctionPointer: "FunctionPointer",
-  FunctionArguments: "FunctionArguments",
-  FunctionResult: "FunctionResult",
-  FunctionLocals: "FunctionLocals"
+  ClosureType,
+  Block,
+  ObjectField,
+  FunctionIndex,
+  FunctionIdentifier,
+  FunctionPointer,
+  FunctionArguments,
+  FunctionResult,
+  FunctionLocals
 };
 
 var _extends = Object.assign || function (target) {
@@ -200,23 +285,23 @@ function binary(ctx, op, params) {
   node.value = op.value;
   node.params = params;
 
-  let Type = Syntax.BinaryExpression;
+  let Type$$1 = Syntax.BinaryExpression;
   if (node.value === "=") {
-    Type = Syntax.Assignment;
+    Type$$1 = Syntax.Assignment;
   } else if (node.value === "-=" || node.value === "+=") {
-    Type = Syntax.Assignment;
+    Type$$1 = Syntax.Assignment;
     const value = node.value[0];
     node.value = "=";
     node.params = [node.params[0], binary(ctx, _extends({}, op, { value }), [node.params[0], node.params[1]])];
-  } else if (node.value === "[") {
+  } else if (node.value === "[" || node.value === ".") {
     return subscriptFromNode(ctx, node);
   } else if (node.value === ":") {
-    Type = Syntax.Pair;
+    Type$$1 = Syntax.Pair;
   } else if (node.value === "||" || node.value === "&&") {
-    Type = Syntax.Select;
+    Type$$1 = Syntax.Select;
   }
 
-  return ctx.endNode(node, Type);
+  return ctx.endNode(node, Type$$1);
 }
 
 const unary = (ctx, op, params) => {
@@ -331,6 +416,7 @@ function builtInType(ctx) {
 // More or less JavaScript precedence
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 
+const PRECEDENCE_MEMBER_ACCESS = 19;
 const PRECEDENCE_FUNCTION_CALL = 19;
 const PRECEDENCE_ASSIGNMENT = 3;
 
@@ -361,6 +447,7 @@ const precedence = {
   "/": PRECEDENCE_DIVIDE,
   "==": 2,
   "!=": 2,
+  ".": PRECEDENCE_MEMBER_ACCESS,
   "=": PRECEDENCE_ASSIGNMENT,
   "-=": PRECEDENCE_ASSIGNMENT,
   "+=": PRECEDENCE_ASSIGNMENT,
@@ -403,10 +490,10 @@ const getAssociativty = token => {
 const maybeIdentifier = ctx => {
   // TODO: Instead of peeking, eat the "(" and return an operator!
   const nextToken = ctx.stream.peek();
-  const Type = nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
+  const Type$$1 = nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
   const node = ctx.startNode();
 
-  return ctx.endNode(node, Type);
+  return ctx.endNode(node, Type$$1);
 };
 
 //      
@@ -594,10 +681,10 @@ type = "i32", check = predicate) => {
 //      
 const declaration = ctx => {
   const node = ctx.startNode();
-  let Type = Syntax.Declaration;
+  let Type$$1 = Syntax.Declaration;
 
   if (ctx.token.value === "const") {
-    Type = Syntax.ImmutableDeclaration;
+    Type$$1 = Syntax.ImmutableDeclaration;
   }
 
   ctx.eat(["const", "let", "function"]);
@@ -624,7 +711,7 @@ const declaration = ctx => {
     throw ctx.syntaxError("Constant value must be initialized");
   }
 
-  return ctx.endNode(_extends({}, node, { params, type }), Type);
+  return ctx.endNode(_extends({}, node, { params, type }), Type$$1);
 };
 
 //      
@@ -674,18 +761,18 @@ function maybeFunctionDeclaration(ctx) {
   const resultNode = parseFunctionResult(ctx);
 
   ctx.expect(["{"]);
-  const statements = [];
+  const statements$$1 = [];
   while (ctx.token && ctx.token.value !== "}") {
     const stmt = statement(ctx);
     if (stmt) {
-      statements.push(stmt);
+      statements$$1.push(stmt);
     }
   }
   ctx.expect(["}"]);
 
   return ctx.endNode(_extends({}, node, {
     value,
-    params: [argumentsNode, resultNode, ...statements]
+    params: [argumentsNode, resultNode, ...statements$$1]
   }), Syntax.FunctionDeclaration);
 }
 
@@ -728,15 +815,17 @@ function breakParser(ctx) {
 //      
 
 function generateErrorString(msg, error, marker, filename, func) {
-  const { sourceLine: Line, line, col } = marker.start;
+  const { line, col } = marker.start;
   const { col: end } = marker.end;
+  const Line = (() => {
+    if (marker.start.sourceLine !== marker.end.sourceLine) {
+      return marker.start.sourceLine + "\n" + marker.end.sourceLine;
+    }
+    return marker.end.sourceLine;
+  })();
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
-  return `
-${Line}
-${highlight} ${error}
-${msg}
-  at ${func} (${filename}:${line}:${col})`;
+  return Line + "\n" + highlight + ` ${error}` + "\n" + msg + "\n" + `  at ${func} (${filename}:${line}:${col})`;
 }
 
 //      
@@ -839,12 +928,19 @@ const TYPE_CAST = "type/cast";
 const OBJECT_KEY_TYPES = "object/key-types";
 const CLOSURE_TYPE = "closure/type";
 
+const ALIAS = "alias";
+
 
 
 const get$1 = (type, node) => {
   invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
   return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
 };
+
+const astMeta = payload => ({
+  payload,
+  type: FUNCTION_INDEX
+});
 
 const funcIndex = payload => ({
   payload,
@@ -906,6 +1002,13 @@ const objectKeyTypes = payload => ({
 const typeIndex = payload => ({
   payload,
   type: TYPE_INDEX
+});
+
+
+
+const alias = payload => ({
+  type: ALIAS,
+  payload
 });
 
 //      
@@ -1228,7 +1331,7 @@ const memoryStore = ctx => {
 // through out the right-hand side of the expression
 function maybeAssignment(ctx) {
   const nextValue = ctx.stream.peek().value;
-  if (nextValue === "[") {
+  if (nextValue === "[" || nextValue === ".") {
     return memoryStore(ctx);
   }
   return expression(ctx);
@@ -1562,7 +1665,7 @@ const parser = char => {
 var comments = token(parser, Syntax.Comment);
 
 //      
-const supported$2 = ["i32", "i64", "f32", "f64", "Function", "Memory", "Table", "void"];
+const supported$2 = ["i32", "i64", "f32", "f64", "i32[]", "i64[]", "f32[]", "f64[]", "Function", "Memory", "Table", "void"];
 const trie$3 = new trie$1(supported$2);
 var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 
@@ -2911,6 +3014,8 @@ const isBuiltinType = type => {
     case "f32":
     case "i64":
     case "f64":
+    case "Memory":
+    case "Table":
       return true;
     default:
       return false;
@@ -3438,8 +3543,8 @@ function generateMemory$2(node) {
 const generateInit = node => {
   const _global = generateValueType(node);
   if (node.params.length > 0) {
-    const { Type, value } = node.params[0];
-    if (Type === Syntax.Constant) {
+    const { Type: Type$$1, value } = node.params[0];
+    if (Type$$1 === Syntax.Constant) {
       switch (_global.type) {
         case F32:
         case F64:
@@ -3769,7 +3874,12 @@ const patchStringSubscript = (metaObject, params) => {
   const field = params[1];
   const { payload: byteOffsetsByKey } = metaObject;
   const absoluteByteOffset = byteOffsetsByKey[field.value];
-  return [params[0], _extends({}, field, { value: absoluteByteOffset, type: "i32", Type: Syntax.Constant })];
+  return [params[0], _extends({}, field, {
+    meta: [alias(field.value)],
+    value: absoluteByteOffset,
+    type: "i32",
+    Type: Syntax.Constant
+  })];
 };
 
 const mapArraySubscript = curry_1(({ userTypes }, node, mapChildren) => {
@@ -4651,36 +4761,100 @@ function semantics$1(ast) {
   })(ast);
 
   return _extends({}, patched, {
+    meta: [
+    // Attach information collected to the AST
+    astMeta({ functions, globals, types, userTypes })],
     params: [...hoistImports, ...patched.params, ...hoist]
   });
 }
 
 //      
+// AST Validator
 const GLOBAL_LABEL = "global";
 
+// We walk the the entire tree and perform syntax validation before we continue
+// onto the generator. This may throw sometimes
 function validate$1(ast, {
   filename
 }) {
+  const [metadata$$1] = ast.meta;
+  if (metadata$$1 == null) {
+    throw new Error("Missing AST metadata!");
+  }
+  const { types } = metadata$$1.payload;
+  const problems = [];
+
   walker({
     [Syntax.Pair]: pair => {
       const [start, end] = pair.range;
-      throw generateErrorString(`Unexpected expression ${pair.Type}`, "", { start, end }, filename, GLOBAL_LABEL);
+      problems.push(generateErrorString(`Unexpected expression ${pair.Type}`, "", { start, end }, filename, GLOBAL_LABEL));
     },
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
       const globalIndex$$1 = get$1(GLOBAL_INDEX, target);
       if (globalIndex$$1 != null && !target.params.length) {
-        throw generateErrorString("Global exports must have a value", "", { start, end }, filename, GLOBAL_LABEL);
+        problems.push(generateErrorString("Global exports must have a value", "", { start, end }, filename, GLOBAL_LABEL));
       }
+    },
+    [Syntax.Import]: (importNode, _) => {
+      walker({
+        [Syntax.Pair]: pair => {
+          const type = pair.params[1];
+          if (!isBuiltinType(type.value) && types[type.value] == null) {
+            const [start, end] = type.range;
+            problems.push(generateErrorString(`Undefined Type ${type.value}`, `Invalid Import. ${type.value} type does not exist`, { start, end }, filename, GLOBAL_LABEL));
+          }
+        }
+      })(importNode);
     },
     // All of the validators below need to be implemented
     [Syntax.Struct]: (_, __) => {},
-    [Syntax.Import]: (_, __) => {},
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (_, __) => {},
-    [Syntax.FunctionDeclaration]: (_, __) => {}
+    [Syntax.FunctionDeclaration]: (func, __) => {
+      const functionName = `${func.value}()`;
+      walker({
+        [Syntax.Declaration]: (node, _transform) => {
+          const [initializer] = node.params;
+          if (initializer != null && statements[initializer.Type] != null) {
+            const [start, end] = node.range;
+            problems.push(generateErrorString(`Unexpected statement ${initializer.Type}`, "Attempting to assign a statement to a variable. Did you miss a semicolon(;)?", { start, end }, filename, functionName));
+          }
+        },
+        [Syntax.Assignment]: node => {
+          const [identifier] = node.params;
+          const [start, end] = node.range;
+          const statement = node.params.find(param => statements[param.Type] != null);
+          if (statement != null) {
+            problems.push(generateErrorString("Unexpected statement in assignment", "Statments cannot be used in assignment expressions. Did you miss a semicolon?", { start: statement.range[0], end: statement.range[1] }, filename, functionName));
+          }
+
+          const isConst = get$1(TYPE_CONST, identifier);
+          if (isConst != null) {
+            problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.", { start, end }, filename, functionName));
+          }
+        },
+        [Syntax.ArraySubscript]: (node, _transform) => {
+          const [identifier, offset] = node.params;
+          const [start, end] = node.range;
+          if (offset.value == null) {
+            const alias$$1 = get$1(ALIAS, offset);
+            problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${identifier.type}`, { start, end }, filename, functionName));
+          }
+        }
+      })(func);
+    }
   })(ast);
+
+  const problemCount = problems.length;
+  if (problemCount > 0) {
+    const errorString = problems.reduce((acc, value) => {
+      return acc + "\n" + `${value}\n`;
+    }, `Cannot generate WebAssembly for ${filename}. ${problemCount} problems.\n`);
+
+    throw new Error(errorString);
+  }
 }
 
 //      
