@@ -18,7 +18,7 @@ test("typos throw", t => {
   const error = t.throws(() => parseAndValidate("expost const x: i32;"));
   t.snapshot(error, true);
 });
-test("const exports must have value", t => {
+test("global exports must have value", t => {
   const error = t.throws(() => parseAndValidate("export const x: i32;"));
   t.snapshot(error);
 });
@@ -40,6 +40,30 @@ test("const cannot be re-asigned", t => {
       x = 1;
       const y: i32 = 0;
       y += 1;
+    }`)
+  );
+  t.snapshot(error);
+});
+
+test("unterminated declaration statements", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test() {
+      const x: i32 = 0
+      x = 2;
+    }`)
+  );
+  t.snapshot(error);
+});
+
+test("unterminated assignment statements", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test() {
+      let x: i32 = 0;
+      let y: i32 = 0;
+      x = 2
+      y = 3 + 3;
     }`)
   );
   t.snapshot(error);

@@ -1,5 +1,5 @@
 // @flow
-import Syntax from "../Syntax";
+import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from "../Syntax";
 import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
@@ -77,10 +77,44 @@ export default function validate(
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (_, __) => {},
     [Syntax.FunctionDeclaration]: (func, __) => {
+      const functionName = `${func.value}()`;
       walkNode({
+        [Syntax.Declaration]: (node, _transform) => {
+          const [initializer] = node.params;
+          if (
+            initializer != null &&
+            ALL_POSSIBLE_STATEMENTS[initializer.Type] != null
+          ) {
+            const [start, end] = node.range;
+            problems.push(
+              error(
+                `Unexpected statement ${initializer.Type}`,
+                "Attempting to assign a statement to a variable. Did you miss a semicolon(;)?",
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
         [Syntax.Assignment]: node => {
           const [identifier] = node.params;
-          const [start, end] = node.range.slice(-2);
+          const [start, end] = node.range;
+          const statement = node.params.find(
+            param => ALL_POSSIBLE_STATEMENTS[param.Type] != null
+          );
+          if (statement != null) {
+            problems.push(
+              error(
+                "Unexpected statement in assignment",
+                "Statments cannot be used in assignment expressions. Did you miss a semicolon?",
+                { start: statement.range[0], end: statement.range[1] },
+                filename,
+                functionName
+              )
+            );
+          }
+
           const isConst = get(TYPE_CONST, identifier);
           if (isConst != null) {
             problems.push(
@@ -89,7 +123,7 @@ export default function validate(
                 "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.",
                 { start, end },
                 filename,
-                GLOBAL_LABEL
+                functionName
               )
             );
           }
@@ -100,8 +134,8 @@ export default function validate(
 
   const problemCount = problems.length;
   if (problemCount > 0) {
-    const errorString = problems.reduce((acc, value, index) => {
-      return acc + "\n" + `[${index + 1}] ${value}\n`;
+    const errorString = problems.reduce((acc, value) => {
+      return acc + "\n" + `${value}\n`;
     }, `Cannot generate WebAssembly for ${filename}. ${problemCount} problems.\n`);
 
     throw new Error(errorString);

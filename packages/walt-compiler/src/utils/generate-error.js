@@ -31,8 +31,14 @@ export default function generateErrorString(
   filename: string,
   func: string
 ): string {
-  const { sourceLine: Line, line, col } = marker.start;
+  const { line, col } = marker.start;
   const { col: end } = marker.end;
+  const Line = (() => {
+    if (marker.start.sourceLine !== marker.end.sourceLine) {
+      return marker.start.sourceLine + "\n" + marker.end.sourceLine;
+    }
+    return marker.end.sourceLine;
+  })();
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
   return (

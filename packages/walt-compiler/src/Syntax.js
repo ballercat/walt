@@ -1,63 +1,146 @@
 // @flow
-const Syntax = {
+
+// Main Program
+export const Program = "Program";
+export const Keyword = "Keyword";
+export const Export = "Export";
+export const Import = "Import";
+export const Statement = "Statement";
+export const IfThenElse = "IfThenElse";
+export const Select = "Select";
+export const Else = "Else";
+export const UnaryExpression = "UnaryExpression";
+export const BinaryExpression = "BinaryExpression";
+export const TernaryExpression = "TernaryExpression";
+export const NumberLiteral = "NumberLiteral";
+export const StringLiteral = "StringLiteral";
+export const Punctuator = "Punctuator";
+export const Identifier = "Identifier";
+export const ArraySubscript = "ArraySubscript";
+export const Constant = "Constant";
+export const Type = "Type";
+export const UserType = "UserType";
+export const FunctionType = "FunctionType";
+export const Declaration = "Declaration";
+export const ImmutableDeclaration = "ImmutableDeclaration";
+export const FunctionDeclaration = "FunctionDeclaration";
+export const ArrayDeclaration = "ArrayDeclaration";
+export const IndirectFunctionCall = "IndirectFunctionCall";
+export const FunctionCall = "FunctionCall";
+export const Loop = "Loop";
+export const MemoryAssignment = "MemoryAssignment";
+export const Assignment = "Assignment";
+export const Param = "Param";
+export const Typedef = "Typedef";
+export const Struct = "Struct";
+export const ReturnStatement = "ReturnStatement";
+export const Sequence = "Sequence";
+export const ObjectLiteral = "ObjectLiteral";
+export const Pair = "Pair";
+export const TypeCast = "TypeCast";
+export const Break = "Break";
+export const Comment = "Comment";
+export const Sizeof = "Sizeof";
+export const Spread = "Spread";
+export const Closure = "Closure";
+export const Noop = "Noop";
+export const ClosureType = "ClosureType";
+export const Block = "Block";
+export const ObjectField = "ObjectField";
+export const FunctionIndex = "FunctionIndex";
+export const FunctionIdentifier = "FunctionIdentifier";
+export const FunctionPointer = "FunctionPointer";
+export const FunctionArguments = "FunctionArguments";
+export const FunctionResult = "FunctionResult";
+export const FunctionLocals = "FunctionLocals";
+
+export const statements = {
   // Main Program
-  Program: "Program",
+  Program,
 
   // Syntax Nodes
-  Keyword: "Keyword",
-  Export: "Export",
-  Import: "Import",
-  Statement: "Statement",
-  IfThenElse: "IfThenElse",
-  Select: "Select",
-  Else: "Else",
-  UnaryExpression: "UnaryExpression",
-  BinaryExpression: "BinaryExpression",
-  TernaryExpression: "TernaryExpression",
-  NumberLiteral: "NumberLiteral",
-  StringLiteral: "StringLiteral",
-  Punctuator: "Punctuator",
-  Identifier: "Identifier",
-  ArraySubscript: "ArraySubscript",
-  Constant: "Constant",
-  Type: "Type",
-  UserType: "UserType",
-  FunctionType: "FunctionType",
-  Declaration: "Declaration",
-  ImmutableDeclaration: "ImmutableDeclaration",
-  FunctionDeclaration: "FunctionDeclaration",
-  ArrayDeclaration: "ArrayDeclaration",
-  IndirectFunctionCall: "IndirectFunctionCall",
-  FunctionCall: "FunctionCall",
-  Loop: "Loop",
-  MemoryAssignment: "MemoryAssignment",
-  Assignment: "Assignment",
-  Param: "Param",
-  Typedef: "Typedef",
-  Struct: "Struct",
-  ReturnStatement: "ReturnStatement",
-  Sequence: "Sequence",
-  ObjectLiteral: "ObjectLiteral",
-  Pair: "Pair",
-  TypeCast: "TypeCast",
-  Break: "Break",
-  Comment: "Comment",
-  Sizeof: "Sizeof",
-  Spread: "Spread",
-  Closure: "Closure",
-
-  Noop: "Noop",
-
-  // Semantic Nodes
-  ClosureType: "ClosureType",
-  Block: "Block",
-  ObjectField: "ObjectField",
-  FunctionIndex: "FunctionIndex",
-  FunctionIdentifier: "FunctionIdentifier",
-  FunctionPointer: "FunctionPointer",
-  FunctionArguments: "FunctionArguments",
-  FunctionResult: "FunctionResult",
-  FunctionLocals: "FunctionLocals",
+  Export,
+  Import,
+  IfThenElse,
+  Else,
+  Declaration,
+  ImmutableDeclaration,
+  FunctionDeclaration,
+  ArrayDeclaration,
+  Loop,
+  MemoryAssignment,
+  Assignment,
+  Typedef,
+  Struct,
+  ReturnStatement,
+  Sequence,
+  ObjectLiteral,
+  Pair,
+  Break,
+  Comment,
+  Sizeof,
+  Spread,
+  Noop,
+  Block,
 };
 
-export default Syntax;
+export default {
+  // Main Program
+  Program,
+
+  // Syntax Nodes
+  Keyword,
+  Export,
+  Import,
+  Statement,
+  IfThenElse,
+  Select,
+  Else,
+  UnaryExpression,
+  BinaryExpression,
+  TernaryExpression,
+  NumberLiteral,
+  StringLiteral,
+  Punctuator,
+  Identifier,
+  ArraySubscript,
+  Constant,
+  Type,
+  UserType,
+  FunctionType,
+  Declaration,
+  ImmutableDeclaration,
+  FunctionDeclaration,
+  ArrayDeclaration,
+  IndirectFunctionCall,
+  FunctionCall,
+  Loop,
+  MemoryAssignment,
+  Assignment,
+  Param,
+  Typedef,
+  Struct,
+  ReturnStatement,
+  Sequence,
+  ObjectLiteral,
+  Pair,
+  TypeCast,
+  Break,
+  Comment,
+  Sizeof,
+  Spread,
+  Closure,
+
+  Noop,
+
+  // Semantic Nodes
+  ClosureType,
+  Block,
+  ObjectField,
+  FunctionIndex,
+  FunctionIdentifier,
+  FunctionPointer,
+  FunctionArguments,
+  FunctionResult,
+  FunctionLocals,
+};
