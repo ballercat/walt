@@ -75,6 +75,7 @@ test("undefined object properties", t => {
     type T = { x: i32 };
     function test() {
       const obj: T = 0;
+      obj = { y: 5 };
       obj.y = 5;
     }`)
   );
