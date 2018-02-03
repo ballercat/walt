@@ -3,9 +3,9 @@ import { FUNC, getTypeString } from "../value_type";
 import { varuint32, varint7, varint1 } from "../numbers";
 import OutputStream from "../../utils/output-stream";
 
-const emitType = (stream, { params, result }) => {
+const emitType = (stream, { params, result }, index) => {
   // as of wasm 1.0 spec types are only of from === func
-  stream.push(varint7, FUNC, "func type");
+  stream.push(varint7, FUNC, `func type (${index})`);
   stream.push(varuint32, params.length, "parameter count");
   params.forEach(type => stream.push(varint7, type, "param"));
   if (result) {
@@ -20,7 +20,7 @@ const emit = (types: any[]) => {
   const stream = new OutputStream();
   stream.push(varuint32, types.length, "count");
 
-  types.forEach(type => emitType(stream, type));
+  types.forEach((type, index) => emitType(stream, type, index));
 
   return stream;
 };

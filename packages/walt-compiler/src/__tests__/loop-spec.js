@@ -35,7 +35,7 @@ test("while loop", t =>
   export function test(x: i32): i32 {
     let y: i32 = 0;
     let i: i32 = 0;
-    while(y <= x) {
+    while(y < x) {
       i = 0 - y;
       y += 1;
     }

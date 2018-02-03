@@ -7,7 +7,7 @@ import {
   EXTERN_GLOBAL,
   EXTERN_TABLE,
 } from "../emitter/external_kind";
-import { get, TYPE_INDEX } from "../parser/metadata";
+import { get, TYPE_INDEX } from "../semantics/metadata";
 import type { IntermediateImportType, NodeType } from "./flow/types";
 
 export const getKindConstant = (value: string) => {

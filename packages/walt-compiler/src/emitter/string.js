@@ -6,7 +6,7 @@ import OutputStream from "../utils/output-stream";
 export function emitString(
   stream: OutputStream,
   string: string,
-  debug: string = "string length"
+  debug: string
 ) {
   stream.push(varuint32, string.length, debug);
   for (let i = 0; i < string.length; i++) {

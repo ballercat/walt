@@ -3,7 +3,12 @@ import opcode from "../emitter/opcode";
 import curry from "curry";
 import invariant from "invariant";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
-import { get, LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../parser/metadata";
+import {
+  get,
+  LOCAL_INDEX,
+  GLOBAL_INDEX,
+  TYPE_CONST,
+} from "../semantics/metadata";
 import type {
   IntermediateVariableType,
   IntermediateOpcodeType,
@@ -24,15 +29,19 @@ export const scopeOperation = curry((op, node) => {
   );
 
   const kind = local ? op + "Local" : op + "Global";
-  const params = [Number(index.payload.index)];
+  const params = [Number(index.payload)];
 
-  return { kind: opcode[kind], params };
+  return {
+    kind: opcode[kind],
+    params,
+    debug: `${node.value}<${node.type ? node.type : "?"}>`,
+  };
 });
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
   const nodeType = node.type || "i32";
 
-  const kind: RawOpcodeType = opcode[nodeType + "Const"];
+  const kind: RawOpcodeType = opcode[nodeType + "Const"] || opcode.i32Const;
   const params = [Number(node.value)];
 
   return {
@@ -56,6 +65,21 @@ export const getType = (str: ?string): number => {
       return I32;
   }
 };
+
+export const isBuiltinType = (type: ?string): boolean => {
+  switch (type) {
+    case "i32":
+    case "f32":
+    case "i64":
+    case "f64":
+    case "Memory":
+    case "Table":
+      return true;
+    default:
+      return false;
+  }
+};
+
 export const generateValueType = (
   node: NodeType
 ): IntermediateVariableType => ({

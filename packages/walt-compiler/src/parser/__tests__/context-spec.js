@@ -1,18 +1,16 @@
 import Syntax from "../../Syntax";
 import test from "ava";
-// import { mockContext } from "../../utils/mocks";
 import Context from "../context";
 
 const ctx = new Context({
   token: {
     type: Syntax.Identifier,
     value: "someUnknownToken",
-    start: { line: 1, col: 13 },
-    end: { line: 1, col: 30 },
+    start: { sourceLine: "let x: i32 = someUnknownToken;", line: 1, col: 13 },
+    end: { sourceLine: "let x: i32 = someUnknownToken;", line: 1, col: 30 },
   },
-  lines: ["let x: i32 = someUnknownToken;"],
   filename: "test.walt",
-  func: { id: "test" },
+  func: "test",
 });
 
 test("syntaxError generates an accurate error string", t => {

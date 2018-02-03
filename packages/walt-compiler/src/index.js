@@ -1,33 +1,57 @@
 // @flow
-import Tokenizer from "./tokenizer";
-import Parser from "./parser";
-import Stream from "./utils/stream";
-import TokenStream from "./utils/token-stream";
+import parser from "./parser";
 import emit from "./emitter";
+import codeGenerator from "./generator";
+import semanticAnalyzer from "./semantics";
+import astValidator from "./validation";
 import _debug from "./utils/debug";
+import printNode from "./utils/print-node";
+import closurePlugin, { mapToImports } from "./closure-plugin";
+import type { WebAssemblyModuleType } from "./flow/types";
 
 export const debug = _debug;
+export const prettyPrintNode = printNode;
+export const semantics = semanticAnalyzer;
+export const generator = codeGenerator;
+export const validate = astValidator;
+export const emitter = emit;
+export { parser, printNode, closurePlugin };
 
 // Used for deugging purposes
-export const getAst = (source: string) => {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokenStream = new TokenStream(tokenizer.parse());
-  const parser = new Parser(tokenStream, stream.lines);
-  const ast = parser.parse();
-  return ast;
-};
-
 export const getIR = (source: string) => {
-  const ast = getAst(source);
-  const wasm = emit(ast);
+  const ast = parser(source);
+  const semanticAST = semantics(ast);
+  validate(
+    semanticAST,
+    // this will eventually be a config
+    {
+      lines: source ? source.split("\n") : [],
+      filename: "walt-source",
+    }
+  );
+  const intermediateCode = generator(semanticAST);
+  const wasm = emitter(intermediateCode);
   return wasm;
 };
 
-// Compiles a raw binary wasm buffer
-const compile = (source: string) => {
-  const wasm = getIR(source);
-  return wasm.buffer();
+export const withPlugins = (
+  plugins: { [string]: WebAssemblyModuleType },
+  importsObj?: { [string]: any }
+) => {
+  const { closure } = plugins;
+  const resultImports = {};
+  if (closure != null) {
+    resultImports["walt-plugin-closure"] = mapToImports(closure);
+  }
+
+  return {
+    ...resultImports,
+    ...importsObj,
+  };
 };
 
-export default compile;
+// Compiles a raw binary wasm buffer
+export default function compileWalt(source: string) {
+  const wasm = getIR(source);
+  return wasm.buffer();
+}

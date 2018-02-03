@@ -23,6 +23,8 @@ Highlights:
 
 :construction: **currently under heavy construction** :construction:
 
+:book: Read the [Quick Start Guide](https://github.com/ballercat/walt/wiki/Walt-In-5-Minutes)
+
 :rocket: Try it out in the [Walt Explorer](https://ballercat.github.io/walt/).
 
 :pray: Contributions are welcomed! [Contributing guide](https://github.com/ballercat/walt/blob/master/CONTRIBUTING.md).
@@ -79,3 +81,14 @@ See [Wiki](https://github.com/ballercat/walt/wiki) for detailed design decisions
 ## Prior Art
 * [wah](https://github.com/tmcw/wah) - A slightly higher level syntax on top of the wasm text format
 * [mini-c](https://github.com/maierfelix/mini-c) - Experimental C to WebAssembly compiler
+
+## Contributors
+
+[<img alt="ballercat" src="https://avatars2.githubusercontent.com/u/743990?v=4&s=117" width="117">](https://github.com/ballercat) |[<img alt="tbroadley" src="https://avatars0.githubusercontent.com/u/8731922?v=4&s=117" width="117">](https://github.com/tbroadley) |[<img alt="whitecrownclown" src="https://avatars0.githubusercontent.com/u/8309417?v=4&s=117" width="117">](https://github.com/whitecrownclown) |[<img alt="balajmarius" src="https://avatars3.githubusercontent.com/u/5159921?v=4&s=117" width="117">](https://github.com/balajmarius) |[<img alt="ForsakenHarmony" src="https://avatars3.githubusercontent.com/u/8845940?v=4&s=117" width="117">](https://github.com/ForsakenHarmony) |[<img alt="hlaaftana" src="https://avatars0.githubusercontent.com/u/10591326?v=4&s=117" width="117">](https://github.com/hlaaftana) |
+:---: |:---: |:---: |:---: |:---: |:---: |
+[ballercat](https://github.com/ballercat) |[tbroadley](https://github.com/tbroadley) |[whitecrownclown](https://github.com/whitecrownclown) |[balajmarius](https://github.com/balajmarius) |[ForsakenHarmony](https://github.com/ForsakenHarmony) |[hlaaftana](https://github.com/hlaaftana) |
+
+[<img alt="petetnt" src="https://avatars2.githubusercontent.com/u/7641760?v=4&s=117" width="117">](https://github.com/petetnt) |[<img alt="novoselrok" src="https://avatars2.githubusercontent.com/u/6417322?v=4&s=117" width="117">](https://github.com/novoselrok) |[<img alt="thomassturm" src="https://avatars3.githubusercontent.com/u/276995?v=4&s=117" width="117">](https://github.com/thomassturm) |[<img alt="Baransu" src="https://avatars2.githubusercontent.com/u/9558691?v=4&s=117" width="117">](https://github.com/Baransu) |[<img alt="hamlim" src="https://avatars2.githubusercontent.com/u/5579638?v=4&s=117" width="117">](https://github.com/hamlim) |
+:---: |:---: |:---: |:---: |:---: |
+[petetnt](https://github.com/petetnt) |[novoselrok](https://github.com/novoselrok) |[thomassturm](https://github.com/thomassturm) |[Baransu](https://github.com/Baransu) |[hamlim](https://github.com/hamlim) |
+

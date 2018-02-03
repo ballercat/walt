@@ -8,6 +8,8 @@ const supported = [
   "++",
   "-",
   "--",
+  ">>",
+  "<<",
   "=",
   "==",
   "+=",
@@ -39,6 +41,7 @@ const supported = [
   "&&",
   "{",
   "}",
+  "...",
 ];
 
 const trie = new Trie(supported);

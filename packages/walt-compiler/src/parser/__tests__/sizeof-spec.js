@@ -1,56 +1,37 @@
 import test from "ava";
-import sizeofParser from "../sizeof";
-import statement from "../statement";
-import { TYPE_USER, OBJECT_SIZE } from "../../parser/metadata";
-import { mockContext } from "../../utils/mocks";
+import compose from "../../utils/compose";
+import compile, { debug, getIR } from "../..";
 
-test("sizeof parser, built-in type", t => {
-  const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ value: "x", type: "i32", meta: [], params: [] }];
-  const node = sizeofParser(ctx);
+const walt = `export function _32BitSizes(): i32 {
+  const x: i32;
+  const y: f32;
+  return sizeof(x) + sizeof(y);
+}
 
-  t.is(node.value, "4");
-  t.is(node.type, "i32");
-});
+export function _64BitSizes(): i32 {
+  const x: i64;
+  const y: f64;
+  return sizeof(x) + sizeof(y);
+}
+type Type = { a: i32, b: i32, c: i32, d: i32 };
+export function userDefinedObject(): i32 {
+  const x: Type;
+  return sizeof(x);
+}
 
-test("sizeof parser, arrays throw", t => {
-  const ctx = mockContext("sizeof(x);");
-  ctx.globals = [
-    { value: "x", type: "i32", meta: [{ type: "type/array" }], params: [] },
-  ];
+export function userDefinedTypeName(): i32 {
+  return sizeof(Type);
+}
+`;
 
-  t.throws(() => sizeofParser(ctx));
-});
-
-test("sizeof parser, user-defined object types", t => {
-  const ctx = mockContext("sizeof(x);");
-  ctx.globals = [
-    {
-      value: "x",
-      type: "i32",
-      params: [],
-      meta: [
-        {
-          type: TYPE_USER,
-          payload: { params: [], meta: [{ type: OBJECT_SIZE, payload: 16 }] },
-        },
-      ],
-    },
-  ];
-  const node = sizeofParser(ctx);
-  t.is(node.value, 16);
-});
-
-test("sizeof parser, 64 bit variables", t => {
-  const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ value: "x", type: "f64", meta: [], params: [] }];
-  const node = sizeofParser(ctx);
-  t.snapshot(node);
-});
-
-test("statements as sizeof calls", t => {
-  const ctx = mockContext("sizeof(x);");
-  ctx.globals = [{ value: "x", type: "f64", meta: [], params: [] }];
-  const node = statement(ctx);
-  t.snapshot(node);
+test("type sizes", t => {
+  const getWasm = compose(debug, getIR);
+  const wasm = getWasm(walt);
+  t.snapshot(wasm);
+  return WebAssembly.instantiate(compile(walt)).then(result => {
+    t.is(result.instance.exports._32BitSizes(), 8, "32 bit sizes combined");
+    t.is(result.instance.exports._64BitSizes(), 16, "64 bit sizes combined");
+    t.is(result.instance.exports.userDefinedObject(), 16, "object types");
+    t.is(result.instance.exports.userDefinedTypeName(), 16, "type-name");
+  });
 });

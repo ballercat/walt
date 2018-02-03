@@ -5,7 +5,6 @@
 import invariant from "invariant";
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
-import printNode from "../utils/print-node";
 import { I32, F32, F64, I64 } from "../emitter/value_type";
 import type { IntermediateTypeDefinitionType, NodeType } from "./flow/types";
 
@@ -28,8 +27,8 @@ export const getType = (str: string): number => {
 export const generateImplicitFunctionType = (
   functionNode: NodeType
 ): IntermediateTypeDefinitionType => {
-  const [argsNode, resultNode] = functionNode.params;
-  const resultType = resultNode.type ? getType(resultNode.type) : null;
+  const [argsNode] = functionNode.params;
+  const resultType = functionNode.type ? getType(functionNode.type) : null;
 
   const params = [];
   walkNode({
@@ -58,36 +57,20 @@ export default function generateType(
     )}`
   );
 
-  const typeExpression = node.params[0];
-  invariant(
-    typeExpression && typeExpression.Type === Syntax.BinaryExpression,
-    "Generator: A function type must be of form (<type>, ...) <type> node:" +
-      `${printNode(node)}`
-  );
+  const [args, result] = node.params;
 
   // Collect the function params and result by walking the tree of nodes
   const params = [];
-  let result = null;
-  const left = typeExpression.params[0];
-  const right = typeExpression.params[1];
-
-  // if we do not have a right node, then we do not have any params for this function
-  // type, so we just skip this.
-  if (right != null) {
-    walkNode({
-      [Syntax.Type]: ({ value: typeValue }) => params.push(getType(typeValue)),
-    })(left);
-  }
 
   walkNode({
-    [Syntax.Type]: ({ value: typeValue }) => {
-      result = typeValue && typeValue !== "void" ? getType(typeValue) : null;
+    [Syntax.Type]: (t, __) => {
+      params.push(getType(t.value));
     },
-  })(right || left);
+  })(args);
 
   return {
     id,
     params,
-    result,
+    result: result.type && result.type !== "void" ? getType(result.type) : null,
   };
 }

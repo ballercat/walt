@@ -4,6 +4,7 @@ import functionPointer from "./function-pointer";
 import fibonacci from "./fibonacci";
 import objectLiteral from "./object-literal";
 import animation from "./animation";
+import closures from "./closures";
 
 const examples = {
   Default: _default,
@@ -11,7 +12,8 @@ const examples = {
   FunctionPointer: functionPointer,
   Fibonacci: fibonacci,
   "Object Literal": objectLiteral,
-  Animation: animation
+  Animation: animation,
+  Closures: closures
 };
 
 export default examples;

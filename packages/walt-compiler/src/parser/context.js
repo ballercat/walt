@@ -1,81 +1,43 @@
-// @flow
-import type TokenStream from "../utils/token-stream";
-import generateErrorString, { handleUndefined } from "../utils/generate-error";
-import type { Token, NodeType } from "../flow/types";
-
 /**
- * Context is used to parse tokens into an AST and IR used by the generator.
+ * Context is used to parse tokens into the base AST.
  * Originally the parser was a giant class and the context was the 'this' pointer.
  * Maintaining a monolithic parser is rather difficult so it was broken up into a
  * collection of self-contained parsers for each syntactic construct. The context
  * is passed around between each one to generate the desired tree
  */
-type ContextOptions = {
-  body: NodeType[],
-  diAssoc: string,
-  stream?: TokenStream,
-  token?: Token,
-  globals: NodeType[],
-  functions: NodeType[],
-  lines: string[],
-};
 
-class Context {
-  token: Token;
+// @flow
+import generateErrorString from "../utils/generate-error";
+import type { TokenStream } from "../utils/token-stream";
+import type { TokenType, NodeType } from "../flow/types";
+
+export default class Context {
+  token: TokenType;
   stream: TokenStream;
-  globals: NodeType[];
-  functions: NodeType[];
-  diAssoc: string;
-  body: NodeType[];
   filename: string;
-  func: NodeType | null;
-  object: NodeType;
-  userTypes: { [string]: NodeType };
-  functionTypes: { [string]: NodeType };
-  Program: any;
   lines: string[];
-  functionImports: NodeType[];
-  functionImportsLength: number;
-  handleUndefinedIdentifier: string => void;
 
-  constructor(options: ContextOptions) {
-    Object.assign(this, {
-      body: [],
-      diAssoc: "right",
-      globals: [],
-      functions: [],
-      lines: [],
-      functionImports: [],
-      functionImportsLength: 0,
-      userTypes: {},
-      functionTypes: {},
-      handleUndefinedIdentifier: handleUndefined(this),
-      ...options,
-    });
-
-    this.Program = {
-      body: [],
-      // Setup keys needed for the emitter
-      Types: [],
-      Code: [],
-      Exports: [],
-      Imports: [],
-      Globals: [],
-      Element: [],
-      Functions: [],
-      Memory: [],
-      Table: [],
-    };
+  constructor({
+    stream,
+    token,
+    lines,
+  }: {
+    stream: TokenStream,
+    token: TokenType,
+    lines: string[],
+  }) {
+    this.token = token;
+    this.stream = stream;
+    this.lines = lines;
   }
 
   syntaxError(msg: string, error: any) {
-    const functionId = (this.func ? this.func.id : "global") || "unknown";
+    const functionId = "unknown";
     return new SyntaxError(
       generateErrorString(
         msg,
         error || "",
         this.token,
-        this.lines[this.token.start.line - 1],
         this.filename || "unknown",
         functionId
       )
@@ -106,7 +68,7 @@ class Context {
     return this.syntaxError("Language feature not supported", this.token.value);
   }
 
-  expect(value: string[] | null, type?: string): Token {
+  expect(value: string[] | null, type?: string): TokenType {
     const token = this.token;
     if (!this.eat(value, type)) {
       throw value ? this.unexpectedValue(value) : this.unexpected(type);
@@ -140,7 +102,7 @@ class Context {
     return false;
   }
 
-  startNode(token: any = this.token): NodeType {
+  startNode(token: any = this.token || {}): NodeType {
     return {
       Type: "",
       value: token.value,
@@ -152,7 +114,7 @@ class Context {
   }
 
   endNode(node: NodeType, Type: string): NodeType {
-    const token = this.token || this.stream.last();
+    const token = this.token || this.stream.last() || {};
     return {
       ...node,
       Type,
@@ -170,5 +132,3 @@ class Context {
     );
   }
 }
-
-export default Context;
