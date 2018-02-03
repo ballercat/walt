@@ -23,6 +23,7 @@ export const TYPE_CAST = "type/cast";
 export const OBJECT_KEY_TYPES = "object/key-types";
 export const CLOSURE_TYPE = "closure/type";
 export const AST_METADATA = "@@global/ast";
+export const ALIAS = "alias";
 
 export const make = (payload: any, type: string) => ({
   type,
@@ -123,6 +124,11 @@ export const typeIndex = (payload: number): MetadataType => ({
 
 export const localIndexMap = (payload: { [string]: number }): MetadataType => ({
   type: LOCAL_INDEX_MAP,
+  payload,
+});
+
+export const alias = (payload: string): MetadataType => ({
+  type: ALIAS,
   payload,
 });
 
