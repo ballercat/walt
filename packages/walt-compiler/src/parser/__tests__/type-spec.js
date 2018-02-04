@@ -6,7 +6,7 @@ import compile, { debug, getIR } from "../..";
 //
 // For this spec to fail the imported and exported function definition need to
 // mismatch. This ensures that correct encoding is done on both sides!
-test.only("type parsing", t => {
+test("type parsing", t => {
   const imports = `
   export function nothing() {}
   export function noparamsi32(): i32 { return 2; }
