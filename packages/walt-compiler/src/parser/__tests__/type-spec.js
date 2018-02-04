@@ -32,7 +32,7 @@ test.only("type parsing", t => {
     return noparamsi32();
   }
   `;
-  debugger;
+
   const importWASM = getIR(imports);
   const sourceWASM = getIR(source);
   return WebAssembly.instantiate(importWASM.buffer()).then(deps => {
