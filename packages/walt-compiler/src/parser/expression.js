@@ -7,7 +7,6 @@ import builtInType from "./builtin-type";
 import block from "./block";
 import { getAssociativty, getPrecedence } from "./introspection";
 import maybeIdentifier from "./maybe-identifier";
-import { PRECEDENCE_FUNCTION_CALL } from "./precedence";
 import type Context from "./context";
 import type { NodeType, TokenType } from "../flow/types";
 
@@ -31,7 +30,6 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
   // closing bracket which causes our depth to fall below 1, then we know we
   // should exit the expression.
   let depth: number = 1;
-  let eatFunctionCall = false;
   let previousToken = null;
 
   const consume = () => operands.push(operator(ctx, operators, operands));
@@ -44,7 +42,7 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
     }
   };
 
-  const flushOperators = (precedence, value) => {
+  const flushOperators = precedence => {
     let previous = null;
     while (
       (previous = last(operators)) &&
@@ -52,9 +50,6 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
       getPrecedence(previous) >= precedence &&
       getAssociativty(previous) === "left"
     ) {
-      if (value === "," && previous.type === Syntax.FunctionCall) {
-        break;
-      }
       consume();
     }
   };
@@ -62,7 +57,7 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
   const processPunctuator = () => {
     switch (ctx.token.value) {
       case "=>":
-        flushOperators(getPrecedence(ctx.token), ctx.token.value);
+        flushOperators(getPrecedence(ctx.token));
         operators.push(ctx.token);
         ctx.next();
         if (ctx.token.value === "{") {
@@ -71,27 +66,7 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
         return false;
       case "(":
         depth++;
-        // Function call.
-        // TODO: figure out a cleaner(?) way of doing this, maybe
-        if (false && eatFunctionCall) {
-          // definetly not immutable
-          flushOperators(PRECEDENCE_FUNCTION_CALL);
-          // Tokenizer does not generate function call tokens it is our job here
-          // to generate a function call on the fly
-          operators.push({
-            ...ctx.token,
-            type: Syntax.FunctionCall,
-          });
-          ctx.next();
-          const expr = expression(ctx);
-          if (expr) {
-            operands.push(expr);
-          }
-          return false;
-        }
-
         operators.push(ctx.token);
-
         break;
       case "[":
         depth++;
@@ -110,13 +85,8 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
         // If we are not in a group already find the last LBracket,
         // consume everything until that point
         eatUntil("(");
-        const previous = last(operators);
-        if (previous && previous.type === Syntax.FunctionCall) {
-          consume();
-        } else if (depth > 0) {
-          // Pop left bracket
-          operators.pop();
-        }
+        // Pop left bracket
+        operators.pop();
 
         break;
       }
@@ -147,7 +117,7 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
           return t;
         })(ctx.token);
 
-        flushOperators(getPrecedence(token), token.value);
+        flushOperators(getPrecedence(token));
         operators.push(token);
       }
     }
@@ -156,25 +126,17 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
   const process = () => {
     switch (ctx.token.type) {
       case Syntax.Constant:
-        eatFunctionCall = false;
         operands.push(constant(ctx));
         break;
       case Syntax.Identifier:
-        eatFunctionCall = true;
         previousToken = ctx.token;
-        const node = maybeIdentifier(ctx);
-        if (node.Type === Syntax.FunctionCall) {
-          // flushOperators(PRECEDENCE_FUNCTION_CALL);
-        }
-        operands.push(node);
-        // ctx.next();
+        // Maybe an Identifier or a function call
+        operands.push(maybeIdentifier(ctx));
         return false;
       case Syntax.StringLiteral:
-        eatFunctionCall = false;
         operands.push(stringLiteral(ctx));
         break;
       case Syntax.Type:
-        eatFunctionCall = false;
         operands.push(builtInType(ctx));
         break;
       case Syntax.Punctuator:
@@ -182,7 +144,6 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
         if (punctuatorResult != null) {
           return punctuatorResult;
         }
-        eatFunctionCall = false;
         break;
     }
 
