@@ -10,6 +10,7 @@ after_success:
   - "npm run coverage"
 cache:
   directories:
-    - packages/walt/node_modules
+    - node_modules
+    - packages/walt-compiler/node_modules
     - packages/walt-docs/node_modules
 
