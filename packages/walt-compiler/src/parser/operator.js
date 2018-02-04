@@ -1,7 +1,6 @@
 // @flow
 import Syntax from "../Syntax";
 import type Context from "./context";
-import functionCall from "./function-call";
 import closure from "./closure";
 import { subscriptFromNode } from "./array-subscript";
 import type { TokenType, NodeType } from "../flow/types";
@@ -124,10 +123,6 @@ const operator = (
     case "sizeof":
       return unary(ctx, op, operands.splice(-1));
     default:
-      if (op.type === Syntax.FunctionCall) {
-        return functionCall(ctx, op, operands);
-      }
-
       return binary(ctx, op, operands.splice(-2));
   }
 };
