@@ -1,17 +1,28 @@
 // @flow
 import Syntax from "../Syntax";
+import expression from "./expression";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
 
 // Maybe identifier, maybe function call
 const maybeIdentifier = (ctx: Context): NodeType => {
-  // TODO: Instead of peeking, eat the "(" and return an operator!
-  const nextToken = ctx.stream.peek();
-  const Type =
-    nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
   const node = ctx.startNode();
+  ctx.eat(null, Syntax.Identifier);
 
-  return ctx.endNode(node, Type);
+  if (ctx.eat(["("])) {
+    const params = [expression(ctx)];
+    const functionCall = ctx.endNode(
+      {
+        ...node,
+        params: params.filter(Boolean),
+      },
+      Syntax.FunctionCall
+    );
+    ctx.expect([")"]);
+    return functionCall;
+  }
+
+  return ctx.endNode(node, Syntax.Identifier);
 };
 
 export default maybeIdentifier;

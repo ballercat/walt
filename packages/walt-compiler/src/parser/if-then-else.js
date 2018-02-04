@@ -7,7 +7,7 @@ import type { NodeType } from "../flow/types";
 
 const condition = (ctx: Context): NodeType => {
   ctx.expect(["("]);
-  const expr = expression(ctx, "i32");
+  const expr = expression(ctx);
   ctx.expect([")"]);
   return expr;
 };

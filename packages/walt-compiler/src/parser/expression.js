@@ -16,11 +16,6 @@ export type OperatorCheck = TokenType => boolean;
 
 const last = (list: any[]): any => list[list.length - 1];
 
-const valueIs = (v: string) => (o: TokenType): boolean => o.value === v;
-
-const isLBracket = valueIs("(");
-const isLSqrBracket = valueIs("[");
-const isBlockStart = valueIs("{");
 export const isPunctuatorAndNotBracket = (t: ?TokenType) =>
   t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
@@ -28,15 +23,10 @@ export const predicate = (token: TokenType, depth: number): boolean =>
   token.value !== ";" && depth > 0;
 
 // Shunting yard
-const expression = (
-  ctx: Context,
-  // Type param is no longer used but a bunch of code still passes it in
-  // eslint-disable-next-line
-  type: string = "i32",
-  check: Predicate = predicate
-) => {
+const expression = (ctx: Context, check: Predicate = predicate) => {
   const operators: TokenType[] = [];
   const operands: NodeType[] = [];
+
   // Depth is the nesting level of brackets in this expression. If we find a
   // closing bracket which causes our depth to fall below 1, then we know we
   // should exit the expression.
@@ -48,7 +38,7 @@ const expression = (
 
   const eatUntil = condition => {
     let prev = last(operators);
-    while (prev && !condition(prev)) {
+    while (prev && prev.value !== condition) {
       consume();
       prev = last(operators);
     }
@@ -83,7 +73,7 @@ const expression = (
         depth++;
         // Function call.
         // TODO: figure out a cleaner(?) way of doing this, maybe
-        if (eatFunctionCall) {
+        if (false && eatFunctionCall) {
           // definetly not immutable
           flushOperators(PRECEDENCE_FUNCTION_CALL);
           // Tokenizer does not generate function call tokens it is our job here
@@ -109,7 +99,7 @@ const expression = (
         break;
       case "]":
         depth--;
-        eatUntil(isLSqrBracket);
+        eatUntil("[");
         consume();
         break;
       case ")": {
@@ -119,7 +109,7 @@ const expression = (
         }
         // If we are not in a group already find the last LBracket,
         // consume everything until that point
-        eatUntil(isLBracket);
+        eatUntil("(");
         const previous = last(operators);
         if (previous && previous.type === Syntax.FunctionCall) {
           consume();
@@ -139,7 +129,7 @@ const expression = (
         if (depth < 1) {
           return false;
         }
-        eatUntil(isBlockStart);
+        eatUntil("{");
         consume();
         break;
       default: {
@@ -171,8 +161,14 @@ const expression = (
         break;
       case Syntax.Identifier:
         eatFunctionCall = true;
-        operands.push(maybeIdentifier(ctx));
-        break;
+        previousToken = ctx.token;
+        const node = maybeIdentifier(ctx);
+        if (node.Type === Syntax.FunctionCall) {
+          // flushOperators(PRECEDENCE_FUNCTION_CALL);
+        }
+        operands.push(node);
+        // ctx.next();
+        return false;
       case Syntax.StringLiteral:
         eatFunctionCall = false;
         operands.push(stringLiteral(ctx));

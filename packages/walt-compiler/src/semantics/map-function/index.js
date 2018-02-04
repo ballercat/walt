@@ -1,4 +1,11 @@
 // @flow
+/**
+ * Function Semantics Parser.
+ *
+ * This is where 80% of the semantic logic lives. Pretty much everything in
+ * WebAssembly is performed in some function. Most of the heavy logic is offloaded
+ * to smaller parsers in here.
+ */
 import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";

@@ -10,7 +10,7 @@ const whileLoop = (ctx: Context): NodeType => {
   ctx.eat(["while"]);
   ctx.expect(["("]);
 
-  const params = [ctx.makeNode({}, Syntax.Noop), expression(ctx, "i32")];
+  const params = [ctx.makeNode({}, Syntax.Noop), expression(ctx)];
 
   ctx.expect([")"]);
   ctx.expect(["{"]);

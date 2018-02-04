@@ -54,6 +54,22 @@ export const FunctionArguments = "FunctionArguments";
 export const FunctionResult = "FunctionResult";
 export const FunctionLocals = "FunctionLocals";
 
+export const i32 = "i32";
+export const f32 = "f32";
+export const i64 = "i64";
+export const f64 = "f64";
+export const Memory = "Memory";
+export const Table = "Table";
+
+export const builtinTypes = {
+  i32,
+  f32,
+  i64,
+  f64,
+  Memory,
+  Table,
+};
+
 export const statements = {
   // Main Program
   Program,

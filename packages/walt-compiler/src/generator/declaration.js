@@ -1,4 +1,5 @@
 // @flow
+import { i32 } from "../Syntax";
 import invariant from "invariant";
 import generateExpression from "./expression";
 import { generateValueType, isBuiltinType } from "./utils";
@@ -20,7 +21,7 @@ const generateDeclaration: GeneratorType = (
     const metaIndex = get(LOCAL_INDEX, node);
     invariant(metaIndex, `Local Index is undefined. Node: ${node.value}`);
 
-    const type = isBuiltinType(node.type) ? node.type : "i32";
+    const type = isBuiltinType(node.type) ? node.type : i32;
 
     return [
       ...generateExpression({ ...initNode, type }, parent),

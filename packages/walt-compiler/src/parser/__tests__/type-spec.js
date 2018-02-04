@@ -6,7 +6,7 @@ import compile, { debug, getIR } from "../..";
 //
 // For this spec to fail the imported and exported function definition need to
 // mismatch. This ensures that correct encoding is done on both sides!
-test("type parsing", t => {
+test.only("type parsing", t => {
   const imports = `
   export function nothing() {}
   export function noparamsi32(): i32 { return 2; }
@@ -32,7 +32,7 @@ test("type parsing", t => {
     return noparamsi32();
   }
   `;
-
+  debugger;
   const importWASM = getIR(imports);
   const sourceWASM = getIR(source);
   return WebAssembly.instantiate(importWASM.buffer()).then(deps => {
