@@ -21,7 +21,6 @@ Highlights:
 * **NO LLVM/binary toolkits required**, zero dependencies 100% written in JS.
 * Fast compilation, integrates into webpack!
 
-:construction: **currently under heavy construction** :construction:
 
 :book: Read the [Quick Start Guide](https://github.com/ballercat/walt/wiki/Walt-In-5-Minutes)
 
@@ -29,7 +28,7 @@ Highlights:
 
 :pray: Contributions are welcomed! [Contributing guide](https://github.com/ballercat/walt/blob/master/CONTRIBUTING.md).
 
-:partly_sunny: Current status: **pre-alpha**
+:hatched_chick: Current status: **Alpha**
 
 ### [Roadmap](https://github.com/ballercat/walt/wiki/Roadmap)
 
