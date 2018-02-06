@@ -149,6 +149,30 @@ export default function validate(
             );
           }
         },
+        [Syntax.ReturnStatement]: (node, _transform) => {
+          if (func.type == null) {
+            return;
+          }
+          const [expression] = node.params;
+          const [start] = node.range;
+          const end = expression != null ? expression.range[1] : node.range[1];
+          const type = expression != null ? expression.type : null;
+
+          if (type !== func.type) {
+            problems.push(
+              error(
+                "Missing return value",
+                "Functions in WebAssembly must have a consistent return value. Expected " +
+                  func.type +
+                  " received " +
+                  type,
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
       })(func);
     },
   })(ast);

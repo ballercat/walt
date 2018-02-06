@@ -42,9 +42,11 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
     };
   }
 
+  const type = identifier.type;
+
   return {
     ...node,
-    type: identifier.type,
+    type,
     params,
   };
 });

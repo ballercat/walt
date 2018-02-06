@@ -34,6 +34,12 @@ export default class OutputStream {
         invariant(size, `Cannot write a value of size ${size}`);
         break;
       }
+      case "varint64": {
+        value = this.encodeSigned(value, 64);
+        size = value.length;
+        invariant(size, `Cannot write a value of size ${size}`);
+        break;
+      }
       default: {
         size = sizeof[type];
         invariant(size, `Cannot write a value of size ${size}, type ${type}`);
@@ -62,9 +68,8 @@ export default class OutputStream {
     return encoding;
   }
 
-  encodeSigned(value: number) {
+  encodeSigned(value: number, size: number = 32) {
     const encoding = [];
-    const size = 32;
     while (true) {
       const byte = value & 127;
       value = value >>> 7;

@@ -214,6 +214,36 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       const { type } = params[0];
       return { ...inputNode, params, type };
     },
+    [Syntax.ReturnStatement]: returnNode => {
+      const [expression] = returnNode.params;
+      if (
+        expression != null &&
+        expression.Type === Syntax.Constant &&
+        expression.type !== fun.type
+      ) {
+        return {
+          ...returnNode,
+          params: [
+            {
+              ...expression,
+              value: ":",
+              Type: Syntax.Pair,
+              params: [
+                expression,
+                {
+                  ...expression,
+                  value: fun.type,
+                  type: fun.type,
+                  Type: Syntax.Type,
+                  params: [],
+                },
+              ],
+            },
+          ],
+        };
+      }
+      return returnNode;
+    },
     [Syntax.ArraySubscript]: mapArraySubscript,
     [Syntax.Sizeof]: mapSizeof,
     [Syntax.Closure]: (closure, transform) => {

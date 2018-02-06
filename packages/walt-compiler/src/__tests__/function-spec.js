@@ -61,7 +61,7 @@ test("functions", t => {
   });
 });
 
-test("closures", t => {
+test.only("closures", t => {
   const source = `
 const table: Table = { element: anyfunc, initial: 2 };
 type lambda Lambda = (i32, i32) => i32;
