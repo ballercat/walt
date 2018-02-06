@@ -81,3 +81,31 @@ test("undefined object properties", t => {
   );
   t.snapshot(error);
 });
+
+test("functions must have consistent returns", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function i32void(): i32 {
+      return;
+    }
+    function i32i64(): i32 {
+      const x: i64 = 0;
+      return x;
+    }
+      `)
+  );
+  t.snapshot(error);
+});
+
+test("functions must be defined", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test(): i32 {
+      const ptr: Type = 0;
+      ptr();
+      return notDefined();
+    }
+      `)
+  );
+  t.snapshot(error);
+});

@@ -17,16 +17,6 @@ export default curry(function mapFunctonCall(options, call) {
     return mapSizeof(call);
   }
 
-  // Regular function calls
-  if (functions[call.value] != null) {
-    const index = Object.keys(functions).indexOf(call.value);
-    return {
-      ...call,
-      type: functions[call.value].type,
-      meta: [setMetaFunctionIndex(index)],
-    };
-  }
-
   // Function pointer calls aka indirect calls
   if (locals[call.value] != null) {
     // Closures are a special case of indirect function calls where a 64-bit
@@ -37,12 +27,18 @@ export default curry(function mapFunctonCall(options, call) {
     };
     const meta = [...identifier.meta];
 
+    const type = (() => {
+      const typedef = types[identifier.type];
+      return typedef != null ? typedef.type : call.type;
+    })();
+
     // Expand the 64-bit identifier into an additional 32-bit argument for closure
     // base pointer and table index.
     if (get(CLOSURE_TYPE, identifier) != null) {
       return {
         ...call,
         meta,
+        type,
         Type: Syntax.IndirectFunctionCall,
         params: [...expandClosureIdentifier(identifier)],
       };
@@ -54,10 +50,17 @@ export default curry(function mapFunctonCall(options, call) {
     return {
       ...call,
       meta,
+      type,
       params: [...call.params, identifier],
       Type: Syntax.IndirectFunctionCall,
     };
   }
 
-  return call;
+  // Regular function calls
+  const index = Object.keys(functions).indexOf(call.value);
+  return {
+    ...call,
+    type: functions[call.value] != null ? functions[call.value].type : null,
+    meta: [setMetaFunctionIndex(index)],
+  };
 });

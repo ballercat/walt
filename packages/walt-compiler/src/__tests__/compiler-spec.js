@@ -108,3 +108,18 @@ test("compiles math", t =>
 
 test("invalid imports throw", t =>
   t.throws(() => compile("import foo from 'bar'")));
+
+test("64 bit constant encoding", t => {
+  return compileAndRun(`
+    function number(): i64 {
+      const x: i64 = 42;
+      return x;
+    }
+    function two() : i64 {
+      return 2;
+    }
+    export function test(): i32 {
+      return number(): i32;
+    }
+  `).then(result => t.is(result.instance.exports.test(), 42));
+});

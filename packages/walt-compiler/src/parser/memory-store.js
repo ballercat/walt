@@ -8,7 +8,7 @@ import type { NodeType } from "../flow/types";
 // Parse the expression and set the appropriate Type for the generator
 const memoryStore = (ctx: Context): NodeType => {
   // Parse the assignment
-  const node = expression(ctx, "i32");
+  const node = expression(ctx);
 
   invariant(
     node.params.length > 0,

@@ -1,4 +1,5 @@
 // @flow
+import { builtinTypes } from "../Syntax";
 import opcode from "../emitter/opcode";
 import curry from "curry";
 import invariant from "invariant";
@@ -39,7 +40,7 @@ export const scopeOperation = curry((op, node) => {
 });
 
 export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
-  const nodeType = node.type || "i32";
+  const nodeType = node.type || builtinTypes.i32;
 
   const kind: RawOpcodeType = opcode[nodeType + "Const"] || opcode.i32Const;
   const params = [Number(node.value)];
@@ -53,31 +54,20 @@ export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
 // clean this up
 export const getType = (str: ?string): number => {
   switch (str) {
-    case "f32":
+    case builtinTypes.f32:
       return F32;
-    case "f64":
+    case builtinTypes.f64:
       return F64;
-    case "i64":
+    case builtinTypes.i64:
       return I64;
-    case "i32":
-    case "Function":
+    case builtinTypes.i32:
     default:
       return I32;
   }
 };
 
 export const isBuiltinType = (type: ?string): boolean => {
-  switch (type) {
-    case "i32":
-    case "f32":
-    case "i64":
-    case "f64":
-    case "Memory":
-    case "Table":
-      return true;
-    default:
-      return false;
-  }
+  return typeof type === "string" && builtinTypes[type] != null;
 };
 
 export const generateValueType = (

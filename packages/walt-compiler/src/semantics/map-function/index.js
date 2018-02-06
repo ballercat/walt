@@ -1,4 +1,11 @@
 // @flow
+/**
+ * Function Semantics Parser.
+ *
+ * This is where 80% of the semantic logic lives. Pretty much everything in
+ * WebAssembly is performed in some function. Most of the heavy logic is offloaded
+ * to smaller parsers in here.
+ */
 import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
@@ -206,6 +213,36 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       const params = inputNode.params.map(transform);
       const { type } = params[0];
       return { ...inputNode, params, type };
+    },
+    [Syntax.ReturnStatement]: returnNode => {
+      const [expression] = returnNode.params;
+      if (
+        expression != null &&
+        expression.Type === Syntax.Constant &&
+        expression.type !== fun.type
+      ) {
+        return {
+          ...returnNode,
+          params: [
+            {
+              ...expression,
+              value: ":",
+              Type: Syntax.Pair,
+              params: [
+                expression,
+                {
+                  ...expression,
+                  value: fun.type,
+                  type: fun.type,
+                  Type: Syntax.Type,
+                  params: [],
+                },
+              ],
+            },
+          ],
+        };
+      }
+      return returnNode;
     },
     [Syntax.ArraySubscript]: mapArraySubscript,
     [Syntax.Sizeof]: mapSizeof,

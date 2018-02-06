@@ -10,7 +10,7 @@ const paramList = (ctx: Context): NodeType[] => {
   const params: NodeType[] = [];
   let node = null;
   while (ctx.token.value && ctx.token.value !== ")") {
-    node = expression(ctx, "i32");
+    node = expression(ctx);
     if (node) {
       params.push(node);
       ctx.eat([";"]);

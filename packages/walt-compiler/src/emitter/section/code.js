@@ -1,6 +1,6 @@
 // @flow
-import { u8, i32, f32, f64 } from "wasm-types";
-import { varint32, varuint32, varint7 } from "../numbers";
+import { u8, i32, f32, f64, i64 } from "wasm-types";
+import { varint32, varuint32, varint7, varint64 } from "../numbers";
 import { getTypeString } from "../value_type";
 import OutputStream from "../../utils/output-stream";
 import opcode from "../opcode";
@@ -51,6 +51,10 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
           case i32:
             type = varint32;
             stringType = "i32.literal";
+            break;
+          case i64:
+            type = varint64;
+            stringType = "i64.literal";
             break;
           default:
             type = varuint32;
