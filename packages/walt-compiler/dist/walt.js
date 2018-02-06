@@ -60,6 +60,22 @@ const FunctionArguments = "FunctionArguments";
 const FunctionResult = "FunctionResult";
 const FunctionLocals = "FunctionLocals";
 
+const i32 = "i32";
+const f32 = "f32";
+const i64 = "i64";
+const f64 = "f64";
+const Memory = "Memory";
+const Table = "Table";
+
+const builtinTypes = {
+  i32,
+  f32,
+  i64,
+  f64,
+  Memory,
+  Table
+};
+
 const statements = {
   // Main Program
   Program,
@@ -184,21 +200,6 @@ function blockParser(ctx) {
     params
   }), Syntax.Block);
 }
-
-//      
-const functionCall = (ctx, op, operands) => {
-  const node = ctx.startNode(op);
-  // If last operand is a sequence that means we have function arguments
-  const maybeArguments = operands[operands.length - 1];
-  if (maybeArguments && maybeArguments.Type !== Syntax.FunctionIdentifier) {
-    node.params = operands.splice(-1);
-  }
-  const identifier = operands.splice(-1)[0];
-
-  return ctx.endNode(_extends({}, node, {
-    value: identifier.value
-  }), Syntax.FunctionCall);
-};
 
 //      
 const makeResult = node => _extends({
@@ -381,10 +382,6 @@ const operator = (ctx, operators, operands) => {
     case "sizeof":
       return unary(ctx, op, operands.splice(-1));
     default:
-      if (op.type === Syntax.FunctionCall) {
-        return functionCall(ctx, op, operands);
-      }
-
       return binary(ctx, op, operands.splice(-2));
   }
 };
@@ -417,7 +414,7 @@ function builtInType(ctx) {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 
 const PRECEDENCE_MEMBER_ACCESS = 19;
-const PRECEDENCE_FUNCTION_CALL = 19;
+
 const PRECEDENCE_ASSIGNMENT = 3;
 
 
@@ -488,56 +485,52 @@ const getAssociativty = token => {
 //      
 // Maybe identifier, maybe function call
 const maybeIdentifier = ctx => {
-  // TODO: Instead of peeking, eat the "(" and return an operator!
-  const nextToken = ctx.stream.peek();
-  const Type$$1 = nextToken.value === "(" ? Syntax.FunctionIdentifier : Syntax.Identifier;
   const node = ctx.startNode();
+  ctx.eat(null, Syntax.Identifier);
 
-  return ctx.endNode(node, Type$$1);
+  if (ctx.eat(["("])) {
+    const params = [expression(ctx)];
+    const functionCall = ctx.endNode(_extends({}, node, {
+      params: params.filter(Boolean)
+    }), Syntax.FunctionCall);
+    ctx.expect([")"]);
+    return functionCall;
+  }
+
+  return ctx.endNode(node, Syntax.Identifier);
 };
 
 //      
 const last = list => list[list.length - 1];
 
-const valueIs = v => o => o.value === v;
-
-const isLBracket = valueIs("(");
-const isLSqrBracket = valueIs("[");
-const isBlockStart = valueIs("{");
 const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
 const predicate = (token, depth) => token.value !== ";" && depth > 0;
 
 // Shunting yard
-const expression = (ctx,
-// Type param is no longer used but a bunch of code still passes it in
-// eslint-disable-next-line
-type = "i32", check = predicate) => {
+const expression = (ctx, check = predicate) => {
   const operators = [];
   const operands = [];
+
   // Depth is the nesting level of brackets in this expression. If we find a
   // closing bracket which causes our depth to fall below 1, then we know we
   // should exit the expression.
   let depth = 1;
-  let eatFunctionCall = false;
   let previousToken = null;
 
   const consume = () => operands.push(operator(ctx, operators, operands));
 
   const eatUntil = condition => {
     let prev = last(operators);
-    while (prev && !condition(prev)) {
+    while (prev && prev.value !== condition) {
       consume();
       prev = last(operators);
     }
   };
 
-  const flushOperators = (precedence, value) => {
+  const flushOperators = precedence => {
     let previous = null;
     while ((previous = last(operators)) && previous.Type !== Syntax.Sequence && getPrecedence(previous) >= precedence && getAssociativty(previous) === "left") {
-      if (value === "," && previous.type === Syntax.FunctionCall) {
-        break;
-      }
       consume();
     }
   };
@@ -545,7 +538,7 @@ type = "i32", check = predicate) => {
   const processPunctuator = () => {
     switch (ctx.token.value) {
       case "=>":
-        flushOperators(getPrecedence(ctx.token), ctx.token.value);
+        flushOperators(getPrecedence(ctx.token));
         operators.push(ctx.token);
         ctx.next();
         if (ctx.token.value === "{") {
@@ -554,26 +547,7 @@ type = "i32", check = predicate) => {
         return false;
       case "(":
         depth++;
-        // Function call.
-        // TODO: figure out a cleaner(?) way of doing this, maybe
-        if (eatFunctionCall) {
-          // definetly not immutable
-          flushOperators(PRECEDENCE_FUNCTION_CALL);
-          // Tokenizer does not generate function call tokens it is our job here
-          // to generate a function call on the fly
-          operators.push(_extends({}, ctx.token, {
-            type: Syntax.FunctionCall
-          }));
-          ctx.next();
-          const expr = expression(ctx);
-          if (expr) {
-            operands.push(expr);
-          }
-          return false;
-        }
-
         operators.push(ctx.token);
-
         break;
       case "[":
         depth++;
@@ -581,7 +555,7 @@ type = "i32", check = predicate) => {
         break;
       case "]":
         depth--;
-        eatUntil(isLSqrBracket);
+        eatUntil("[");
         consume();
         break;
       case ")":
@@ -592,14 +566,9 @@ type = "i32", check = predicate) => {
           }
           // If we are not in a group already find the last LBracket,
           // consume everything until that point
-          eatUntil(isLBracket);
-          const previous = last(operators);
-          if (previous && previous.type === Syntax.FunctionCall) {
-            consume();
-          } else if (depth > 0) {
-            // Pop left bracket
-            operators.pop();
-          }
+          eatUntil("(");
+          // Pop left bracket
+          operators.pop();
 
           break;
         }
@@ -612,7 +581,7 @@ type = "i32", check = predicate) => {
         if (depth < 1) {
           return false;
         }
-        eatUntil(isBlockStart);
+        eatUntil("{");
         consume();
         break;
       default:
@@ -627,7 +596,7 @@ type = "i32", check = predicate) => {
             return t;
           })(ctx.token);
 
-          flushOperators(getPrecedence(token), token.value);
+          flushOperators(getPrecedence(token));
           operators.push(token);
         }
     }
@@ -636,19 +605,17 @@ type = "i32", check = predicate) => {
   const process = () => {
     switch (ctx.token.type) {
       case Syntax.Constant:
-        eatFunctionCall = false;
         operands.push(parseConstant(ctx));
         break;
       case Syntax.Identifier:
-        eatFunctionCall = true;
+        previousToken = ctx.token;
+        // Maybe an Identifier or a function call
         operands.push(maybeIdentifier(ctx));
-        break;
+        return false;
       case Syntax.StringLiteral:
-        eatFunctionCall = false;
         operands.push(stringLiteral(ctx));
         break;
       case Syntax.Type:
-        eatFunctionCall = false;
         operands.push(builtInType(ctx));
         break;
       case Syntax.Punctuator:
@@ -656,7 +623,6 @@ type = "i32", check = predicate) => {
         if (punctuatorResult != null) {
           return punctuatorResult;
         }
-        eatFunctionCall = false;
         break;
     }
 
@@ -1078,7 +1044,7 @@ const paramList = ctx => {
   const params = [];
   let node = null;
   while (ctx.token.value && ctx.token.value !== ")") {
-    node = expression(ctx, "i32");
+    node = expression(ctx);
     if (node) {
       params.push(node);
       ctx.eat([";"]);
@@ -1117,7 +1083,7 @@ const whileLoop = ctx => {
   ctx.eat(["while"]);
   ctx.expect(["("]);
 
-  const params = [ctx.makeNode({}, Syntax.Noop), expression(ctx, "i32")];
+  const params = [ctx.makeNode({}, Syntax.Noop), expression(ctx)];
 
   ctx.expect([")"]);
   ctx.expect(["{"]);
@@ -1251,7 +1217,7 @@ const returnStatement = ctx => {
 //      
 const condition = ctx => {
   ctx.expect(["("]);
-  const expr = expression(ctx, "i32");
+  const expr = expression(ctx);
   ctx.expect([")"]);
   return expr;
 };
@@ -1317,7 +1283,7 @@ const keyword = ctx => {
 // Parse the expression and set the appropriate Type for the generator
 const memoryStore = ctx => {
   // Parse the assignment
-  const node = expression(ctx, "i32");
+  const node = expression(ctx);
 
   invariant_1(node.params.length > 0, "Memory Store expression could not be parsed");
 
@@ -1852,10 +1818,10 @@ function parse(source) {
  * @license MIT
  */
 
-const i32 = 1;
-const i64 = 1 << 1;
-const f32 = 1 << 2;
-const f64 = 1 << 3;
+const i32$1 = 1;
+const i64$1 = 1 << 1;
+const f32$1 = 1 << 2;
+const f64$1 = 1 << 3;
 const anyfunc = 1 << 4;
 const func = 1 << 5;
 const block_type = 1 << 6;
@@ -1872,10 +1838,10 @@ const u64 = 1 << 12;
 const word = 4;
 
 const sizeof = {
-  [i32]: word,
-  [i64]: word * 2,
-  [f32]: word,
-  [f64]: word * 2,
+  [i32$1]: word,
+  [i64$1]: word * 2,
+  [f32$1]: word,
+  [f64$1]: word * 2,
   [u32]: word,
   [u16]: word >> 1,
   [u8]: word >> 2,
@@ -1891,13 +1857,13 @@ const LITTLE_ENDIAN = true;
 
 const get$2 = (type, index, dataView) => {
   switch (type) {
-    case i32:
+    case i32$1:
       return dataView.getInt32(index, LITTLE_ENDIAN);
-    case i64:
+    case i64$1:
       return dataView.getInt64(index, LITTLE_ENDIAN);
-    case f32:
+    case f32$1:
       return dataView.getFloat32(index, LITTLE_ENDIAN);
-    case f64:
+    case f64$1:
       return dataView.getFloat64(index, LITTLE_ENDIAN);
     case anyfunc:
       return dataView.getUint32(index, LITTLE_ENDIAN);
@@ -1922,13 +1888,13 @@ const get$2 = (type, index, dataView) => {
 
 const set$1 = (type, index, dataView, value) => {
   switch (type) {
-    case i32:
+    case i32$1:
       return dataView.setInt32(index, value, LITTLE_ENDIAN);
-    case i64:
+    case i64$1:
       return dataView.setInt64(index, value, LITTLE_ENDIAN);
-    case f32:
+    case f32$1:
       return dataView.setFloat32(index, value, LITTLE_ENDIAN);
-    case f64:
+    case f64$1:
       return dataView.setFloat64(index, value, LITTLE_ENDIAN);
     case anyfunc:
       return dataView.setUint32(index, value, LITTLE_ENDIAN);
@@ -1952,10 +1918,10 @@ const set$1 = (type, index, dataView, value) => {
 };
 
 var index = {
-  i32,
-  i64,
-  f32,
-  f64,
+  i32: i32$1,
+  i64: i64$1,
+  f32: f32$1,
+  f64: f64$1,
   anyfunc,
   func,
   block_type,
@@ -2012,6 +1978,13 @@ class OutputStream {
           invariant_1(size, `Cannot write a value of size ${size}`);
           break;
         }
+      case "varint64":
+        {
+          value = this.encodeSigned(value, 64);
+          size = value.length;
+          invariant_1(size, `Cannot write a value of size ${size}`);
+          break;
+        }
       default:
         {
           size = index_16[type];
@@ -2041,9 +2014,8 @@ class OutputStream {
     return encoding;
   }
 
-  encodeSigned(value) {
+  encodeSigned(value, size = 32) {
     const encoding = [];
-    const size = 32;
     while (true) {
       const byte = value & 127;
       value = value >>> 7;
@@ -2106,6 +2078,7 @@ const varuint32 = "varuint32";
 const varint7 = "varint7";
 const varint1 = "varint1";
 const varint32 = "varint32";
+const varint64 = "varint64";
 
 //      
 const I32 = 0x7f;
@@ -2652,6 +2625,10 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
             type = varint32;
             stringType = "i32.literal";
             break;
+          case index_2:
+            type = varint64;
+            stringType = "i64.literal";
+            break;
           default:
             type = varuint32;
         }
@@ -2981,7 +2958,7 @@ const scopeOperation = curry_1((op, node) => {
 });
 
 const getConstOpcode = node => {
-  const nodeType = node.type || "i32";
+  const nodeType = node.type || builtinTypes.i32;
 
   const kind = def[nodeType + "Const"] || def.i32Const;
   const params = [Number(node.value)];
@@ -2995,31 +2972,20 @@ const getConstOpcode = node => {
 // clean this up
 const getType = str => {
   switch (str) {
-    case "f32":
+    case builtinTypes.f32:
       return F32;
-    case "f64":
+    case builtinTypes.f64:
       return F64;
-    case "i64":
+    case builtinTypes.i64:
       return I64;
-    case "i32":
-    case "Function":
+    case builtinTypes.i32:
     default:
       return I32;
   }
 };
 
 const isBuiltinType = type => {
-  switch (type) {
-    case "i32":
-    case "f32":
-    case "i64":
-    case "f64":
-    case "Memory":
-    case "Table":
-      return true;
-    default:
-      return false;
-  }
+  return typeof type === "string" && builtinTypes[type] != null;
 };
 
 const generateValueType = node => ({
@@ -3118,7 +3084,7 @@ const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
     const metaIndex = get$1(LOCAL_INDEX, node);
     invariant_1(metaIndex, `Local Index is undefined. Node: ${node.value}`);
 
-    const type = isBuiltinType(node.type) ? node.type : "i32";
+    const type = isBuiltinType(node.type) ? node.type : i32;
 
     return [...generateExpression(_extends({}, initNode, { type }), parent), {
       kind: def.SetLocal,
@@ -3895,8 +3861,10 @@ const mapArraySubscript = curry_1(({ userTypes }, node, mapChildren) => {
     });
   }
 
+  const type = identifier.type;
+
   return _extends({}, node, {
-    type: identifier.type,
+    type,
     params
   });
 });
@@ -3907,8 +3875,12 @@ const mapIdentifier = curry_1(({ locals, globals, functions, table, userTypes },
   const local = locals[identifier.value];
   const global = globals[identifier.value];
   if (local != null) {
+    const type = (() => {
+      const isArray = get$1(TYPE_ARRAY, locals[identifier.value]);
+      return isArray != null ? isArray.payload : locals[identifier.value].type;
+    })();
     return _extends({}, identifier, {
-      type: locals[identifier.value].type,
+      type,
       meta: [...local.meta]
     });
   } else if (global != null) {
@@ -3978,64 +3950,6 @@ const mapSizeof = curry_1(({ locals, globals, functions, userTypes }, sizeof) =>
 });
 
 //      
-const typeWeight = typeString => {
-  switch (typeString) {
-    case "i32":
-      return 0;
-    case "i64":
-      return 1;
-    case "f32":
-      return 2;
-    case "f64":
-      return 3;
-    default:
-      return -1;
-  }
-};
-
-const balanceTypesInMathExpression = expression => {
-  // find the result type in the expression
-  let type = null;
-  expression.params.forEach(({ type: childType }) => {
-    // The way we do that is by scanning the top-level nodes in our expression
-    if (typeWeight(type) < typeWeight(childType)) {
-      type = childType;
-    }
-  });
-
-  if (type == null) {
-    const [start, end] = expression.range;
-    throw new SyntaxError(generateErrorString("Cannot generate expression, missing type information", "Missing type information", { start, end }, "", ""));
-  }
-
-  // iterate again, this time, patching any mis-typed nodes
-  const params = expression.params.map(paramNode => {
-    if (paramNode.type == null) {
-      const [start, end] = paramNode.range;
-      throw new SyntaxError(generateErrorString("Could not infer a type in binary expression", `${paramNode.value} has no defined type`, { start, end }, "", ""));
-    }
-
-    if (paramNode.type !== type && type != null) {
-      // last check is for flow
-      return _extends({}, paramNode, {
-        type,
-        value: paramNode.value,
-        Type: Syntax.TypeCast,
-        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
-        params: [paramNode]
-      });
-    }
-
-    return paramNode;
-  });
-
-  return _extends({}, expression, {
-    params,
-    type
-  });
-};
-
-//      
 var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) {
   const [lhs, rhs] = node.params;
 
@@ -4101,15 +4015,9 @@ var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) 
     });
   }
 
-  // FIXME
-  // @ballercat:
-  // These extra typecasts are added because 64 bit Constant values are not
-  // encoded correctly, apparently they need to literrally be 64 bits wided in the
-  // binary, which is different form variable length 32 bit Ints/floats. The type-cast
-  // is easier to encode and perform at this point. Please fix the encoding.
-  return balanceTypesInMathExpression(_extends({}, node, {
+  return _extends({}, node, {
     params: node.params.map(mapChildren)
-  }));
+  });
 });
 
 //      
@@ -4387,15 +4295,6 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
     return mapSizeof(call);
   }
 
-  // Regular function calls
-  if (functions[call.value] != null) {
-    const index = Object.keys(functions).indexOf(call.value);
-    return _extends({}, call, {
-      type: functions[call.value].type,
-      meta: [funcIndex(index)]
-    });
-  }
-
   // Function pointer calls aka indirect calls
   if (locals[call.value] != null) {
     // Closures are a special case of indirect function calls where a 64-bit
@@ -4405,11 +4304,17 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
     });
     const meta = [...identifier.meta];
 
+    const type = (() => {
+      const typedef = types[identifier.type];
+      return typedef != null ? typedef.type : call.type;
+    })();
+
     // Expand the 64-bit identifier into an additional 32-bit argument for closure
     // base pointer and table index.
     if (get$1(CLOSURE_TYPE, identifier) != null) {
       return _extends({}, call, {
         meta,
+        type,
         Type: Syntax.IndirectFunctionCall,
         params: [...expandClosureIdentifier(identifier)]
       });
@@ -4420,12 +4325,18 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
 
     return _extends({}, call, {
       meta,
+      type,
       params: [...call.params, identifier],
       Type: Syntax.IndirectFunctionCall
     });
   }
 
-  return call;
+  // Regular function calls
+  const index = Object.keys(functions).indexOf(call.value);
+  return _extends({}, call, {
+    type: functions[call.value] != null ? functions[call.value].type : null,
+    meta: [funcIndex(index)]
+  });
 });
 
 //      
@@ -4454,6 +4365,71 @@ var makePair = curry_1((options, typeCastMaybe, transform) => {
 });
 
 //      
+const typeWeight = typeString => {
+  switch (typeString) {
+    case "i32":
+      return 0;
+    case "i64":
+      return 1;
+    case "f32":
+      return 2;
+    case "f64":
+      return 3;
+    default:
+      return -1;
+  }
+};
+
+const balanceTypesInMathExpression = expression => {
+  // find the result type in the expression
+  let type = null;
+  expression.params.forEach(({ type: childType }) => {
+    // The way we do that is by scanning the top-level nodes in our expression
+    if (typeWeight(type) < typeWeight(childType)) {
+      type = childType;
+    }
+  });
+
+  if (type == null) {
+    const [start, end] = expression.range;
+    throw new SyntaxError(generateErrorString("Cannot generate expression, missing type information", "Missing type information", { start, end }, "", ""));
+  }
+
+  // iterate again, this time, patching any mis-typed nodes
+  const params = expression.params.map(paramNode => {
+    if (paramNode.type == null) {
+      const [start, end] = paramNode.range;
+      throw new SyntaxError(generateErrorString("Could not infer a type in binary expression", `${paramNode.value} has no defined type`, { start, end }, "", ""));
+    }
+
+    if (paramNode.type !== type && type != null) {
+      // last check is for flow
+      return _extends({}, paramNode, {
+        type,
+        value: paramNode.value,
+        Type: Syntax.TypeCast,
+        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
+        params: [paramNode]
+      });
+    }
+
+    return paramNode;
+  });
+
+  return _extends({}, expression, {
+    params,
+    type
+  });
+};
+
+//      
+/**
+ * Function Semantics Parser.
+ *
+ * This is where 80% of the semantic logic lives. Pretty much everything in
+ * WebAssembly is performed in some function. Most of the heavy logic is offloaded
+ * to smaller parsers in here.
+ */
 /**
  * Initialize function node and patch it's type and meta
  */
@@ -4605,6 +4581,24 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       const params = inputNode.params.map(transform);
       const { type } = params[0];
       return _extends({}, inputNode, { params, type });
+    },
+    [Syntax.ReturnStatement]: returnNode => {
+      const [expression] = returnNode.params;
+      if (expression != null && expression.Type === Syntax.Constant && expression.type !== fun.type) {
+        return _extends({}, returnNode, {
+          params: [_extends({}, expression, {
+            value: ":",
+            Type: Syntax.Pair,
+            params: [expression, _extends({}, expression, {
+              value: fun.type,
+              type: fun.type,
+              Type: Syntax.Type,
+              params: []
+            })]
+          })]
+        });
+      }
+      return returnNode;
     },
     [Syntax.ArraySubscript]: mapArraySubscript$$1,
     [Syntax.Sizeof]: mapSizeof$$1,
@@ -4781,7 +4775,7 @@ function validate$1(ast, {
   if (metadata$$1 == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types } = metadata$$1.payload;
+  const { types, functions } = metadata$$1.payload;
   const problems = [];
 
   walker({
@@ -4815,7 +4809,7 @@ function validate$1(ast, {
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walker({
-        [Syntax.Declaration]: (node, _transform) => {
+        [Syntax.Declaration]: (node, _validator) => {
           const [initializer] = node.params;
           if (initializer != null && statements[initializer.Type] != null) {
             const [start, end] = node.range;
@@ -4835,12 +4829,42 @@ function validate$1(ast, {
             problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.", { start, end }, filename, functionName));
           }
         },
-        [Syntax.ArraySubscript]: (node, _transform) => {
+        [Syntax.ArraySubscript]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {
             const alias$$1 = get$1(ALIAS, offset);
             problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${identifier.type}`, { start, end }, filename, functionName));
+          }
+        },
+        [Syntax.ReturnStatement]: (node, validator) => {
+          node.params.map(validator);
+          if (func.type == null) {
+            return;
+          }
+          const [expression] = node.params;
+          const [start] = node.range;
+          const end = expression != null ? expression.range[1] : node.range[1];
+          const type = expression != null ? expression.type : null;
+
+          if (type !== func.type) {
+            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + type, { start, end }, filename, functionName));
+          }
+        },
+        [Syntax.FunctionCall]: (node, _validator) => {
+          if (functions[node.value] == null) {
+            const [start, end] = node.range;
+
+            problems.push(generateErrorString("Undefined function reference", `${node.value} is not defined.`, { start, end }, filename, functionName));
+          }
+        },
+        [Syntax.IndirectFunctionCall]: (node, _validator) => {
+          const identifier = node.params[node.params.length - 1];
+          const type = types[identifier.type];
+
+          if (!isBuiltinType(identifier.type) && type == null) {
+            const [start, end] = node.range;
+            problems.push(generateErrorString("Cannot make an indirect call without a valid function type", `${identifier.value} has type ${identifier.type} which is not defined. Inidrect calls must have pre-defined types.`, { start, end }, filename, functionName));
           }
         }
       })(func);
