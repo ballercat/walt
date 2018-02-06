@@ -50,10 +50,15 @@ export default curry(function mapFunctonCall(options, call) {
 
     const typeIndex = Object.keys(types).indexOf(identifier.type);
     meta.push(setMetaTypeIndex(typeIndex));
+    const type = (() => {
+      const typedef = types[identifier.type];
+      return typedef != null ? typedef.type : call.type;
+    })();
 
     return {
       ...call,
       meta,
+      type,
       params: [...call.params, identifier],
       Type: Syntax.IndirectFunctionCall,
     };
