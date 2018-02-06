@@ -96,3 +96,16 @@ test("functions must have consistent returns", t => {
   );
   t.snapshot(error);
 });
+
+test("functions must be defined", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test(): i32 {
+      const ptr: Type = 0;
+      ptr();
+      return notDefined();
+    }
+      `)
+  );
+  t.snapshot(error);
+});

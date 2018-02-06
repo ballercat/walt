@@ -24,7 +24,7 @@ export default function validate(
   if (metadata == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types } = metadata.payload;
+  const { types, functions } = metadata.payload;
   const problems = [];
 
   walkNode({
@@ -82,7 +82,7 @@ export default function validate(
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walkNode({
-        [Syntax.Declaration]: (node, _transform) => {
+        [Syntax.Declaration]: (node, _validator) => {
           const [initializer] = node.params;
           if (
             initializer != null &&
@@ -131,7 +131,7 @@ export default function validate(
             );
           }
         },
-        [Syntax.ArraySubscript]: (node, _transform) => {
+        [Syntax.ArraySubscript]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {
@@ -149,7 +149,8 @@ export default function validate(
             );
           }
         },
-        [Syntax.ReturnStatement]: (node, _transform) => {
+        [Syntax.ReturnStatement]: (node, validator) => {
+          node.params.map(validator);
           if (func.type == null) {
             return;
           }
@@ -166,6 +167,40 @@ export default function validate(
                   func.type +
                   " received " +
                   type,
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
+        [Syntax.FunctionCall]: (node, _validator) => {
+          if (functions[node.value] == null) {
+            const [start, end] = node.range;
+
+            problems.push(
+              error(
+                "Undefined function reference",
+                `${node.value} is not defined.`,
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
+        [Syntax.IndirectFunctionCall]: (node, _validator) => {
+          const identifier = node.params[node.params.length - 1];
+          const type = types[identifier.type];
+
+          if (!isBuiltinType(identifier.type) && type == null) {
+            const [start, end] = node.range;
+            problems.push(
+              error(
+                "Cannot make an indirect call without a valid function type",
+                `${identifier.value} has type ${
+                  identifier.type
+                } which is not defined. Inidrect calls must have pre-defined types.`,
                 { start, end },
                 filename,
                 functionName
