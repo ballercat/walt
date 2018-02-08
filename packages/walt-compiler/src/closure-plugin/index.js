@@ -14,7 +14,7 @@ const source = `
   let heapPointer: i32 = 0;
   export function malloc(size: i32): i32 {
     const ptr: i32 = heapPointer;
-    heapPointer += 8;
+    heapPointer += size;
     return ptr;
   }
 
