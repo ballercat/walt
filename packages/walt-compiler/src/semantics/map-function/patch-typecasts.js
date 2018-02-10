@@ -1,7 +1,6 @@
 // @flow
 import Syntax from "../../Syntax";
 import { typeCast } from "../metadata";
-import generateErrorString from "../../utils/generate-error";
 import type { NodeType } from "../../flow/types";
 
 export const typeWeight = (typeString: ?string) => {
@@ -31,35 +30,9 @@ export const balanceTypesInMathExpression = (
     }
   });
 
-  if (type == null) {
-    const [start, end] = expression.range;
-    throw new SyntaxError(
-      generateErrorString(
-        "Cannot generate expression, missing type information",
-        "Missing type information",
-        { start, end },
-        "",
-        ""
-      )
-    );
-  }
-
   // iterate again, this time, patching any mis-typed nodes
   const params = expression.params.map(paramNode => {
-    if (paramNode.type == null) {
-      const [start, end] = paramNode.range;
-      throw new SyntaxError(
-        generateErrorString(
-          "Could not infer a type in binary expression",
-          `${paramNode.value} has no defined type`,
-          { start, end },
-          "",
-          ""
-        )
-      );
-    }
-
-    if (paramNode.type !== type && type != null) {
+    if (paramNode.type != null && paramNode.type !== type && type != null) {
       // last check is for flow
       return {
         ...paramNode,
