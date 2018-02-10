@@ -100,8 +100,15 @@ test("parses basic strings", t => {
   t.snapshot(tokenizer.parse());
 });
 
-test("parsers strings within strings", t => {
+test("parses strings within strings", t => {
   const stream = new Stream("\"here is a string with a 'substring'\"");
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse());
+});
+
+test("parses strings with escaped string", t => {
+  // eslint-disable-next-line
+  const stream = new Stream(`"string start \\" string end" 'start \\' end '`);
   const tokenizer = new Tokenizer(stream);
   t.snapshot(tokenizer.parse());
 });
