@@ -1359,7 +1359,7 @@ const quoteOK = quoteCheck => () => quoteCheck;
 const nextFails = () => null;
 
 const endsInSingleQuote = char => {
-  if (char === "\\") {
+  if (/\\/.test(char)) {
     return quoteOK(endsInSingleQuote);
   }
   if (char === "'") {
@@ -1370,7 +1370,7 @@ const endsInSingleQuote = char => {
 };
 
 const endsInDoubleQuote = char => {
-  if (char === "\\") {
+  if (/\\/.test(char)) {
     return quoteOK(endsInDoubleQuote);
   }
   if (char === '"') {
@@ -2096,7 +2096,7 @@ opcode(___, ___, ___, 0, 0x24, "SetGlobal", "set_global");
 opcode(index_1, index_1, ___, 4, 0x28, "i32Load", "i32.load");
 opcode(index_2, index_1, ___, 8, 0x29, "i64Load", "i64.load");
 opcode(index_3, index_1, ___, 4, 0x2a, "f32Load", "f32.load");
-opcode(index_3, index_1, ___, 8, 0x2b, "f64Load", "f64.load");
+opcode(index_4, index_1, ___, 8, 0x2b, "f64Load", "f64.load");
 opcode(index_1, index_1, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
 opcode(index_1, index_1, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
 opcode(index_1, index_1, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
@@ -2213,13 +2213,13 @@ opcode(index_3, index_3, index_3, 0, 0x9c, "f32Floor", "f64.floor");
 opcode(index_3, index_3, index_3, 0, 0x9d, "f32Trunc", "f64.trunc");
 opcode(index_3, index_3, index_3, 0, 0x9e, "f32Nearest", "f64.nearest");
 opcode(index_3, index_3, index_3, 0, 0x9f, "f32Sqrt", "f64.sqrt");
-opcode(index_3, index_3, index_3, 0, 0xa0, "f64Add", "f64.add");
-opcode(index_3, index_3, index_3, 0, 0xa1, "f64Sub", "f64.sub");
-opcode(index_3, index_3, index_3, 0, 0xa2, "f64Mul", "f64.mul");
-opcode(index_3, index_3, index_3, 0, 0xa3, "f64Div", "f64.div");
-opcode(index_3, index_3, index_3, 0, 0xa4, "f64Min", "f64.min");
-opcode(index_3, index_3, index_3, 0, 0xa5, "f64Max", "f64.max");
-opcode(index_3, index_3, index_3, 0, 0xa6, "f64Copysign", "f64.copysign");
+opcode(index_4, index_4, index_4, 0, 0xa0, "f64Add", "f64.add");
+opcode(index_4, index_4, index_4, 0, 0xa1, "f64Sub", "f64.sub");
+opcode(index_4, index_4, index_4, 0, 0xa2, "f64Mul", "f64.mul");
+opcode(index_4, index_4, index_4, 0, 0xa3, "f64Div", "f64.div");
+opcode(index_4, index_4, index_4, 0, 0xa4, "f64Min", "f64.min");
+opcode(index_4, index_4, index_4, 0, 0xa5, "f64Max", "f64.max");
+opcode(index_4, index_4, index_4, 0, 0xa6, "f64Copysign", "f64.copysign");
 opcode(index_1, index_2, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
 opcode(index_1, index_3, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
 opcode(index_1, index_3, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");
@@ -2668,6 +2668,7 @@ const TYPE_CAST = "type/cast";
 const OBJECT_KEY_TYPES = "object/key-types";
 const CLOSURE_TYPE = "closure/type";
 
+const FUNCTION_METADATA = "@@function/meta";
 const ALIAS = "alias";
 
 
@@ -3068,10 +3069,6 @@ const generateExpression = (node, parent) => [node].map(mapSyntax(parent)).reduc
 //      
 const generateDeclaration = (node, parent = { code: [], locals: [] }) => {
   const initNode = node.params[0];
-
-  if (parent && Array.isArray(parent.locals)) {
-    parent.locals.push(generateValueType(node));
-  }
 
   if (initNode) {
     const metaIndex = get$2(LOCAL_INDEX, node);
@@ -3501,20 +3498,16 @@ function generateMemory$2(node) {
 //      
 const generateInit = node => {
   const _global = generateValueType(node);
-  if (node.params.length > 0) {
-    const { Type: Type$$1, value } = node.params[0];
-    if (Type$$1 === Syntax.Constant) {
-      switch (_global.type) {
-        case F32:
-        case F64:
-          _global.init = parseFloat(value);
-          break;
-        case I32:
-        case I64:
-        default:
-          _global.init = parseInt(value);
-      }
-    }
+  const { value } = node.params[0];
+  switch (_global.type) {
+    case F32:
+    case F64:
+      _global.init = parseFloat(value);
+      break;
+    case I32:
+    case I64:
+    default:
+      _global.init = parseInt(value);
   }
 
   return _global;
@@ -3587,11 +3580,21 @@ const generateCode = func => {
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
 
+  const metadata = get$2(FUNCTION_METADATA, func);
   invariant_1(body, "Cannot generate code for function without body");
+  invariant_1(metadata, "Cannot generate code for function without metadata");
+
+  const { locals, argumentsCount } = metadata.payload;
 
   const block = {
     code: [],
-    locals: [],
+    // On this Episode of ECMAScript Spec: Object own keys traversal!
+    // Sometimes it pays to know the spec. Keys are traversed in the order
+    // they are added to the object. This includes Object.keys. Because the AST is traversed
+    // depth-first we can guarantee that arguments will also be added first
+    // to the locals object. We can depend on the spec providing the keys,
+    // such that we can slice away the number of arguments and get DECLARED locals _only_.
+    locals: Object.keys(locals).slice(argumentsCount).map(key => generateValueType(locals[key])),
     debug: `Function ${func.value}`
   };
 
@@ -4383,19 +4386,9 @@ const balanceTypesInMathExpression = expression => {
     }
   });
 
-  if (type == null) {
-    const [start, end] = expression.range;
-    throw new SyntaxError(generateErrorString("Cannot generate expression, missing type information", "Missing type information", { start, end }, "", ""));
-  }
-
   // iterate again, this time, patching any mis-typed nodes
   const params = expression.params.map(paramNode => {
-    if (paramNode.type == null) {
-      const [start, end] = paramNode.range;
-      throw new SyntaxError(generateErrorString("Could not infer a type in binary expression", `${paramNode.value} has no defined type`, { start, end }, "", ""));
-    }
-
-    if (paramNode.type !== type && type != null) {
+    if (paramNode.type != null && paramNode.type !== type && type != null) {
       // last check is for flow
       return _extends({}, paramNode, {
         type,
@@ -4430,6 +4423,8 @@ const initialize = (options, node) => {
   const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
+  // Count the number of arguments to help with generating bytecode
+  let argumentsCount = 0;
   const closures = {
     // Capture all enclosed variables if any
     variables: getEnclosedVariables(node),
@@ -4444,6 +4439,7 @@ const initialize = (options, node) => {
     [Syntax.FunctionArguments]: (args, _) => {
       walker({
         [Syntax.Pair]: pairNode => {
+          argumentsCount += 1;
           const [identifierNode, typeNode] = pairNode.params;
           const withTypeApplied = _extends({}, identifierNode, {
             type: typeNode.value
@@ -4472,7 +4468,15 @@ const initialize = (options, node) => {
       // Everything non-lambda just return the type
       return typeDef.type;
     })(),
-    meta: [...node.meta, funcIndex(Object.keys(functions).length)],
+    meta: [...node.meta, funcIndex(Object.keys(functions).length), {
+      type: FUNCTION_METADATA,
+      payload: {
+        locals,
+        get argumentsCount() {
+          return argumentsCount;
+        }
+      }
+    }],
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
     // changed via source code.
@@ -4684,16 +4688,12 @@ const mapGeneric = curry_1((options, node, _) => {
   const { types } = options;
   const [generic, T] = node.params;
   const realType = types[T.value];
-  // No other generic is supported, YET
-  if (generic.value !== "Lambda") {
-    return node;
-  }
   const [args, result] = realType.params;
   // Patch the node to be a real type which we can reference later
   const patch = _extends({}, realType, {
     range: generic.range,
     value: node.value,
-    meta: [...realType.meta, closureType(true)],
+    meta: [...realType.meta, closureType(generic.value === "Lambda")],
     params: [_extends({}, args, {
       params: [_extends({}, args, {
         params: [],
