@@ -64,10 +64,13 @@ test("functions", t => {
 test("closures", t => {
   const source = `
 const table: Table = { element: anyfunc, initial: 2 };
-type lambda Lambda = (i32, i32) => i32;
-type lambda SimpleLambda = () => i32;
+type Func = (i32, i32) => i32;
+type Simple = () => i32;
 
-function getSimpleLambda(): SimpleLambda {
+type Closure = Lambda<Func>;
+type SimpleClosure = Lambda<Simple>;
+
+function getSimpleLambda(): SimpleClosure {
   let x: i32 = 0;
   return (): i32 => {
     x += 1;
@@ -75,7 +78,7 @@ function getSimpleLambda(): SimpleLambda {
   }
 }
 
-function getLambda(): Lambda {
+function getLambda(): Closure {
   // close over two locals
   let x: i32 = 0;
   return (xx: i32, yy: i32): i32 => {
@@ -85,11 +88,11 @@ function getLambda(): Lambda {
 }
 
 export function test(): i32 {
-  const closure: Lambda = getLambda();
+  const closure: Closure = getLambda();
   // should be 5
   const x: i32 = closure(2, 3);
 
-  const closure2: SimpleLambda = getSimpleLambda();
+  const closure2: SimpleClosure = getSimpleLambda();
   // should be 1
   closure2();
   // should be 2

@@ -3,20 +3,33 @@ import Syntax from "../Syntax";
 import type Context from "./context";
 import expression from "./expression";
 import generateError from "../utils/generate-error";
-import { closureType } from "../semantics/metadata";
 import type { NodeType } from "../flow/types";
 
 export default function typeParser(ctx: Context): NodeType {
   const node: NodeType = ctx.startNode();
   ctx.eat(["type"]);
   const meta = [];
-  const isClosure = ctx.eat(["lambda"]);
-  if (isClosure) {
-    meta.push(closureType(true));
-  }
 
   const value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
+
+  const maybeGeneric = ctx.token.value;
+  // Generic Type
+  if (ctx.eat(null, Syntax.Identifier)) {
+    ctx.expect(["<"]);
+    const idNode = ctx.makeNode(
+      { ...ctx.token, type: null },
+      Syntax.Identifier
+    );
+    ctx.expect(null, Syntax.Identifier);
+    ctx.expect([">"]);
+
+    const genericTypeNode = ctx.endNode(
+      { ...node, value, params: [{ ...idNode, value: maybeGeneric }, idNode] },
+      Syntax.GenericType
+    );
+    return genericTypeNode;
+  }
 
   // Regular function type definition
   if (ctx.eat(["("])) {
@@ -36,13 +49,6 @@ export default function typeParser(ctx: Context): NodeType {
             Type: Syntax.FunctionArguments,
             params: [],
           };
-
-    if (isClosure) {
-      args.params = [
-        { ...args, params: [], type: "i32", value: "i32", Type: Syntax.Type },
-        ...args.params,
-      ];
-    }
 
     ctx.expect([")"]);
     ctx.expect(["=>"]);

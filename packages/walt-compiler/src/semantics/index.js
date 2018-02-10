@@ -13,13 +13,13 @@
 
 // @flow
 import Syntax from "../Syntax";
-import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
 import { mapImport } from "./map-import";
 import mapFunctionNode from "./map-function";
 import closureImports from "../closure-plugin/imports";
 import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
+import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
 import { astMeta } from "./metadata";
 import type { NodeType } from "../flow/types";
@@ -37,10 +37,12 @@ export default function semantics(ast: NodeType): NodeType {
     ast = { ...ast, params: [...closureImports(), ...ast.params] };
   }
   // Types have to be pre-parsed before the rest of the program
-  walkNode({
-    [Syntax.Typedef]: node => {
+  const astWithTypes = mapNode({
+    [Syntax.Typedef]: (node, _) => {
       types[node.value] = node;
+      return node;
     },
+    [Syntax.GenericType]: mapGeneric({ types }),
   })(ast);
 
   const patched = mapNode({
@@ -59,7 +61,7 @@ export default function semantics(ast: NodeType): NodeType {
       userTypes,
       table,
     }),
-  })(ast);
+  })(astWithTypes);
 
   return {
     ...patched,
