@@ -39,6 +39,8 @@ const initialize = (options, node: NodeType) => {
   const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
+  // Count the number of arguments to help with generating bytecode
+  let argumentsCount = 0;
   const closures = {
     // Capture all enclosed variables if any
     variables: getEnclosedVariables(node),
@@ -53,6 +55,7 @@ const initialize = (options, node: NodeType) => {
     [Syntax.FunctionArguments]: (args, _) => {
       walkNode({
         [Syntax.Pair]: pairNode => {
+          argumentsCount += 1;
           const [identifierNode, typeNode] = pairNode.params;
           const withTypeApplied = {
             ...identifierNode,
@@ -93,7 +96,19 @@ const initialize = (options, node: NodeType) => {
       // Everything non-lambda just return the type
       return typeDef.type;
     })(),
-    meta: [...node.meta, setMetaFunctionIndex(Object.keys(functions).length)],
+    meta: [
+      ...node.meta,
+      setMetaFunctionIndex(Object.keys(functions).length),
+      {
+        type: FUNCTION_METADATA,
+        payload: {
+          locals,
+          get argumentsCount() {
+            return argumentsCount;
+          },
+        },
+      },
+    ],
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
     // changed via source code.
@@ -265,10 +280,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         )
       );
     },
-  })({
-    ...fun,
-    meta: [...fun.meta, { type: FUNCTION_METADATA, payload: { locals } }],
-  });
+  })(fun);
 };
 
 export default curry(mapFunctionNode);
