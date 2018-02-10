@@ -21,7 +21,7 @@ test("functions", t => {
   export function testParams(x: i32, y: i32) : i32 { return x + y; }
   export function testGlobalScope(): i32 { let x: i32 = 42; return x; }
   // This just needs to compile
-  export function testUninitializedLocals() { const x: i32; }
+  export function testUninitializedLocals() { let x: i32; }
   // This also tests built-in words in function names ("void")
   export function testVoidIsOptional() {}
   export function test0FunctionNames1(): i32 { return 2; }
@@ -63,11 +63,18 @@ test("functions", t => {
 
 test("closures", t => {
   const source = `
-const table: Table = { element: anyfunc, initial: 2 };
-type lambda Lambda = (i32, i32) => i32;
-type lambda SimpleLambda = () => i32;
+const table: Table = { element: anyfunc, initial: 5 };
+type Func = (i32, i32) => i32;
+type Simple = () => i32;
+type Void = () => void;
+type ArgsOnly = (i32, i32) => void;
 
-function getSimpleLambda(): SimpleLambda {
+type Closure = Lambda<Func>;
+type SimpleClosure = Lambda<Simple>;
+type VoidClosure = Lambda<Void>;
+type ArgsOnlyClosure = Lambda<ArgsOnly>;
+
+function getSimpleLambda(): SimpleClosure {
   let x: i32 = 0;
   return (): i32 => {
     x += 1;
@@ -75,7 +82,7 @@ function getSimpleLambda(): SimpleLambda {
   }
 }
 
-function getLambda(): Lambda {
+function getLambda(): Closure {
   // close over two locals
   let x: i32 = 0;
   return (xx: i32, yy: i32): i32 => {
@@ -84,12 +91,27 @@ function getLambda(): Lambda {
   }
 }
 
+// Closures below are not useful, but necessary to cover all scenarios
+function getVoidLamba(): VoidClosure {
+  let x: i32 = 0;
+  return () => {
+    x += 1;
+  }
+}
+
+function getArgsOnlyLambda(): ArgsOnlyClosure {
+  let x: i32 = 0;
+  return (z: i32, y: i32) => {
+    x+= z + y;
+  }
+}
+
 export function test(): i32 {
-  const closure: Lambda = getLambda();
+  const closure: Closure = getLambda();
   // should be 5
   const x: i32 = closure(2, 3);
 
-  const closure2: SimpleLambda = getSimpleLambda();
+  const closure2: SimpleClosure = getSimpleLambda();
   // should be 1
   closure2();
   // should be 2

@@ -37,7 +37,7 @@ export default function parselambda(
   const block = operands[2] || result || args;
   operands.splice(-3);
 
-  let params = [];
+  let baseParams = [];
   const lambda = {
     ...op,
     type: "i32",
@@ -46,57 +46,39 @@ export default function parselambda(
     Type: Syntax.Closure,
     params: [],
   };
+
+  const [lhs, rhs] = args.params;
   // The reason why this is so tricky to parse is because there are too many
   // optional parts of a coluse definition, like arguments and return type
   if (args.Type === Syntax.Pair) {
-    const [lhs, rhs] = args.params;
     if (lhs != null && rhs != null) {
-      params =
+      baseParams =
         lhs.Type === Syntax.Pair
           ? [makeArgs(lhs), makeResult(rhs)]
           : [
               makeArgs(lhs.Type === Syntax.Sequence ? lhs : args),
               makeResult(rhs.Type === Syntax.Type ? rhs : null),
             ];
-      return {
-        ...lambda,
-        params: [
-          {
-            ...lambda,
-            Type: Syntax.FunctionDeclaration,
-            params: [...params, block],
-          },
-        ],
-      };
+    } else {
+      baseParams = [makeArgs(null), makeResult(lhs)];
     }
-
-    return {
-      ...lambda,
-      params: [
-        {
-          ...lambda,
-          Type: Syntax.FunctionDeclaration,
-          params: [makeArgs(null), makeResult(lhs), block],
-        },
-      ],
-    };
   } else if (args.Type === Syntax.Sequence) {
-    return {
-      ...lambda,
-      params: [
-        {
-          ...lambda,
-          Type: Syntax.FunctionDeclaration,
-
-          params: [
-            makeArgs(args),
-            makeResult(result.Type === Syntax.Type ? result : null),
-            block,
-          ],
-        },
-      ],
-    };
+    baseParams = [
+      makeArgs(args),
+      makeResult(result.Type === Syntax.Type ? result : null),
+    ];
+  } else {
+    baseParams = [makeArgs(null), makeResult(null)];
   }
 
-  return lambda;
+  return {
+    ...lambda,
+    params: [
+      {
+        ...lambda,
+        Type: Syntax.FunctionDeclaration,
+        params: [...baseParams, block],
+      },
+    ],
+  };
 }

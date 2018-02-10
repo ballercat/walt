@@ -6,7 +6,7 @@ const quoteOK = quoteCheck => () => quoteCheck;
 const nextFails = () => null;
 
 const endsInSingleQuote = char => {
-  if (char === "\\") {
+  if (/\\/.test(char)) {
     return quoteOK(endsInSingleQuote);
   }
   if (char === "'") {
@@ -17,7 +17,7 @@ const endsInSingleQuote = char => {
 };
 
 const endsInDoubleQuote = char => {
-  if (char === "\\") {
+  if (/\\/.test(char)) {
     return quoteOK(endsInDoubleQuote);
   }
   if (char === '"') {

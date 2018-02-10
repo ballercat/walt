@@ -12,12 +12,13 @@ import generateTable from "./table";
 import generateInitializer from "../generator/initializer";
 import generateImport from "./import";
 import generateType from "./type";
+import { generateValueType } from "./utils";
 import { generateImplicitFunctionType } from "./type";
-
 import {
   get,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
+  FUNCTION_METADATA,
   typeIndex as setMetaTypeIndex,
 } from "../semantics/metadata";
 
@@ -33,11 +34,23 @@ export const generateCode = (
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
 
+  const metadata = get(FUNCTION_METADATA, func);
   invariant(body, "Cannot generate code for function without body");
+  invariant(metadata, "Cannot generate code for function without metadata");
+
+  const { locals, argumentsCount } = metadata.payload;
 
   const block = {
     code: [],
-    locals: [],
+    // On this Episode of ECMAScript Spec: Object own keys traversal!
+    // Sometimes it pays to know the spec. Keys are traversed in the order
+    // they are added to the object. This includes Object.keys. Because the AST is traversed
+    // depth-first we can guarantee that arguments will also be added first
+    // to the locals object. We can depend on the spec providing the keys,
+    // such that we can slice away the number of arguments and get DECLARED locals _only_.
+    locals: Object.keys(locals)
+      .slice(argumentsCount)
+      .map(key => generateValueType(locals[key])),
     debug: `Function ${func.value}`,
   };
 

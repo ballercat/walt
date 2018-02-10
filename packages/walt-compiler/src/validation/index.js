@@ -5,7 +5,6 @@ import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
 import { get, GLOBAL_INDEX, TYPE_CONST, ALIAS } from "../semantics/metadata";
-
 import type { NodeType } from "../flow/types";
 
 const GLOBAL_LABEL = "global";
@@ -78,7 +77,35 @@ export default function validate(
     // All of the validators below need to be implemented
     [Syntax.Struct]: (_, __) => {},
     [Syntax.ImmutableDeclaration]: (_, __) => {},
-    [Syntax.Declaration]: (_, __) => {},
+    [Syntax.Declaration]: (decl, _validator) => {
+      const [initializer] = decl.params;
+      if (get(TYPE_CONST, decl) != null) {
+        const [start, end] = decl.range;
+        if (initializer != null && initializer.Type !== Syntax.Constant) {
+          problems.push(
+            error(
+              "Global Constants must be initialized with a Number literal.",
+              "WebAssembly does not allow for non number literal constant initializers.",
+              { start, end },
+              filename,
+              GLOBAL_LABEL
+            )
+          );
+        }
+
+        if (initializer == null) {
+          problems.push(
+            error(
+              "Constant declaration without an initializer.",
+              "Global constants must be initialized with a Number literal.",
+              { start, end },
+              filename,
+              GLOBAL_LABEL
+            )
+          );
+        }
+      }
+    },
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walkNode({
@@ -98,6 +125,21 @@ export default function validate(
                 functionName
               )
             );
+          }
+          if (get(TYPE_CONST, node) != null) {
+            const [start, end] = node.range;
+
+            if (initializer == null) {
+              problems.push(
+                error(
+                  "Constant declaration without an initializer.",
+                  "Local Constants must be initialized with an expression.",
+                  { start, end },
+                  filename,
+                  GLOBAL_LABEL
+                )
+              );
+            }
           }
         },
         [Syntax.Assignment]: node => {

@@ -3,19 +3,19 @@ import compose from "../../utils/compose";
 import compile, { debug, getIR } from "../..";
 
 const walt = `export function _32BitSizes(): i32 {
-  const x: i32;
-  const y: f32;
+  let x: i32;
+  let y: f32;
   return sizeof(x) + sizeof(y);
 }
 
 export function _64BitSizes(): i32 {
-  const x: i64;
-  const y: f64;
+  const x: i64 = 0;
+  const y: f64 = 0;
   return sizeof(x) + sizeof(y);
 }
 type Type = { a: i32, b: i32, c: i32, d: i32 };
 export function userDefinedObject(): i32 {
-  const x: Type;
+  const x: Type = 0;
   return sizeof(x);
 }
 

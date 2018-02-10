@@ -1,5 +1,5 @@
 // @flow
-import { i32, i64, f32 } from "wasm-types";
+import { i32, i64, f32, f64 } from "wasm-types";
 import type { RawOpcodeType } from "../generator/flow/types";
 
 /**
@@ -67,7 +67,7 @@ opcode(___, ___, ___, 0, 0x24, "SetGlobal", "set_global");
 opcode(i32, i32, ___, 4, 0x28, "i32Load", "i32.load");
 opcode(i64, i32, ___, 8, 0x29, "i64Load", "i64.load");
 opcode(f32, i32, ___, 4, 0x2a, "f32Load", "f32.load");
-opcode(f32, i32, ___, 8, 0x2b, "f64Load", "f64.load");
+opcode(f64, i32, ___, 8, 0x2b, "f64Load", "f64.load");
 opcode(i32, i32, ___, 1, 0x2c, "i32Load8S", "i32.load8_s");
 opcode(i32, i32, ___, 1, 0x2d, "i32Load8U", "i32.load8_u");
 opcode(i32, i32, ___, 2, 0x2e, "i32Load16S", "i32.load16_s");
@@ -92,7 +92,7 @@ opcode(i32, i32, ___, 0, 0x40, "GrowMemory", "grow_memory");
 opcode(i32, ___, ___, 0, 0x41, "i32Const", "i32.const");
 opcode(i64, ___, ___, 0, 0x42, "i64Const", "i64.const");
 opcode(f32, ___, ___, 0, 0x43, "f32Const", "f32.const");
-opcode(f32, ___, ___, 0, 0x44, "f64Const", "f64.const");
+opcode(f64, ___, ___, 0, 0x44, "f64Const", "f64.const");
 opcode(i32, i32, ___, 0, 0x45, "i32Eqz", "i32.eqz");
 opcode(i32, i32, i32, 0, 0x46, "i32Eq", "i32.eq");
 opcode(i32, i32, i32, 0, 0x47, "i32Ne", "i32.ne");
@@ -184,13 +184,13 @@ opcode(f32, f32, f32, 0, 0x9c, "f32Floor", "f64.floor");
 opcode(f32, f32, f32, 0, 0x9d, "f32Trunc", "f64.trunc");
 opcode(f32, f32, f32, 0, 0x9e, "f32Nearest", "f64.nearest");
 opcode(f32, f32, f32, 0, 0x9f, "f32Sqrt", "f64.sqrt");
-opcode(f32, f32, f32, 0, 0xa0, "f64Add", "f64.add");
-opcode(f32, f32, f32, 0, 0xa1, "f64Sub", "f64.sub");
-opcode(f32, f32, f32, 0, 0xa2, "f64Mul", "f64.mul");
-opcode(f32, f32, f32, 0, 0xa3, "f64Div", "f64.div");
-opcode(f32, f32, f32, 0, 0xa4, "f64Min", "f64.min");
-opcode(f32, f32, f32, 0, 0xa5, "f64Max", "f64.max");
-opcode(f32, f32, f32, 0, 0xa6, "f64Copysign", "f64.copysign");
+opcode(f64, f64, f64, 0, 0xa0, "f64Add", "f64.add");
+opcode(f64, f64, f64, 0, 0xa1, "f64Sub", "f64.sub");
+opcode(f64, f64, f64, 0, 0xa2, "f64Mul", "f64.mul");
+opcode(f64, f64, f64, 0, 0xa3, "f64Div", "f64.div");
+opcode(f64, f64, f64, 0, 0xa4, "f64Min", "f64.min");
+opcode(f64, f64, f64, 0, 0xa5, "f64Max", "f64.max");
+opcode(f64, f64, f64, 0, 0xa6, "f64Copysign", "f64.copysign");
 opcode(i32, i64, ___, 0, 0xa7, "i32Wrapi64", "i32.wrap/i64");
 opcode(i32, f32, ___, 0, 0xa8, "i32TruncSf32", "i32.trunc_s/f32");
 opcode(i32, f32, ___, 0, 0xa9, "i32TruncUf32", "i32.trunc_u/f32");

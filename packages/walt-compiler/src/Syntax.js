@@ -19,6 +19,7 @@ export const Identifier = "Identifier";
 export const ArraySubscript = "ArraySubscript";
 export const Constant = "Constant";
 export const Type = "Type";
+export const GenericType = "GenericType";
 export const UserType = "UserType";
 export const FunctionType = "FunctionType";
 export const Declaration = "Declaration";
@@ -122,6 +123,7 @@ export default {
   ArraySubscript,
   Constant,
   Type,
+  GenericType,
   UserType,
   FunctionType,
   Declaration,

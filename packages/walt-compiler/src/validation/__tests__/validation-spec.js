@@ -109,3 +109,15 @@ test("functions must be defined", t => {
   );
   t.snapshot(error);
 });
+
+test("constants must be initialized", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    const g: i32 = 2 + 2;
+    function test() {
+      const x: i32;
+    }
+      `)
+  );
+  t.snapshot(error);
+});
