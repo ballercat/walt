@@ -12,12 +12,13 @@ import generateTable from "./table";
 import generateInitializer from "../generator/initializer";
 import generateImport from "./import";
 import generateType from "./type";
+import { generateValueType } from "./utils";
 import { generateImplicitFunctionType } from "./type";
-
 import {
   get,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
+  FUNCTION_METADATA,
   typeIndex as setMetaTypeIndex,
 } from "../semantics/metadata";
 
@@ -33,11 +34,15 @@ export const generateCode = (
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
 
+  const metadata = get(FUNCTION_METADATA, func);
   invariant(body, "Cannot generate code for function without body");
+  invariant(metadata, "Cannot generate code for function without metadata");
 
   const block = {
     code: [],
-    locals: [],
+    locals: Object.keys(metadata.payload.locals).map(key =>
+      generateValueType(metadata.payload.locals[key])
+    ),
     debug: `Function ${func.value}`,
   };
 

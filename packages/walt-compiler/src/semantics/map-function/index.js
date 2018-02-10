@@ -28,6 +28,7 @@ import {
   funcIndex as setMetaFunctionIndex,
   get,
   CLOSURE_TYPE,
+  FUNCTION_METADATA,
 } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
@@ -264,7 +265,10 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         )
       );
     },
-  })(fun);
+  })({
+    ...fun,
+    meta: [...fun.meta, { type: FUNCTION_METADATA, payload: { locals } }],
+  });
 };
 
 export default curry(mapFunctionNode);
