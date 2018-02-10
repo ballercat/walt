@@ -10,7 +10,6 @@ export default function generateMemory(node: NodeType): IntermediateTableType {
     [Syntax.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
-      debugger;
       if (key === "initial") {
         table.initial = parseInt(value);
       } else if (key === "element") {

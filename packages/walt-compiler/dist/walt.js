@@ -4463,10 +4463,6 @@ const initialize = (options, node) => {
   })(_extends({}, node, {
     type: (() => {
       const typeDef = node.params[1];
-      if (typeDef == null) {
-        return null;
-      }
-
       // Identifier, can match Struct type, Function Type or Lambda. Check lambda
       if (types[typeDef.value] != null && get$2(CLOSURE_TYPE, types[typeDef.value])) {
         // Lmbdas are 64-bit Integers when used in source
