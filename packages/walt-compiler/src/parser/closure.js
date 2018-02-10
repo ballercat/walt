@@ -46,10 +46,11 @@ export default function parselambda(
     Type: Syntax.Closure,
     params: [],
   };
+
+  const [lhs, rhs] = args.params;
   // The reason why this is so tricky to parse is because there are too many
   // optional parts of a coluse definition, like arguments and return type
   if (args.Type === Syntax.Pair) {
-    const [lhs, rhs] = args.params;
     if (lhs != null && rhs != null) {
       baseParams =
         lhs.Type === Syntax.Pair
@@ -61,11 +62,6 @@ export default function parselambda(
     } else {
       baseParams = [makeArgs(null), makeResult(lhs)];
     }
-  } else if (args.Type === Syntax.Sequence) {
-    baseParams = [
-      makeArgs(args),
-      makeResult(result.Type === Syntax.Type ? result : null),
-    ];
   }
 
   return {
