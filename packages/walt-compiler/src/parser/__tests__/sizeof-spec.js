@@ -3,8 +3,8 @@ import compose from "../../utils/compose";
 import compile, { debug, getIR } from "../..";
 
 const walt = `export function _32BitSizes(): i32 {
-  const x: i32 = 0;
-  const y: f32 = 0;
+  let x: i32;
+  let y: f32;
   return sizeof(x) + sizeof(y);
 }
 

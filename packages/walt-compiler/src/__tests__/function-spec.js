@@ -21,7 +21,7 @@ test("functions", t => {
   export function testParams(x: i32, y: i32) : i32 { return x + y; }
   export function testGlobalScope(): i32 { let x: i32 = 42; return x; }
   // This just needs to compile
-  export function testUninitializedLocals() { const x: i32; }
+  export function testUninitializedLocals() { let x: i32; }
   // This also tests built-in words in function names ("void")
   export function testVoidIsOptional() {}
   export function test0FunctionNames1(): i32 { return 2; }
@@ -61,7 +61,7 @@ test("functions", t => {
   });
 });
 
-test.only("closures", t => {
+test("closures", t => {
   const source = `
 const table: Table = { element: anyfunc, initial: 5 };
 type Func = (i32, i32) => i32;
