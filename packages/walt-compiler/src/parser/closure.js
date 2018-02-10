@@ -62,6 +62,13 @@ export default function parselambda(
     } else {
       baseParams = [makeArgs(null), makeResult(lhs)];
     }
+  } else if (args.Type === Syntax.Sequence) {
+    baseParams = [
+      makeArgs(args),
+      makeResult(result.Type === Syntax.Type ? result : null),
+    ];
+  } else {
+    baseParams = [makeArgs(null), makeResult(null)];
   }
 
   return {

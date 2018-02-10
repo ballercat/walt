@@ -32,10 +32,6 @@ const declaration = (ctx: Context): NodeType => {
     params.push(expression(ctx));
   }
 
-  if (node.const && !node.init) {
-    throw ctx.syntaxError("Constant value must be initialized");
-  }
-
   return ctx.endNode({ ...node, params, type }, Type);
 };
 

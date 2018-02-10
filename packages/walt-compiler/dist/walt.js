@@ -252,6 +252,10 @@ function parselambda(ctx, op, operands) {
     } else {
       baseParams = [makeArgs(null), makeResult(lhs)];
     }
+  } else if (args.Type === Syntax.Sequence) {
+    baseParams = [makeArgs(args), makeResult(result.Type === Syntax.Type ? result : null)];
+  } else {
+    baseParams = [makeArgs(null), makeResult(null)];
   }
 
   return _extends({}, lambda, {
@@ -662,10 +666,6 @@ const declaration = ctx => {
     params.push(expression(ctx));
   }
 
-  if (node.const && !node.init) {
-    throw ctx.syntaxError("Constant value must be initialized");
-  }
-
   return ctx.endNode(_extends({}, node, { params, type }), Type$$1);
 };
 
@@ -780,7 +780,7 @@ function generateErrorString(msg, error, marker, filename, func) {
   })();
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
-  return Line + "\n" + highlight + ` ${error}` + "\n" + msg + "\n" + `  at ${func} (${filename}:${line}:${col})`;
+  return "\n" + Line + "\n" + highlight + ` ${error}` + "\n" + msg + "\n" + `  at ${func} (${filename}:${line}:${col})`;
 }
 
 //      
@@ -2121,7 +2121,7 @@ opcode(index_1, index_1, ___, 0, 0x40, "GrowMemory", "grow_memory");
 opcode(index_1, ___, ___, 0, 0x41, "i32Const", "i32.const");
 opcode(index_2, ___, ___, 0, 0x42, "i64Const", "i64.const");
 opcode(index_3, ___, ___, 0, 0x43, "f32Const", "f32.const");
-opcode(index_3, ___, ___, 0, 0x44, "f64Const", "f64.const");
+opcode(index_4, ___, ___, 0, 0x44, "f64Const", "f64.const");
 opcode(index_1, index_1, ___, 0, 0x45, "i32Eqz", "i32.eqz");
 opcode(index_1, index_1, index_1, 0, 0x46, "i32Eq", "i32.eq");
 opcode(index_1, index_1, index_1, 0, 0x47, "i32Ne", "i32.ne");
@@ -4463,6 +4463,10 @@ const initialize = (options, node) => {
   })(_extends({}, node, {
     type: (() => {
       const typeDef = node.params[1];
+      if (typeDef == null) {
+        return null;
+      }
+
       // Identifier, can match Struct type, Function Type or Lambda. Check lambda
       if (types[typeDef.value] != null && get$2(CLOSURE_TYPE, types[typeDef.value])) {
         // Lmbdas are 64-bit Integers when used in source
@@ -4828,7 +4832,19 @@ function validate$1(ast, {
     // All of the validators below need to be implemented
     [Syntax.Struct]: (_, __) => {},
     [Syntax.ImmutableDeclaration]: (_, __) => {},
-    [Syntax.Declaration]: (_, __) => {},
+    [Syntax.Declaration]: (decl, _validator) => {
+      const [initializer] = decl.params;
+      if (get$2(TYPE_CONST, decl) != null) {
+        const [start, end] = decl.range;
+        if (initializer != null && initializer.Type !== Syntax.Constant) {
+          problems.push(generateErrorString("Global Constants must be initialized with a Number literal.", "WebAssembly does not allow for non number literal constant initializers.", { start, end }, filename, GLOBAL_LABEL));
+        }
+
+        if (initializer == null) {
+          problems.push(generateErrorString("Constant declaration without an initializer.", "Global constants must be initialized with a Number literal.", { start, end }, filename, GLOBAL_LABEL));
+        }
+      }
+    },
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walker({
@@ -4837,6 +4853,13 @@ function validate$1(ast, {
           if (initializer != null && statements[initializer.Type] != null) {
             const [start, end] = node.range;
             problems.push(generateErrorString(`Unexpected statement ${initializer.Type}`, "Attempting to assign a statement to a variable. Did you miss a semicolon(;)?", { start, end }, filename, functionName));
+          }
+          if (get$2(TYPE_CONST, node) != null) {
+            const [start, end] = node.range;
+
+            if (initializer == null) {
+              problems.push(generateErrorString("Constant declaration without an initializer.", "Local Constants must be initialized with an expression.", { start, end }, filename, GLOBAL_LABEL));
+            }
           }
         },
         [Syntax.Assignment]: node => {

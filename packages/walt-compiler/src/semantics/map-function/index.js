@@ -80,6 +80,10 @@ const initialize = (options, node: NodeType) => {
     ...node,
     type: (() => {
       const typeDef = node.params[1];
+      if (typeDef == null) {
+        return null;
+      }
+
       // Identifier, can match Struct type, Function Type or Lambda. Check lambda
       if (
         types[typeDef.value] != null &&

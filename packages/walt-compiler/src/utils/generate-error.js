@@ -21,6 +21,7 @@ export default function generateErrorString(
 
   const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
   return (
+    "\n" +
     Line +
     "\n" +
     highlight +

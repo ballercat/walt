@@ -1,5 +1,5 @@
 // @flow
-import { i32, i64, f32 } from "wasm-types";
+import { i32, i64, f32, f64 } from "wasm-types";
 import type { RawOpcodeType } from "../generator/flow/types";
 
 /**
@@ -92,7 +92,7 @@ opcode(i32, i32, ___, 0, 0x40, "GrowMemory", "grow_memory");
 opcode(i32, ___, ___, 0, 0x41, "i32Const", "i32.const");
 opcode(i64, ___, ___, 0, 0x42, "i64Const", "i64.const");
 opcode(f32, ___, ___, 0, 0x43, "f32Const", "f32.const");
-opcode(f32, ___, ___, 0, 0x44, "f64Const", "f64.const");
+opcode(f64, ___, ___, 0, 0x44, "f64Const", "f64.const");
 opcode(i32, i32, ___, 0, 0x45, "i32Eqz", "i32.eqz");
 opcode(i32, i32, i32, 0, 0x46, "i32Eq", "i32.eq");
 opcode(i32, i32, i32, 0, 0x47, "i32Ne", "i32.ne");
