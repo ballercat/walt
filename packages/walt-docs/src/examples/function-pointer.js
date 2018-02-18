@@ -15,7 +15,7 @@ function compile(buffer) {
         const func = table.get(functionPointer);
         console.log("Getting function from Table", table);
         console.log(`function pointer id: ${functionPointer} == ${func}`);
-        setTimeout(func, timeout);
+        window.setTimeout(func, timeout);
       }
     }
   }).then(result => result.instance.exports.test());
