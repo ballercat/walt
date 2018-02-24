@@ -3097,7 +3097,7 @@ const generateArraySubscript = (node, parent) => {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
     // TODO: fix this for user-defined types
-    { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }]);
+    { kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
     type = isArray.payload;
   }
 
@@ -3140,7 +3140,7 @@ const generateMemoryAssignment = (node, parent) => {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
     // TODO: fix this for user-defined types
-    { kind: def.i32Const, params: [4] }, { kind: def.i32Mul, params: [] }]);
+    { kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
     type = isArray.payload;
   }
 
@@ -3498,16 +3498,19 @@ function generateMemory$2(node) {
 //      
 const generateInit = node => {
   const _global = generateValueType(node);
-  const { value } = node.params[0];
-  switch (_global.type) {
-    case F32:
-    case F64:
-      _global.init = parseFloat(value);
-      break;
-    case I32:
-    case I64:
-    default:
-      _global.init = parseInt(value);
+  const [initializer] = node.params;
+  if (initializer != null) {
+    const { value } = initializer;
+    switch (_global.type) {
+      case F32:
+      case F64:
+        _global.init = parseFloat(value);
+        break;
+      case I32:
+      case I64:
+      default:
+        _global.init = parseInt(value);
+    }
   }
 
   return _global;
