@@ -15,8 +15,8 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
       // TODO: fix this for user-defined types
-      { kind: opcode.i32Const, params: [4] },
-      { kind: opcode.i32Mul, params: [] },
+      { kind: opcode.i32Const, params: [2] },
+      { kind: opcode.i32Shl, params: [] },
     ]);
     type = isArray.payload;
   }

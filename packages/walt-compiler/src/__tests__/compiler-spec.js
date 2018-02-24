@@ -24,7 +24,9 @@ test("global indexes compile correctly", t =>
   const bar: i32 = 2;
   let foo: i32 = 3;
   let baz: i32 = 0;
+  let x: i32;
   export function test(): i32 {
+    x = 1;
     foo = two();
     baz = alsoTwo();
     return foo + baz;
