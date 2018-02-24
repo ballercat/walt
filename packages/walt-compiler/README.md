@@ -8,17 +8,22 @@ This is the main walt compiler package.
 ### API
 
 ```js
-import compileWalt, { debug as printWasm } from 'walt-compiler';
+import compileWalt from 'walt-compiler';
+//const compileWalt = require('walt-compiler').default; // in case of Node.js
 
 const buffer = compileWalt(`
+  let counter: i32 = 0;
   export function count(): i32 {
     counter += 1;
     return counter;
   }
 `);
 
-WebAssembly.instantiate(buffer).then(module => {
-  console.log(`Counter export: ${module.instance.exports.count()}`);
+//require('fs').writeFileSync('bin.wasm', new Uint8Array(buffer)); // to save the binary file
+
+WebAssembly.instantiate(buffer).then(result => {
+  console.log(`First invocation: ${result.instance.exports.count()}`);
+  console.log(`Second invocation: ${result.instance.exports.count()}`);
 });
 ```
 
