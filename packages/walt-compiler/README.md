@@ -7,9 +7,10 @@ This is the main walt compiler package.
 
 ### API
 
+Compile and run Walt code in browser: 
+
 ```js
 import compileWalt from 'walt-compiler';
-//const compileWalt = require('walt-compiler').default; // in case of Node.js
 
 const buffer = compileWalt(`
   let counter: i32 = 0;
@@ -19,12 +20,27 @@ const buffer = compileWalt(`
   }
 `);
 
-//require('fs').writeFileSync('bin.wasm', new Uint8Array(buffer)); // to save the binary file
-
 WebAssembly.instantiate(buffer).then(result => {
   console.log(`First invocation: ${result.instance.exports.count()}`);
   console.log(`Second invocation: ${result.instance.exports.count()}`);
 });
+```
+
+Compile and save a `.wasm` file via Node.js: 
+
+```js
+const compileWalt = require('walt-compiler').default;
+const fs = require('fs');
+
+const buffer = compileWalt(`
+  let counter: i32 = 0;
+  export function count(): i32 {
+    counter += 1;
+    return counter;
+  }
+`);
+
+fs.writeFileSync('bin.wasm', new Uint8Array(buffer));
 ```
 
 #### parse
