@@ -1,11 +1,28 @@
 // @flow
 import test from "ava";
 import printNode from "../print-node";
-// copied from another spec
-const mockNodeString =
-  '{"Type":"BinaryExpression","value":"+","range":[null,{"line":1,"col":8}],"meta":[],"params":[{"Type":"ArraySubscript","value":"[","range":[null,{"line":1,"col":4}],"meta":[],"params":[{"Type":"Identifier","value":"b","range":[{"line":1,"col":0},{"line":1,"col":1}],"meta":[{"payload":0,"type":"global/index"}],"params":[],"type":"i32"},{"Type":"Constant","value":"1","range":[{"line":1,"col":2},{"line":1,"col":3}],"meta":[],"params":[],"type":"i32"}],"type":"i32"},{"Type":"Constant","value":"5","range":[{"line":1,"col":7},{"line":1,"col":8}],"meta":[],"params":[],"type":"i32"}],"type":"i32"}';
+import { parser, semantics } from "../..";
+import compose from "../compose";
+
+const getAST = compose(semantics, parser);
 
 test("print-node", t => {
-  const node = JSON.parse(mockNodeString);
+  const node = getAST(`
+    function simple(): i32 {
+      const x: i32 = 1 + 1;
+      const y: i32 = 2;
+      return x + y;
+    }
+    function multiple_args(x: i32, y: f32): f32 {
+      return x + y;
+    }
+    function arrays(): i32 {
+      const x: i32[] = 0;
+      x[0] = 2;
+      x[1] = 2;
+      return x[0] + x[1];
+    }
+  `);
+
   t.snapshot(printNode(node));
 });
