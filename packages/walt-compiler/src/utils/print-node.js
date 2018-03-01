@@ -58,6 +58,11 @@ const getPrinters = add => ({
       },
     })(nodes);
   },
+  [Syntax.Export]: (node, print) => {
+    add("(export", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
   [Syntax.GenericType]: (node, _print) => {
     add("(type-generic " + node.value + ")", 0, 0, " pseudo type");
   },
