@@ -66,6 +66,9 @@ const getPrinters = add => ({
   [Syntax.GenericType]: (node, _print) => {
     add("(type-generic " + node.value + ")", 0, 0, " pseudo type");
   },
+  [Syntax.FunctionCall]: (node, print) => {
+    debugger;
+  },
   [Syntax.BinaryExpression]: (node: NodeType, print) => {
     const text = getText(node);
     add("(" + text, 2);
