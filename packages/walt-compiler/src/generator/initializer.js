@@ -5,16 +5,19 @@ import type { NodeType, IntermediateVariableType } from "./flow/types";
 
 const generateInit = (node: NodeType): IntermediateVariableType => {
   const _global = generateValueType(node);
-  const { value } = node.params[0];
-  switch (_global.type) {
-    case F32:
-    case F64:
-      _global.init = parseFloat(value);
-      break;
-    case I32:
-    case I64:
-    default:
-      _global.init = parseInt(value);
+  const [initializer] = node.params;
+  if (initializer != null) {
+    const { value } = initializer;
+    switch (_global.type) {
+      case F32:
+      case F64:
+        _global.init = parseFloat(value);
+        break;
+      case I32:
+      case I64:
+      default:
+        _global.init = parseInt(value);
+    }
   }
 
   return _global;
