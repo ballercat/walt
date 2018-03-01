@@ -6,7 +6,7 @@ import compose from "../compose";
 
 const getAST = compose(semantics, parser);
 
-test("print-node", t => {
+test("full ast printer", t => {
   const node = getAST(`
     function simple(): i32 {
       const x: i32 = 1 + 1;
@@ -25,4 +25,30 @@ test("print-node", t => {
   `);
 
   t.snapshot(printNode(node));
+});
+
+test("plain ast parser", t => {
+  const node = parser(`
+    type Type = (i32, f32) => i32;
+    type Inc = Closure<Type>;
+
+    function simple(y: i32): i32 {
+      const x : i32 = 2;
+      return x + y;
+    }
+  `);
+
+  t.snapshot(printNode(node));
+});
+
+test.only("imports", t => {
+  const node = getAST(`
+    import { foo: FooType, bar: FooType } from 'env';
+    type FooType = () => i32;
+
+    export function test(): i32 {
+      return foo();
+    }`);
+
+  console.log(printNode(node));
 });

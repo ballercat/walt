@@ -5,7 +5,15 @@ import { Header, Image, Segment } from "semantic-ui-react";
 import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
-import waltCompiler, { getIR as getWaltIR, debug as debugWalt } from "walt-compiler";
+import waltCompiler, {
+  getIR as getWaltIR,
+  debug as debugWalt,
+  parser,
+  semantics,
+  printNode
+} from "walt-compiler";
+
+const getAST = source => semantics(parser(source));
 
 const exampleList = Object.keys(examples).map(key => {
   return {
@@ -64,7 +72,8 @@ class Explorer extends React.Component {
       requestAnimationFrame(() => {
         try {
           this.intermediateRepresentation = getWaltIR(this.state.code);
-          const wasm = debugWalt(this.intermediateRepresentation);
+          // double parse :(
+          const wasm = printNode(getAST(this.state.code));
           this.setState({ wasm }, this.compileAndRun);
         } catch (e) {
           this.setState({ compiling: false });

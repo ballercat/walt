@@ -2620,32 +2620,40 @@ const mergeBlock = (block, v) => {
 //      
 
 
-const formatMetadata = meta => {
-  return meta.filter(entry => entry != null).map(({ type, payload }) => {
-    let payloadString = "";
-    if (typeof payload === "object") {
-      payloadString = "...";
-    } else {
-      payloadString = JSON.stringify(payload);
+// Dead simple AST walker, takes a visitor object and calls all methods for
+// appropriate node Types.
+function walker(visitor) {
+  const walkNode = node => {
+    if (node == null) {
+      return node;
+    }
+    const { params } = node;
+
+    const mappingFunction = (() => {
+      if ("*" in visitor && typeof visitor["*"] === "function") {
+        return visitor["*"];
+      }
+
+      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+        return visitor[node.Type];
+      }
+
+      return () => node;
+    })();
+
+    if (mappingFunction.length === 2) {
+      mappingFunction(node, walkNode);
+      return node;
     }
 
-    return `${type}(${payloadString})`;
-  }).join(",");
-};
+    mappingFunction(node);
+    params.forEach(walkNode);
 
-const printNode = (node, level = 0) => {
-  if (node == null) {
-    return "";
-  }
-  const typeString = `${node.type ? "<" + node.type + ">" : ""}`;
-  const metaString = formatMetadata(node.meta);
-  let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
-  out = out.padStart(out.length + level * 2);
-  node.params.forEach(p => {
-    out += printNode(p, level + 1);
-  });
-  return out;
-};
+    return node;
+  };
+
+  return walkNode;
+}
 
 //      
 // All of the metadata options are used like redux actions
@@ -2674,7 +2682,9 @@ const ALIAS = "alias";
 
 
 const get$2 = (type, node) => {
-  invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
+  if (node.meta == null) {
+    throw new Error(`Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
+  }
   return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
 };
 
@@ -2751,6 +2761,140 @@ const alias = payload => ({
   type: ALIAS,
   payload
 });
+
+//      
+const getText = node => {
+  const value = node.value || "??";
+  const hasType = node.type;
+  const type = hasType || "i32";
+  const op = opcodeFromOperator({ value, type });
+
+  if (!hasType) {
+    return op.text.replace("i32", "??");
+  }
+
+  return op.text;
+};
+
+const parseParams = node => {
+  const params = [];
+  walker({
+    [Syntax.Pair]: (pair, _) => {
+      params.push(`${pair.params[0].value} ${pair.params[1].value}`);
+    },
+    [Syntax.Type]: p => {
+      params.push(p.value);
+    }
+  })(node);
+  return params.length ? " param(" + params.join(" ") + ")" : "";
+};
+
+const parseResult = node => {
+  if (node == null) {
+    return "";
+  }
+  return " (result " + (node.type || "??") + ")";
+};
+
+const getPrinters = add => ({
+  [Syntax.GenericType]: (node, _print) => {
+    add("(type-generic " + node.value + ")", 0, 0, " pseudo type");
+  },
+  [Syntax.BinaryExpression]: (node, print) => {
+    const text = getText(node);
+    add("(" + text, 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ArraySubscript]: (node, print) => {
+    add("(i32.add", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Typedef]: (node, _) => {
+    const [paramsNode, resultNode] = node.params;
+
+    add("(type " + node.value + ` (func${parseParams(paramsNode)}${parseResult(resultNode)}))`);
+  },
+  [Syntax.Identifier]: node => {
+    const scope = get$2(GLOBAL_INDEX, node) ? "global" : "local";
+    add(`get_${scope} ${node.value}`);
+  },
+  [Syntax.Constant]: node => {
+    add(`${node.type}.const ${node.value}`);
+  },
+  [Syntax.FunctionDeclaration]: (node, print) => {
+    const [params, result, ...rest] = node.params;
+    add(`(func ${node.value}${parseParams(params)}${parseResult(result)}`, 2);
+
+    rest.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ReturnStatement]: (node, print) => {
+    add("(return", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Declaration]: (node, print) => {
+    const mutability = get$2(TYPE_CONST, node) ? " immutable" : "mutable";
+    add("(local " + node.value + " " + node.type, 2, 0, mutability);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ImmutableDeclaration]: (node, print) => {
+    add("(local " + node.value + " " + node.type, 2, 0, " immutable");
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Type]: node => {
+    add(node.value);
+  },
+  [Syntax.TypeCast]: (node, print) => {
+    const op = getTypecastOpcode(node.type, node.params[0].type);
+    add("(" + op.text, 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ArraySubscript]: (node, print) => {
+    add("(" + node.type + ".load", 2, 0);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.MemoryAssignment]: (node, print) => {
+    add("(" + node.type + ".store", 2, 0);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  }
+});
+
+const printNode = node => {
+  if (node == null) {
+    return "";
+  }
+
+  let depth = 0;
+  const offsets = [];
+  const pieces = [];
+  const comments = [];
+  const add = (piece, post = 0, pre = 0, comment = "") => {
+    depth += pre;
+    comments.push(comment);
+    pieces.push(piece);
+    offsets.push(depth + piece.length);
+    depth += post;
+  };
+
+  walker(getPrinters(add))(node);
+
+  const max = Math.max(...offsets);
+  const edge = max + 4;
+  const result = pieces.reduce((acc, val, i) => {
+    acc += val.padStart(offsets[i], " ").padEnd(edge, " ") + ";" + comments[i] + "\n";
+    return acc;
+  }, "");
+
+  return result;
+};
 
 //      
 const generateFunctionCall = (node, parent) => {
@@ -3163,44 +3307,6 @@ const generateMemoryAssignment = (node, parent) => {
 
   return block;
 };
-
-//      
-
-
-// Dead simple AST walker, takes a visitor object and calls all methods for
-// appropriate node Types.
-function walker(visitor) {
-  const walkNode = node => {
-    if (node == null) {
-      return node;
-    }
-    const { params } = node;
-
-    const mappingFunction = (() => {
-      if ("*" in visitor && typeof visitor["*"] === "function") {
-        return visitor["*"];
-      }
-
-      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-        return visitor[node.Type];
-      }
-
-      return () => node;
-    })();
-
-    if (mappingFunction.length === 2) {
-      mappingFunction(node, walkNode);
-      return node;
-    }
-
-    mappingFunction(node);
-    params.forEach(walkNode);
-
-    return node;
-  };
-
-  return walkNode;
-}
 
 //      
 const getKindConstant = value => {
@@ -5043,7 +5149,6 @@ const emitter = emit;
 const getIR = source => {
   const ast = parse(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
   validate(semanticAST,
   // this will eventually be a config
   {
