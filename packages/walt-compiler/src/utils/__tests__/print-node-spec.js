@@ -41,14 +41,18 @@ test("plain ast parser", t => {
   t.snapshot(printNode(node));
 });
 
-test.only("imports", t => {
+test("imports", t => {
   const node = getAST(`
     import { foo: FooType, bar: FooType } from 'env';
     type FooType = () => i32;
 
+    function two(): i32 {
+      return 2;
+    }
+
     export function test(): i32 {
-      return foo();
+      return foo(two() + 2);
     }`);
 
-  console.log(printNode(node));
+  t.snapshot(printNode(node));
 });
