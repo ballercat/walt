@@ -29,9 +29,9 @@ type information. This tree cannot be directly compiled without semantic analysi
 can be transformed easily.
 
 ```js
-import { parse } from 'walt-compiler';
+import { parser } from 'walt-compiler';
 
-const ast = parse(`
+const ast = parser(`
   type MyObjectType = { 'foo': i32, 'bar': f32 };
   export function test(): f32 {
     const obj: MyObjectType = 0;
