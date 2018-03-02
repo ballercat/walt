@@ -41,7 +41,7 @@ test("plain ast parser", t => {
   t.snapshot(printNode(node));
 });
 
-test("imports", t => {
+test("imports/exports", t => {
   const node = getAST(`
     import { foo: FooType, bar: FooType } from 'env';
     type FooType = () => i32;
@@ -55,4 +55,22 @@ test("imports", t => {
     }`);
 
   t.snapshot(printNode(node));
+});
+
+test("assignment, ternary, if", t => {
+  const node = getAST(`
+    let x: i32 = 0;
+    export function test(z: i32): i32 {
+      let y: i32 = z > 0 ? 1 : 0;
+      if (z == 2) {
+        x = 2;
+      } else {
+        x = 1;
+      }
+      y = 1 + 1;
+      return x + y;
+    }
+  `);
+
+  console.log(printNode(node));
 });

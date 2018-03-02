@@ -91,10 +91,10 @@ const getPrinters = add => ({
   },
   [Syntax.Identifier]: node => {
     const scope = get(GLOBAL_INDEX, node) ? "global" : "local";
-    add(`get_${scope} ${node.value}`);
+    add(`(get_${scope} ${node.value})`);
   },
   [Syntax.Constant]: node => {
-    add(`${node.type}.const ${node.value}`);
+    add(`(${node.type}.const ${node.value})`);
   },
   [Syntax.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
@@ -109,8 +109,8 @@ const getPrinters = add => ({
     add(")", 0, -2);
   },
   [Syntax.Declaration]: (node, print) => {
-    const mutability = get(TYPE_CONST, node) ? " immutable" : "mutable";
-    add("(local " + node.value + " " + node.type, 2, 0, mutability);
+    const mutability = get(TYPE_CONST, node) ? "immutable" : "mutable";
+    add("(local " + node.value + " " + node.type, 2, 0, ` ${mutability}`);
     node.params.forEach(print);
     add(")", 0, -2);
   },
@@ -138,6 +138,35 @@ const getPrinters = add => ({
     node.params.forEach(print);
     add(")", 0, -2);
   },
+  [Syntax.Assignment]: (node, print) => {
+    const [target, ...params] = node.params;
+    const scope = get(GLOBAL_INDEX, target) ? "global" : "local";
+    add(`(set_${scope} ${target.value}`, 2);
+    params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.TernaryExpression]: (node, print) => {
+    const [condition, options] = node.params;
+    add("(select", 2);
+    print(options);
+    print(condition);
+    add(")", 0, -2);
+  },
+  [Syntax.IfThenElse]: (node, print) => {
+    const [condition, then, ...rest] = node.params;
+    add("(if", 2);
+    print(condition);
+    add("(then", 2);
+    print(then);
+    add(")", 0, -2);
+    if (rest.length > 0) {
+      add("(else", 2);
+      rest.forEach(print);
+      add(")", 0, -2);
+    }
+    add(")", 0, -2);
+  },
+  [Syntax.ObjectLiteral]: (_, __) => {},
 });
 
 const printNode = (node?: NodeType): string => {

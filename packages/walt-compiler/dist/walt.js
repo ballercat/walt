@@ -2796,9 +2796,38 @@ const parseResult = node => {
   return " (result " + (node.type || "??") + ")";
 };
 
+const typedefString = node => {
+  const [paramsNode, resultNode] = node.params;
+  return "(type " + node.value + ` (func${parseParams(paramsNode)}${parseResult(resultNode)}))`;
+};
+
 const getPrinters = add => ({
+  [Syntax.Import]: (node, _print) => {
+    const [nodes, mod] = node.params;
+    walker({
+      [Syntax.Pair]: ({ params }, _) => {
+        const { value: field } = params[0];
+        const type = params[1];
+        add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
+      }
+    })(nodes);
+  },
+  [Syntax.Export]: (node, print) => {
+    add("(export", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
   [Syntax.GenericType]: (node, _print) => {
     add("(type-generic " + node.value + ")", 0, 0, " pseudo type");
+  },
+  [Syntax.FunctionCall]: (node, print) => {
+    if (node.params.length > 0) {
+      add(`(call ${node.value}`, 2);
+      node.params.forEach(print);
+      add(")", 0, -2);
+    } else {
+      add(`(call ${node.value})`);
+    }
   },
   [Syntax.BinaryExpression]: (node, print) => {
     const text = getText(node);
@@ -2812,16 +2841,14 @@ const getPrinters = add => ({
     add(")", 0, -2);
   },
   [Syntax.Typedef]: (node, _) => {
-    const [paramsNode, resultNode] = node.params;
-
-    add("(type " + node.value + ` (func${parseParams(paramsNode)}${parseResult(resultNode)}))`);
+    add(typedefString(node));
   },
   [Syntax.Identifier]: node => {
     const scope = get$2(GLOBAL_INDEX, node) ? "global" : "local";
-    add(`get_${scope} ${node.value}`);
+    add(`(get_${scope} ${node.value})`);
   },
   [Syntax.Constant]: node => {
-    add(`${node.type}.const ${node.value}`);
+    add(`(${node.type}.const ${node.value})`);
   },
   [Syntax.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
@@ -2836,8 +2863,8 @@ const getPrinters = add => ({
     add(")", 0, -2);
   },
   [Syntax.Declaration]: (node, print) => {
-    const mutability = get$2(TYPE_CONST, node) ? " immutable" : "mutable";
-    add("(local " + node.value + " " + node.type, 2, 0, mutability);
+    const mutability = get$2(TYPE_CONST, node) ? "immutable" : "mutable";
+    add("(local " + node.value + " " + node.type, 2, 0, ` ${mutability}`);
     node.params.forEach(print);
     add(")", 0, -2);
   },
@@ -2864,7 +2891,36 @@ const getPrinters = add => ({
     add("(" + node.type + ".store", 2, 0);
     node.params.forEach(print);
     add(")", 0, -2);
-  }
+  },
+  [Syntax.Assignment]: (node, print) => {
+    const [target, ...params] = node.params;
+    const scope = get$2(GLOBAL_INDEX, target) ? "global" : "local";
+    add(`(set_${scope} ${target.value}`, 2);
+    params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.TernaryExpression]: (node, print) => {
+    const [condition, options] = node.params;
+    add("(select", 2);
+    print(options);
+    print(condition);
+    add(")", 0, -2);
+  },
+  [Syntax.IfThenElse]: (node, print) => {
+    const [condition, then, ...rest] = node.params;
+    add("(if", 2);
+    print(condition);
+    add("(then", 2);
+    print(then);
+    add(")", 0, -2);
+    if (rest.length > 0) {
+      add("(else", 2);
+      rest.forEach(print);
+      add(")", 0, -2);
+    }
+    add(")", 0, -2);
+  },
+  [Syntax.ObjectLiteral]: (_, __) => {}
 });
 
 const printNode = node => {

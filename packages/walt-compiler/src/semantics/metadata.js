@@ -1,7 +1,6 @@
 // @flow
 import printNode from "../utils/print-node";
 import type { NodeType, MetadataType } from "../flow/types";
-import invariant from "invariant";
 
 // All of the metadata options are used like redux actions
 // this is intentional but only for the purposes of a common
