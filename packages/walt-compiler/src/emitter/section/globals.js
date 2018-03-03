@@ -20,7 +20,7 @@ const encode = (payload, { type, init, mutable }) => {
       break;
     case F64:
       payload.push(u8, opcode.f64Const.code, opcode.f64Const.text);
-      payload.push(f64, 42.6, `value (${init})`);
+      payload.push(f64, init, `value (${init})`);
       break;
   }
 

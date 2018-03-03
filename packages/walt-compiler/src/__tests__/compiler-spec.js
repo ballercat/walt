@@ -57,6 +57,10 @@ test("compiler basics", t =>
     gArray[1] = 2;
     return gArray[0] + gArray[1];
   }
+  const foobar: f64 = 24;
+  export function testGlobali64(): f64 {
+    return foobar;
+  }
 `,
     { env: { two: () => 2, alsoTwo: () => 2 } }
   ).then(module => {
@@ -64,4 +68,5 @@ test("compiler basics", t =>
     t.is(module.instance.exports.test(), 8);
     t.is(module.instance.exports.testLargeSignedConstant(), 126);
     t.is(module.instance.exports.testGlobalArray(), 4);
+    t.is(module.instance.exports.testGlobali64(), 24);
   }));
