@@ -2848,7 +2848,7 @@ const getPrinters = add => ({
     add(`(get_${scope} ${node.value})`);
   },
   [Syntax.Constant]: node => {
-    add(`(${node.type}.const ${node.value})`);
+    add(`(${String(node.type)}.const ${node.value})`);
   },
   [Syntax.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
@@ -2864,12 +2864,12 @@ const getPrinters = add => ({
   },
   [Syntax.Declaration]: (node, print) => {
     const mutability = get$2(TYPE_CONST, node) ? "immutable" : "mutable";
-    add("(local " + node.value + " " + node.type, 2, 0, ` ${mutability}`);
+    add("(local " + node.value + " " + String(node.type), 2, 0, ` ${mutability}`);
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.ImmutableDeclaration]: (node, print) => {
-    add("(local " + node.value + " " + node.type, 2, 0, " immutable");
+    add("(local " + node.value + " " + String(node.type), 2, 0, " immutable");
     node.params.forEach(print);
     add(")", 0, -2);
   },
@@ -2877,18 +2877,19 @@ const getPrinters = add => ({
     add(node.value);
   },
   [Syntax.TypeCast]: (node, print) => {
-    const op = getTypecastOpcode(node.type, node.params[0].type);
+    const from = node.params[0];
+    const op = getTypecastOpcode(String(node.type), from.type);
     add("(" + op.text, 2);
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.ArraySubscript]: (node, print) => {
-    add("(" + node.type + ".load", 2, 0);
+    add("(" + String(node.type) + ".load", 2, 0);
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.MemoryAssignment]: (node, print) => {
-    add("(" + node.type + ".store", 2, 0);
+    add("(" + String(node.type) + ".store", 2, 0);
     node.params.forEach(print);
     add(")", 0, -2);
   },
@@ -3157,10 +3158,10 @@ const getConstOpcode = node => {
   const kind = def[nodeType + "Const"] || def.i32Const;
   const params = [Number(node.value)];
 
-  return {
+  return [{
     kind,
     params
-  };
+  }];
 };
 
 // clean this up
@@ -3365,56 +3366,6 @@ const generateMemoryAssignment = (node, parent) => {
 };
 
 //      
-const getKindConstant = value => {
-  switch (value) {
-    case "Memory":
-      return EXTERN_MEMORY;
-    case "Table":
-      return EXTERN_TABLE;
-    case "i32":
-    case "f32":
-    case "i64":
-    case "f64":
-      return EXTERN_GLOBAL;
-    default:
-      return EXTERN_FUNCTION;
-  }
-};
-
-function generateImportFromNode(node) {
-  const [importsNode, moduleStringLiteralNode] = node.params;
-  const { value: module } = moduleStringLiteralNode;
-  const imports = [];
-
-  // Look for Pair Types, encode them into imports array
-  walker({
-    [Syntax.Pair]: pairNode => {
-      const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
-      const { value: field } = fieldIdentifierNode;
-      const { value: importTypeValue } = typeOrIdentifierNode;
-      const kind = getKindConstant(importTypeValue);
-      const typeIndex$$1 = (() => {
-        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
-        if (typeIndexMeta) {
-          return typeIndexMeta.payload;
-        }
-        return null;
-      })();
-
-      imports.push({
-        module,
-        field,
-        global: kind === EXTERN_GLOBAL,
-        kind,
-        typeIndex: typeIndex$$1
-      });
-    }
-  })(importsNode);
-
-  return imports;
-}
-
-//      
 const generateLoop = (node, parent) => {
   const block = [];
   const mapper = mapSyntax(parent);
@@ -3457,6 +3408,7 @@ const generateSequence = (node, parent) => {
 };
 
 //      
+//
 const generateTypecast = (node, parent) => {
   const metaTypecast = get$2(TYPE_CAST, node);
   invariant_1(metaTypecast, `Cannot generate typecast for node: ${JSON.stringify(node)}`);
@@ -3532,8 +3484,6 @@ const syntaxMap = {
   [Syntax.Assignment]: generateAssignment,
   // Memory
   [Syntax.MemoryAssignment]: generateMemoryAssignment,
-  // Imports
-  [Syntax.Import]: generateImportFromNode,
   // Loops
   [Syntax.Loop]: generateLoop,
   [Syntax.Break]: generateTypecast$2,
@@ -3677,6 +3627,56 @@ const generateInit = node => {
 
   return _global;
 };
+
+//      
+const getKindConstant = value => {
+  switch (value) {
+    case "Memory":
+      return EXTERN_MEMORY;
+    case "Table":
+      return EXTERN_TABLE;
+    case "i32":
+    case "f32":
+    case "i64":
+    case "f64":
+      return EXTERN_GLOBAL;
+    default:
+      return EXTERN_FUNCTION;
+  }
+};
+
+function generateImportFromNode(node) {
+  const [importsNode, moduleStringLiteralNode] = node.params;
+  const { value: module } = moduleStringLiteralNode;
+  const imports = [];
+
+  // Look for Pair Types, encode them into imports array
+  walker({
+    [Syntax.Pair]: pairNode => {
+      const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
+      const { value: field } = fieldIdentifierNode;
+      const { value: importTypeValue } = typeOrIdentifierNode;
+      const kind = getKindConstant(importTypeValue);
+      const typeIndex$$1 = (() => {
+        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
+        if (typeIndexMeta) {
+          return typeIndexMeta.payload;
+        }
+        return null;
+      })();
+
+      imports.push({
+        module,
+        field,
+        global: kind === EXTERN_GLOBAL,
+        kind,
+        typeIndex: typeIndex$$1
+      });
+    }
+  })(importsNode);
+
+  return imports;
+}
 
 //      
 /**
@@ -4266,7 +4266,7 @@ const mapIdentifierToOffset = (base, offset) => {
   return _extends({}, base, {
     value: "+",
     params: [_extends({}, base, {
-      value: offset,
+      value: String(offset),
       Type: Syntax.Constant,
       type: "i32"
     }), _extends({}, base, {
@@ -4421,7 +4421,7 @@ var makeClosure = curry_1(function mapClosure(options, node, topLevelTransform) 
         const local = locals[rhs.value];
         return _extends({}, assignment, {
           value: `closure--set-${local.type}`,
-          params: [mapIdentifierToOffset(_extends({}, rhs, { value: CLOSURE_INNER }), offsets[local.value]), lhs],
+          params: [mapIdentifierToOffset(_extends({}, rhs, { value: String(CLOSURE_INNER) }), offsets[local.value]), lhs],
           meta: [],
           Type: Syntax.FunctionCall
         });
@@ -4752,7 +4752,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
             value: ":",
             Type: Syntax.Pair,
             params: [expression, _extends({}, expression, {
-              value: fun.type,
+              value: String(fun.type),
               type: fun.type,
               Type: Syntax.Type,
               params: []
@@ -5041,7 +5041,7 @@ function validate$1(ast, {
           const [start, end] = node.range;
           if (offset.value == null) {
             const alias$$1 = get$2(ALIAS, offset);
-            problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${identifier.type}`, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${String(identifier.type)}`, { start, end }, filename, functionName));
           }
         },
         [Syntax.ReturnStatement]: (node, validator) => {
@@ -5055,7 +5055,7 @@ function validate$1(ast, {
           const type = expression != null ? expression.type : null;
 
           if (type !== func.type) {
-            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + type, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + String(type), { start, end }, filename, functionName));
           }
         },
         [Syntax.FunctionCall]: (node, _validator) => {
@@ -5071,7 +5071,7 @@ function validate$1(ast, {
 
           if (!isBuiltinType(identifier.type) && type == null) {
             const [start, end] = node.range;
-            problems.push(generateErrorString("Cannot make an indirect call without a valid function type", `${identifier.value} has type ${identifier.type} which is not defined. Inidrect calls must have pre-defined types.`, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Cannot make an indirect call without a valid function type", `${identifier.value} has type ${String(identifier.type)} which is not defined. Inidrect calls must have pre-defined types.`, { start, end }, filename, functionName));
           }
         }
       })(func);
