@@ -27,38 +27,44 @@ const getTypeSize = typeString => {
 const isClosureType = (types, type): boolean => {
   return types[type] != null && !!get(CLOSURE_TYPE, types[type]);
 };
+const parse = (isConst, { types, scope }, declaration) => {
+  const index = Object.keys(scope).length;
+  const typeString = declaration.type;
+  const modifier = declaration.type.slice(-2);
+  const isArray = modifier === "[]";
+  const isClosure = isClosureType(types, typeString);
+  const type = (() => {
+    if (isArray) {
+      return "i32";
+    } else if (isClosure) {
+      return "i64";
+    }
+    return declaration.type;
+  })();
+  const metaArray = isArray ? setMetaArray(typeString.slice(0, -2)) : null;
+  const metaClosure = isClosure ? setClosure(true) : null;
+  const meta = [
+    metaArray,
+    metaClosure,
+    isConst ? setMetaConst() : null,
+    isClosure ? setMetaTypeIndex(Object.keys(types).indexOf(typeString)) : null,
+  ];
+
+  return [type, meta, index];
+};
 
 export const parseDeclaration = curry((isConst, options, declaration) => {
-  const { types, locals, closures } = options;
-  if (locals[declaration.value] == null) {
-    const index = Object.keys(locals).length;
-    const typeString = declaration.type;
-    const modifier = declaration.type.slice(-2);
-    const isArray = modifier === "[]";
-    const isClosure = isClosureType(types, typeString);
-    const type = (() => {
-      if (isArray) {
-        return "i32";
-      } else if (isClosure) {
-        return "i64";
-      }
-      return declaration.type;
-    })();
-    const metaArray = isArray ? setMetaArray(typeString.slice(0, -2)) : null;
-    const metaClosure = isClosure ? setClosure(true) : null;
-    const meta = [
-      setMetaLocalIndex(index),
-      metaArray,
-      metaClosure,
-      isConst ? setMetaConst() : null,
-      isClosure
-        ? setMetaTypeIndex(Object.keys(types).indexOf(typeString))
-        : null,
-    ];
-    locals[declaration.value] = {
+  const { locals: scope, closures } = options;
+  if (scope[declaration.value] == null) {
+    const [type, meta, index] = parse(
+      isConst,
+      { ...options, scope },
+      declaration
+    );
+    scope[declaration.value] = {
       ...declaration,
       type,
-      meta,
+      meta: [...meta, setMetaLocalIndex(index)],
       Type: Syntax.Declaration,
     };
 
@@ -72,17 +78,17 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
 });
 
 export const parseGlobalDeclaration = curry((isConst, options, node) => {
-  const { globals } = options;
-
+  const { globals: scope } = options;
   if (node.type !== "Table" && node.type !== "Memory") {
-    const globalIndex = Object.keys(globals).length;
-    const meta = [
-      setMetaGlobalIndex(globalIndex),
-      isConst ? setMetaConst() : null,
-    ];
-    globals[node.value] = { ...node, meta, Type: Syntax.Declaration };
+    const [type, meta, index] = parse(isConst, { ...options, scope }, node);
+    scope[node.value] = {
+      ...node,
+      meta: [...meta, setMetaGlobalIndex(index)],
+      type,
+      Type: Syntax.Declaration,
+    };
 
-    return globals[node.value];
+    return scope[node.value];
   }
   return { ...node, meta: [setMetaGlobalIndex(-1)] };
 });
