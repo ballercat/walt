@@ -1,5 +1,5 @@
 import test from "ava";
-import compile from "..";
+import compile, { semantics, parser, printNode } from "..";
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src), imports);
@@ -9,6 +9,9 @@ test("empty module compilation", t =>
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
   }));
+
+test("invalid imports throw", t =>
+  t.throws(() => compile("import foo from 'bar'")));
 
 test("compiler basics", t =>
   compileAndRun(
@@ -37,8 +40,6 @@ test("compiler basics", t =>
   export function testLargeSignedConstant(): i32 {
     return 126;
   }
-
-
   function number(): i64 {
     const x: i64 = 42;
     return x;
@@ -49,13 +50,18 @@ test("compiler basics", t =>
   export function test64BitConstants(): i32 {
     return number(): i32;
   }
+
+  const gArray: i32[] = 0;
+  export function testGlobalArray(): i32 {
+    gArray[0] = 2;
+    gArray[1] = 2;
+    return gArray[0] + gArray[1];
+  }
 `,
     { env: { two: () => 2, alsoTwo: () => 2 } }
   ).then(module => {
     t.is(module.instance.exports.bar, 2);
     t.is(module.instance.exports.test(), 8);
     t.is(module.instance.exports.testLargeSignedConstant(), 126);
+    t.is(module.instance.exports.testGlobalArray(), 4);
   }));
-
-test("invalid imports throw", t =>
-  t.throws(() => compile("import foo from 'bar'")));

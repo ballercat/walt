@@ -49,8 +49,11 @@ export default function semantics(ast: NodeType): NodeType {
     [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
     [Syntax.Import]: mapImport({ functions, types }),
-    [Syntax.Declaration]: parseGlobalDeclaration(false, { globals }),
-    [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, { globals }),
+    [Syntax.Declaration]: parseGlobalDeclaration(false, { globals, types }),
+    [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, {
+      globals,
+      types,
+    }),
     [Syntax.Struct]: mapStructNode({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode({
       hoist,
