@@ -1,6 +1,5 @@
 // @flow
-import Syntax from "../Syntax";
-
+/* global $Exact */
 export type Marker = {
   sourceLine: string,
   line: number,
