@@ -2620,32 +2620,40 @@ const mergeBlock = (block, v) => {
 //      
 
 
-const formatMetadata = meta => {
-  return meta.filter(entry => entry != null).map(({ type, payload }) => {
-    let payloadString = "";
-    if (typeof payload === "object") {
-      payloadString = "...";
-    } else {
-      payloadString = JSON.stringify(payload);
+// Dead simple AST walker, takes a visitor object and calls all methods for
+// appropriate node Types.
+function walker(visitor) {
+  const walkNode = node => {
+    if (node == null) {
+      return node;
+    }
+    const { params } = node;
+
+    const mappingFunction = (() => {
+      if ("*" in visitor && typeof visitor["*"] === "function") {
+        return visitor["*"];
+      }
+
+      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+        return visitor[node.Type];
+      }
+
+      return () => node;
+    })();
+
+    if (mappingFunction.length === 2) {
+      mappingFunction(node, walkNode);
+      return node;
     }
 
-    return `${type}(${payloadString})`;
-  }).join(",");
-};
+    mappingFunction(node);
+    params.forEach(walkNode);
 
-const printNode = (node, level = 0) => {
-  if (node == null) {
-    return "";
-  }
-  const typeString = `${node.type ? "<" + node.type + ">" : ""}`;
-  const metaString = formatMetadata(node.meta);
-  let out = `${node.Type}${typeString} ${node.value} ${metaString}\n`;
-  out = out.padStart(out.length + level * 2);
-  node.params.forEach(p => {
-    out += printNode(p, level + 1);
-  });
-  return out;
-};
+    return node;
+  };
+
+  return walkNode;
+}
 
 //      
 // All of the metadata options are used like redux actions
@@ -2674,7 +2682,9 @@ const ALIAS = "alias";
 
 
 const get$2 = (type, node) => {
-  invariant_1(node.meta, `Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
+  if (node.meta == null) {
+    throw new Error(`Attemptend to access MetadataType but it was undefined in node ${printNode(node)}`);
+  }
   return node ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) || null : null;
 };
 
@@ -2751,6 +2761,197 @@ const alias = payload => ({
   type: ALIAS,
   payload
 });
+
+//      
+const getText = node => {
+  const value = node.value || "??";
+  const hasType = node.type;
+  const type = hasType || "i32";
+  const op = opcodeFromOperator({ value, type });
+
+  if (!hasType) {
+    return op.text.replace("i32", "??");
+  }
+
+  return op.text;
+};
+
+const parseParams = node => {
+  const params = [];
+  walker({
+    [Syntax.Pair]: (pair, _) => {
+      params.push(`${pair.params[0].value} ${pair.params[1].value}`);
+    },
+    [Syntax.Type]: p => {
+      params.push(p.value);
+    }
+  })(node);
+  return params.length ? " param(" + params.join(" ") + ")" : "";
+};
+
+const parseResult = node => {
+  if (node == null) {
+    return "";
+  }
+  return " (result " + (node.type || "??") + ")";
+};
+
+const typedefString = node => {
+  const [paramsNode, resultNode] = node.params;
+  return "(type " + node.value + ` (func${parseParams(paramsNode)}${parseResult(resultNode)}))`;
+};
+
+const getPrinters = add => ({
+  [Syntax.Import]: (node, _print) => {
+    const [nodes, mod] = node.params;
+    walker({
+      [Syntax.Pair]: ({ params }, _) => {
+        const { value: field } = params[0];
+        const type = params[1];
+        add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
+      }
+    })(nodes);
+  },
+  [Syntax.Export]: (node, print) => {
+    add("(export", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.GenericType]: (node, _print) => {
+    add("(type-generic " + node.value + ")", 0, 0, " pseudo type");
+  },
+  [Syntax.FunctionCall]: (node, print) => {
+    if (node.params.length > 0) {
+      add(`(call ${node.value}`, 2);
+      node.params.forEach(print);
+      add(")", 0, -2);
+    } else {
+      add(`(call ${node.value})`);
+    }
+  },
+  [Syntax.BinaryExpression]: (node, print) => {
+    const text = getText(node);
+    add("(" + text, 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ArraySubscript]: (node, print) => {
+    add("(i32.add", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Typedef]: (node, _) => {
+    add(typedefString(node));
+  },
+  [Syntax.Identifier]: node => {
+    const scope = get$2(GLOBAL_INDEX, node) ? "global" : "local";
+    add(`(get_${scope} ${node.value})`);
+  },
+  [Syntax.Constant]: node => {
+    add(`(${String(node.type)}.const ${node.value})`);
+  },
+  [Syntax.FunctionDeclaration]: (node, print) => {
+    const [params, result, ...rest] = node.params;
+    add(`(func ${node.value}${parseParams(params)}${parseResult(result)}`, 2);
+
+    rest.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ReturnStatement]: (node, print) => {
+    add("(return", 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Declaration]: (node, print) => {
+    const mutability = get$2(TYPE_CONST, node) ? "immutable" : "mutable";
+    add("(local " + node.value + " " + String(node.type), 2, 0, ` ${mutability}`);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ImmutableDeclaration]: (node, print) => {
+    add("(local " + node.value + " " + String(node.type), 2, 0, " immutable");
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Type]: node => {
+    add(node.value);
+  },
+  [Syntax.TypeCast]: (node, print) => {
+    const from = node.params[0];
+    const op = getTypecastOpcode(String(node.type), from.type);
+    add("(" + op.text, 2);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.ArraySubscript]: (node, print) => {
+    add("(" + String(node.type) + ".load", 2, 0);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.MemoryAssignment]: (node, print) => {
+    add("(" + String(node.type) + ".store", 2, 0);
+    node.params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.Assignment]: (node, print) => {
+    const [target, ...params] = node.params;
+    const scope = get$2(GLOBAL_INDEX, target) ? "global" : "local";
+    add(`(set_${scope} ${target.value}`, 2);
+    params.forEach(print);
+    add(")", 0, -2);
+  },
+  [Syntax.TernaryExpression]: (node, print) => {
+    const [condition, options] = node.params;
+    add("(select", 2);
+    print(options);
+    print(condition);
+    add(")", 0, -2);
+  },
+  [Syntax.IfThenElse]: (node, print) => {
+    const [condition, then, ...rest] = node.params;
+    add("(if", 2);
+    print(condition);
+    add("(then", 2);
+    print(then);
+    add(")", 0, -2);
+    if (rest.length > 0) {
+      add("(else", 2);
+      rest.forEach(print);
+      add(")", 0, -2);
+    }
+    add(")", 0, -2);
+  },
+  [Syntax.ObjectLiteral]: (_, __) => {}
+});
+
+const printNode = node => {
+  if (node == null) {
+    return "";
+  }
+
+  let depth = 0;
+  const offsets = [];
+  const pieces = [];
+  const comments = [];
+  const add = (piece, post = 0, pre = 0, comment = "") => {
+    depth += pre;
+    comments.push(comment);
+    pieces.push(piece);
+    offsets.push(depth + piece.length);
+    depth += post;
+  };
+
+  walker(getPrinters(add))(node);
+
+  const max = Math.max(...offsets);
+  const edge = max + 4;
+  const result = pieces.reduce((acc, val, i) => {
+    acc += val.padStart(offsets[i], " ").padEnd(edge, " ") + ";" + comments[i] + "\n";
+    return acc;
+  }, "");
+
+  return result;
+};
 
 //      
 const generateFunctionCall = (node, parent) => {
@@ -2957,10 +3158,10 @@ const getConstOpcode = node => {
   const kind = def[nodeType + "Const"] || def.i32Const;
   const params = [Number(node.value)];
 
-  return {
+  return [{
     kind,
     params
-  };
+  }];
 };
 
 // clean this up
@@ -3165,94 +3366,6 @@ const generateMemoryAssignment = (node, parent) => {
 };
 
 //      
-
-
-// Dead simple AST walker, takes a visitor object and calls all methods for
-// appropriate node Types.
-function walker(visitor) {
-  const walkNode = node => {
-    if (node == null) {
-      return node;
-    }
-    const { params } = node;
-
-    const mappingFunction = (() => {
-      if ("*" in visitor && typeof visitor["*"] === "function") {
-        return visitor["*"];
-      }
-
-      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
-        return visitor[node.Type];
-      }
-
-      return () => node;
-    })();
-
-    if (mappingFunction.length === 2) {
-      mappingFunction(node, walkNode);
-      return node;
-    }
-
-    mappingFunction(node);
-    params.forEach(walkNode);
-
-    return node;
-  };
-
-  return walkNode;
-}
-
-//      
-const getKindConstant = value => {
-  switch (value) {
-    case "Memory":
-      return EXTERN_MEMORY;
-    case "Table":
-      return EXTERN_TABLE;
-    case "i32":
-    case "f32":
-    case "i64":
-    case "f64":
-      return EXTERN_GLOBAL;
-    default:
-      return EXTERN_FUNCTION;
-  }
-};
-
-function generateImportFromNode(node) {
-  const [importsNode, moduleStringLiteralNode] = node.params;
-  const { value: module } = moduleStringLiteralNode;
-  const imports = [];
-
-  // Look for Pair Types, encode them into imports array
-  walker({
-    [Syntax.Pair]: pairNode => {
-      const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
-      const { value: field } = fieldIdentifierNode;
-      const { value: importTypeValue } = typeOrIdentifierNode;
-      const kind = getKindConstant(importTypeValue);
-      const typeIndex$$1 = (() => {
-        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
-        if (typeIndexMeta) {
-          return typeIndexMeta.payload;
-        }
-        return null;
-      })();
-
-      imports.push({
-        module,
-        field,
-        global: kind === EXTERN_GLOBAL,
-        kind,
-        typeIndex: typeIndex$$1
-      });
-    }
-  })(importsNode);
-
-  return imports;
-}
-
-//      
 const generateLoop = (node, parent) => {
   const block = [];
   const mapper = mapSyntax(parent);
@@ -3295,6 +3408,7 @@ const generateSequence = (node, parent) => {
 };
 
 //      
+//
 const generateTypecast = (node, parent) => {
   const metaTypecast = get$2(TYPE_CAST, node);
   invariant_1(metaTypecast, `Cannot generate typecast for node: ${JSON.stringify(node)}`);
@@ -3370,8 +3484,6 @@ const syntaxMap = {
   [Syntax.Assignment]: generateAssignment,
   // Memory
   [Syntax.MemoryAssignment]: generateMemoryAssignment,
-  // Imports
-  [Syntax.Import]: generateImportFromNode,
   // Loops
   [Syntax.Loop]: generateLoop,
   [Syntax.Break]: generateTypecast$2,
@@ -3515,6 +3627,56 @@ const generateInit = node => {
 
   return _global;
 };
+
+//      
+const getKindConstant = value => {
+  switch (value) {
+    case "Memory":
+      return EXTERN_MEMORY;
+    case "Table":
+      return EXTERN_TABLE;
+    case "i32":
+    case "f32":
+    case "i64":
+    case "f64":
+      return EXTERN_GLOBAL;
+    default:
+      return EXTERN_FUNCTION;
+  }
+};
+
+function generateImportFromNode(node) {
+  const [importsNode, moduleStringLiteralNode] = node.params;
+  const { value: module } = moduleStringLiteralNode;
+  const imports = [];
+
+  // Look for Pair Types, encode them into imports array
+  walker({
+    [Syntax.Pair]: pairNode => {
+      const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
+      const { value: field } = fieldIdentifierNode;
+      const { value: importTypeValue } = typeOrIdentifierNode;
+      const kind = getKindConstant(importTypeValue);
+      const typeIndex$$1 = (() => {
+        const typeIndexMeta = get$2(TYPE_INDEX, typeOrIdentifierNode);
+        if (typeIndexMeta) {
+          return typeIndexMeta.payload;
+        }
+        return null;
+      })();
+
+      imports.push({
+        module,
+        field,
+        global: kind === EXTERN_GLOBAL,
+        kind,
+        typeIndex: typeIndex$$1
+      });
+    }
+  })(importsNode);
+
+  return imports;
+}
 
 //      
 /**
@@ -4104,7 +4266,7 @@ const mapIdentifierToOffset = (base, offset) => {
   return _extends({}, base, {
     value: "+",
     params: [_extends({}, base, {
-      value: offset,
+      value: String(offset),
       Type: Syntax.Constant,
       type: "i32"
     }), _extends({}, base, {
@@ -4259,7 +4421,7 @@ var makeClosure = curry_1(function mapClosure(options, node, topLevelTransform) 
         const local = locals[rhs.value];
         return _extends({}, assignment, {
           value: `closure--set-${local.type}`,
-          params: [mapIdentifierToOffset(_extends({}, rhs, { value: CLOSURE_INNER }), offsets[local.value]), lhs],
+          params: [mapIdentifierToOffset(_extends({}, rhs, { value: String(CLOSURE_INNER) }), offsets[local.value]), lhs],
           meta: [],
           Type: Syntax.FunctionCall
         });
@@ -4590,7 +4752,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
             value: ":",
             Type: Syntax.Pair,
             params: [expression, _extends({}, expression, {
-              value: fun.type,
+              value: String(fun.type),
               type: fun.type,
               Type: Syntax.Type,
               params: []
@@ -4879,7 +5041,7 @@ function validate$1(ast, {
           const [start, end] = node.range;
           if (offset.value == null) {
             const alias$$1 = get$2(ALIAS, offset);
-            problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${identifier.type}`, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Cannot generate memory offset", `Undefined key ${alias$$1 ? alias$$1.payload : offset.value} for type ${String(identifier.type)}`, { start, end }, filename, functionName));
           }
         },
         [Syntax.ReturnStatement]: (node, validator) => {
@@ -4893,7 +5055,7 @@ function validate$1(ast, {
           const type = expression != null ? expression.type : null;
 
           if (type !== func.type) {
-            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + type, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + String(type), { start, end }, filename, functionName));
           }
         },
         [Syntax.FunctionCall]: (node, _validator) => {
@@ -4909,7 +5071,7 @@ function validate$1(ast, {
 
           if (!isBuiltinType(identifier.type) && type == null) {
             const [start, end] = node.range;
-            problems.push(generateErrorString("Cannot make an indirect call without a valid function type", `${identifier.value} has type ${identifier.type} which is not defined. Inidrect calls must have pre-defined types.`, { start, end }, filename, functionName));
+            problems.push(generateErrorString("Cannot make an indirect call without a valid function type", `${identifier.value} has type ${String(identifier.type)} which is not defined. Inidrect calls must have pre-defined types.`, { start, end }, filename, functionName));
           }
         }
       })(func);
@@ -5043,7 +5205,6 @@ const emitter = emit;
 const getIR = source => {
   const ast = parse(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
   validate(semanticAST,
   // this will eventually be a config
   {

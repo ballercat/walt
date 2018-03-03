@@ -39,16 +39,18 @@ export const scopeOperation = curry((op, node) => {
   };
 });
 
-export const getConstOpcode = (node: NodeType): IntermediateOpcodeType => {
+export const getConstOpcode = (node: NodeType): IntermediateOpcodeType[] => {
   const nodeType = node.type || builtinTypes.i32;
 
   const kind: RawOpcodeType = opcode[nodeType + "Const"] || opcode.i32Const;
   const params = [Number(node.value)];
 
-  return {
-    kind,
-    params,
-  };
+  return [
+    {
+      kind,
+      params,
+    },
+  ];
 };
 
 // clean this up

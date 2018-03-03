@@ -35,7 +35,7 @@ import type { NodeType } from "../../flow/types";
 /**
  * Initialize function node and patch it's type and meta
  */
-const initialize = (options, node: NodeType) => {
+const initialize = (options, node: NodeType): [NodeType, any, any] => {
   const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
@@ -248,7 +248,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
                 expression,
                 {
                   ...expression,
-                  value: fun.type,
+                  value: String(fun.type),
                   type: fun.type,
                   Type: Syntax.Type,
                   params: [],

@@ -1,5 +1,5 @@
 // @flow
-
+/* global $Exact */
 export type Marker = {
   sourceLine: string,
   line: number,
@@ -30,4 +30,10 @@ export type WebAssemblyModuleType = {
       [string]: any,
     },
   },
+};
+
+export type TypeCastType = {
+  ...$Exact<NodeType>,
+  type: string,
+  params: [{ ...NodeType, type: string }],
 };

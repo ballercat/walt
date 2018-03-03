@@ -1,7 +1,6 @@
 // @flow
 import printNode from "../utils/print-node";
 import type { NodeType, MetadataType } from "../flow/types";
-import invariant from "invariant";
 
 // All of the metadata options are used like redux actions
 // this is intentional but only for the purposes of a common
@@ -32,12 +31,13 @@ export const make = (payload: any, type: string) => ({
 });
 
 export const get = (type: string, node: NodeType): ?MetadataType => {
-  invariant(
-    node.meta,
-    `Attemptend to access MetadataType but it was undefined in node ${printNode(
-      node
-    )}`
-  );
+  if (node.meta == null) {
+    throw new Error(
+      `Attemptend to access MetadataType but it was undefined in node ${printNode(
+        node
+      )}`
+    );
+  }
   return node
     ? node.meta.filter(Boolean).find(({ type: _type }) => _type === type) ||
         null

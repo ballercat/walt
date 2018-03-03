@@ -1,4 +1,5 @@
 // @flow
+//
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import { getTypecastOpcode } from "../emitter/opcode";

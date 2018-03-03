@@ -21,7 +21,6 @@ export { parser, printNode, closurePlugin };
 export const getIR = (source: string) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  // console.log(printNode(semanticAST));
   validate(
     semanticAST,
     // this will eventually be a config
