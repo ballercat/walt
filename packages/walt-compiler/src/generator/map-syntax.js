@@ -10,7 +10,6 @@ import generateDeclaration from "./declaration";
 import generateArraySubscript from "./array-subscript";
 import generateAssignment from "./assignment";
 import generateMemoryAssignment from "./memory-assignment";
-import generateImport from "./import";
 import generateLoop from "./loop";
 import generateSequence from "./sequence";
 import generateTypecast from "./typecast";
@@ -49,8 +48,6 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.Assignment]: generateAssignment,
   // Memory
   [Syntax.MemoryAssignment]: generateMemoryAssignment,
-  // Imports
-  [Syntax.Import]: generateImport,
   // Loops
   [Syntax.Loop]: generateLoop,
   [Syntax.Break]: generateBreak,

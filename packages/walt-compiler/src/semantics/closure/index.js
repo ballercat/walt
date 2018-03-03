@@ -121,14 +121,17 @@ export const collapseClosureIdentifier = (
   };
 };
 
-export const mapIdentifierToOffset = (base: NodeType, offset: number) => {
+export const mapIdentifierToOffset = (
+  base: NodeType,
+  offset: number
+): NodeType => {
   return {
     ...base,
     value: "+",
     params: [
       {
         ...base,
-        value: offset,
+        value: String(offset),
         Type: Syntax.Constant,
         type: "i32",
       },
@@ -334,7 +337,7 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
           value: `closure--set-${local.type}`,
           params: [
             mapIdentifierToOffset(
-              { ...rhs, value: CLOSURE_INNER },
+              { ...rhs, value: String(CLOSURE_INNER) },
               offsets[local.value]
             ),
             lhs,

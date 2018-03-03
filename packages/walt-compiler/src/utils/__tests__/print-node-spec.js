@@ -72,5 +72,5 @@ test("assignment, ternary, if", t => {
     }
   `);
 
-  console.log(printNode(node));
+  t.snapshot(printNode(node));
 });

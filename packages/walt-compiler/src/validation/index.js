@@ -183,7 +183,7 @@ export default function validate(
                 "Cannot generate memory offset",
                 `Undefined key ${
                   alias ? alias.payload : offset.value
-                } for type ${identifier.type}`,
+                } for type ${String(identifier.type)}`,
                 { start, end },
                 filename,
                 functionName
@@ -208,7 +208,7 @@ export default function validate(
                 "Functions in WebAssembly must have a consistent return value. Expected " +
                   func.type +
                   " received " +
-                  type,
+                  String(type),
                 { start, end },
                 filename,
                 functionName
@@ -240,9 +240,9 @@ export default function validate(
             problems.push(
               error(
                 "Cannot make an indirect call without a valid function type",
-                `${identifier.value} has type ${
+                `${identifier.value} has type ${String(
                   identifier.type
-                } which is not defined. Inidrect calls must have pre-defined types.`,
+                )} which is not defined. Inidrect calls must have pre-defined types.`,
                 { start, end },
                 filename,
                 functionName

@@ -3,7 +3,7 @@ import walkNode from "./walk-node";
 import Syntax from "../Syntax";
 import { get, GLOBAL_INDEX, TYPE_CONST } from "../semantics/metadata";
 import { opcodeFromOperator, getTypecastOpcode } from "../emitter/opcode";
-import type { NodeType } from "../flow/types";
+import type { NodeType, TypeCastType } from "../flow/types";
 
 const getText = (node: NodeType): string => {
   const value = node.value || "??";
@@ -94,7 +94,7 @@ const getPrinters = add => ({
     add(`(get_${scope} ${node.value})`);
   },
   [Syntax.Constant]: node => {
-    add(`(${node.type}.const ${node.value})`);
+    add(`(${String(node.type)}.const ${node.value})`);
   },
   [Syntax.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
@@ -110,31 +110,37 @@ const getPrinters = add => ({
   },
   [Syntax.Declaration]: (node, print) => {
     const mutability = get(TYPE_CONST, node) ? "immutable" : "mutable";
-    add("(local " + node.value + " " + node.type, 2, 0, ` ${mutability}`);
+    add(
+      "(local " + node.value + " " + String(node.type),
+      2,
+      0,
+      ` ${mutability}`
+    );
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.ImmutableDeclaration]: (node, print) => {
-    add("(local " + node.value + " " + node.type, 2, 0, " immutable");
+    add("(local " + node.value + " " + String(node.type), 2, 0, " immutable");
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.Type]: node => {
     add(node.value);
   },
-  [Syntax.TypeCast]: (node, print) => {
-    const op = getTypecastOpcode(node.type, node.params[0].type);
+  [Syntax.TypeCast]: (node: TypeCastType, print) => {
+    const from = node.params[0];
+    const op = getTypecastOpcode(String(node.type), from.type);
     add("(" + op.text, 2);
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.ArraySubscript]: (node, print) => {
-    add("(" + node.type + ".load", 2, 0);
+    add("(" + String(node.type) + ".load", 2, 0);
     node.params.forEach(print);
     add(")", 0, -2);
   },
   [Syntax.MemoryAssignment]: (node, print) => {
-    add("(" + node.type + ".store", 2, 0);
+    add("(" + String(node.type) + ".store", 2, 0);
     node.params.forEach(print);
     add(")", 0, -2);
   },

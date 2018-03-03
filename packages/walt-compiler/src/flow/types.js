@@ -1,4 +1,5 @@
 // @flow
+import Syntax from "../Syntax";
 
 export type Marker = {
   sourceLine: string,
@@ -30,4 +31,10 @@ export type WebAssemblyModuleType = {
       [string]: any,
     },
   },
+};
+
+export type TypeCastType = {
+  ...$Exact<NodeType>,
+  type: string,
+  params: [{ ...NodeType, type: string }],
 };
