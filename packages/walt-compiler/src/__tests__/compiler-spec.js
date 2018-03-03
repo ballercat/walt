@@ -1,5 +1,5 @@
 import test from "ava";
-import compile, { semantics, parser, printNode } from "..";
+import compile from "..";
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src), imports);
