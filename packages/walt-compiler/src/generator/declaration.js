@@ -22,7 +22,7 @@ const generateDeclaration: GeneratorType = (
       {
         kind: opcode.SetLocal,
         params: [metaIndex],
-        debug: `${node.value}<${node.type ? node.type : "?"}>`,
+        debug: `${node.value}<${String(node.type)}>`,
       },
     ];
   }
