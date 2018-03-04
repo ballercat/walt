@@ -39,14 +39,14 @@ const unary = (ctx: Context, op: TokenType, params: NodeType[]): NodeType => {
       ...target,
       Type: Syntax.UnaryExpression,
       value: "-",
-      meta: [],
+      meta: {},
       params: [
         {
           ...target,
           value: "0",
           Type: Syntax.Constant,
           params: [],
-          meta: [],
+          meta: {},
         },
         target,
       ],
@@ -56,7 +56,7 @@ const unary = (ctx: Context, op: TokenType, params: NodeType[]): NodeType => {
   return {
     ...op,
     range: [op.start, target.range[1]],
-    meta: [],
+    meta: {},
     Type: Syntax.Spread,
     params: [target],
   };

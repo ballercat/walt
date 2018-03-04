@@ -23,10 +23,6 @@ const declaration = (ctx: Context): NodeType => {
     ctx.expect(null, Syntax.Identifier);
   }
 
-  if (ctx.eat(["["]) && ctx.eat(["]"])) {
-    type = type + "[]";
-  }
-
   const params = [];
   if (ctx.eat(["="])) {
     params.push(expression(ctx));

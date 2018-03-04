@@ -2,12 +2,7 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import { expandClosureIdentifier } from "../closure";
-import {
-  funcIndex as setMetaFunctionIndex,
-  typeIndex as setMetaTypeIndex,
-  get,
-  CLOSURE_TYPE,
-} from "../metadata";
+import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
 
 export default curry(function mapFunctonCall(options, call) {
   const { functions, types, locals, mapIdentifier, mapSizeof } = options;
@@ -25,7 +20,7 @@ export default curry(function mapFunctonCall(options, call) {
       ...mapIdentifier(call),
       Type: Syntax.Identifier,
     };
-    const meta = [...identifier.meta];
+    const meta = { ...identifier.meta };
 
     const type = (() => {
       const typedef = types[identifier.type];
@@ -34,7 +29,7 @@ export default curry(function mapFunctonCall(options, call) {
 
     // Expand the 64-bit identifier into an additional 32-bit argument for closure
     // base pointer and table index.
-    if (get(CLOSURE_TYPE, identifier) != null) {
+    if (identifier.meta[CLOSURE_TYPE] != null) {
       return {
         ...call,
         meta,
@@ -45,11 +40,13 @@ export default curry(function mapFunctonCall(options, call) {
     }
 
     const typeIndex = Object.keys(types).indexOf(identifier.type);
-    meta.push(setMetaTypeIndex(typeIndex));
 
     return {
       ...call,
-      meta,
+      meta: {
+        ...meta,
+        [TYPE_INDEX]: typeIndex,
+      },
       type,
       params: [...call.params, identifier],
       Type: Syntax.IndirectFunctionCall,
@@ -61,6 +58,6 @@ export default curry(function mapFunctonCall(options, call) {
   return {
     ...call,
     type: functions[call.value] != null ? functions[call.value].type : null,
-    meta: [setMetaFunctionIndex(index)],
+    meta: { [FUNCTION_INDEX]: index },
   };
 });

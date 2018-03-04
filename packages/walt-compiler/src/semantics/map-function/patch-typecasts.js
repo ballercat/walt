@@ -1,6 +1,6 @@
 // @flow
 import Syntax from "../../Syntax";
-import { typeCast } from "../metadata";
+import { TYPE_CAST } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 export const typeWeight = (typeString: ?string) => {
@@ -39,7 +39,10 @@ export const balanceTypesInMathExpression = (
         type,
         value: paramNode.value,
         Type: Syntax.TypeCast,
-        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
+        meta: {
+          ...paramNode.meta,
+          [TYPE_CAST]: { to: type, from: paramNode.type },
+        },
         params: [paramNode],
       };
     }

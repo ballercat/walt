@@ -15,11 +15,10 @@ import generateType from "./type";
 import { generateValueType } from "./utils";
 import { generateImplicitFunctionType } from "./type";
 import {
-  get,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   FUNCTION_METADATA,
-  typeIndex as setMetaTypeIndex,
+  TYPE_INDEX,
 } from "../semantics/metadata";
 
 import type { NodeType, ProgramType } from "./flow/types";
@@ -34,11 +33,11 @@ export const generateCode = (
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
 
-  const metadata = get(FUNCTION_METADATA, func);
+  const metadata = func.meta[FUNCTION_METADATA];
   invariant(body, "Cannot generate code for function without body");
   invariant(metadata, "Cannot generate code for function without metadata");
 
-  const { locals, argumentsCount } = metadata.payload;
+  const { locals, argumentsCount } = metadata;
 
   const block = {
     code: [],
@@ -108,7 +107,7 @@ export default function generator(ast: NodeType): ProgramType {
 
       typeNode = {
         ...node,
-        meta: [...node.meta, setMetaTypeIndex(typeIndex)],
+        meta: { ...node.meta, [TYPE_INDEX]: typeIndex },
       };
 
       typeMap[node.value] = { typeIndex, typeNode };
@@ -123,8 +122,8 @@ export default function generator(ast: NodeType): ProgramType {
       program.Exports.push(generateExport(nodeToExport));
     },
     [Syntax.ImmutableDeclaration]: node => {
-      const globalMeta = get(GLOBAL_INDEX, node);
-      if (globalMeta !== null) {
+      const globalMeta = node.meta[GLOBAL_INDEX];
+      if (globalMeta != null) {
         switch (node.type) {
           case "Memory":
             program.Memory.push(generateMemory(node));
@@ -138,8 +137,8 @@ export default function generator(ast: NodeType): ProgramType {
       }
     },
     [Syntax.Declaration]: node => {
-      const globalMeta = get(GLOBAL_INDEX, node);
-      if (globalMeta !== null) {
+      const globalMeta = node.meta[GLOBAL_INDEX];
+      if (globalMeta != null) {
         program.Globals.push(generateInitializer(node));
       }
     },
@@ -164,16 +163,16 @@ export default function generator(ast: NodeType): ProgramType {
           if (userDefinedType != null) {
             return {
               ...typeNode,
-              meta: [...typeNode.meta, setMetaTypeIndex(userDefinedType.index)],
+              meta: { ...typeNode.meta, [TYPE_INDEX]: userDefinedType.index },
             };
           }
 
           return typeNode;
         },
         [Syntax.FunctionPointer]: pointer => {
-          const metaFunctionIndex = get(FUNCTION_INDEX, pointer);
+          const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           if (metaFunctionIndex) {
-            const functionIndex = metaFunctionIndex.payload;
+            const functionIndex = metaFunctionIndex;
             let tableIndex = findTableIndex(functionIndex);
             if (tableIndex < 0) {
               tableIndex = program.Element.length;
@@ -186,12 +185,12 @@ export default function generator(ast: NodeType): ProgramType {
 
       // Quick fix for shifting around function indices. These don't necessarily
       // get written in the order they appear in the source code.
-      const index = get(FUNCTION_INDEX, node);
-      invariant(index, "Function index must be set");
+      const index = node.meta[FUNCTION_INDEX];
+      invariant(index != null, "Function index must be set");
 
-      program.Functions[index.payload] = typeIndex;
+      program.Functions[index] = typeIndex;
       // We will need to filter out the empty slots later
-      program.Code[index.payload] = generateCode(patched);
+      program.Code[index] = generateCode(patched);
     },
   };
 

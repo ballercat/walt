@@ -1,7 +1,7 @@
 // @flow
 import curry from "curry";
 import Syntax from "../../Syntax";
-import { typeCast } from "../metadata";
+import { TYPE_CAST } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 export default curry(
@@ -19,7 +19,7 @@ export default curry(
         type: to,
         value: targetNode.value,
         Type: Syntax.TypeCast,
-        meta: [...typeCastMaybe.meta, typeCast({ to, from })],
+        meta: { ...typeCastMaybe.meta, [TYPE_CAST]: { to, from } },
         // We need to drop the typeNode here, because it's not something we can generate
         params: [targetNode],
       };

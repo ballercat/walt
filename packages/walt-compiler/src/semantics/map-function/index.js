@@ -24,12 +24,7 @@ import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
-import {
-  funcIndex as setMetaFunctionIndex,
-  get,
-  CLOSURE_TYPE,
-  FUNCTION_METADATA,
-} from "../metadata";
+import { FUNCTION_INDEX, CLOSURE_TYPE, FUNCTION_METADATA } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 /**
@@ -87,7 +82,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
       // Identifier, can match Struct type, Function Type or Lambda. Check lambda
       if (
         types[typeDef.value] != null &&
-        get(CLOSURE_TYPE, types[typeDef.value])
+        types[typeDef.value].meta[CLOSURE_TYPE]
       ) {
         // Lmbdas are 64-bit Integers when used in source
         return "i64";
@@ -96,19 +91,16 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
       // Everything non-lambda just return the type
       return typeDef.type;
     })(),
-    meta: [
+    meta: {
       ...node.meta,
-      setMetaFunctionIndex(Object.keys(functions).length),
-      {
-        type: FUNCTION_METADATA,
-        payload: {
-          locals,
-          get argumentsCount() {
-            return argumentsCount;
-          },
+      [FUNCTION_INDEX]: Object.keys(functions).length,
+      [FUNCTION_METADATA]: {
+        locals,
+        get argumentsCount() {
+          return argumentsCount;
         },
       },
-    ],
+    },
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
     // changed via source code.
