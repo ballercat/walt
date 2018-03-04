@@ -2,7 +2,6 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import {
-  get,
   CLOSURE_TYPE,
   TYPE_ARRAY,
   TYPE_CONST,
@@ -24,7 +23,7 @@ const getTypeSize = typeString => {
 };
 
 const isClosureType = (types, type): boolean => {
-  return types[type] != null && !!get(CLOSURE_TYPE, types[type]);
+  return types[type] != null && !!types[type].meta[CLOSURE_TYPE];
 };
 const parse = (isConst, { types, scope }, declaration) => {
   const index = Object.keys(scope).length;

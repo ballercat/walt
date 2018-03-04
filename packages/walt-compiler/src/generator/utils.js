@@ -4,12 +4,7 @@ import opcode from "../emitter/opcode";
 import curry from "curry";
 import invariant from "invariant";
 import { I32, I64, F32, F64 } from "../emitter/value_type";
-import {
-  get,
-  LOCAL_INDEX,
-  GLOBAL_INDEX,
-  TYPE_CONST,
-} from "../semantics/metadata";
+import { LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from "../semantics/metadata";
 import type {
   IntermediateVariableType,
   IntermediateOpcodeType,
@@ -18,8 +13,8 @@ import type {
 import type { NodeType } from "../flow/types";
 
 export const scopeOperation = curry((op, node) => {
-  const local = get(LOCAL_INDEX, node);
-  const _global = get(GLOBAL_INDEX, node);
+  const local = node.meta[LOCAL_INDEX];
+  const _global = node.meta[GLOBAL_INDEX];
   const index = local != null ? local : _global;
 
   invariant(
@@ -75,7 +70,7 @@ export const isBuiltinType = (type: ?string): boolean => {
 export const generateValueType = (
   node: NodeType
 ): IntermediateVariableType => ({
-  mutable: get(TYPE_CONST, node) ? 0 : 1,
+  mutable: node.meta[TYPE_CONST] ? 0 : 1,
   type: getType(node.type),
 });
 export const setInScope = scopeOperation("Set");

@@ -1,7 +1,7 @@
 // @flow
 import Syntax from "../../Syntax";
 import curry from "curry";
-import { get, TYPE_OBJECT } from "../metadata";
+import { TYPE_OBJECT } from "../metadata";
 
 import walkNode from "../../utils/walk-node";
 
@@ -44,7 +44,7 @@ export default curry(function mapAssignment(options, node, mapChildren) {
         const { locals, userTypes } = options;
         const [target] = spread.params;
         const userType = userTypes[locals[target.value].type];
-        const keyOffsetMap = get(TYPE_OBJECT, userType);
+        const keyOffsetMap = userType.meta[TYPE_OBJECT];
         if (keyOffsetMap != null) {
           // map over the keys
           Object.keys(keyOffsetMap).forEach(key => {

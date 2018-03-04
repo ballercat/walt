@@ -24,12 +24,7 @@ import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
-import {
-  get,
-  FUNCTION_INDEX,
-  CLOSURE_TYPE,
-  FUNCTION_METADATA,
-} from "../metadata";
+import { FUNCTION_INDEX, CLOSURE_TYPE, FUNCTION_METADATA } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 /**
@@ -87,7 +82,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
       // Identifier, can match Struct type, Function Type or Lambda. Check lambda
       if (
         types[typeDef.value] != null &&
-        get(CLOSURE_TYPE, types[typeDef.value])
+        types[typeDef.value].meta[CLOSURE_TYPE]
       ) {
         // Lmbdas are 64-bit Integers when used in source
         return "i64";

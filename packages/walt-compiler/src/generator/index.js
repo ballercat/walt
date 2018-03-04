@@ -15,7 +15,6 @@ import generateType from "./type";
 import { generateValueType } from "./utils";
 import { generateImplicitFunctionType } from "./type";
 import {
-  get,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   FUNCTION_METADATA,
@@ -34,7 +33,7 @@ export const generateCode = (
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
 
-  const metadata = get(FUNCTION_METADATA, func);
+  const metadata = func.meta[FUNCTION_METADATA];
   invariant(body, "Cannot generate code for function without body");
   invariant(metadata, "Cannot generate code for function without metadata");
 
@@ -123,8 +122,8 @@ export default function generator(ast: NodeType): ProgramType {
       program.Exports.push(generateExport(nodeToExport));
     },
     [Syntax.ImmutableDeclaration]: node => {
-      const globalMeta = get(GLOBAL_INDEX, node);
-      if (globalMeta !== null) {
+      const globalMeta = node.meta[GLOBAL_INDEX];
+      if (globalMeta != null) {
         switch (node.type) {
           case "Memory":
             program.Memory.push(generateMemory(node));
@@ -138,8 +137,8 @@ export default function generator(ast: NodeType): ProgramType {
       }
     },
     [Syntax.Declaration]: node => {
-      const globalMeta = get(GLOBAL_INDEX, node);
-      if (globalMeta !== null) {
+      const globalMeta = node.meta[GLOBAL_INDEX];
+      if (globalMeta != null) {
         program.Globals.push(generateInitializer(node));
       }
     },
@@ -171,7 +170,7 @@ export default function generator(ast: NodeType): ProgramType {
           return typeNode;
         },
         [Syntax.FunctionPointer]: pointer => {
-          const metaFunctionIndex = get(FUNCTION_INDEX, pointer);
+          const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           if (metaFunctionIndex) {
             const functionIndex = metaFunctionIndex;
             let tableIndex = findTableIndex(functionIndex);
@@ -186,7 +185,7 @@ export default function generator(ast: NodeType): ProgramType {
 
       // Quick fix for shifting around function indices. These don't necessarily
       // get written in the order they appear in the source code.
-      const index = get(FUNCTION_INDEX, node);
+      const index = node.meta[FUNCTION_INDEX];
       invariant(index != null, "Function index must be set");
 
       program.Functions[index] = typeIndex;

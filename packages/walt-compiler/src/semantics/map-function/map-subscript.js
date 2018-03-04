@@ -2,7 +2,7 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import type { NodeType } from "../../flow/types";
-import { get, TYPE_OBJECT, OBJECT_KEY_TYPES, ALIAS } from "../metadata";
+import { TYPE_OBJECT, OBJECT_KEY_TYPES, ALIAS } from "../metadata";
 
 const patchStringSubscript = (
   byteOffsetsByKey: any,
@@ -27,8 +27,8 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
   const [identifier, field] = params;
   const userType = userTypes[identifier.type];
   if (userType != null) {
-    const metaObject = get(TYPE_OBJECT, userType);
-    const objectKeyTypeMap = get(OBJECT_KEY_TYPES, userType);
+    const metaObject = userType.meta[TYPE_OBJECT];
+    const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
     return {
       ...node,
       type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : "i32",

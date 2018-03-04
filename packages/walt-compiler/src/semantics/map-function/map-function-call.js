@@ -2,7 +2,7 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import { expandClosureIdentifier } from "../closure";
-import { get, FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
+import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
 
 export default curry(function mapFunctonCall(options, call) {
   const { functions, types, locals, mapIdentifier, mapSizeof } = options;
@@ -29,7 +29,7 @@ export default curry(function mapFunctonCall(options, call) {
 
     // Expand the 64-bit identifier into an additional 32-bit argument for closure
     // base pointer and table index.
-    if (get(CLOSURE_TYPE, identifier) != null) {
+    if (identifier.meta[CLOSURE_TYPE] != null) {
       return {
         ...call,
         meta,

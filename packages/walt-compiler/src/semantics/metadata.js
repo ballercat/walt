@@ -1,6 +1,4 @@
 // @flow
-import type { NodeType } from "../flow/types";
-
 export const FUNCTION_INDEX = "function/index";
 export const LOCAL_INDEX_MAP = "function/locals-index-map";
 export const POSTFIX = "operator/postfix";
@@ -20,7 +18,3 @@ export const CLOSURE_TYPE = "closure/type";
 export const AST_METADATA = "@@global/ast";
 export const FUNCTION_METADATA = "@@function/meta";
 export const ALIAS = "alias";
-
-export const get = (type: string, node: NodeType): ?any => {
-  return node.meta[type] != null ? node.meta[type] : null;
-};

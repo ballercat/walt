@@ -2,12 +2,12 @@
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
 import type { GeneratorType } from "./flow/types";
-import { get, TYPE_ARRAY } from "../semantics/metadata";
+import { TYPE_ARRAY } from "../semantics/metadata";
 import mapSyntax from "./map-syntax";
 
 const generateArraySubscript: GeneratorType = (node, parent) => {
   const identifier = node.params[0];
-  const isArray = get(TYPE_ARRAY, identifier);
+  const isArray = identifier.meta[TYPE_ARRAY];
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   let type = node.type;
 

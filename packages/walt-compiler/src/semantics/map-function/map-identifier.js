@@ -1,7 +1,7 @@
 // @flow
 import Syntax from "../../Syntax";
 import curry from "curry";
-import { FUNCTION_INDEX, TYPE_ARRAY, get } from "../metadata";
+import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
 
 const mapIdentifier = curry(
   ({ locals, globals, functions, table, userTypes }, identifier) => {
@@ -10,8 +10,8 @@ const mapIdentifier = curry(
     const global = globals[identifier.value];
     if (local != null) {
       const type = (() => {
-        const isArray = get(TYPE_ARRAY, locals[identifier.value]);
-        return isArray || locals[identifier.value].type;
+        const isArray = local.meta[TYPE_ARRAY];
+        return isArray || local.type;
       })();
       return {
         ...identifier,

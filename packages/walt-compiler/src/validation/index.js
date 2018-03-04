@@ -5,7 +5,6 @@ import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
 import {
-  get,
   GLOBAL_INDEX,
   TYPE_CONST,
   ALIAS,
@@ -48,7 +47,7 @@ export default function validate(
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
-      const globalIndex = get(GLOBAL_INDEX, target);
+      const globalIndex = target.meta[GLOBAL_INDEX];
       if (globalIndex != null && !target.params.length) {
         problems.push(
           error(
@@ -85,7 +84,7 @@ export default function validate(
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (decl, _validator) => {
       const [initializer] = decl.params;
-      if (get(TYPE_CONST, decl) != null) {
+      if (decl.meta[TYPE_CONST] != null) {
         const [start, end] = decl.range;
         if (initializer != null && initializer.Type !== Syntax.Constant) {
           problems.push(
@@ -132,7 +131,7 @@ export default function validate(
               )
             );
           }
-          if (get(TYPE_CONST, node) != null) {
+          if (node.meta[TYPE_CONST] != null) {
             const [start, end] = node.range;
 
             if (initializer == null) {
@@ -166,7 +165,7 @@ export default function validate(
             );
           }
 
-          const isConst = get(TYPE_CONST, identifier);
+          const isConst = identifier.meta[TYPE_CONST];
           if (isConst != null) {
             problems.push(
               error(
@@ -183,7 +182,7 @@ export default function validate(
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {
-            const alias = get(ALIAS, offset);
+            const alias = offset.meta[ALIAS];
             problems.push(
               error(
                 "Cannot generate memory offset",

@@ -3,12 +3,12 @@
 import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import { getTypecastOpcode } from "../emitter/opcode";
-import { get, TYPE_CAST } from "../semantics/metadata";
+import { TYPE_CAST } from "../semantics/metadata";
 import invariant from "invariant";
 import type { GeneratorType } from "./flow/types";
 
 const generateTypecast: GeneratorType = (node, parent) => {
-  const metaTypecast = get(TYPE_CAST, node);
+  const metaTypecast = node.meta[TYPE_CAST];
   invariant(
     metaTypecast,
     `Cannot generate typecast for node: ${JSON.stringify(node)}`
