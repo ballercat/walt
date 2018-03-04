@@ -90,7 +90,7 @@ const getPrinters = add => ({
     add(typedefString(node));
   },
   [Syntax.Identifier]: node => {
-    const scope = get(GLOBAL_INDEX, node) ? "global" : "local";
+    const scope = get(GLOBAL_INDEX, node) != null ? "global" : "local";
     add(`(get_${scope} ${node.value})`);
   },
   [Syntax.Constant]: node => {
@@ -109,7 +109,7 @@ const getPrinters = add => ({
     add(")", 0, -2);
   },
   [Syntax.Declaration]: (node, print) => {
-    const mutability = get(TYPE_CONST, node) ? "immutable" : "mutable";
+    const mutability = get(TYPE_CONST, node) != null ? "immutable" : "mutable";
     add(
       "(local " + node.value + " " + String(node.type),
       2,
@@ -146,7 +146,7 @@ const getPrinters = add => ({
   },
   [Syntax.Assignment]: (node, print) => {
     const [target, ...params] = node.params;
-    const scope = get(GLOBAL_INDEX, target) ? "global" : "local";
+    const scope = get(GLOBAL_INDEX, target) != null ? "global" : "local";
     add(`(set_${scope} ${target.value}`, 2);
     params.forEach(print);
     add(")", 0, -2);

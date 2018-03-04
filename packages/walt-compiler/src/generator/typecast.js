@@ -14,7 +14,7 @@ const generateTypecast: GeneratorType = (node, parent) => {
     `Cannot generate typecast for node: ${JSON.stringify(node)}`
   );
 
-  const { to, from } = metaTypecast.payload;
+  const { to, from } = metaTypecast;
 
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   return [

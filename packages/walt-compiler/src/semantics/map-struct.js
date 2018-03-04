@@ -4,7 +4,7 @@ import invariant from "invariant";
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
 import type { NodeType } from "../flow/types";
-import { objectSize, objectType, objectKeyTypes } from "./metadata";
+import { OBJECT_SIZE, OBJECT_KEY_TYPES, TYPE_OBJECT } from "./metadata";
 
 export const getByteOffsetsAndSize = (
   objectLiteralNode: NodeType
@@ -46,11 +46,11 @@ const mapStruct = curry(({ userTypes }, node, _ignore) => {
 
   const struct = {
     ...node,
-    meta: [
-      objectType(offsetsByKey),
-      objectSize(totalSize),
-      objectKeyTypes(keyTypeMap),
-    ],
+    meta: {
+      [TYPE_OBJECT]: offsetsByKey,
+      [OBJECT_SIZE]: totalSize,
+      [OBJECT_KEY_TYPES]: keyTypeMap,
+    },
   };
 
   userTypes[struct.value] = struct;

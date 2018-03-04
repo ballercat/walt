@@ -29,7 +29,7 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
     invariant(metaSize, "Object size information is missing");
     return {
       ...sizeof,
-      value: metaSize.payload,
+      value: metaSize,
       params: [],
       type: "i32",
       Type: Syntax.Constant,

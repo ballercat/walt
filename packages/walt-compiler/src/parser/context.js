@@ -107,7 +107,7 @@ export default class Context {
       Type: "",
       value: token.value,
       range: [token.start],
-      meta: [],
+      meta: {},
       params: [],
       type: null,
     };

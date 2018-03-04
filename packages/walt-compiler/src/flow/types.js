@@ -13,14 +13,14 @@ export type TokenType = {
   value: string,
 };
 
-export type MetadataType = { type: string, payload: any };
+export type MetadataType = { [string]: any };
 
 export type NodeType = {
   range: Marker[],
   Type: string,
   type: string | null,
   value: string,
-  meta: MetadataType[],
+  meta: MetadataType,
   params: NodeType[],
 };
 

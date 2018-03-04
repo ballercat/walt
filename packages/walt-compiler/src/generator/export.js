@@ -8,17 +8,17 @@ export default function generateExport(node: NodeType): IntermediateExportType {
   const functionIndexMeta = get(FUNCTION_INDEX, node);
   const globalIndexMeta = get(GLOBAL_INDEX, node);
 
-  if (globalIndexMeta) {
+  if (globalIndexMeta != null) {
     return {
-      index: globalIndexMeta.payload,
+      index: globalIndexMeta,
       kind: EXTERN_GLOBAL,
       field: node.value,
     };
   }
 
-  invariant(functionIndexMeta, "Unknown Export");
+  invariant(functionIndexMeta != null, "Unknown Export");
   return {
-    index: functionIndexMeta.payload,
+    index: functionIndexMeta,
     kind: EXTERN_FUNCTION,
     field: node.value,
   };

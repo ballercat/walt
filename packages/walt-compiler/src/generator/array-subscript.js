@@ -18,7 +18,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
       { kind: opcode.i32Const, params: [2] },
       { kind: opcode.i32Shl, params: [] },
     ]);
-    type = isArray.payload;
+    type = isArray;
   }
 
   // The sequence of opcodes to perfrom a memory load is

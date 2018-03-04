@@ -21,7 +21,7 @@ import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
 import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
-import { astMeta } from "./metadata";
+import { AST_METADATA } from "./metadata";
 import type { NodeType } from "../flow/types";
 
 export default function semantics(ast: NodeType): NodeType {
@@ -68,10 +68,11 @@ export default function semantics(ast: NodeType): NodeType {
 
   return {
     ...patched,
-    meta: [
+    meta: {
+      ...patched.meta,
       // Attach information collected to the AST
-      astMeta({ functions, globals, types, userTypes }),
-    ],
+      [AST_METADATA]: { functions, globals, types, userTypes },
+    },
     params: [...hoistImports, ...patched.params, ...hoist],
   };
 }

@@ -43,7 +43,7 @@ export default function generateImportFromNode(
       const typeIndex = (() => {
         const typeIndexMeta = get(TYPE_INDEX, typeOrIdentifierNode);
         if (typeIndexMeta) {
-          return typeIndexMeta.payload;
+          return typeIndexMeta;
         }
         return null;
       })();

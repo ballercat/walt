@@ -11,13 +11,13 @@ const generateFunctionCall: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
   const metaFunctionIndex = get(FUNCTION_INDEX, node);
   invariant(
-    metaFunctionIndex,
+    metaFunctionIndex != null,
     "Undefined function index for node \n" + `${printNode(node)}`
   );
 
   block.push({
     kind: opcode.Call,
-    params: [metaFunctionIndex.payload],
+    params: [metaFunctionIndex],
     debug: `${node.value}<${node.type ? node.type : "void"}>`,
   });
 

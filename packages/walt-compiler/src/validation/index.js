@@ -4,7 +4,13 @@ import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from "../Syntax";
 import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
-import { get, GLOBAL_INDEX, TYPE_CONST, ALIAS } from "../semantics/metadata";
+import {
+  get,
+  GLOBAL_INDEX,
+  TYPE_CONST,
+  ALIAS,
+  AST_METADATA,
+} from "../semantics/metadata";
 import type { NodeType } from "../flow/types";
 
 const GLOBAL_LABEL = "global";
@@ -19,11 +25,11 @@ export default function validate(
     filename: string,
   }
 ) {
-  const [metadata] = ast.meta;
+  const metadata = ast.meta[AST_METADATA];
   if (metadata == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types, functions } = metadata.payload;
+  const { types, functions } = metadata;
   const problems = [];
 
   walkNode({
@@ -182,7 +188,7 @@ export default function validate(
               error(
                 "Cannot generate memory offset",
                 `Undefined key ${
-                  alias ? alias.payload : offset.value
+                  alias != null ? alias : offset.value
                 } for type ${String(identifier.type)}`,
                 { start, end },
                 filename,

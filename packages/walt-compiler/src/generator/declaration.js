@@ -15,7 +15,10 @@ const generateDeclaration: GeneratorType = (
 
   if (initNode) {
     const metaIndex = get(LOCAL_INDEX, node);
-    invariant(metaIndex, `Local Index is undefined. Node: ${node.value}`);
+    invariant(
+      metaIndex != null,
+      `Local Index is undefined. Node: ${node.value}`
+    );
 
     const type = isBuiltinType(node.type) ? node.type : i32;
 
@@ -23,7 +26,7 @@ const generateDeclaration: GeneratorType = (
       ...generateExpression({ ...initNode, type }, parent),
       {
         kind: opcode.SetLocal,
-        params: [metaIndex.payload],
+        params: [metaIndex],
         debug: `${node.value}<${node.type ? node.type : "?"}>`,
       },
     ];

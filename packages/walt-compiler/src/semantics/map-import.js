@@ -2,10 +2,7 @@
 import curry from "curry";
 import Syntax from "../Syntax";
 import mapNode from "../utils/map-node";
-import {
-  funcIndex as setMetaFunctionIndex,
-  typeIndex as setMetaTypeIndex,
-} from "./metadata";
+import { FUNCTION_INDEX, TYPE_INDEX } from "./metadata";
 
 export const mapImport = curry((options, node, _) =>
   mapNode({
@@ -21,10 +18,10 @@ export const mapImport = curry((options, node, _) =>
           ...identifierNode,
           id: identifierNode.value,
           type: types[typeNode.value].type,
-          meta: [
-            setMetaFunctionIndex(functionIndex),
-            setMetaTypeIndex(typeIndex),
-          ],
+          meta: {
+            [FUNCTION_INDEX]: functionIndex,
+            [TYPE_INDEX]: typeIndex,
+          },
         };
         functions[identifierNode.value] = functionNode;
         return {

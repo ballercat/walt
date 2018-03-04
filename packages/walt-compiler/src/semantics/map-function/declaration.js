@@ -4,12 +4,11 @@ import curry from "curry";
 import {
   get,
   CLOSURE_TYPE,
-  array as setMetaArray,
-  constant as setMetaConst,
-  localIndex as setMetaLocalIndex,
-  closureType as setClosure,
-  typeIndex as setMetaTypeIndex,
-  globalIndex as setMetaGlobalIndex,
+  TYPE_ARRAY,
+  TYPE_CONST,
+  TYPE_INDEX,
+  LOCAL_INDEX,
+  GLOBAL_INDEX,
 } from "../metadata";
 
 const getTypeSize = typeString => {
@@ -41,14 +40,12 @@ const parse = (isConst, { types, scope }, declaration) => {
     }
     return declaration.type;
   })();
-  const metaArray = isArray ? setMetaArray(typeString.slice(0, -2)) : null;
-  const metaClosure = isClosure ? setClosure(true) : null;
-  const meta = [
-    metaArray,
-    metaClosure,
-    isConst ? setMetaConst() : null,
-    isClosure ? setMetaTypeIndex(Object.keys(types).indexOf(typeString)) : null,
-  ];
+  const meta = {
+    [TYPE_ARRAY]: isArray ? typeString.slice(0, -2) : null,
+    [CLOSURE_TYPE]: isClosure || null,
+    [TYPE_CONST]: isConst || null,
+    [TYPE_INDEX]: isClosure ? Object.keys(types).indexOf(typeString) : null,
+  };
 
   return [type, meta, index];
 };
@@ -64,7 +61,7 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
     scope[declaration.value] = {
       ...declaration,
       type,
-      meta: [...meta, setMetaLocalIndex(index)],
+      meta: { ...meta, [LOCAL_INDEX]: index },
       Type: Syntax.Declaration,
     };
 
@@ -83,12 +80,12 @@ export const parseGlobalDeclaration = curry((isConst, options, node) => {
     const [type, meta, index] = parse(isConst, { ...options, scope }, node);
     scope[node.value] = {
       ...node,
-      meta: [...meta, setMetaGlobalIndex(index)],
+      meta: { ...meta, [GLOBAL_INDEX]: index },
       type,
       Type: Syntax.Declaration,
     };
 
     return scope[node.value];
   }
-  return { ...node, meta: [setMetaGlobalIndex(-1)] };
+  return { ...node, meta: { [GLOBAL_INDEX]: -1 } };
 });

@@ -25,7 +25,7 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
     {
       ...identifier,
       value: ":",
-      meta: [],
+      meta: {},
       Type: Syntax.Pair,
       params: [
         bareIdentifier(),
@@ -33,7 +33,7 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
           ...identifier,
           value: "i32",
           type: "i32",
-          meta: [],
+          meta: {},
           params: [],
           Type: Syntax.Type,
         },
@@ -44,12 +44,12 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
       ...identifier,
       value: ":",
       Type: Syntax.Pair,
-      meta: [],
+      meta: {},
       params: [
         {
           ...identifier,
           value: ">>",
-          meta: [],
+          meta: {},
           Type: Syntax.BinaryExpression,
           params: [
             bareIdentifier(),
@@ -57,7 +57,7 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
               ...identifier,
               value: "32",
               type: "i32",
-              meta: [],
+              meta: {},
               params: [],
               Type: Syntax.Constant,
             },
@@ -65,7 +65,7 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
         },
         {
           ...identifier,
-          meta: [],
+          meta: {},
           value: "i32",
           type: "i32",
           params: [],
@@ -88,7 +88,7 @@ export const collapseClosureIdentifier = (
       {
         ...closure,
         value: ":",
-        meta: [],
+        meta: {},
         Type: Syntax.Pair,
         params: [
           { ...closure, Type: Syntax.Identifier, params: [] },
@@ -111,7 +111,7 @@ export const collapseClosureIdentifier = (
             ...pointer,
             value: "32",
             type: "i64",
-            meta: [],
+            meta: {},
             params: [],
             Type: Syntax.Constant,
           },
@@ -214,7 +214,7 @@ export const injectEnvironmentMaybe = (
           mapFunctionCall({
             ...start,
             type: "i32",
-            meta: [],
+            meta: {},
             value: CLOSURE_MALLOC,
             Type: Syntax.FunctionCall,
             params: [
@@ -275,7 +275,7 @@ export const transformClosedDeclaration = curry((options, decl, transform) => {
         },
         init,
       ],
-      meta: [],
+      meta: {},
       Type: Syntax.FunctionCall,
     });
   }
@@ -342,7 +342,7 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
             ),
             lhs,
           ],
-          meta: [],
+          meta: {},
           Type: Syntax.FunctionCall,
         };
       }

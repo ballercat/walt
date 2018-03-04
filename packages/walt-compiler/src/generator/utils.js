@@ -20,17 +20,17 @@ import type { NodeType } from "../flow/types";
 export const scopeOperation = curry((op, node) => {
   const local = get(LOCAL_INDEX, node);
   const _global = get(GLOBAL_INDEX, node);
-  const index = local || _global;
+  const index = local != null ? local : _global;
 
   invariant(
-    index,
+    index != null,
     `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(
       op
     )} node: ${JSON.stringify(node, null, 2)}`
   );
 
-  const kind = local ? op + "Local" : op + "Global";
-  const params = [Number(index.payload)];
+  const kind = local != null ? op + "Local" : op + "Global";
+  const params = [Number(index)];
 
   return {
     kind: opcode[kind],

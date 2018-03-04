@@ -6,7 +6,7 @@ import type { NodeType, TokenType } from "../flow/types";
 export const makeResult = (node: NodeType | null) => ({
   range: [],
   ...node,
-  meta: [],
+  meta: {},
   params: [],
   Type: Syntax.FunctionResult,
   value: "FUNCTION_RESULT",
@@ -22,7 +22,7 @@ export const makeArgs = (node: NodeType | null) => ({
     return node.Type === Syntax.Sequence ? node.params : [node];
   })(),
   type: null,
-  meta: [],
+  meta: {},
   value: "FUNCTION_ARGUMENTS",
   Type: Syntax.FunctionArguments,
 });
@@ -42,7 +42,7 @@ export default function parselambda(
     ...op,
     type: "i32",
     range: [ctx.token.start, ctx.token.end],
-    meta: [],
+    meta: {},
     Type: Syntax.Closure,
     params: [],
   };

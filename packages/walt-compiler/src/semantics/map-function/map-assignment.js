@@ -47,7 +47,7 @@ export default curry(function mapAssignment(options, node, mapChildren) {
         const keyOffsetMap = get(TYPE_OBJECT, userType);
         if (keyOffsetMap != null) {
           // map over the keys
-          Object.keys(keyOffsetMap.payload).forEach(key => {
+          Object.keys(keyOffsetMap).forEach(key => {
             const offsetNode = {
               ...target,
               Type: Syntax.Identifier,

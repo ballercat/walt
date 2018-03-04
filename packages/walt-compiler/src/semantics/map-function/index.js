@@ -25,8 +25,8 @@ import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
 import {
-  funcIndex as setMetaFunctionIndex,
   get,
+  FUNCTION_INDEX,
   CLOSURE_TYPE,
   FUNCTION_METADATA,
 } from "../metadata";
@@ -96,19 +96,16 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
       // Everything non-lambda just return the type
       return typeDef.type;
     })(),
-    meta: [
+    meta: {
       ...node.meta,
-      setMetaFunctionIndex(Object.keys(functions).length),
-      {
-        type: FUNCTION_METADATA,
-        payload: {
-          locals,
-          get argumentsCount() {
-            return argumentsCount;
-          },
+      [FUNCTION_INDEX]: Object.keys(functions).length,
+      [FUNCTION_METADATA]: {
+        locals,
+        get argumentsCount() {
+          return argumentsCount;
         },
       },
-    ],
+    },
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
     // changed via source code.
