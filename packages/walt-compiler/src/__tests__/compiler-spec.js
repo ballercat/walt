@@ -18,7 +18,7 @@ test("compiler basics", t =>
     `import { two: TwoType, alsoTwo: TwoType } from 'env';
   type TwoType = () => i32;
   // Memory
-  const memory: Memory = { 'initial': 1 };
+  const memory: Memory<{ initial: 1 }>;
   // Const globals, export
   export const bar: i32 = 2;
   let foo: i32 = 3;

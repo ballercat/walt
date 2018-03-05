@@ -7,7 +7,7 @@ test("functions", t => {
   // For pointers
   const table: Table = { element: anyfunc, initial: 10, max: 10 };
   // For object operations
-  const memory: Memory = { 'initial': 1 };
+  const memory: Memory<{ initial: 1 }>;
 
   type Test = () => i32;
   type Type = { 'a': i32 };

@@ -33,7 +33,7 @@ test("generates globals", t => {
 });
 
 test("generates memory declaration", t => {
-  const ast = parser("const memory: Memory = {'initial': 1, 'max': 10};");
+  const ast = parser("const memory: Memory<{initial: 1, max: 10}>;");
   const program = generator(semantics(ast));
   t.snapshot(program);
 });
