@@ -1,5 +1,5 @@
 // Memory type is a special global pre-defined type
-const memory: Memory = { 'initial': 1 };
+const memory: Memory<{ initial: 1 }>;
 
 // An object of Memory type must be defined(can be imported)
 // to enable memory operations

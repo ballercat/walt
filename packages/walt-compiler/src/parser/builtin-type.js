@@ -5,14 +5,15 @@ import expression from "../parser/expression";
 import type { NodeType } from "../flow/types";
 
 export default function builtInType(ctx: Context): NodeType {
-  if (ctx.token.value === "Memory" && ctx.stream.peek().value === "<") {
-    ctx.eat(["Memory"]);
+  if (ctx.stream.peek().value === "<") {
+    const valueType = ctx.token.value;
+    ctx.eat(["Memory", "Table"]);
     ctx.eat(["<"]);
     ctx.eat(["{"]);
     const node = ctx.makeNode(
       {
-        value: "Memory",
-        type: "Memory",
+        value: valueType,
+        type: valueType,
         params: [expression(ctx)],
       },
       Syntax.Type

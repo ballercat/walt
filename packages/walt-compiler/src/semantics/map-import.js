@@ -6,7 +6,7 @@ import { FUNCTION_INDEX, TYPE_INDEX } from "./metadata";
 
 export const mapImport = curry((options, node, _) =>
   mapNode({
-    [Syntax.Pair]: pairNode => {
+    [Syntax.Pair]: (pairNode, __) => {
       const { types, functions } = options;
       const [identifierNode, typeNode] = pairNode.params;
 

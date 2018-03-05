@@ -24,7 +24,8 @@ const declaration = (ctx: Context): NodeType => {
   }
 
   const params = [];
-  if (ctx.eat(["<"]) && (type === "Memory" || type === "Table")) {
+  // Parse generic
+  if (ctx.eat(["<"])) {
     ctx.eat(["{"]);
     params.push(expression(ctx));
     ctx.eat(["}"]);
