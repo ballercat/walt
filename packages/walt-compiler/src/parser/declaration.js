@@ -24,7 +24,12 @@ const declaration = (ctx: Context): NodeType => {
   }
 
   const params = [];
-  if (ctx.eat(["="])) {
+  if (ctx.eat(["<"]) && (type === "Memory" || type === "Table")) {
+    ctx.eat(["{"]);
+    params.push(expression(ctx));
+    ctx.eat(["}"]);
+    ctx.eat([">"]);
+  } else if (ctx.eat(["="])) {
     params.push(expression(ctx));
   }
 

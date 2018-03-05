@@ -3,6 +3,7 @@ import walkNode from "./walk-node";
 import Syntax from "../Syntax";
 import { GLOBAL_INDEX, TYPE_CONST } from "../semantics/metadata";
 import { opcodeFromOperator, getTypecastOpcode } from "../emitter/opcode";
+import { parseBounds } from "./resizable-limits";
 import type { NodeType, TypeCastType } from "../flow/types";
 
 const getText = (node: NodeType): string => {
@@ -54,7 +55,17 @@ const getPrinters = add => ({
       [Syntax.Pair]: ({ params }, _) => {
         const { value: field } = params[0];
         const type = params[1];
-        add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
+
+        if (type.value === "Memory") {
+          const memory = parseBounds(type);
+          add(
+            `(import "${mod.value}" "${field}" (memory ${memory.initial}${
+              memory.max ? memory.max : ""
+            }))`
+          );
+        } else {
+          add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
+        }
       },
     })(nodes);
   },
@@ -120,9 +131,20 @@ const getPrinters = add => ({
     add(")", 0, -2);
   },
   [Syntax.ImmutableDeclaration]: (node, print) => {
-    add("(local " + node.value + " " + String(node.type), 2, 0, " immutable");
-    node.params.forEach(print);
-    add(")", 0, -2);
+    const scope = node.meta[GLOBAL_INDEX] != null ? "global" : "local";
+    if (node.type === "Memory") {
+      const memory = parseBounds(node);
+      add(`(memory ${memory.initial}${memory.max ? ` ${memory.max}` : ""})`);
+    } else {
+      add(
+        `(${scope} ` + node.value + " " + String(node.type),
+        2,
+        0,
+        " immutable"
+      );
+      node.params.forEach(print);
+      add(")", 0, -2);
+    }
   },
   [Syntax.Type]: node => {
     add(node.value);

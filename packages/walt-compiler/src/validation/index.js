@@ -62,7 +62,7 @@ export default function validate(
     },
     [Syntax.Import]: (importNode, _) => {
       walkNode({
-        [Syntax.Pair]: pair => {
+        [Syntax.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
             const [start, end] = type.range;
