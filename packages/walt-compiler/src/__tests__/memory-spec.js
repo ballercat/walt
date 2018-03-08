@@ -20,13 +20,20 @@ test("memory can be defined", t =>
   }`
   ).then(outputIs(t, 42)));
 
-test("memory can be imported", t => {
+test("memory of any shape can be imported", t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
+  // since initial 2 is higher than available this throws and proves that
+  // generic memory type works
+  t.throws(
+    compileAndRun('import { memory: Memory<{ initial: 2 }> } from "env";', {
+      env: { memory },
+    })
+  );
   const view = new Int32Array(memory.buffer);
   view[1024] = 42;
   return compileAndRun(
     `
-  import { memory: Memory } from 'env';
+  import { memory: Memory<{initial: 1 }> } from 'env';
   export function test(): i32 {
     const pointer: i32[] = 0;
     return pointer[1024];

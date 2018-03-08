@@ -15,7 +15,7 @@ type ParticleType = {
   vy: f32
 };
 
-const memory: Memory = { initial: 1 };
+const memory: Memory<{ initial: 1 }>;
 const particleByteSize: i32 = 16;
 
 let total: i32 = 0;

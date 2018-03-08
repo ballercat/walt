@@ -1,6 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
+import { parseBounds } from "../utils/resizable-limits";
 import {
   EXTERN_FUNCTION,
   EXTERN_MEMORY,
@@ -35,7 +36,7 @@ export default function generateImportFromNode(
 
   // Look for Pair Types, encode them into imports array
   walkNode({
-    [Syntax.Pair]: pairNode => {
+    [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
       const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
@@ -47,6 +48,8 @@ export default function generateImportFromNode(
         }
         return null;
       })();
+      const bounds =
+        importTypeValue === "Memory" ? parseBounds(typeOrIdentifierNode) : {};
 
       imports.push({
         module,
@@ -54,6 +57,7 @@ export default function generateImportFromNode(
         global: kind === EXTERN_GLOBAL,
         kind,
         typeIndex,
+        ...bounds,
       });
     },
   })(importsNode);
