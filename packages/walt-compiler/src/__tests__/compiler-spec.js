@@ -2,7 +2,7 @@ import test from "ava";
 import compile from "..";
 
 const compileAndRun = (src, imports) =>
-  WebAssembly.instantiate(compile(src), imports);
+  WebAssembly.instantiate(compile(src, { encodeNames: true }), imports);
 
 test("empty module compilation", t =>
   compileAndRun("").then(({ module, instance }) => {

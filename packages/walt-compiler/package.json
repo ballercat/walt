@@ -4,7 +4,7 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
-    "test": "nyc ava --no-color --no-power-assert --tap",
+    "test": "nyc ava --no-color --no-power-assert --tap | tap-nyc",
     "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
@@ -13,7 +13,8 @@
     "flow": "flow",
     "lint": "eslint src",
     "prettier": "prettier --list-different src/**/*.js",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "nyc": "nyc"
   },
   "repository": {
     "type": "git",
@@ -63,6 +64,7 @@
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-replace": "2.0.0",
     "rollup-plugin-uglify": "2.0.1",
+    "tap-nyc": "1.0.3",
     "uglify-es": "3.0.17"
   },
   "prettier": {
@@ -90,5 +92,8 @@
       "prettier --write",
       "git add"
     ]
+  },
+  "nyc": {
+    "cache": true
   }
 }
