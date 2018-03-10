@@ -13,7 +13,7 @@ const writer = ({
   emitter: any => OutputStream,
 }) => (ast: any): ?OutputStream => {
   const field = ast[label];
-  if (!field || !field.length) {
+  if (!field || (Array.isArray(field) && !field.length)) {
     return null;
   }
 

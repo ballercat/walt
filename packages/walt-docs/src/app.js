@@ -73,12 +73,14 @@ class Explorer extends React.Component {
       // spinner) that we are compiling things.
       requestAnimationFrame(() => {
         try {
-          const ast = getAST(this.state.code);
-          validate(ast, {
+          const config = {
+            encodeNames: true,
             filename: this.state.example,
             source: this.state.code.split("\n")
-          });
-          this.bytecode = emitter(generator(ast));
+          };
+          const ast = getAST(this.state.code);
+          validate(ast, config);
+          this.bytecode = emitter(generator(ast, config), config);
           this.setState({ wasm: printNode(ast) }, this.compileAndRun);
         } catch (e) {
           this.setState({ compiling: false });

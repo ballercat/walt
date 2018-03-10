@@ -21,8 +21,9 @@ import {
   TYPE_INDEX,
 } from "../semantics/metadata";
 
-import type { NodeType, ProgramType } from "./flow/types";
+import type { NodeType, ConfigType } from "../flow/types";
 import type {
+  ProgramType,
   IntermediateOpcodeType,
   IntermediateVariableType,
 } from "./flow/types";
@@ -63,8 +64,12 @@ export const generateCode = (
   return block;
 };
 
-export default function generator(ast: NodeType): ProgramType {
+export default function generator(
+  ast: NodeType,
+  config: ConfigType
+): ProgramType {
   const program: ProgramType = {
+    Version: config.version,
     Types: [],
     Code: [],
     Exports: [],
@@ -75,6 +80,11 @@ export default function generator(ast: NodeType): ProgramType {
     Memory: [],
     Table: [],
     Artifacts: [],
+    Name: {
+      module: config.filename,
+      functions: [],
+      locals: [],
+    },
   };
 
   const findTypeIndex = (functionNode: NodeType): number => {
@@ -191,6 +201,30 @@ export default function generator(ast: NodeType): ProgramType {
       program.Functions[index] = typeIndex;
       // We will need to filter out the empty slots later
       program.Code[index] = generateCode(patched);
+
+      if (config.encodeNames) {
+        program.Name.functions.push({
+          index,
+          name: node.value,
+        });
+        const functionMetadata = node.meta[FUNCTION_METADATA];
+        if (
+          functionMetadata != null &&
+          Object.keys(functionMetadata.locals).length
+        ) {
+          program.Name.locals[index] = {
+            index,
+            locals: Object.entries(functionMetadata.locals).map(
+              ([name, local]: [string, any]) => {
+                return {
+                  name,
+                  index: Number(local.meta["local/index"]),
+                };
+              }
+            ),
+          };
+        }
+      }
     },
   };
 

@@ -3,12 +3,12 @@ import imports from "./imports";
 import exports_ from "./exports";
 import globals from "./globals";
 import functions from "./functions";
-import writer from "./writer";
 import element from "./element";
 import types from "./types";
 import code from "./code";
 import memory from "./memory";
 import table from "./table";
+import name from "./name";
 import {
   SECTION_TYPE,
   SECTION_IMPORT,
@@ -19,7 +19,10 @@ import {
   SECTION_EXPORT,
   SECTION_ELEMENT,
   SECTION_CODE,
+  SECTION_NAME,
 } from "./codes";
+
+import writer from "./writer";
 
 export default {
   type: writer({ type: SECTION_TYPE, label: "Types", emitter: types }),
@@ -43,4 +46,5 @@ export default {
     emitter: element,
   }),
   code: writer({ type: SECTION_CODE, label: "Code", emitter: code }),
+  name: writer({ type: SECTION_NAME, label: "Name", emitter: name }),
 };

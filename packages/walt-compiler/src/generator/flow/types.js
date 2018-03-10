@@ -60,8 +60,19 @@ export type IntermediateTableType = {
 };
 export type IntermediateMemoryType = { max: number, initial: number };
 
+export type FunctionNameType = { index: number, name: string };
+export type NameSectionType = {
+  module: string,
+  functions: FunctionNameType[],
+  locals: Array<{
+    index: number,
+    locals: Array<{ index: number, name: string }>,
+  }>,
+};
+
 export type ProgramType = {
   // Setup keys needed for the emitter
+  Version: number,
   Types: IntermediateTypeDefinitionType[],
   Code: IntermediateFunctionType[],
   Exports: IntermediateExportType[],
@@ -72,4 +83,5 @@ export type ProgramType = {
   Memory: IntermediateMemoryType[],
   Table: IntermediateTableType[],
   Artifacts: NodeType[],
+  Name: NameSectionType,
 };
