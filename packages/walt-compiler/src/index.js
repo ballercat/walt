@@ -7,7 +7,7 @@ import astValidator from "./validation";
 import _debug from "./utils/debug";
 import printNode from "./utils/print-node";
 import closurePlugin, { mapToImports } from "./closure-plugin";
-import type { WebAssemblyModuleType } from "./flow/types";
+import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
 
 export const debug = _debug;
 export const prettyPrintNode = printNode;
@@ -18,19 +18,26 @@ export const emitter = emit;
 export { parser, printNode, closurePlugin };
 
 // Used for deugging purposes
-export const getIR = (source: string) => {
+export const getIR = (
+  source: string,
+  {
+    encodeNames = true,
+    lines = source ? source.split("\n") : [],
+    filename = "unknown",
+  }: ConfigType = {}
+) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
   validate(
     semanticAST,
     // this will eventually be a config
     {
-      lines: source ? source.split("\n") : [],
-      filename: "walt-source",
+      lines,
+      filename,
     }
   );
-  const intermediateCode = generator(semanticAST);
-  const wasm = emitter(intermediateCode);
+  const intermediateCode = generator(semanticAST, { encodeNames, filename });
+  const wasm = emitter(intermediateCode, { encodeNames, filename });
   return wasm;
 };
 
@@ -51,7 +58,7 @@ export const withPlugins = (
 };
 
 // Compiles a raw binary wasm buffer
-export default function compileWalt(source: string) {
-  const wasm = getIR(source);
+export default function compileWalt(source: string, config: ConfigType) {
+  const wasm = getIR(source, config);
   return wasm.buffer();
 }

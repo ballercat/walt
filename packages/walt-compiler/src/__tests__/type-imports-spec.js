@@ -34,7 +34,7 @@ test("function typed imports", t => {
   });
 });
 
-test.only("function pointers", t =>
+test("function pointers", t =>
   new Promise(resolve => {
     const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
     compileAndRun(

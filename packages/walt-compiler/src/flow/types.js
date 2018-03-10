@@ -32,6 +32,12 @@ export type WebAssemblyModuleType = {
   },
 };
 
+export type ConfigType = {
+  encodeNames: boolean,
+  lines: string[],
+  filename: string,
+};
+
 export type TypeCastType = {
   ...$Exact<NodeType>,
   type: string,
