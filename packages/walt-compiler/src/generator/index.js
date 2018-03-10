@@ -82,6 +82,7 @@ export default function generator(
     Name: {
       module: config.filename,
       functions: [],
+      locals: [],
     },
   };
 
@@ -205,6 +206,23 @@ export default function generator(
           index,
           name: node.value,
         });
+        const functionMetadata = node.meta[FUNCTION_METADATA];
+        if (
+          functionMetadata != null &&
+          Object.keys(functionMetadata.locals).length
+        ) {
+          program.Name.locals[index] = {
+            index,
+            locals: Object.entries(functionMetadata.locals).map(
+              ([name, local]: [string, any]) => {
+                return {
+                  name,
+                  index: Number(local.meta["local/index"]),
+                };
+              }
+            ),
+          };
+        }
       }
     },
   };

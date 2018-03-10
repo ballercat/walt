@@ -64,6 +64,10 @@ export type FunctionNameType = { index: number, name: string };
 export type NameSectionType = {
   module: string,
   functions: FunctionNameType[],
+  locals: Array<{
+    index: number,
+    locals: Array<{ index: number, name: string }>,
+  }>,
 };
 
 export type ProgramType = {

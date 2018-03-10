@@ -3,12 +3,13 @@ import preamble from "./preamble";
 import section from "./section";
 import OutputStream from "../utils/output-stream";
 import type { ProgramType } from "../generator/flow/types";
+import type { ConfigType } from "../flow/types";
 
-export default function emit(program: ProgramType) {
+export default function emit(program: ProgramType, config: ConfigType) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  return stream
+  const result = stream
     .write(preamble())
     .write(section.type(program))
     .write(section.imports(program))
@@ -18,6 +19,11 @@ export default function emit(program: ProgramType) {
     .write(section.globals(program))
     .write(section.exports(program))
     .write(section.element(program))
-    .write(section.code(program))
-    .write(section.name(program));
+    .write(section.code(program));
+
+  if (config.encodeNames) {
+    return result.write(section.name(program));
+  }
+
+  return result;
 }

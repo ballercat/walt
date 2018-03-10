@@ -21,23 +21,23 @@ export { parser, printNode, closurePlugin };
 export const getIR = (
   source: string,
   {
-    encodeNames = true,
+    encodeNames = false,
     lines = source ? source.split("\n") : [],
     filename = "unknown",
   }: ConfigType = {}
 ) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-  validate(
-    semanticAST,
-    // this will eventually be a config
-    {
-      lines,
-      filename,
-    }
-  );
-  const intermediateCode = generator(semanticAST, { encodeNames, filename });
-  const wasm = emitter(intermediateCode, { encodeNames, filename });
+  validate(semanticAST, {
+    lines,
+    filename,
+  });
+  const intermediateCode = generator(semanticAST, {
+    encodeNames,
+    lines,
+    filename,
+  });
+  const wasm = emitter(intermediateCode, { encodeNames, filename, lines });
   return wasm;
 };
 

@@ -1,7 +1,6 @@
 // @flow
 import { u8 } from "wasm-types";
 import { varuint32 } from "../numbers";
-import { emitString } from "../string";
 import OutputStream from "../../utils/output-stream";
 
 const writer = ({

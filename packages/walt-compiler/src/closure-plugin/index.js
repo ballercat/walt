@@ -93,5 +93,9 @@ export const mapToImports = (plugin: WebAssemblyModuleType) => {
 };
 
 export default function closurePlugin() {
-  return compile(source);
+  return compile(source, {
+    encodeNames: false,
+    filename: "walt-closure-plugin",
+    lines: source.split("\n"),
+  });
 }

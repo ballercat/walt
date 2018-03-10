@@ -1945,7 +1945,7 @@ function write() {
 }
 
 //      
-
+const varuint7 = "varuint7";
 const varuint32 = "varuint32";
 const varint7 = "varint7";
 const varint1 = "varint1";
@@ -2391,26 +2391,6 @@ const emit$4 = functions => {
 };
 
 //      
-const writer = ({
-  type,
-  label,
-  emitter
-}) => ast => {
-  const field = ast[label];
-  if (!field || !field.length) {
-    return null;
-  }
-
-  const stream = new OutputStream().push(index_9, type, label + " section");
-  const entries = emitter(field);
-
-  stream.push(varuint32, entries.size, "size");
-  stream.write(entries);
-
-  return stream;
-};
-
-//      
 const emitElement = stream => ({ functionIndex }, index$$1) => {
   stream.push(varuint32, 0, "table index");
   stream.push(index_9, def.i32Const.code, "offset");
@@ -2575,6 +2555,64 @@ function emitTables(tables) {
 }
 
 //      
+const emitModuleName = name => {
+  const moduleSubsection = new OutputStream();
+  emitString(moduleSubsection, name, `name_len: ${name}`);
+  return moduleSubsection;
+};
+
+const emitFunctionNames = names => {
+  const stream = new OutputStream();
+
+  stream.push(varuint32, names.length, `count: ${String(names.length)}`);
+  names.forEach(({ index, name }) => {
+    stream.push(varuint32, index, `index: ${String(index)}`);
+    emitString(stream, name, `name_len: ${name}`);
+  });
+
+  return stream;
+};
+
+const emitLocals = localsMap => {
+  const stream = new OutputStream();
+
+  stream.push(varuint32, localsMap.length, `count: ${String(localsMap.length)}`);
+  localsMap.forEach(({ index: funIndex, locals }) => {
+    stream.push(varuint32, funIndex, `function index: ${String(funIndex)}`);
+    stream.push(varuint32, locals.length, `number of params and locals ${locals.length}`);
+    locals.forEach(({ index, name }) => {
+      stream.push(varuint32, index, `index: ${String(index)}`);
+      emitString(stream, name, `name_len: ${name}`);
+    });
+  });
+
+  return stream;
+};
+
+const emit$9 = nameSection => {
+  const stream = new OutputStream();
+  // Name identifier/header as this is a custom section which requires a string id
+  emitString(stream, "name", "name_len: name");
+
+  const moduleSubsection = emitModuleName(nameSection.module);
+  stream.push(varuint7, 0, "name_type: Module");
+  stream.push(varuint32, moduleSubsection.size, "name_payload_len");
+  stream.write(moduleSubsection);
+
+  const functionSubsection = emitFunctionNames(nameSection.functions);
+  stream.push(varuint7, 1, "name_type: Function");
+  stream.push(varuint32, functionSubsection.size, "name_payload_len");
+  stream.write(functionSubsection);
+
+  const localsSubsection = emitLocals(nameSection.locals);
+  stream.push(varuint7, 2, "name_type: Locals");
+  stream.push(varuint32, localsSubsection.size, "name_payload_len");
+  stream.write(localsSubsection);
+
+  return stream;
+};
+
+//      
 const SECTION_TYPE = 1;
 const SECTION_IMPORT = 2;
 const SECTION_FUNCTION = 3;
@@ -2585,6 +2623,29 @@ const SECTION_EXPORT = 7;
 
 const SECTION_ELEMENT = 9;
 const SECTION_CODE = 10;
+
+// Custom sections
+const SECTION_NAME = 0;
+
+//      
+const writer = ({
+  type,
+  label,
+  emitter
+}) => ast => {
+  const field = ast[label];
+  if (!field || Array.isArray(field) && !field.length) {
+    return null;
+  }
+
+  const stream = new OutputStream().push(index_9, type, label + " section");
+  const entries = emitter(field);
+
+  stream.push(varuint32, entries.size, "size");
+  stream.write(entries);
+
+  return stream;
+};
 
 //      
 var section = {
@@ -2608,15 +2669,22 @@ var section = {
     label: "Element",
     emitter: emit$5
   }),
-  code: writer({ type: SECTION_CODE, label: "Code", emitter: emit$7 })
+  code: writer({ type: SECTION_CODE, label: "Code", emitter: emit$7 }),
+  name: writer({ type: SECTION_NAME, label: "Name", emitter: emit$9 })
 };
 
 //      
-function emit(ast = {}) {
+function emit(program, config) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  return stream.write(write()).write(section.type(ast)).write(section.imports(ast)).write(section.function(ast)).write(section.table(ast)).write(section.memory(ast)).write(section.globals(ast)).write(section.exports(ast)).write(section.element(ast)).write(section.code(ast));
+  const result = stream.write(write()).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program));
+
+  if (config.encodeNames) {
+    return result.write(section.name(program));
+  }
+
+  return result;
 }
 
 //      
@@ -3723,7 +3791,7 @@ const generateCode = func => {
   return block;
 };
 
-function generator$1(ast) {
+function generator$1(ast, config) {
   const program = {
     Types: [],
     Code: [],
@@ -3734,7 +3802,12 @@ function generator$1(ast) {
     Functions: [],
     Memory: [],
     Table: [],
-    Artifacts: []
+    Artifacts: [],
+    Name: {
+      module: config.filename,
+      functions: [],
+      locals: []
+    }
   };
 
   const findTypeIndex = functionNode => {
@@ -3846,6 +3919,25 @@ function generator$1(ast) {
       program.Functions[index] = typeIndex;
       // We will need to filter out the empty slots later
       program.Code[index] = generateCode(patched);
+
+      if (config.encodeNames) {
+        program.Name.functions.push({
+          index,
+          name: node.value
+        });
+        const functionMetadata = node.meta[FUNCTION_METADATA];
+        if (functionMetadata != null && Object.keys(functionMetadata.locals).length) {
+          program.Name.locals[index] = {
+            index,
+            locals: Object.entries(functionMetadata.locals).map(([name, local]) => {
+              return {
+                name,
+                index: Number(local.meta["local/index"])
+              };
+            })
+          };
+        }
+      }
     }
   };
 
@@ -5166,7 +5258,11 @@ const mapToImports = plugin => {
 };
 
 function closurePlugin$$1() {
-  return compileWalt(source);
+  return compileWalt(source, {
+    encodeNames: false,
+    filename: "walt-closure-plugin",
+    lines: source.split("\n")
+  });
 }
 
 //      
@@ -5177,17 +5273,23 @@ const generator = generator$1;
 const validate = validate$1;
 const emitter = emit;
 // Used for deugging purposes
-const getIR = source => {
+const getIR = (source, {
+  encodeNames = true,
+  lines = source ? source.split("\n") : [],
+  filename = "unknown"
+} = {}) => {
   const ast = parse(source);
   const semanticAST = semantics(ast);
-  validate(semanticAST,
-  // this will eventually be a config
-  {
-    lines: source ? source.split("\n") : [],
-    filename: "walt-source"
+  validate(semanticAST, {
+    lines,
+    filename
   });
-  const intermediateCode = generator(semanticAST);
-  const wasm = emitter(intermediateCode);
+  const intermediateCode = generator(semanticAST, {
+    encodeNames,
+    lines,
+    filename
+  });
+  const wasm = emitter(intermediateCode, { encodeNames, filename, lines });
   return wasm;
 };
 
@@ -5202,8 +5304,9 @@ const withPlugins = (plugins, importsObj) => {
 };
 
 // Compiles a raw binary wasm buffer
-function compileWalt(source) {
-  const wasm = getIR(source);
+function compileWalt(source, config) {
+  const wasm = getIR(source, config);
+  console.log(debug(wasm));
   return wasm.buffer();
 }
 
