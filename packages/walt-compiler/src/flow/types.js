@@ -33,6 +33,7 @@ export type WebAssemblyModuleType = {
 };
 
 export type ConfigType = {
+  version: number,
   encodeNames: boolean,
   lines: string[],
   filename: string,

@@ -10,7 +10,7 @@ export default function emit(program: ProgramType, config: ConfigType) {
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
   const result = stream
-    .write(preamble())
+    .write(preamble(program.Version))
     .write(section.type(program))
     .write(section.imports(program))
     .write(section.function(program))

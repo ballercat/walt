@@ -7,6 +7,7 @@ import astValidator from "./validation";
 import _debug from "./utils/debug";
 import printNode from "./utils/print-node";
 import closurePlugin, { mapToImports } from "./closure-plugin";
+import { VERSION_1 } from "./emitter/preamble";
 import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
 
 export const debug = _debug;
@@ -21,6 +22,7 @@ export { parser, printNode, closurePlugin };
 export const getIR = (
   source: string,
   {
+    version = VERSION_1,
     encodeNames = false,
     lines = source ? source.split("\n") : [],
     filename = "unknown",
@@ -33,11 +35,17 @@ export const getIR = (
     filename,
   });
   const intermediateCode = generator(semanticAST, {
+    version,
     encodeNames,
     lines,
     filename,
   });
-  const wasm = emitter(intermediateCode, { encodeNames, filename, lines });
+  const wasm = emitter(intermediateCode, {
+    version,
+    encodeNames,
+    filename,
+    lines,
+  });
   return wasm;
 };
 

@@ -72,6 +72,7 @@ export type NameSectionType = {
 
 export type ProgramType = {
   // Setup keys needed for the emitter
+  Version: number,
   Types: IntermediateTypeDefinitionType[],
   Code: IntermediateFunctionType[],
   Exports: IntermediateExportType[],

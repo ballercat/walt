@@ -69,6 +69,7 @@ export default function generator(
   config: ConfigType
 ): ProgramType {
   const program: ProgramType = {
+    Version: config.version,
     Types: [],
     Code: [],
     Exports: [],
