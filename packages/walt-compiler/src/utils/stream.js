@@ -15,11 +15,6 @@ class Stream {
     this.newLine();
   }
 
-  // Stop parsing and throw a fatal error
-  die(reason: string) {
-    throw new Error(reason);
-  }
-
   // Peek at a character at current position
   peek(): string {
     return this.input.charAt(this.pos);

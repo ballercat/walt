@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 // @flow
 import walkNode from "./walk-node";
 import Syntax from "../Syntax";

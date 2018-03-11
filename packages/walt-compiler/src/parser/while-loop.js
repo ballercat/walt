@@ -5,6 +5,7 @@ import expression from "./expression";
 import statement from "./statement";
 import type { NodeType } from "../flow/types";
 
+// Truth tables are tricky.
 const reverse = {
   ">": "<=",
   "<": ">=",

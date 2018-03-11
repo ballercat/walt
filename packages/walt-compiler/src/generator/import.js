@@ -1,6 +1,7 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
+import { stringToType } from "../emitter/value_type";
 import { parseBounds } from "../utils/resizable-limits";
 import {
   EXTERN_FUNCTION,
@@ -56,6 +57,7 @@ export default function generateImportFromNode(
         field,
         global: kind === EXTERN_GLOBAL,
         kind,
+        type: stringToType[importTypeValue],
         typeIndex,
         ...bounds,
       });

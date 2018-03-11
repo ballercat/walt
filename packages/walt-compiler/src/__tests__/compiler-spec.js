@@ -15,59 +15,63 @@ test("invalid imports throw", t =>
 
 test("compiler basics", t =>
   compileAndRun(
-    `import { two: TwoType, alsoTwo: TwoType } from 'env';
+    `import { two: TwoType, alsoTwo: TwoType, externalConst: i32 } from 'env';
   type TwoType = () => i32;
-  // Memory
-  const memory: Memory<{ initial: 1 }>;
-  // Const globals, export
-  export const bar: i32 = 2;
-  let foo: i32 = 3;
-  let baz: i32 = 0;
-  let x: i32;
+   // Memory
+   const memory: Memory<{ initial: 1 }>;
+   // Const globals, export
+   export const bar: i32 = 2;
+   let foo: i32 = 3;
+   let baz: i32 = 0;
+   let x: i32;
 
-  // Function export
-  export function test(): i32 {
-    x = 1;
-    // Local vs global, test scope
-    const foo: i32 = two();
-    // set global
-    baz = alsoTwo();
+   // Function export
+   export function test(): i32 {
+     x = 1;
+     // Local vs global, test scope
+     const foo: i32 = two();
+     // set global
+     baz = alsoTwo();
 
-    // global references, math
-    return 2 * 2 + foo + baz;
-  }
+     // global references, math
+     return 2 * 2 + foo + baz;
+   }
 
-  export function testLargeSignedConstant(): i32 {
-    return 126;
-  }
-  function number(): i64 {
-    const x: i64 = 42;
-    return x;
-  }
-  function two() : i64 {
-    return 2;
-  }
-  export function test64BitConstants(): i32 {
-    return number(): i32;
-  }
+   export function testLargeSignedConstant(): i32 {
+     return 126;
+   }
+   function number(): i64 {
+     const x: i64 = 42;
+     return x;
+   }
+   function two() : i64 {
+     return 2;
+   }
+   export function test64BitConstants(): i32 {
+     return number(): i32;
+   }
 
-  const gArray: i32[] = 0;
-  export function testGlobalArray(): i32 {
-    gArray[0] = 2;
-    gArray[1] = 2;
-    return gArray[0] + gArray[1];
-  }
-  const foobar: f64 = 24;
-  export function testGlobali64(): f64 {
-    return foobar;
-  }
+   const gArray: i32[] = 0;
+   export function testGlobalArray(): i32 {
+     gArray[0] = 2;
+     gArray[1] = 2;
+     return gArray[0] + gArray[1];
+   }
+   const foobar: f64 = 24;
+   export function testGlobali64(): f64 {
+     return foobar;
+   }
 
-  const globalf32: f32 = 33.0;
-  export function testGlobalF32(): f32 {
-    return globalf32;
+   const globalf32: f32 = 33.0;
+   export function testGlobalF32(): f32 {
+     return globalf32;
+   }
+
+  export function testExternalImport(): i32 {
+    return externalConst;
   }
 `,
-    { env: { two: () => 2, alsoTwo: () => 2 } }
+    { env: { two: () => 2, alsoTwo: () => 2, externalConst: 42 } }
   ).then(module => {
     t.is(module.instance.exports.bar, 2);
     t.is(module.instance.exports.test(), 8);
@@ -75,6 +79,7 @@ test("compiler basics", t =>
     t.is(module.instance.exports.testGlobalArray(), 4);
     t.is(module.instance.exports.testGlobali64(), 24);
     t.is(module.instance.exports.testGlobalF32(), 33.0);
+    t.is(module.instance.exports.testExternalImport(), 42);
   }));
 
 // The most boring spec ever

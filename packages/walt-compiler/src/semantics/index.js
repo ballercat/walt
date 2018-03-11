@@ -48,7 +48,7 @@ export default function semantics(ast: NodeType): NodeType {
   const patched = mapNode({
     [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
-    [Syntax.Import]: mapImport({ functions, types }),
+    [Syntax.Import]: mapImport({ functions, types, globals }),
     [Syntax.Declaration]: parseGlobalDeclaration(false, { globals, types }),
     [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, {
       globals,

@@ -24,8 +24,8 @@ const emit = (entries: any[]) => {
 
     switch (entry.kind) {
       case EXTERN_GLOBAL: {
-        payload.push(u8, entry.kind, "Global");
-        payload.push(u8, global, getTypeString(global));
+        payload.push(u8, EXTERN_GLOBAL, "Global");
+        payload.push(u8, entry.type, getTypeString(entry.type));
         payload.push(u8, 0, "immutable");
         break;
       }
@@ -43,7 +43,7 @@ const emit = (entries: any[]) => {
       }
       case EXTERN_MEMORY: {
         payload.push(u8, entry.kind, "Memory");
-        payload.push(varint1, entry.max ? 1 : 0, "has no max");
+        payload.push(varint1, !!entry.max, "has no max");
         payload.push(varuint32, entry.initial, "initial memory size(PAGES)");
         if (entry.max) {
           payload.push(varuint32, entry.max, "max memory size(PAGES)");

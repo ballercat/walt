@@ -8,6 +8,7 @@ const mapIdentifier = curry(
     // Not a function call or pointer, look-up variables
     const local = locals[identifier.value];
     const global = globals[identifier.value];
+
     if (local != null) {
       const type = (() => {
         const isArray = local.meta[TYPE_ARRAY];
