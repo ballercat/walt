@@ -863,6 +863,15 @@ function typeParser(ctx) {
 }
 
 //      
+const reverse = {
+  ">": "<=",
+  "<": ">=",
+  ">=": "<",
+  "<=": ">",
+  "==": "!=",
+  "!=": "=="
+};
+
 const paramList = ctx => {
   ctx.expect(["("]);
   const params = [];
@@ -883,7 +892,15 @@ const forLoop = ctx => {
   const node = ctx.startNode();
   ctx.eat(["for"]);
 
-  const params = paramList(ctx);
+  // Pop the last expression from param list to append to the body of the loop.
+  // This is important to do here as it'll be more difficult to acomplish later
+  // in the generator accurately. In a for-loop we always want the afterthought
+  // to follow the entire body, so here we are.
+  const [initializer, condition, afterthought] = paramList(ctx);
+  if (reverse[condition.value]) {
+    condition.value = reverse[condition.value];
+  }
+  const body = [];
 
   ctx.expect(["{"]);
 
@@ -891,23 +908,39 @@ const forLoop = ctx => {
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
     if (stmt) {
-      params.push(stmt);
+      body.push(stmt);
     }
   }
   ctx.expect(["}"]);
 
   return ctx.endNode(_extends({}, node, {
-    params
+    params: [initializer, condition, ...body, afterthought]
   }), Syntax.Loop);
 };
 
 //      
+// Truth tables are tricky.
+const reverse$1 = {
+  ">": "<=",
+  "<": ">=",
+  ">=": "<",
+  "<=": ">",
+  "==": "!=",
+  "!=": "=="
+};
+
 const whileLoop = ctx => {
   const node = ctx.startNode();
   ctx.eat(["while"]);
   ctx.expect(["("]);
 
-  const params = [ctx.makeNode({}, Syntax.Noop), expression(ctx)];
+  const initializer = ctx.makeNode({}, Syntax.Noop);
+  const condition = expression(ctx);
+  // This could also be instead patched with a Eqz instruction
+  if (reverse$1[condition.value]) {
+    condition.value = reverse$1[condition.value];
+  }
+  const body = [];
 
   ctx.expect([")"]);
   ctx.expect(["{"]);
@@ -916,14 +949,14 @@ const whileLoop = ctx => {
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
     if (stmt) {
-      params.push(stmt);
+      body.push(stmt);
     }
   }
 
   ctx.expect(["}"]);
 
   return ctx.endNode(_extends({}, node, {
-    params
+    params: [initializer, condition, ...body]
   }), Syntax.Loop);
 };
 
@@ -1205,11 +1238,6 @@ class Stream {
     this.input = input;
     this.lines = input.split("\n");
     this.newLine();
-  }
-
-  // Stop parsing and throw a fatal error
-  die(reason) {
-    throw new Error(reason);
   }
 
   // Peek at a character at current position
@@ -1511,10 +1539,6 @@ var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 class Tokenizer {
 
   constructor(stream, parsers = [punctuator, constant, tokenParser, keyword$2, stringParser, type, comments]) {
-    if (!(stream instanceof Stream)) {
-      this.die(`Tokenizer expected instance of Stream in constructor.
-                Instead received ${JSON.stringify(stream)}`);
-    }
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -1567,10 +1591,6 @@ class Tokenizer {
   }
 
   match(char, parsers) {
-    if (char == null) {
-      return parsers;
-    }
-
     return parsers.map(parse => parse(char)).filter(p => p);
   }
 
@@ -1613,13 +1633,6 @@ class Tokenizer {
     }
 
     return this.tokens;
-  }
-
-  /**
-   * Stop parsing and throw a fatal error
-   */
-  die(reason) {
-    throw new Error(reason);
   }
 }
 
@@ -1960,6 +1973,13 @@ const ANYFUNC = 0x70;
 const FUNC = 0x60;
 
 
+const stringToType = {
+  i32: I32,
+  i64: I64,
+  f32: F32,
+  f64: F64
+};
+
 const getTypeString = type => {
   switch (type) {
     case I32:
@@ -2005,8 +2025,8 @@ const emit$1 = entries => {
     switch (entry.kind) {
       case EXTERN_GLOBAL:
         {
-          payload.push(index_9, entry.kind, "Global");
-          payload.push(index_9, global, getTypeString(global));
+          payload.push(index_9, EXTERN_GLOBAL, "Global");
+          payload.push(index_9, entry.type, getTypeString(entry.type));
           payload.push(index_9, 0, "immutable");
           break;
         }
@@ -2027,7 +2047,7 @@ const emit$1 = entries => {
       case EXTERN_MEMORY:
         {
           payload.push(index_9, entry.kind, "Memory");
-          payload.push(varint1, entry.max ? 1 : 0, "has no max");
+          payload.push(varint1, !!entry.max, "has no max");
           payload.push(varuint32, entry.initial, "initial memory size(PAGES)");
           if (entry.max) {
             payload.push(varuint32, entry.max, "max memory size(PAGES)");
@@ -2289,50 +2309,29 @@ const opcodeFromOperator = ({
   type,
   value
 }) => {
-  if (type == null) {
-    return def.Noop;
-  }
+  // 100% code coverage is a harsh mistress
+  const mapping = {
+    "+": def[String(type) + "Add"],
+    "-": def[String(type) + "Sub"],
+    "*": def[String(type) + "Mul"],
+    "/": def[String(type) + "DivS"] || def[String(type) + "Div"],
+    "%": def[String(type) + "RemS"] || def[String(type) + "RemU"],
+    "==": def[String(type) + "Eq"],
+    "!=": def[String(type) + "Ne"],
+    ">": def[String(type) + "Gt"] || def[String(type) + "GtS"],
+    "<": def[String(type) + "Lt"] || def[String(type) + "LtS"],
+    "<=": def[String(type) + "Le"] || def[String(type) + "LeS"],
+    ">=": def[String(type) + "Ge"] || def[String(type) + "GeS"],
+    "?": def.If,
+    ":": def.Else,
+    "&": def[String(type) + "And"],
+    "|": def[String(type) + "Or"],
+    "^": def[String(type) + "Xor"],
+    ">>": def[String(type) + "ShrU"],
+    "<<": def[String(type) + "Shl"]
+  };
 
-  switch (value) {
-    case "+":
-      return def[type + "Add"];
-    case "-":
-      return def[type + "Sub"];
-    case "*":
-      return def[type + "Mul"];
-    case "/":
-      return def[type + "DivS"] || def[type + "Div"];
-    case "%":
-      return def[type + "RemS"] || def[type + "RemU"];
-    case "==":
-      return def[type + "Eq"];
-    case "!=":
-      return def[type + "Ne"];
-    case ">":
-      return def[type + "Gt"] || def[type + "GtS"];
-    case "<":
-      return def[type + "Lt"] || def[type + "LtS"];
-    case "<=":
-      return def[type + "Le"] || def[type + "LeS"];
-    case ">=":
-      return def[type + "Ge"] || def[type + "GeS"];
-    case "?":
-      return def.If;
-    case ":":
-      return def.Else;
-    case "&":
-      return def[type + "And"];
-    case "|":
-      return def[type + "Or"];
-    case "^":
-      return def[type + "Xor"];
-    case ">>":
-      return def[type + "ShrU"];
-    case "<<":
-      return def[type + "Shl"];
-    default:
-      throw new Error(`No mapping from operator to opcode ${value}`);
-  }
+  return mapping[value];
 };
 
 //      
@@ -3135,22 +3134,19 @@ const generateMemoryAssignment = (node, parent) => {
 const generateLoop = (node, parent) => {
   const block = [];
   const mapper = mapSyntax(parent);
-  const condition = node.params.slice(1, 2);
-  // condition[0].value = reverse[condition[0].value];
-  const expression = node.params.slice(2, 3);
-  const body = node.params.slice(3);
 
-  block.push.apply(block, node.params.slice(0, 1).map(mapper).reduce(mergeBlock, []));
+  // First param in a for loop is assignment expression or Noop if it's a while loop
+  const [initializer, condition, ...body] = node.params;
+
+  block.push.apply(block, [initializer].map(mapper).reduce(mergeBlock, []));
   block.push({ kind: def.Block, params: [0x40] });
   block.push({ kind: def.Loop, params: [0x40] });
 
-  block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
-  block.push({ kind: def.i32Eqz, params: [] });
+  block.push.apply(block, [condition].map(mapper).reduce(mergeBlock, []));
   block.push({ kind: def.BrIf, params: [1] });
 
   block.push.apply(block, body.map(mapper).reduce(mergeBlock, []));
 
-  block.push.apply(block, expression.map(mapper).reduce(mergeBlock, []));
   block.push({ kind: def.Br, params: [0] });
 
   block.push({ kind: def.End, params: [] });
@@ -3268,6 +3264,7 @@ const parseBounds = node => {
   return memory;
 };
 
+/* istanbul ignore file */
 //      
 const getText = node => {
   const value = node.value || "??";
@@ -3678,6 +3675,7 @@ function generateImportFromNode(node) {
         field,
         global: kind === EXTERN_GLOBAL,
         kind,
+        type: stringToType[importTypeValue],
         typeIndex
       }, bounds));
     }
@@ -3943,7 +3941,7 @@ function generator$1(ast, config) {
 //      
 const mapImport = curry_1((options, node, _) => mapNode({
   [Syntax.Pair]: (pairNode, __) => {
-    const { types, functions } = options;
+    const { types, functions, globals } = options;
     const [identifierNode, typeNode] = pairNode.params;
 
     if (types[typeNode.value] != null) {
@@ -3961,6 +3959,14 @@ const mapImport = curry_1((options, node, _) => mapNode({
       functions[identifierNode.value] = functionNode;
       return _extends({}, pairNode, {
         params: [functionNode, types[typeNode.value]]
+      });
+    }
+
+    if (typeNode.type !== "Table" && typeNode.type !== "Memory") {
+      const index = Object.keys(globals).length;
+      globals[identifierNode.value] = _extends({}, identifierNode, {
+        meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+        type: typeNode.type
       });
     }
 
@@ -4080,6 +4086,7 @@ const mapIdentifier = curry_1(({ locals, globals, functions, table, userTypes },
   // Not a function call or pointer, look-up variables
   const local = locals[identifier.value];
   const global = globals[identifier.value];
+
   if (local != null) {
     const type = (() => {
       const isArray = local.meta[TYPE_ARRAY];
@@ -4981,7 +4988,7 @@ function semantics$1(ast) {
   const patched = mapNode({
     [Syntax.Typedef]: (_, __) => _,
     // Read Import node, attach indexes if non-scalar
-    [Syntax.Import]: mapImport({ functions, types }),
+    [Syntax.Import]: mapImport({ functions, types, globals }),
     [Syntax.Declaration]: parseGlobalDeclaration(false, { globals, types }),
     [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, {
       globals,
