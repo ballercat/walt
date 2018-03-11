@@ -1330,7 +1330,7 @@ const wrap = (predicate, type, supported) => {
 var token = wrap;
 
 //      
-const supported = ["+", "++", "-", "--", ">>", "<<", "=", "==", "+=", "-=", "=>", "<=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
+const supported = ["+", "++", "-", "--", ">>", "<<", "=", "==", "+=", "-=", "=>", "<=", ">=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
 
 const trie = new trie$1(supported);
 var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
@@ -1934,14 +1934,13 @@ class OutputStream {
 }
 
 //      
-// TODO these should be configure-able/not defined here
-const VERSION = 0x1;
+const VERSION_1 = 0x1;
 const MAGIC = 0x6d736100;
 
 
 
-function write() {
-  return new OutputStream().push(index_12, MAGIC, "\\0asm").push(index_12, VERSION, `version ${VERSION}`);
+function write(version) {
+  return new OutputStream().push(index_12, MAGIC, "\\0asm").push(index_12, version, `version ${version}`);
 }
 
 //      
@@ -2264,7 +2263,6 @@ opcode(index_3, index_2, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64
 
 const getTypecastOpcode = (to, from) => {
   const toType = to[0];
-  const fromType = from[0];
 
   if (to === "i32" && from === "i64") {
     return def.i32Wrapi64;
@@ -2280,15 +2278,8 @@ const getTypecastOpcode = (to, from) => {
     return def.f64Promotef32;
   }
 
-  if (toType === "f" && fromType === "i") {
-    return def[to + "ConvertS" + from];
-  }
-
-  if (toType === "i" && fromType === "f") {
-    return def[to + "TruncS" + from];
-  }
-
-  throw new Error(`Unknown type conversion ${from} to ${to}`);
+  const conversion = toType === "f" ? "ConvertS" : "TruncS";
+  return def[to + conversion + from];
 };
 
 /**
@@ -2318,19 +2309,17 @@ const opcodeFromOperator = ({
     case "!=":
       return def[type + "Ne"];
     case ">":
-      return def[type + "GtU"] || def[type + "Gt"];
+      return def[type + "Gt"] || def[type + "GtS"];
     case "<":
-      return def[type + "LtU"] || def[type + "Lt"];
+      return def[type + "Lt"] || def[type + "LtS"];
     case "<=":
-      return def[type + "LeU"] || def[type + "Le"];
+      return def[type + "Le"] || def[type + "LeS"];
     case ">=":
-      return def[type + "GeU"] || def[type + "Ge"];
+      return def[type + "Ge"] || def[type + "GeS"];
     case "?":
       return def.If;
     case ":":
       return def.Else;
-    case "[":
-      return def[type + "Load"];
     case "&":
       return def[type + "And"];
     case "|":
@@ -2555,12 +2544,14 @@ function emitTables(tables) {
 }
 
 //      
+// Emit Module name subsection
 const emitModuleName = name => {
   const moduleSubsection = new OutputStream();
   emitString(moduleSubsection, name, `name_len: ${name}`);
   return moduleSubsection;
 };
 
+// Emit Functions subsection
 const emitFunctionNames = names => {
   const stream = new OutputStream();
 
@@ -2573,9 +2564,14 @@ const emitFunctionNames = names => {
   return stream;
 };
 
+// Emit Locals subsection
 const emitLocals = localsMap => {
   const stream = new OutputStream();
 
+  // WebAssembly Binary Encoding docs are not the best on how this should be encoded.
+  // This is pretty much lifted from wabt C++ source code. First comes the number
+  // or functions, where each function is a header of a u32 function index followed
+  // by locals + params count with each local/param encoded as a name_map
   stream.push(varuint32, localsMap.length, `count: ${String(localsMap.length)}`);
   localsMap.forEach(({ index: funIndex, locals }) => {
     stream.push(varuint32, funIndex, `function index: ${String(funIndex)}`);
@@ -2589,11 +2585,14 @@ const emitLocals = localsMap => {
   return stream;
 };
 
+// Emit the Name custom section.
 const emit$9 = nameSection => {
   const stream = new OutputStream();
   // Name identifier/header as this is a custom section which requires a string id
   emitString(stream, "name", "name_len: name");
 
+  // NOTE: Every subsection header is encoded here, not in the individual subsection
+  // logic.
   const moduleSubsection = emitModuleName(nameSection.module);
   stream.push(varuint7, 0, "name_type: Module");
   stream.push(varuint32, moduleSubsection.size, "name_payload_len");
@@ -2678,7 +2677,7 @@ function emit(program, config) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  const result = stream.write(write()).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program));
+  const result = stream.write(write(program.Version)).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program));
 
   if (config.encodeNames) {
     return result.write(section.name(program));
@@ -3136,18 +3135,8 @@ const generateMemoryAssignment = (node, parent) => {
 const generateLoop = (node, parent) => {
   const block = [];
   const mapper = mapSyntax(parent);
-  const reverse = {
-    ">": "<=",
-    "<": ">=",
-    ">=": "<",
-    "<=": ">",
-    "==": "!=",
-    "!=": "=="
-  };
-
-  // First param in a for loop is assignment expression or Noop if it's a while loop
   const condition = node.params.slice(1, 2);
-  condition[0].value = reverse[condition[0].value];
+  // condition[0].value = reverse[condition[0].value];
   const expression = node.params.slice(2, 3);
   const body = node.params.slice(3);
 
@@ -3156,6 +3145,7 @@ const generateLoop = (node, parent) => {
   block.push({ kind: def.Loop, params: [0x40] });
 
   block.push.apply(block, condition.map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: def.i32Eqz, params: [] });
   block.push({ kind: def.BrIf, params: [1] });
 
   block.push.apply(block, body.map(mapper).reduce(mergeBlock, []));
@@ -3793,6 +3783,7 @@ const generateCode = func => {
 
 function generator$1(ast, config) {
   const program = {
+    Version: config.version,
     Types: [],
     Code: [],
     Exports: [],
@@ -4599,19 +4590,19 @@ const typeWeight = typeString => {
 };
 
 const balanceTypesInMathExpression = expression => {
-  // find the result type in the expression
-  let type = null;
-  expression.params.forEach(({ type: childType }) => {
+  // find the heaviest type in the expression
+  const type = expression.params.reduce((acc, { type: childType }) => {
     // The way we do that is by scanning the top-level nodes in our expression
-    if (typeWeight(type) < typeWeight(childType)) {
-      type = childType;
+    if (typeWeight(acc) < typeWeight(childType)) {
+      return childType;
     }
-  });
 
-  // iterate again, this time, patching any mis-typed nodes
+    return acc;
+  }, null);
+
+  // iterate again, this time, patching any lighter types
   const params = expression.params.map(paramNode => {
-    if (paramNode.type != null && paramNode.type !== type && type != null) {
-      // last check is for flow
+    if (paramNode.type != null && paramNode.type !== type) {
       return _extends({}, paramNode, {
         type,
         value: paramNode.value,
@@ -5100,7 +5091,7 @@ function validate$1(ast, {
 
           const isConst = identifier.meta[TYPE_CONST];
           if (isConst != null) {
-            problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.", { start, end }, filename, functionName));
+            problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, "const variables cannot be reassigned, use let instead.", { start, end }, filename, functionName));
           }
         },
         [Syntax.ArraySubscript]: (node, _validator) => {
@@ -5119,10 +5110,15 @@ function validate$1(ast, {
           const [expression] = node.params;
           const [start] = node.range;
           const end = expression != null ? expression.range[1] : node.range[1];
-          const type = expression != null ? expression.type : null;
+          const type = (() => {
+            if (expression == null) {
+              return null;
+            }
+            return [">", "<", ">=", "<=", "==", "!="].includes(expression.value) ? "i32" : expression.type;
+          })();
 
           if (type !== func.type) {
-            problems.push(generateErrorString("Missing return value", "Functions in WebAssembly must have a consistent return value. Expected " + func.type + " received " + String(type), { start, end }, filename, functionName));
+            problems.push(generateErrorString("Missing return value", "Inconsistent return value. Expected " + func.type + " received " + String(type), { start, end }, filename, functionName));
           }
         },
         [Syntax.FunctionCall]: (node, _validator) => {
@@ -5259,6 +5255,7 @@ const mapToImports = plugin => {
 
 function closurePlugin$$1() {
   return compileWalt(source, {
+    version: 0x1,
     encodeNames: false,
     filename: "walt-closure-plugin",
     lines: source.split("\n")
@@ -5274,7 +5271,8 @@ const validate = validate$1;
 const emitter = emit;
 // Used for deugging purposes
 const getIR = (source, {
-  encodeNames = true,
+  version = VERSION_1,
+  encodeNames = false,
   lines = source ? source.split("\n") : [],
   filename = "unknown"
 } = {}) => {
@@ -5285,11 +5283,17 @@ const getIR = (source, {
     filename
   });
   const intermediateCode = generator(semanticAST, {
+    version,
     encodeNames,
     lines,
     filename
   });
-  const wasm = emitter(intermediateCode, { encodeNames, filename, lines });
+  const wasm = emitter(intermediateCode, {
+    version,
+    encodeNames,
+    filename,
+    lines
+  });
   return wasm;
 };
 
@@ -5306,7 +5310,6 @@ const withPlugins = (plugins, importsObj) => {
 // Compiles a raw binary wasm buffer
 function compileWalt(source, config) {
   const wasm = getIR(source, config);
-  console.log(debug(wasm));
   return wasm.buffer();
 }
 

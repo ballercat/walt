@@ -24,7 +24,14 @@ export function _64FloatTypecast(x: f64): f32 {
 }
 export function promotions(): f32 {
   return 2.5 + 2 + 0.5 * (10/ 5);
-}`;
+}
+
+export function promoteF32toF64(): f64 {
+  const x: f64 = 2;
+  const y: f32 = 2;
+  return x + y;
+}
+`;
 
 test("typecasts work", t => {
   const getWasm = compose(debug, getIR);
@@ -38,5 +45,6 @@ test("typecasts work", t => {
     t.is(result.instance.exports._64IntTypecast(), 4);
     t.is(result.instance.exports._64FloatTypecast(2), 4);
     t.is(result.instance.exports.promotions(), 5.5);
+    t.is(result.instance.exports.promoteF32toF64(), 4);
   });
 });

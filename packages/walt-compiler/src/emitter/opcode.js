@@ -219,7 +219,6 @@ opcode(f32, i64, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
 
 export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
   const toType = to[0];
-  const fromType = from[0];
 
   if (to === "i32" && from === "i64") {
     return def.i32Wrapi64;
@@ -235,15 +234,8 @@ export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
     return def.f64Promotef32;
   }
 
-  if (toType === "f" && fromType === "i") {
-    return def[to + "ConvertS" + from];
-  }
-
-  if (toType === "i" && fromType === "f") {
-    return def[to + "TruncS" + from];
-  }
-
-  throw new Error(`Unknown type conversion ${from} to ${to}`);
+  const conversion = toType === "f" ? "ConvertS" : "TruncS";
+  return def[to + conversion + from];
 };
 
 /**
@@ -276,19 +268,17 @@ export const opcodeFromOperator = ({
     case "!=":
       return def[type + "Ne"];
     case ">":
-      return def[type + "GtU"] || def[type + "Gt"];
+      return def[type + "Gt"] || def[type + "GtS"];
     case "<":
-      return def[type + "LtU"] || def[type + "Lt"];
+      return def[type + "Lt"] || def[type + "LtS"];
     case "<=":
-      return def[type + "LeU"] || def[type + "Le"];
+      return def[type + "Le"] || def[type + "LeS"];
     case ">=":
-      return def[type + "GeU"] || def[type + "Ge"];
+      return def[type + "Ge"] || def[type + "GeS"];
     case "?":
       return def.If;
     case ":":
       return def.Else;
-    case "[":
-      return def[type + "Load"];
     case "&":
       return def[type + "And"];
     case "|":

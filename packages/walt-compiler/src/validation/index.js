@@ -170,7 +170,7 @@ export default function validate(
             problems.push(
               error(
                 `Cannot reassign a const variable ${identifier.value}`,
-                "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.",
+                "const variables cannot be reassigned, use let instead.",
                 { start, end },
                 filename,
                 functionName
@@ -204,13 +204,20 @@ export default function validate(
           const [expression] = node.params;
           const [start] = node.range;
           const end = expression != null ? expression.range[1] : node.range[1];
-          const type = expression != null ? expression.type : null;
+          const type = (() => {
+            if (expression == null) {
+              return null;
+            }
+            return [">", "<", ">=", "<=", "==", "!="].includes(expression.value)
+              ? "i32"
+              : expression.type;
+          })();
 
           if (type !== func.type) {
             problems.push(
               error(
                 "Missing return value",
-                "Functions in WebAssembly must have a consistent return value. Expected " +
+                "Inconsistent return value. Expected " +
                   func.type +
                   " received " +
                   String(type),

@@ -35,13 +35,13 @@ test("while loop", t =>
   export function test(x: i32): i32 {
     let y: i32 = 0;
     let i: i32 = 0;
-    while(y < x) {
-      i = 0 - y;
+    while(y != x) {
+      i -= y;
       y += 1;
     }
     return i;
   }
-  `).then(outputIs(t, -5, 5)));
+  `).then(outputIs(t, -10, 5)));
 
 test("break", t => {
   return compileAndRun(

@@ -74,6 +74,7 @@ class Explorer extends React.Component {
       requestAnimationFrame(() => {
         try {
           const config = {
+            version: 1,
             encodeNames: true,
             filename: this.state.example,
             source: this.state.code.split("\n")
