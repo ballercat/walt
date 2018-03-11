@@ -4,7 +4,12 @@ import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from "../Syntax";
 import walkNode from "../utils/walk-node";
 import error from "../utils/generate-error";
 import { isBuiltinType } from "../generator/utils";
-import { get, GLOBAL_INDEX, TYPE_CONST, ALIAS } from "../semantics/metadata";
+import {
+  GLOBAL_INDEX,
+  TYPE_CONST,
+  ALIAS,
+  AST_METADATA,
+} from "../semantics/metadata";
 import type { NodeType } from "../flow/types";
 
 const GLOBAL_LABEL = "global";
@@ -19,11 +24,11 @@ export default function validate(
     filename: string,
   }
 ) {
-  const [metadata] = ast.meta;
+  const metadata = ast.meta[AST_METADATA];
   if (metadata == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types, functions } = metadata.payload;
+  const { types, functions } = metadata;
   const problems = [];
 
   walkNode({
@@ -42,7 +47,7 @@ export default function validate(
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
-      const globalIndex = get(GLOBAL_INDEX, target);
+      const globalIndex = target.meta[GLOBAL_INDEX];
       if (globalIndex != null && !target.params.length) {
         problems.push(
           error(
@@ -57,7 +62,7 @@ export default function validate(
     },
     [Syntax.Import]: (importNode, _) => {
       walkNode({
-        [Syntax.Pair]: pair => {
+        [Syntax.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
             const [start, end] = type.range;
@@ -79,7 +84,7 @@ export default function validate(
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (decl, _validator) => {
       const [initializer] = decl.params;
-      if (get(TYPE_CONST, decl) != null) {
+      if (decl.meta[TYPE_CONST] != null) {
         const [start, end] = decl.range;
         if (initializer != null && initializer.Type !== Syntax.Constant) {
           problems.push(
@@ -126,7 +131,7 @@ export default function validate(
               )
             );
           }
-          if (get(TYPE_CONST, node) != null) {
+          if (node.meta[TYPE_CONST] != null) {
             const [start, end] = node.range;
 
             if (initializer == null) {
@@ -160,12 +165,12 @@ export default function validate(
             );
           }
 
-          const isConst = get(TYPE_CONST, identifier);
+          const isConst = identifier.meta[TYPE_CONST];
           if (isConst != null) {
             problems.push(
               error(
                 `Cannot reassign a const variable ${identifier.value}`,
-                "const is a convenience type and cannot be reassigned, use let instead. NOTE: All locals in WebAssembly are mutable.",
+                "const variables cannot be reassigned, use let instead.",
                 { start, end },
                 filename,
                 functionName
@@ -177,13 +182,13 @@ export default function validate(
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {
-            const alias = get(ALIAS, offset);
+            const alias = offset.meta[ALIAS];
             problems.push(
               error(
                 "Cannot generate memory offset",
                 `Undefined key ${
-                  alias ? alias.payload : offset.value
-                } for type ${identifier.type}`,
+                  alias != null ? alias : offset.value
+                } for type ${String(identifier.type)}`,
                 { start, end },
                 filename,
                 functionName
@@ -199,16 +204,23 @@ export default function validate(
           const [expression] = node.params;
           const [start] = node.range;
           const end = expression != null ? expression.range[1] : node.range[1];
-          const type = expression != null ? expression.type : null;
+          const type = (() => {
+            if (expression == null) {
+              return null;
+            }
+            return [">", "<", ">=", "<=", "==", "!="].includes(expression.value)
+              ? "i32"
+              : expression.type;
+          })();
 
           if (type !== func.type) {
             problems.push(
               error(
                 "Missing return value",
-                "Functions in WebAssembly must have a consistent return value. Expected " +
+                "Inconsistent return value. Expected " +
                   func.type +
                   " received " +
-                  type,
+                  String(type),
                 { start, end },
                 filename,
                 functionName
@@ -240,9 +252,9 @@ export default function validate(
             problems.push(
               error(
                 "Cannot make an indirect call without a valid function type",
-                `${identifier.value} has type ${
+                `${identifier.value} has type ${String(
                   identifier.type
-                } which is not defined. Inidrect calls must have pre-defined types.`,
+                )} which is not defined. Inidrect calls must have pre-defined types.`,
                 { start, end },
                 filename,
                 functionName

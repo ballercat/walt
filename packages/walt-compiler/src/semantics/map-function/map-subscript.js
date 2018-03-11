@@ -2,25 +2,19 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import type { NodeType } from "../../flow/types";
-import {
-  get,
-  TYPE_OBJECT,
-  OBJECT_KEY_TYPES,
-  alias as setMetaAlias,
-} from "../metadata";
+import { TYPE_OBJECT, OBJECT_KEY_TYPES, ALIAS } from "../metadata";
 
 const patchStringSubscript = (
-  metaObject: any,
+  byteOffsetsByKey: any,
   params: NodeType[]
 ): NodeType[] => {
   const field = params[1];
-  const { payload: byteOffsetsByKey } = metaObject;
   const absoluteByteOffset = byteOffsetsByKey[field.value];
   return [
     params[0],
     {
       ...field,
-      meta: [setMetaAlias(field.value)],
+      meta: { [ALIAS]: field.value },
       value: absoluteByteOffset,
       type: "i32",
       Type: Syntax.Constant,
@@ -33,11 +27,11 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
   const [identifier, field] = params;
   const userType = userTypes[identifier.type];
   if (userType != null) {
-    const metaObject = get(TYPE_OBJECT, userType);
-    const objectKeyTypeMap = get(OBJECT_KEY_TYPES, userType);
+    const metaObject = userType.meta[TYPE_OBJECT];
+    const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
     return {
       ...node,
-      type: objectKeyTypeMap ? objectKeyTypeMap.payload[field.value] : "i32",
+      type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : "i32",
       params: patchStringSubscript(metaObject, params),
     };
   }

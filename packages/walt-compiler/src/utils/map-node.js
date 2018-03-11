@@ -1,10 +1,12 @@
 // @flow
 import type { NodeType } from "../flow/types";
 
-type WalkerType = (node: NodeType, childMapper?: any) => NodeType;
+type WalkerType = (node: NodeType, childMapper: any) => NodeType;
 type VisitorType = { [string]: WalkerType };
 
-export default function mapNode(visitor: VisitorType): WalkerType {
+export default function mapNode(
+  visitor: VisitorType
+): (node: NodeType) => NodeType {
   const nodeMapper = (node: NodeType): NodeType => {
     if (node == null) {
       return node;

@@ -23,12 +23,14 @@ const declaration = (ctx: Context): NodeType => {
     ctx.expect(null, Syntax.Identifier);
   }
 
-  if (ctx.eat(["["]) && ctx.eat(["]"])) {
-    type = type + "[]";
-  }
-
   const params = [];
-  if (ctx.eat(["="])) {
+  // Parse generic
+  if (ctx.eat(["<"])) {
+    ctx.eat(["{"]);
+    params.push(expression(ctx));
+    ctx.eat(["}"]);
+    ctx.eat([">"]);
+  } else if (ctx.eat(["="])) {
     params.push(expression(ctx));
   }
 

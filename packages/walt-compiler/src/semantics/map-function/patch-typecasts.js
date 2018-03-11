@@ -1,6 +1,6 @@
 // @flow
 import Syntax from "../../Syntax";
-import { typeCast } from "../metadata";
+import { TYPE_CAST } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 export const typeWeight = (typeString: ?string) => {
@@ -21,25 +21,28 @@ export const typeWeight = (typeString: ?string) => {
 export const balanceTypesInMathExpression = (
   expression: NodeType
 ): NodeType => {
-  // find the result type in the expression
-  let type = null;
-  expression.params.forEach(({ type: childType }) => {
+  // find the heaviest type in the expression
+  const type = expression.params.reduce((acc, { type: childType }) => {
     // The way we do that is by scanning the top-level nodes in our expression
-    if (typeWeight(type) < typeWeight(childType)) {
-      type = childType;
+    if (typeWeight(acc) < typeWeight(childType)) {
+      return childType;
     }
-  });
 
-  // iterate again, this time, patching any mis-typed nodes
+    return acc;
+  }, null);
+
+  // iterate again, this time, patching any lighter types
   const params = expression.params.map(paramNode => {
-    if (paramNode.type != null && paramNode.type !== type && type != null) {
-      // last check is for flow
+    if (paramNode.type != null && paramNode.type !== type) {
       return {
         ...paramNode,
         type,
         value: paramNode.value,
         Type: Syntax.TypeCast,
-        meta: [...paramNode.meta, typeCast({ to: type, from: paramNode.type })],
+        meta: {
+          ...paramNode.meta,
+          [TYPE_CAST]: { to: type, from: paramNode.type },
+        },
         params: [paramNode],
       };
     }

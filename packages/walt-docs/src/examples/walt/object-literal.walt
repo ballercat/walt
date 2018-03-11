@@ -1,5 +1,5 @@
 // Memory is required. This could also be imported
-const memory: Memory = { 'initial': 1 };
+const memory: Memory<{ initial: 1 }>;
 
 // Object type. This has no side-effects on the final WebAssembly output
 // It is only used as a compiler hint
@@ -23,6 +23,5 @@ export function test(): i32 {
   // operations.
   obj.answer = obj.foo + obj.bar;
 
-  // . 'dot' syntax not yet supported
   return obj.answer;
 }

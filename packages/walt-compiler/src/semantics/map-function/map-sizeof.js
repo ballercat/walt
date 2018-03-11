@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import curry from "curry";
 import Syntax from "../../Syntax";
-import { get, OBJECT_SIZE } from "../../semantics/metadata";
+import { OBJECT_SIZE } from "../../semantics/metadata";
 
 const variableSize = (type: string): string => {
   switch (type) {
@@ -25,11 +25,11 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
   const func = functions[target.value];
 
   if (userType != null) {
-    const metaSize = get(OBJECT_SIZE, userType);
+    const metaSize = userType.meta[OBJECT_SIZE];
     invariant(metaSize, "Object size information is missing");
     return {
       ...sizeof,
-      value: metaSize.payload,
+      value: metaSize,
       params: [],
       type: "i32",
       Type: Syntax.Constant,

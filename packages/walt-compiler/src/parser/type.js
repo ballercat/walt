@@ -8,7 +8,6 @@ import type { NodeType } from "../flow/types";
 export default function typeParser(ctx: Context): NodeType {
   const node: NodeType = ctx.startNode();
   ctx.eat(["type"]);
-  const meta = [];
 
   const value = ctx.expect(null, Syntax.Identifier).value;
   ctx.expect(["="]);
@@ -61,7 +60,6 @@ export default function typeParser(ctx: Context): NodeType {
     return ctx.endNode(
       {
         ...node,
-        meta,
         value,
         type: result.type,
         params: [args, result],

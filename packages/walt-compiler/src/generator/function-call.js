@@ -2,22 +2,16 @@
 import mapSyntax from "./map-syntax";
 import opcode from "../emitter/opcode";
 import mergeBlock from "./merge-block";
-import invariant from "invariant";
-import printNode from "../utils/print-node";
-import { get, FUNCTION_INDEX } from "../semantics/metadata";
+import { FUNCTION_INDEX } from "../semantics/metadata";
 import type { GeneratorType } from "./flow/types";
 
 const generateFunctionCall: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  const metaFunctionIndex = get(FUNCTION_INDEX, node);
-  invariant(
-    metaFunctionIndex,
-    "Undefined function index for node \n" + `${printNode(node)}`
-  );
+  const metaFunctionIndex = node.meta[FUNCTION_INDEX];
 
   block.push({
     kind: opcode.Call,
-    params: [metaFunctionIndex.payload],
+    params: [metaFunctionIndex],
     debug: `${node.value}<${node.type ? node.type : "void"}>`,
   });
 

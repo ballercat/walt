@@ -5,9 +5,9 @@ import closurePlugin from "../closure-plugin";
 test("functions", t => {
   const walt = `
   // For pointers
-  const table: Table = { element: anyfunc, initial: 10, max: 10 };
+  const table: Table<{ element: anyfunc, initial: 10, max: 10 }>;
   // For object operations
-  const memory: Memory = { 'initial': 1 };
+  const memory: Memory<{ initial: 1 }>;
 
   type Test = () => i32;
   type Type = { 'a': i32 };
@@ -63,7 +63,7 @@ test("functions", t => {
 
 test("closures", t => {
   const source = `
-const table: Table = { element: anyfunc, initial: 5 };
+const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
 type Simple = () => i32;
 type Void = () => void;

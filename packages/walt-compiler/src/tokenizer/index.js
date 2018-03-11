@@ -28,10 +28,6 @@ class Tokenizer {
       comments,
     ]
   ) {
-    if (!(stream instanceof Stream)) {
-      this.die(`Tokenizer expected instance of Stream in constructor.
-                Instead received ${JSON.stringify(stream)}`);
-    }
     this.stream = stream;
     this.tokens = [];
     this.pos = 0;
@@ -84,10 +80,6 @@ class Tokenizer {
   }
 
   match(char: string, parsers: Parsers) {
-    if (char == null) {
-      return parsers;
-    }
-
     return parsers.map(parse => parse(char)).filter(p => p);
   }
 
@@ -134,13 +126,6 @@ class Tokenizer {
     }
 
     return this.tokens;
-  }
-
-  /**
-   * Stop parsing and throw a fatal error
-   */
-  die(reason: string) {
-    throw new Error(reason);
   }
 }
 

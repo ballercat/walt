@@ -1,13 +1,15 @@
 // @flow
 import Syntax from "../Syntax";
 import walkNode from "../utils/walk-node";
+import { stringToType } from "../emitter/value_type";
+import { parseBounds } from "../utils/resizable-limits";
 import {
   EXTERN_FUNCTION,
   EXTERN_MEMORY,
   EXTERN_GLOBAL,
   EXTERN_TABLE,
 } from "../emitter/external_kind";
-import { get, TYPE_INDEX } from "../semantics/metadata";
+import { TYPE_INDEX } from "../semantics/metadata";
 import type { IntermediateImportType, NodeType } from "./flow/types";
 
 export const getKindConstant = (value: string) => {
@@ -35,25 +37,29 @@ export default function generateImportFromNode(
 
   // Look for Pair Types, encode them into imports array
   walkNode({
-    [Syntax.Pair]: pairNode => {
+    [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
       const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
       const kind = getKindConstant(importTypeValue);
       const typeIndex = (() => {
-        const typeIndexMeta = get(TYPE_INDEX, typeOrIdentifierNode);
+        const typeIndexMeta = typeOrIdentifierNode.meta[TYPE_INDEX];
         if (typeIndexMeta) {
-          return typeIndexMeta.payload;
+          return typeIndexMeta;
         }
         return null;
       })();
+      const bounds =
+        importTypeValue === "Memory" ? parseBounds(typeOrIdentifierNode) : {};
 
       imports.push({
         module,
         field,
         global: kind === EXTERN_GLOBAL,
         kind,
+        type: stringToType[importTypeValue],
         typeIndex,
+        ...bounds,
       });
     },
   })(importsNode);

@@ -1,12 +1,12 @@
 // @flow
 import type { NodeType } from "../flow/types";
 
-type WalkerType = (node: NodeType, childMapper?: any) => NodeType;
+export type WalkerType = (node: any, childMapper: any) => any | void;
 type VisitorType = { [string]: WalkerType };
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-function walker(visitor: VisitorType): WalkerType {
+function walker(visitor: VisitorType): (node: NodeType) => NodeType {
   const walkNode = (node: NodeType): NodeType => {
     if (node == null) {
       return node;

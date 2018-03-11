@@ -3,14 +3,16 @@ import curry from "curry";
 import Syntax from "../Syntax";
 import mapNode from "../utils/map-node";
 import {
-  funcIndex as setMetaFunctionIndex,
-  typeIndex as setMetaTypeIndex,
+  FUNCTION_INDEX,
+  TYPE_INDEX,
+  TYPE_CONST,
+  GLOBAL_INDEX,
 } from "./metadata";
 
 export const mapImport = curry((options, node, _) =>
   mapNode({
-    [Syntax.Pair]: pairNode => {
-      const { types, functions } = options;
+    [Syntax.Pair]: (pairNode, __) => {
+      const { types, functions, globals } = options;
       const [identifierNode, typeNode] = pairNode.params;
 
       if (types[typeNode.value] != null) {
@@ -21,15 +23,24 @@ export const mapImport = curry((options, node, _) =>
           ...identifierNode,
           id: identifierNode.value,
           type: types[typeNode.value].type,
-          meta: [
-            setMetaFunctionIndex(functionIndex),
-            setMetaTypeIndex(typeIndex),
-          ],
+          meta: {
+            [FUNCTION_INDEX]: functionIndex,
+            [TYPE_INDEX]: typeIndex,
+          },
         };
         functions[identifierNode.value] = functionNode;
         return {
           ...pairNode,
           params: [functionNode, types[typeNode.value]],
+        };
+      }
+
+      if (typeNode.type !== "Table" && typeNode.type !== "Memory") {
+        const index = Object.keys(globals).length;
+        globals[identifierNode.value] = {
+          ...identifierNode,
+          meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+          type: typeNode.type,
         };
       }
 

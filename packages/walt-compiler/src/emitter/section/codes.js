@@ -10,3 +10,5 @@ export const SECTION_START = 8;
 export const SECTION_ELEMENT = 9;
 export const SECTION_CODE = 10;
 export const SECTION_DATA = 11;
+// Custom sections
+export const SECTION_NAME = 0;

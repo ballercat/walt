@@ -1,34 +1,29 @@
 // @flow
 import Syntax from "../../Syntax";
 import curry from "curry";
-import {
-  TYPE_ARRAY,
-  get,
-  funcIndex as setMetaFunctionIndex,
-} from "../metadata";
+import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
 
 const mapIdentifier = curry(
   ({ locals, globals, functions, table, userTypes }, identifier) => {
     // Not a function call or pointer, look-up variables
     const local = locals[identifier.value];
     const global = globals[identifier.value];
+
     if (local != null) {
       const type = (() => {
-        const isArray = get(TYPE_ARRAY, locals[identifier.value]);
-        return isArray != null
-          ? isArray.payload
-          : locals[identifier.value].type;
+        const isArray = local.meta[TYPE_ARRAY];
+        return isArray || local.type;
       })();
       return {
         ...identifier,
         type,
-        meta: [...local.meta],
+        meta: { ...local.meta },
       };
     } else if (global != null) {
       return {
         ...identifier,
         type: globals[identifier.value].type,
-        meta: [...global.meta],
+        meta: { ...global.meta },
       };
     } else if (userTypes[identifier.value] != null) {
       return {
@@ -43,11 +38,9 @@ const mapIdentifier = curry(
       return {
         ...identifier,
         type: "i32",
-        meta: [
-          setMetaFunctionIndex(
-            Object.keys(functions).indexOf(identifier.value)
-          ),
-        ],
+        meta: {
+          [FUNCTION_INDEX]: Object.keys(functions).indexOf(identifier.value),
+        },
         value: Object.keys(table).indexOf(identifier.value),
         Type: Syntax.FunctionPointer,
       };

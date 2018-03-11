@@ -10,7 +10,10 @@ const statement = (ctx: Context): NodeType | null => {
   switch (ctx.token.type) {
     case Syntax.Keyword:
       return keyword(ctx);
+    case Syntax.Identifier:
+      return maybeAssignment(ctx);
     case Syntax.Punctuator:
+    default:
       if (ctx.eat([";"])) {
         return null;
       }
@@ -18,10 +21,6 @@ const statement = (ctx: Context): NodeType | null => {
         return block(ctx);
       }
       throw ctx.syntaxError("Unexpected expression");
-    case Syntax.Identifier:
-      return maybeAssignment(ctx);
-    default:
-      throw ctx.unknown(ctx.token);
   }
 };
 

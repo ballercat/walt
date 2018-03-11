@@ -5,7 +5,16 @@ import { Header, Image, Segment } from "semantic-ui-react";
 import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
-import waltCompiler, { getIR as getWaltIR, debug as debugWalt } from "walt-compiler";
+import waltCompiler, {
+  parser,
+  semantics,
+  validate,
+  generator,
+  emitter,
+  printNode
+} from "walt-compiler";
+
+const getAST = source => semantics(parser(source));
 
 const exampleList = Object.keys(examples).map(key => {
   return {
@@ -34,15 +43,16 @@ class Explorer extends React.Component {
   state = {
     code: examples.Default.code,
     js: examples.Default.js,
-    wasm: debugWalt(getWaltIR(examples.Default.code)),
+    wasm: printNode(getAST(examples.Default.code)),
     compiling: false,
     logs: [],
-    activeItem: "code"
+    activeItem: "code",
+    example: "Default"
   };
 
   compileAndRun = () => {
     const compiler = eval(`(${this.state.js})`);
-    const buffer = this.intermediateRepresentation.buffer();
+    const buffer = this.bytecode.buffer();
     Promise.resolve(compiler(buffer))
       .then(cancel =>
         // without this raf the spinner will not likely render as everything is
@@ -63,9 +73,16 @@ class Explorer extends React.Component {
       // spinner) that we are compiling things.
       requestAnimationFrame(() => {
         try {
-          this.intermediateRepresentation = getWaltIR(this.state.code);
-          const wasm = debugWalt(this.intermediateRepresentation);
-          this.setState({ wasm }, this.compileAndRun);
+          const config = {
+            version: 1,
+            encodeNames: true,
+            filename: this.state.example,
+            source: this.state.code.split("\n")
+          };
+          const ast = getAST(this.state.code);
+          validate(ast, config);
+          this.bytecode = emitter(generator(ast, config), config);
+          this.setState({ wasm: printNode(ast) }, this.compileAndRun);
         } catch (e) {
           this.setState({ compiling: false });
           setTimeout(() => {
@@ -97,7 +114,7 @@ class Explorer extends React.Component {
 
   handleSelectExample = (e, { value }) => {
     const { js, code } = examples[value];
-    this.setState({ compiling: true });
+    this.setState({ compiling: true, example: value });
     requestAnimationFrame(() => this.setState({ code, js, compiling: false }));
   };
 

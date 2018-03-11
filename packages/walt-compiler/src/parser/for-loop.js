@@ -5,6 +5,15 @@ import statement from "./statement";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
 
+const reverse = {
+  ">": "<=",
+  "<": ">=",
+  ">=": "<",
+  "<=": ">",
+  "==": "!=",
+  "!=": "==",
+};
+
 const paramList = (ctx: Context): NodeType[] => {
   ctx.expect(["("]);
   const params: NodeType[] = [];
@@ -25,7 +34,15 @@ const forLoop = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(["for"]);
 
-  const params = paramList(ctx);
+  // Pop the last expression from param list to append to the body of the loop.
+  // This is important to do here as it'll be more difficult to acomplish later
+  // in the generator accurately. In a for-loop we always want the afterthought
+  // to follow the entire body, so here we are.
+  const [initializer, condition, afterthought] = paramList(ctx);
+  if (reverse[condition.value]) {
+    condition.value = reverse[condition.value];
+  }
+  const body = [];
 
   ctx.expect(["{"]);
 
@@ -33,7 +50,7 @@ const forLoop = (ctx: Context): NodeType => {
   while (ctx.token && ctx.token.value !== "}") {
     stmt = statement(ctx);
     if (stmt) {
-      params.push(stmt);
+      body.push(stmt);
     }
   }
   ctx.expect(["}"]);
@@ -41,7 +58,7 @@ const forLoop = (ctx: Context): NodeType => {
   return ctx.endNode(
     {
       ...node,
-      params,
+      params: [initializer, condition, ...body, afterthought],
     },
     Syntax.Loop
   );

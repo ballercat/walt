@@ -1,5 +1,5 @@
 // @flow
-
+/* global $Exact */
 export type Marker = {
   sourceLine: string,
   line: number,
@@ -13,14 +13,14 @@ export type TokenType = {
   value: string,
 };
 
-export type MetadataType = { type: string, payload: any };
+export type MetadataType = { [string]: any };
 
 export type NodeType = {
   range: Marker[],
   Type: string,
   type: string | null,
   value: string,
-  meta: MetadataType[],
+  meta: MetadataType,
   params: NodeType[],
 };
 
@@ -30,4 +30,17 @@ export type WebAssemblyModuleType = {
       [string]: any,
     },
   },
+};
+
+export type ConfigType = {
+  version: number,
+  encodeNames: boolean,
+  lines: string[],
+  filename: string,
+};
+
+export type TypeCastType = {
+  ...$Exact<NodeType>,
+  type: string,
+  params: [{ ...NodeType, type: string }],
 };

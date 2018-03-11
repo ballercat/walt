@@ -7,6 +7,13 @@ export const ANYFUNC = 0x70;
 export const FUNC = 0x60;
 export const BLOCK_TYPE = 0x40;
 
+export const stringToType = {
+  i32: I32,
+  i64: I64,
+  f32: F32,
+  f64: F64,
+};
+
 export const getTypeString = (type: number) => {
   switch (type) {
     case I32:

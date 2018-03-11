@@ -39,7 +39,7 @@ test("function pointers", t =>
     const table = new WebAssembly.Table({ element: "anyfunc", initial: 10 });
     compileAndRun(
       `
-      import { table: Table } from 'env';
+      import { table: Table<{ initial: 20 }> } from 'env';
       import { setTimeout: Later } from 'env';
       import { log: Log } from 'env';
 

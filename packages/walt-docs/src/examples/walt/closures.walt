@@ -1,4 +1,4 @@
-const table: Table = { element: anyfunc, initial: 1 };
+const table: Table<{ element: anyfunc, initial: 1 }>;
 // lambda keyword is used to indicate a function type which is used as a lambda/closure
 type Fun = () => i32;
 type Type = Lambda<Fun>;
