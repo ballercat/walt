@@ -1233,7 +1233,7 @@ const statement = ctx => {
 // Base Character stream class
 class Stream {
 
-  constructor(input = "") {
+  constructor(input) {
     this.pos = this.line = this.col = 0;
     this.input = input;
     this.lines = input.split("\n");
@@ -1358,7 +1358,7 @@ const wrap = (predicate, type, supported) => {
 var token = wrap;
 
 //      
-const supported = ["+", "++", "-", "--", ">>", "<<", "=", "==", "+=", "-=", "=>", "<=", ">=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
+const supported = ["+", "++", "-", "--", ">>", ">>>", "<<", "=", "==", "+=", "-=", "=>", "<=", ">=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
 
 const trie = new trie$1(supported);
 var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
@@ -1413,7 +1413,9 @@ const maybeModifier = char => {
 };
 
 const root = char => {
-  if (isDot(char)) {
+  if (char === "-") {
+    return root;
+  } else if (isDot(char)) {
     return number;
   } else if (char === "0") {
     return maybeModifier;
@@ -1862,6 +1864,40 @@ var index_14 = index.set;
 var index_16 = index.sizeof;
 
 //      
+const encodeSigned = (value, size = 32) => {
+  const encoding = [];
+  while (true) {
+    const byte = value & 127;
+    value = value >> 7;
+    const signbit = byte & 0x40;
+
+    if (value === 0 && !signbit || value === -1 && signbit) {
+      encoding.push(byte);
+      break;
+    } else {
+      encoding.push(byte | 0x80);
+    }
+  }
+  return encoding;
+};
+
+const encodeUnsigned = value => {
+  const encoding = [];
+  while (true) {
+    const i = value & 127;
+    value = value >>> 7;
+    if (value === 0) {
+      encoding.push(i);
+      break;
+    }
+
+    encoding.push(i | 0x80);
+  }
+
+  return encoding;
+};
+
+//      
 // Used to output raw binary, holds values and types in a large array 'stream'
 class OutputStream {
 
@@ -1873,7 +1909,7 @@ class OutputStream {
     this.size = 0;
   }
 
-  push(type, value, debug = "") {
+  push(type, value, debug) {
     let size = 0;
     switch (type) {
       case "varuint7":
@@ -1882,21 +1918,21 @@ class OutputStream {
       case "varint1":
         {
           // Encode all of the LEB128 aka 'var*' types
-          value = this.encode(value);
+          value = encodeUnsigned(value);
           size = value.length;
           invariant_1(size, `Cannot write a value of size ${size}`);
           break;
         }
       case "varint32":
         {
-          value = this.encodeSigned(value);
+          value = encodeSigned(value);
           size = value.length;
           invariant_1(size, `Cannot write a value of size ${size}`);
           break;
         }
       case "varint64":
         {
-          value = this.encodeSigned(value, 64);
+          value = encodeSigned(value, 64);
           size = value.length;
           invariant_1(size, `Cannot write a value of size ${size}`);
           break;
@@ -1912,42 +1948,6 @@ class OutputStream {
     this.size += size;
 
     return this;
-  }
-
-  encode(value) {
-    const encoding = [];
-    while (true) {
-      const i = value & 127;
-      value = value >>> 7;
-      if (value === 0) {
-        encoding.push(i);
-        break;
-      }
-
-      encoding.push(i | 0x80);
-    }
-
-    return encoding;
-  }
-
-  encodeSigned(value, size = 32) {
-    const encoding = [];
-    while (true) {
-      const byte = value & 127;
-      value = value >>> 7;
-      const signbit = byte & 0x40;
-      if (value < 0) {
-        value = value | ~0 << size - 7;
-      }
-
-      if (value === 0 && !signbit || value === -1 && signbit) {
-        encoding.push(byte);
-        break;
-      } else {
-        encoding.push(byte | 0x80);
-      }
-    }
-    return encoding;
   }
 
   // Get the BUFFER, not data array. **Always creates new buffer**
@@ -2358,7 +2358,8 @@ const opcodeFromOperator = ({
     "&": def[String(type) + "And"],
     "|": def[String(type) + "Or"],
     "^": def[String(type) + "Xor"],
-    ">>": def[String(type) + "ShrU"],
+    ">>": def[String(type) + "ShrS"],
+    ">>>": def[String(type) + "ShrU"],
     "<<": def[String(type) + "Shl"]
   };
 
@@ -2472,7 +2473,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
       body.push(index_9, valueType.mutable, "mutable");
     }
 
-    // map over all params, if any and encode each one
+    // map over all params, if any and encode each on
     (params || []).forEach(p => {
       let type = varuint32;
       let stringType = "i32.literal";

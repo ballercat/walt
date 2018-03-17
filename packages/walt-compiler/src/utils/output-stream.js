@@ -1,5 +1,6 @@
 // @flow
 import invariant from "invariant";
+import { encodeSigned, encodeUnsigned } from "./leb128";
 import { sizeof, set, u8 } from "wasm-types";
 
 // Used to output raw binary, holds values and types in a large array 'stream'
@@ -23,19 +24,19 @@ export default class OutputStream {
       case "varint7":
       case "varint1": {
         // Encode all of the LEB128 aka 'var*' types
-        value = this.encode(value);
+        value = encodeUnsigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
       }
       case "varint32": {
-        value = this.encodeSigned(value);
+        value = encodeSigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
       }
       case "varint64": {
-        value = this.encodeSigned(value, 64);
+        value = encodeSigned(value, 64);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
@@ -50,42 +51,6 @@ export default class OutputStream {
     this.size += size;
 
     return this;
-  }
-
-  encode(value: number) {
-    const encoding = [];
-    while (true) {
-      const i = value & 127;
-      value = value >>> 7;
-      if (value === 0) {
-        encoding.push(i);
-        break;
-      }
-
-      encoding.push(i | 0x80);
-    }
-
-    return encoding;
-  }
-
-  encodeSigned(value: number, size: number = 32) {
-    const encoding = [];
-    while (true) {
-      const byte = value & 127;
-      value = value >>> 7;
-      const signbit = byte & 0x40;
-      if (value < 0) {
-        value = value | (~0 << (size - 7));
-      }
-
-      if ((value === 0 && !signbit) || (value === -1 && signbit)) {
-        encoding.push(byte);
-        break;
-      } else {
-        encoding.push(byte | 0x80);
-      }
-    }
-    return encoding;
   }
 
   // Get the BUFFER, not data array. **Always creates new buffer**

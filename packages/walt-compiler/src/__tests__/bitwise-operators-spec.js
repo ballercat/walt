@@ -4,53 +4,32 @@ import compile from "..";
 const compileAndRun = (src, importsObj = {}) =>
   WebAssembly.instantiate(compile(src), importsObj);
 
-const outputIs = (t, value) => result =>
-  t.is(result.instance.exports.test(), value);
-
-test("bitwise and operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
+test("bitwise operators", t => {
+  return compileAndRun(`
+    export function testAnd(): i32 {
       return 1 & 1;
     }
-  `).then(outputIs(t, 1));
-});
 
-test("bitwise or operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
+    export function testOr(): i32 {
       return 0 | 0;
     }
-  `).then(outputIs(t, 0));
-});
 
-test("bitwise xor operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
-      return 1 ^ 1;
-    }
-  `).then(outputIs(t, 0));
-});
-
-test("chain bitwise xor operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
+    export function testXor(): i32 {
       return 1 ^ 1 ^ 1;
     }
-  `).then(outputIs(t, 1));
-});
 
-test("chain bitwise and operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
-      return 15 & 7 & 2;
+    export function testZeroFillShiftRight(): i32 {
+      return -9 >>> 2;
     }
-  `).then(outputIs(t, 2));
-});
 
-test("chain bitwise or operator", t => {
-  compileAndRun(`
-    export function test(): i32 {
-      return 8 | 4 | 2 | 1;
+    export function testStickyRightShift(): i32 {
+      return -9 >> 2;
     }
-  `).then(outputIs(t, 15));
+  `).then(({ instance: { exports } }) => {
+    t.is(exports.testAnd(), 1);
+    t.is(exports.testOr(), 0);
+    t.is(exports.testXor(), 1);
+    t.is(exports.testZeroFillShiftRight(), 1073741821);
+    t.is(exports.testStickyRightShift(), -3);
+  });
 });

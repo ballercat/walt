@@ -266,7 +266,8 @@ export const opcodeFromOperator = ({
     "&": def[String(type) + "And"],
     "|": def[String(type) + "Or"],
     "^": def[String(type) + "Xor"],
-    ">>": def[String(type) + "ShrU"],
+    ">>": def[String(type) + "ShrS"],
+    ">>>": def[String(type) + "ShrU"],
     "<<": def[String(type) + "Shl"],
   };
 
