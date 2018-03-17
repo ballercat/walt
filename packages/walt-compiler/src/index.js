@@ -30,6 +30,7 @@ export const getIR = (
 ) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
+
   validate(semanticAST, {
     lines,
     filename,

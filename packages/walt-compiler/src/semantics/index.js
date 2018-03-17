@@ -32,6 +32,7 @@ export default function semantics(ast: NodeType): NodeType {
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
   const hoistImports: NodeType[] = [];
+  const statics: { [string]: NodeType } = {};
 
   if (hasNode(Syntax.Closure, ast)) {
     ast = { ...ast, params: [...closureImports(), ...ast.params] };
@@ -63,6 +64,7 @@ export default function semantics(ast: NodeType): NodeType {
       functions,
       userTypes,
       table,
+      statics,
     }),
   })(astWithTypes);
 
@@ -71,7 +73,7 @@ export default function semantics(ast: NodeType): NodeType {
     meta: {
       ...patched.meta,
       // Attach information collected to the AST
-      [AST_METADATA]: { functions, globals, types, userTypes },
+      [AST_METADATA]: { functions, globals, types, userTypes, statics },
     },
     params: [...hoistImports, ...patched.params, ...hoist],
   };

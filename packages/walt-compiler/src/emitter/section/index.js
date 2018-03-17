@@ -8,6 +8,7 @@ import types from "./types";
 import code from "./code";
 import memory from "./memory";
 import table from "./table";
+import data from "./data";
 import name from "./name";
 import {
   SECTION_TYPE,
@@ -19,6 +20,7 @@ import {
   SECTION_EXPORT,
   SECTION_ELEMENT,
   SECTION_CODE,
+  SECTION_DATA,
   SECTION_NAME,
 } from "./codes";
 
@@ -46,5 +48,6 @@ export default {
     emitter: element,
   }),
   code: writer({ type: SECTION_CODE, label: "Code", emitter: code }),
+  data: writer({ type: SECTION_DATA, label: "Data", emitter: data }),
   name: writer({ type: SECTION_NAME, label: "Name", emitter: name }),
 };

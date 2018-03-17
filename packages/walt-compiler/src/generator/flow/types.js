@@ -69,6 +69,7 @@ export type NameSectionType = {
     locals: Array<{ index: number, name: string }>,
   }>,
 };
+export type DataSectionType = Array<{ offset: number, data: string }>;
 
 export type ProgramType = {
   // Setup keys needed for the emitter
@@ -84,4 +85,5 @@ export type ProgramType = {
   Table: IntermediateTableType[],
   Artifacts: NodeType[],
   Name: NameSectionType,
+  Data: DataSectionType,
 };

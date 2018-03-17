@@ -24,7 +24,13 @@ import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
-import { FUNCTION_INDEX, CLOSURE_TYPE, FUNCTION_METADATA } from "../metadata";
+import {
+  FUNCTION_INDEX,
+  CLOSURE_TYPE,
+  FUNCTION_METADATA,
+  STATIC_INDEX,
+  STATIC_STRING,
+} from "../metadata";
 import type { NodeType } from "../../flow/types";
 
 /**
@@ -215,6 +221,28 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         ...binaryNode,
         params: binaryNode.params.map(transform),
       });
+    },
+    [Syntax.StringLiteral]: (stringLiteral, transform) => {
+      const { statics } = options;
+      const { value } = stringLiteral;
+      const index = statics[value]
+        ? statics[value].value
+        : Object.values(statics)
+            .map(({ meta: { [STATIC_STRING]: data } }) => data)
+            .reduce((a, v) => a + v.length, 0);
+      const transformed = transform({
+        ...stringLiteral,
+        value: String(index),
+        meta: {
+          ...stringLiteral.meta,
+          [STATIC_STRING]: value,
+        },
+        Type: Syntax.Constant,
+      });
+      // it really does not matter when we write the key in
+      statics[stringLiteral.value] = transformed;
+
+      return transformed;
     },
     [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, transform) => {

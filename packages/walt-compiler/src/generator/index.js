@@ -18,7 +18,9 @@ import {
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   FUNCTION_METADATA,
+  STATIC_STRING,
   TYPE_INDEX,
+  AST_METADATA,
 } from "../semantics/metadata";
 
 import type { NodeType, ConfigType } from "../flow/types";
@@ -80,6 +82,7 @@ export default function generator(
     Memory: [],
     Table: [],
     Artifacts: [],
+    Data: [],
     Name: {
       module: config.filename,
       functions: [],
@@ -232,6 +235,14 @@ export default function generator(
 
   // Unlike function indexes we need function bodies to be exact
   program.Code = program.Code.filter(Boolean);
+
+  // Encode the static memory values into Data section
+  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce(
+    (acc, [key, val]: [string, any]) => {
+      return [...acc, { offset: Number(val.value), data: key }];
+    },
+    []
+  );
 
   return program;
 }

@@ -1,5 +1,12 @@
 import test from "ava";
 import compile from "..";
+import { readFileSync } from "fs";
+import path from "path";
+
+const compilerWalt = readFileSync(
+  path.join(__dirname, "./compiler-spec.walt"),
+  "utf8"
+);
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src, { encodeNames: true }), imports);
@@ -12,6 +19,26 @@ test("empty module compilation", t =>
 
 test("invalid imports throw", t =>
   t.throws(() => compile("import foo from 'bar'")));
+
+test("subscript operator", t => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const view = new DataView(memory.buffer);
+  return compileAndRun(compilerWalt, {
+    env: {
+      memory,
+      assert(strPointer, value, expected) {
+        let text = "";
+        const length = view.getUint8(strPointer, true);
+        for (let i = 0; i < length; i++) {
+          text += String.fromCharCode(view.getUint8(strPointer + 1 + i, true));
+        }
+        t.is(value, expected, text);
+      },
+    },
+  }).then(module => {
+    module.instance.exports.run();
+  });
+});
 
 test("compiler basics", t =>
   compileAndRun(

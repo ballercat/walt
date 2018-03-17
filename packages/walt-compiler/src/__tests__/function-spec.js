@@ -10,13 +10,13 @@ test("functions", t => {
   const memory: Memory<{ initial: 1 }>;
 
   type Test = () => i32;
-  type Type = { 'a': i32 };
+  type Type = { a: i32 };
 
   const x: i32 = 32;
 
   function callback(pointer: Test): i32 { return pointer(); }
   function result(): i32 { return 2; }
-  function addOne(ptr: Type) { ptr['a'] += 1; }
+  function addOne(ptr: Type) { ptr.a += 1; }
 
   export function testParams(x: i32, y: i32) : i32 { return x + y; }
   export function testGlobalScope(): i32 { let x: i32 = 42; return x; }
@@ -27,9 +27,9 @@ test("functions", t => {
   export function test0FunctionNames1(): i32 { return 2; }
   export function testPointerArguments(): i32 {
     let original: Type = 0;
-    original['a'] = 4;
+    original.a = 4;
     addOne(original);
-    return original['a'];
+    return original.a;
   }
   export function testFunctionPointers(): i32 {
     return callback(result) + callback(result);
