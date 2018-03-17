@@ -25,7 +25,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
       body.push(u8, valueType.mutable, "mutable");
     }
 
-    // map over all params, if any and encode each one
+    // map over all params, if any and encode each on
     (params || []).forEach(p => {
       let type = varuint32;
       let stringType = "i32.literal";

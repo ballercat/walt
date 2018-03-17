@@ -51,7 +51,9 @@ const maybeModifier = char => {
 };
 
 const root = char => {
-  if (isDot(char)) {
+  if (char === "-") {
+    return root;
+  } else if (isDot(char)) {
     return number;
   } else if (char === "0") {
     return maybeModifier;
