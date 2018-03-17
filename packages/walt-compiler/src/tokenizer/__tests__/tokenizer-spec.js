@@ -118,3 +118,9 @@ test("parses identifiers with numbers", t => {
   const tokenizer = new Tokenizer(stream);
   t.snapshot(tokenizer.parse());
 });
+
+test("number literals", t => {
+  const stream = new Stream("1e10 0b101 0xFF 0B0101 0o10 0b10 0xff 0xE10");
+  const tokenizer = new Tokenizer(stream);
+  t.snapshot(tokenizer.parse().map(({ value }) => value));
+});
