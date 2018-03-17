@@ -36,7 +36,7 @@ export default class OutputStream {
         break;
       }
       case "varint64": {
-        value = encodeSigned(value, 64);
+        value = encodeSigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
