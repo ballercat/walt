@@ -8,7 +8,7 @@ class Stream {
   col: number;
   lines: string[];
 
-  constructor(input: string = "") {
+  constructor(input: string) {
     this.pos = this.line = this.col = 0;
     this.input = input;
     this.lines = input.split("\n");

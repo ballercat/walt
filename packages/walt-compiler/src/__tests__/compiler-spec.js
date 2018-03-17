@@ -70,6 +70,17 @@ test("compiler basics", t =>
   export function testExternalImport(): i32 {
     return externalConst;
   }
+
+  export function testNumberLiterals(): i32 {
+    const hex: i32 = 0xff; // 255
+    const HEX: i32 = 0xFF; // 255
+    const oct: i32 = 0o10; // 8
+    const exp: i32 = 1e2;  // 100
+    const EXP: i32 = 1E2;  // 100
+    const bin: i32 = 0b10; // 2
+
+    return hex + HEX + oct + exp + EXP + bin;
+  }
 `,
     { env: { two: () => 2, alsoTwo: () => 2, externalConst: 42 } }
   ).then(module => {
@@ -80,6 +91,7 @@ test("compiler basics", t =>
     t.is(module.instance.exports.testGlobali64(), 24);
     t.is(module.instance.exports.testGlobalF32(), 33.0);
     t.is(module.instance.exports.testExternalImport(), 42);
+    t.is(module.instance.exports.testNumberLiterals(), 720);
   }));
 
 // The most boring spec ever

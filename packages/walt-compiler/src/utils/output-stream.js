@@ -15,7 +15,7 @@ export default class OutputStream {
     this.size = 0;
   }
 
-  push(type: string, value: any, debug: string = "") {
+  push(type: string, value: any, debug: string) {
     let size = 0;
     switch (type) {
       case "varuint7":
