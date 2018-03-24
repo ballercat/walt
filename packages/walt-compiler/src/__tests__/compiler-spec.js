@@ -20,12 +20,13 @@ test("empty module compilation", t =>
 test("invalid imports throw", t =>
   t.throws(() => compile("import foo from 'bar'")));
 
-test("subscript operator", t => {
+test.only("subscript operator", t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
   return compileAndRun(compilerWalt, {
     env: {
       memory,
+      externalConst: 42,
       assert(strPointer, value, expected) {
         let text = "";
         const length = view.getUint8(strPointer, true);

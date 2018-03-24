@@ -1,4 +1,5 @@
 import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
+import { externalConst: i32 } from 'env';
 type String = {
   length: i32,
   chars: i32[]
@@ -12,6 +13,64 @@ function testArraySubscript(): i32 {
   return arr[1] + arr[2];
 }
 
+const gArray: i32[] = 0;
+export function testGlobalArray(): i32 {
+  gArray[0] = 2;
+  gArray[1] = 2;
+  return gArray[0] + gArray[1];
+}
+
+// Const globals, export
+export const bar: i32 = 2;
+let foo: i32 = 3;
+let baz: i32 = 0;
+let x: i32;
+
+export function testLargeSignedConstant(): i32 {
+  return 126;
+}
+function number(): i64 {
+  const x: i64 = 42;
+  return x;
+}
+function two() : i64 {
+  return 2;
+}
+export function test64BitConstants(): i32 {
+  return number(): i32;
+}
+
+const foobar: f64 = 24;
+export function testGlobalf64(): f64 {
+  return foobar;
+}
+
+const globalf32: f32 = 33.0;
+export function testGlobalf32(): f32 {
+  return globalf32;
+}
+
+export function testExternalImport(): i32 {
+  return externalConst;
+}
+
+export function testNumberLiterals(): i32 {
+  const hex: i32 = 0xff; // 255
+  const HEX: i32 = 0xFF; // 255
+  const oct: i32 = 0o10; // 8
+  const exp: i32 = 1e2;  // 100
+  const EXP: i32 = 1E2;  // 100
+  const bin: i32 = 0b10; // 2
+
+  return hex + HEX + oct + exp + EXP + bin;
+}
+
 export function run() {
   assert("array subscripts - (math should work)", testArraySubscript(), 4);
+  assert("large signed constant encoding", testLargeSignedConstant(), 126);
+  assert("global arrays", testGlobalArray(), 4);
+  assert("global i64", testGlobalf64() : i32, 24);
+  assert("global f32", testGlobalf32() : i32, 33);
+  assert("const import", testExternalImport(), 42);
+  assert("number literals", testNumberLiterals(), 720);
 }
