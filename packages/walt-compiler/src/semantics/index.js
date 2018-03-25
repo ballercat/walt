@@ -19,6 +19,7 @@ import mapFunctionNode from "./map-function";
 import closureImports from "../closure-plugin/imports";
 import { parseGlobalDeclaration } from "./map-function/declaration";
 import mapStructNode from "./map-struct";
+import mapCharacterLiteral from "./map-char";
 import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
 import { AST_METADATA } from "./metadata";
@@ -55,6 +56,7 @@ export default function semantics(ast: NodeType): NodeType {
       globals,
       types,
     }),
+    [Syntax.CharacterLiteral]: mapCharacterLiteral,
     [Syntax.Struct]: mapStructNode({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode({
       hoist,

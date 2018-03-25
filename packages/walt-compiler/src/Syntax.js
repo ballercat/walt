@@ -14,6 +14,7 @@ export const BinaryExpression = "BinaryExpression";
 export const TernaryExpression = "TernaryExpression";
 export const NumberLiteral = "NumberLiteral";
 export const StringLiteral = "StringLiteral";
+export const CharacterLiteral = "CharacterLiteral";
 export const Punctuator = "Punctuator";
 export const Identifier = "Identifier";
 export const ArraySubscript = "ArraySubscript";
@@ -119,6 +120,7 @@ export default {
   TernaryExpression,
   NumberLiteral,
   StringLiteral,
+  CharacterLiteral,
   Punctuator,
   Identifier,
   ArraySubscript,

@@ -9,6 +9,24 @@ const mapIdentifier = curry(
     const local = locals[identifier.value];
     const global = globals[identifier.value];
 
+    if (identifier.value === "false") {
+      return {
+        ...identifier,
+        type: "i32",
+        value: "0",
+        Type: Syntax.Constant,
+      };
+    }
+
+    if (identifier.value === "true") {
+      return {
+        ...identifier,
+        type: "i32",
+        value: "1",
+        Type: Syntax.Constant,
+      };
+    }
+
     if (identifier.value === "__DATA_LENGTH__") {
       return {
         ...identifier,

@@ -24,7 +24,7 @@ function getStringIterator(addr: i32) : StringIterator {
   let shift: i32 = 0;
 
   // Decode varuint32 length header
-  while (1) {
+  while (true) {
     byte = i32.load8_u(addr);
     length = length | ((byte & 0x7f) << shift);
     addr += 1;
@@ -34,14 +34,14 @@ function getStringIterator(addr: i32) : StringIterator {
     shift += 7;
   }
 
-  iterator = { done: 0, length, index: 0, addr, start: addr };
+  iterator = { done: false, length, index: 0, addr, start: addr };
 
   return iterator;
 }
 
 function next(iterator: StringIterator): StringIterator {
   if (iterator.length == 0 || iterator.index == iterator.length) {
-    iterator.done = 1;
+    iterator.done = true;
     iterator.value = 0;
     return iterator;
   }
@@ -51,7 +51,7 @@ function next(iterator: StringIterator): StringIterator {
   let byte: i32 = 0;
   let addr: i32 = iterator.addr;
 
-  while (1) {
+  while (true) {
     byte = i32.load8_u(addr);
     value = value | ((byte & 0x7f) << shift);
     addr += 1;
@@ -84,7 +84,7 @@ function countCharacter(ptr: i32, character: i32) : i32 {
   let result: i32 = 0;
 
   next(iterator);
-  while(iterator.done == 0) {
+  while(iterator.done == false) {
     if (iterator.value == character) {
       result += 1;
     }
@@ -133,8 +133,10 @@ function indexOf(haystack: i32, needle: i32) : i32 {
 }
 
 export function run() {
-  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 97), 7);
-  assert("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", 128514), 4);
+  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
+  // This spec miiiight be a bit misleading. The emoji below is two code points
+  // but can also be represented with a single code point.
+  assert("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", '😂'), 4);
   assert("string iterator, indexOf ascii", indexOf("quick brown fox", "brown"), 6);
   assert(
     "string iterator, indexOf utf8",

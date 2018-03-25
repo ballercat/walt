@@ -11,6 +11,7 @@ import curry from "curry";
 import mapNode from "../../utils/map-node";
 import { stringEncoder } from "../../utils/string";
 import { parseDeclaration } from "./declaration";
+import mapCharacterLiteral from "../map-char";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
@@ -222,6 +223,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
         params: binaryNode.params.map(transform),
       });
     },
+    [Syntax.CharacterLiteral]: mapCharacterLiteral,
     [Syntax.StringLiteral]: (stringLiteral, transform) => {
       const { statics } = options;
       const { value } = stringLiteral;

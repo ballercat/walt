@@ -25,13 +25,6 @@ test("strings", t => {
 
         t.is(value, expected, text);
       },
-      log(h, n) {
-        console.log(
-          "HAYSTACK, NEEDLE",
-          String.fromCodePoint(h),
-          String.fromCodePoint(n)
-        );
-      },
     },
   }).then(({ instance: { exports: { run } } }) => {
     run();

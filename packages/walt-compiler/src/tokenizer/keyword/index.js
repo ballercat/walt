@@ -21,8 +21,6 @@ const supported = [
   "continue",
   "do",
   "while",
-
-  // walt replacement, matching s-expression syntax
   "function",
 
   // s-expression
