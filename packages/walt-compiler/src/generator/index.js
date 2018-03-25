@@ -5,6 +5,7 @@ import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
+import { stringEncoder } from "../utils/string";
 import generateElement from "./element";
 import generateExport from "./export";
 import generateMemory from "./memory";
@@ -18,7 +19,6 @@ import {
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   FUNCTION_METADATA,
-  STATIC_STRING,
   TYPE_INDEX,
   AST_METADATA,
 } from "../semantics/metadata";
@@ -89,6 +89,14 @@ export default function generator(
       locals: [],
     },
   };
+
+  // Encode the static memory values into Data section
+  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce(
+    (acc, [key, val]: [string, any]) => {
+      return [...acc, { offset: Number(val.value), data: stringEncoder(key) }];
+    },
+    []
+  );
 
   const findTypeIndex = (functionNode: NodeType): number => {
     const search = generateImplicitFunctionType(functionNode);
@@ -235,14 +243,6 @@ export default function generator(
 
   // Unlike function indexes we need function bodies to be exact
   program.Code = program.Code.filter(Boolean);
-
-  // Encode the static memory values into Data section
-  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce(
-    (acc, [key, val]: [string, any]) => {
-      return [...acc, { offset: Number(val.value), data: key }];
-    },
-    []
-  );
 
   return program;
 }

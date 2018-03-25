@@ -2,19 +2,20 @@ import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
 import { externalConst: i32 } from 'env';
 type String = {
   length: i32,
-  chars: i32[]
+  chars: i32[],
 };
 type Assert = (i32, i32, i32) => void;
 
 function testArraySubscript(): i32 {
-  const arr: i32[] = 100;
+  const arr: i32[] = __DATA_LENGTH__;
   arr[1] = 2;
   arr[2] = 2;
   return arr[1] + arr[2];
 }
 
-const gArray: i32[] = 0;
+let gArray: i32[] = 0;
 export function testGlobalArray(): i32 {
+  gArray = __DATA_LENGTH__ + 8;
   gArray[0] = 2;
   gArray[1] = 2;
   return gArray[0] + gArray[1];
@@ -33,11 +34,11 @@ function number(): i64 {
   const x: i64 = 42;
   return x;
 }
-function two() : i64 {
+function two(): i64 {
   return 2;
 }
 export function test64BitConstants(): i32 {
-  return number(): i32;
+  return (number(): i32);
 }
 
 const foobar: f64 = 24;
@@ -56,21 +57,158 @@ export function testExternalImport(): i32 {
 
 export function testNumberLiterals(): i32 {
   const hex: i32 = 0xff; // 255
-  const HEX: i32 = 0xFF; // 255
+  const HEX: i32 = 0xff; // 255
   const oct: i32 = 0o10; // 8
-  const exp: i32 = 1e2;  // 100
-  const EXP: i32 = 1E2;  // 100
+  const exp: i32 = 1e2; // 100
+  const EXP: i32 = 1e2; // 100
   const bin: i32 = 0b10; // 2
 
   return hex + HEX + oct + exp + EXP + bin;
+}
+
+const GT_UNSIGNED: i32 = 0;
+const GT_SIGNED: i32 = 1;
+const GTE_UNSIGNED: i32 = 2;
+const GTE_SIGNED: i32 = 3;
+const LT_UNSIGNED: i32 = 4;
+const LT_SIGNED: i32 = 5;
+const LTE_UNSIGNED: i32 = 6;
+const LTE_SIGNED: i32 = 7;
+
+function comparison_testi32(lhs: i32, mode: i32): i32 {
+  if (GT_UNSIGNED == mode) {
+    return lhs > 1;
+  } else if (GT_SIGNED == mode) {
+    return lhs > -1;
+  } else if (GTE_UNSIGNED == mode) {
+    return lhs >= 1;
+  } else if (GTE_SIGNED == mode) {
+    return lhs >= -1;
+  } else if (LT_UNSIGNED == mode) {
+    return lhs < 1;
+  } else if (LT_SIGNED == mode) {
+    return lhs < -1;
+  } else if (LTE_UNSIGNED == mode) {
+    return lhs <= 1;
+  } else if (LTE_SIGNED == mode) {
+    return lhs <= -1;
+  }
+
+  return -1;
+}
+
+function comparison_testi64(lhsi32: i32, mode: i32): i32 {
+  // We can't pass in a 64 bit integer so we just goin to have to cast it
+  const lhs: i64 = (lhsi32: i64);
+  if (GT_UNSIGNED == mode) {
+    return lhs > 1;
+  } else if (GT_SIGNED == mode) {
+    return lhs > -1;
+  } else if (GTE_UNSIGNED == mode) {
+    return lhs >= 1;
+  } else if (GTE_SIGNED == mode) {
+    return lhs >= -1;
+  } else if (LT_UNSIGNED == mode) {
+    return lhs < 1;
+  } else if (LT_SIGNED == mode) {
+    return lhs < -1;
+  } else if (LTE_UNSIGNED == mode) {
+    return lhs <= 1;
+  } else if (LTE_SIGNED == mode) {
+    return lhs <= -1;
+  }
+
+  return -1;
+}
+
+function comparison_testf32(lhs: f32, mode: i32): i32 {
+  if (GT_UNSIGNED == mode) {
+    return lhs > 1;
+  } else if (GT_SIGNED == mode) {
+    return lhs > -1;
+  } else if (GTE_UNSIGNED == mode) {
+    return lhs >= 1;
+  } else if (GTE_SIGNED == mode) {
+    return lhs >= -1;
+  } else if (LT_UNSIGNED == mode) {
+    return lhs < 1;
+  } else if (LT_SIGNED == mode) {
+    return lhs < -1;
+  } else if (LTE_UNSIGNED == mode) {
+    return lhs <= 1;
+  } else if (LTE_SIGNED == mode) {
+    return lhs <= -1;
+  }
+
+  return -1;
+}
+
+function comparison_testf64(lhs: f64, mode: i32): i32 {
+  if (GT_UNSIGNED == mode) {
+    return lhs > 1;
+  } else if (GT_SIGNED == mode) {
+    return lhs > -1;
+  } else if (GTE_UNSIGNED == mode) {
+    return lhs >= 1;
+  } else if (GTE_SIGNED == mode) {
+    return lhs >= -1;
+  } else if (LT_UNSIGNED == mode) {
+    return lhs < 1;
+  } else if (LT_SIGNED == mode) {
+    return lhs < -1;
+  } else if (LTE_UNSIGNED == mode) {
+    return lhs <= 1;
+  } else if (LTE_SIGNED == mode) {
+    return lhs <= -1;
+  }
+
+  return -1;
 }
 
 export function run() {
   assert("array subscripts - (math should work)", testArraySubscript(), 4);
   assert("large signed constant encoding", testLargeSignedConstant(), 126);
   assert("global arrays", testGlobalArray(), 4);
-  assert("global i64", testGlobalf64() : i32, 24);
-  assert("global f32", testGlobalf32() : i32, 33);
+  assert("global i64", (testGlobalf64(): i32), 24);
+  assert("global f32", (testGlobalf32(): i32), 33);
   assert("const import", testExternalImport(), 42);
   assert("number literals", testNumberLiterals(), 720);
+
+  // Test comparison operators
+  assert("GT_UNSIGNED i32", comparison_testi32(2, GT_UNSIGNED), 1);
+  assert("GT_SIGNED i32", comparison_testi32(0, GT_SIGNED), 1);
+  assert("GTE_UNSIGNED i32", comparison_testi32(1, GTE_UNSIGNED), 1);
+  assert("GTE_SIGNED i32", comparison_testi32(-1, GTE_SIGNED), 1);
+  assert("LT_UNSIGNED i32", comparison_testi32(0, LT_UNSIGNED), 1);
+  assert("LT_SIGNED i32", comparison_testi32(-2, LT_SIGNED), 1);
+  assert("LTE_UNSIGNED i32", comparison_testi32(1, LTE_UNSIGNED), 1);
+  assert("LTE_SIGNED i32", comparison_testi32(-1, LTE_SIGNED), 1);
+
+  assert("GT_UNSIGNED i64", comparison_testi64(2, GT_UNSIGNED), 1);
+  assert("GT_SIGNED i64", comparison_testi64(0, GT_SIGNED), 1);
+  assert("GTE_UNSIGNED i64", comparison_testi64(1, GTE_UNSIGNED), 1);
+  assert("GTE_UNSIGNED i64", comparison_testi64(-1, GTE_SIGNED), 1);
+  assert("LT_UNSIGNED i64", comparison_testi64(0, LT_UNSIGNED), 1);
+  assert("LT_SIGNED i64", comparison_testi64(-2, LT_SIGNED), 1);
+  assert("LTE_UNSIGNED i64", comparison_testi64(1, LTE_UNSIGNED), 1);
+  assert("LTE_SIGNED i64", comparison_testi64(-1, LTE_SIGNED), 1);
+
+  assert("GT_UNSIGNED f32", comparison_testf32(2.0, GT_UNSIGNED), 1);
+  assert("GT_SIGNED f32", comparison_testf32(0.0, GT_SIGNED), 1);
+  assert("GTE_UNSIGNED f32", comparison_testf32(1.0, GTE_UNSIGNED), 1);
+  assert("GTE_SIGNED f32", comparison_testf32(-1.0, GTE_SIGNED), 1);
+  assert("LT_UNSIGNED f32", comparison_testf32(0.0, LT_UNSIGNED), 1);
+  assert("LT_SIGNED f32", comparison_testf32(-2.0, LT_SIGNED), 1);
+  assert("LTE_UNSIGNED f32", comparison_testf32(1.0, LTE_UNSIGNED), 1);
+  assert("LTE_SIGNED f32", comparison_testf32(-1.0, LTE_SIGNED), 1);
+
+  assert("GT_UNSIGNED f64", comparison_testf64((2: f64), GT_UNSIGNED), 1);
+  assert("GT_SIGNED f64", comparison_testf64((0: f64), GT_SIGNED), 1);
+  assert("GTE_UNSIGNED f64", comparison_testf64((1: f64), GTE_UNSIGNED), 1);
+  assert("GTE_SIGNED f64", comparison_testf64((-1: f64), GTE_SIGNED), 1);
+  assert("LT_UNSIGNED f64", comparison_testf64((0: f64), LT_UNSIGNED), 1);
+  assert("LT_SIGNED f64", comparison_testf64((-2: f64), LT_SIGNED), 1);
+  assert("LTE_UNSIGNED f64", comparison_testf64((1: f64), LTE_UNSIGNED), 1);
+  assert("LTE_SIGNED f64", comparison_testf64((-1: f64), LTE_SIGNED), 1);
+
 }

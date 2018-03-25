@@ -36,6 +36,17 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
     };
   }
 
+  if (identifier.type === "Memory") {
+    return {
+      ...node,
+      type: "i32",
+      params: [
+        { ...node, type: "i32", Type: Syntax.Constant, value: "0", params: [] },
+        { ...node, type: "i32", Type: Syntax.Constant, value: "0", params: [] },
+      ],
+    };
+  }
+
   const type = identifier.type;
 
   return {

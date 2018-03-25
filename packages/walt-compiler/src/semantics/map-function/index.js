@@ -9,6 +9,7 @@
 import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
+import { stringEncoder } from "../../utils/string";
 import { parseDeclaration } from "./declaration";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
@@ -28,7 +29,6 @@ import {
   FUNCTION_INDEX,
   CLOSURE_TYPE,
   FUNCTION_METADATA,
-  STATIC_INDEX,
   STATIC_STRING,
 } from "../metadata";
 import type { NodeType } from "../../flow/types";
@@ -228,14 +228,14 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       const index = statics[value]
         ? statics[value].value
         : Object.values(statics)
-            .map(({ meta: { [STATIC_STRING]: data } }) => data)
-            .reduce((a, v) => a + v.length, 0);
+            .map(({ meta: { [STATIC_STRING]: data } }: any) => data)
+            .reduce((a, v) => a + v.size, 4);
       const transformed = transform({
         ...stringLiteral,
         value: String(index),
         meta: {
           ...stringLiteral.meta,
-          [STATIC_STRING]: value,
+          [STATIC_STRING]: stringEncoder(value),
         },
         Type: Syntax.Constant,
       });

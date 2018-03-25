@@ -9,6 +9,18 @@ const mapIdentifier = curry(
     const local = locals[identifier.value];
     const global = globals[identifier.value];
 
+    if (identifier.value === "__DATA_LENGTH__") {
+      return {
+        ...identifier,
+        type: "i32",
+        Type: Syntax.ArraySubscript,
+        params: [
+          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+        ],
+      };
+    }
+
     if (local != null) {
       const type = (() => {
         const isArray = local.meta[TYPE_ARRAY];
