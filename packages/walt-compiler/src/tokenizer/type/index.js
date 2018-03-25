@@ -12,6 +12,7 @@ const supported = [
   "i64[]",
   "f32[]",
   "f64[]",
+  "u8[]",
   "Function",
   "Memory",
   "Table",

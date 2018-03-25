@@ -1,0 +1,144 @@
+import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
+type Assert = (i32, i32, i32) => void;
+type StringIterator = {
+  length: i32,
+  index: i32,
+  addr: i32,
+  start: i32,
+  value: i32,
+  done: i32
+};
+
+let offset: i32 = 0;
+function malloc(size: i32) : i32 {
+  const pointer: i32 = __DATA_LENGTH__ + offset;
+  offset += size;
+  return pointer;
+}
+
+// Create string iterator object.
+function getStringIterator(addr: i32) : StringIterator {
+  const iterator: StringIterator = malloc(sizeof(StringIterator));
+  let length: i32 = 0;
+  let byte: i32 = 0;
+  let shift: i32 = 0;
+
+  // Decode varuint32 length header
+  while (1) {
+    byte = i32.load8_u(addr);
+    length = length | ((byte & 0x7f) << shift);
+    addr += 1;
+    if ((byte & 0x80) == 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  iterator = { done: 0, length, index: 0, addr, start: addr };
+
+  return iterator;
+}
+
+function next(iterator: StringIterator): StringIterator {
+  if (iterator.length == 0 || iterator.index == iterator.length) {
+    iterator.done = 1;
+    iterator.value = 0;
+    return iterator;
+  }
+
+  let value: i32 = 0;
+  let shift: i32 = 0;
+  let byte: i32 = 0;
+  let addr: i32 = iterator.addr;
+
+  while (1) {
+    byte = i32.load8_u(addr);
+    value = value | ((byte & 0x7f) << shift);
+    addr += 1;
+    if ((byte & 0x80) == 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  iterator = {
+    index: iterator.index + 1,
+    addr,
+    value
+  };
+
+  return iterator;
+}
+
+function reset(iterator: StringIterator) {
+  iterator = {
+    addr: iterator.start,
+    index: 0,
+    done: 0,
+    value: 0
+  };
+}
+
+function countCharacter(ptr: i32, character: i32) : i32 {
+  const iterator: StringIterator = getStringIterator(ptr);
+  let result: i32 = 0;
+
+  next(iterator);
+  while(iterator.done == 0) {
+    if (iterator.value == character) {
+      result += 1;
+    }
+    next(iterator);
+  }
+
+  return result;
+}
+
+function indexOf(haystack: i32, needle: i32) : i32 {
+  let result: i32 = -1;
+  const haystackIterator: StringIterator = getStringIterator(haystack);
+  const needleIterator: StringIterator = getStringIterator(needle);
+
+  if (
+    haystackIterator.length == 0 ||
+    needleIterator.length == 0 ||
+    (haystackIterator.length < needleIterator.length)
+  ) {
+    return result;
+  }
+
+  // Get initial values of both iterators
+  next(haystackIterator);
+  next(needleIterator);
+
+  while (haystackIterator.done == 0) {
+    result = haystackIterator.index - 1;
+    // Keep iterating while characters match
+    while(haystackIterator.value == needleIterator.value) {
+      next(haystackIterator);
+      next(needleIterator);
+      if (needleIterator.done) {
+        return result;
+      }
+    }
+
+    // Reset needle as we are about to start matching again
+    reset(needleIterator);
+    next(needleIterator);
+
+    next(haystackIterator);
+  }
+
+  return -1;
+}
+
+export function run() {
+  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 97), 7);
+  assert("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", 128514), 4);
+  assert("string iterator, indexOf ascii", indexOf("quick brown fox", "brown"), 6);
+  assert(
+    "string iterator, indexOf utf8",
+    indexOf('Liberté, égalité, fraternité for all utf encodings!', 'égalité'),
+    9
+  );
+}

@@ -18,6 +18,7 @@ import generateNoop from "./noop";
 import generateBlock from "./block";
 import generateElse from "./else";
 import generateSelect from "./select";
+import generateNative from "./native";
 
 import Syntax from "../Syntax";
 import { getInScope, getConstOpcode } from "./utils";
@@ -56,6 +57,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   // Typecast
   [Syntax.TypeCast]: generateTypecast,
   [Syntax.Noop]: generateNoop,
+  [Syntax.NativeMethod]: generateNative,
 };
 
 const mapSyntax: MapSyntaxType = curry((parent, operand) => {

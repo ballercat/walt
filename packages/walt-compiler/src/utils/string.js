@@ -2,32 +2,33 @@ import OutputStream from "./output-stream";
 
 export function* stringDecoder(view, start) {
   let length = 0;
-  let index = start;
+  let index = 0;
   let shift = 0;
+  let addr = start;
   while (true) {
-    const byte = view.getUint8(index, true);
+    const byte = view.getUint8(addr, true);
     length |= (byte & 0x7f) << shift;
-    index += 1;
+    addr += 1;
     if ((byte & 0x80) === 0) {
       break;
     }
     shift += 7;
   }
-  let end = index + length;
 
   let result = 0;
-  while (index < end) {
+  while (index < length) {
     result = 0;
     shift = 0;
     while (true) {
-      const byte = view.getUint8(index, true);
+      const byte = view.getUint8(addr, true);
       result |= (byte & 0x7f) << shift;
-      index += 1;
+      addr += 1;
       if ((byte & 0x80) === 0) {
         break;
       }
       shift += 7;
     }
+    index += 1;
     yield result;
   }
 }

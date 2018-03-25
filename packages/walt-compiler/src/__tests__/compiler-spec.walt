@@ -4,7 +4,7 @@ type String = {
   length: i32,
   chars: i32[],
 };
-type Assert = (i32, i32, i32) => void;
+type Assert = (String, i32, i32) => void;
 
 function testArraySubscript(): i32 {
   const arr: i32[] = __DATA_LENGTH__;

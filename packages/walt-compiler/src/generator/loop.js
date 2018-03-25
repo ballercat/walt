@@ -16,6 +16,7 @@ const generateLoop: GeneratorType = (node, parent) => {
   block.push({ kind: opcode.Loop, params: [0x40] });
 
   block.push.apply(block, [condition].map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: opcode.i32Eqz, params: [] });
   block.push({ kind: opcode.BrIf, params: [1] });
 
   block.push.apply(block, body.map(mapper).reduce(mergeBlock, []));
