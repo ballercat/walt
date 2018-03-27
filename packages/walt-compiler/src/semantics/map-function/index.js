@@ -12,6 +12,7 @@ import mapNode from "../../utils/map-node";
 import { stringEncoder } from "../../utils/string";
 import { parseDeclaration } from "./declaration";
 import mapCharacterLiteral from "../map-char";
+import mapUnary from "../map-unary";
 import makeArraySubscript from "./map-subscript";
 import makeMapIdentifier from "./map-identifier";
 import makeSizeof from "./map-sizeof";
@@ -185,23 +186,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     [Syntax.FunctionCall]: mapFunctonCall,
     [Syntax.Pair]: mapPair,
     // Unary expressions need to be patched so that the LHS type matches the RHS
-    [Syntax.UnaryExpression]: (unaryNode, transform) => {
-      const lhs = unaryNode.params[0];
-      // Recurse into RHS and determine types
-      const rhs = transform(unaryNode.params[1]);
-      return {
-        ...unaryNode,
-        type: rhs.type,
-        params: [
-          {
-            ...lhs,
-            type: rhs.type,
-          },
-          rhs,
-        ],
-        Type: Syntax.BinaryExpression,
-      };
-    },
+    [Syntax.UnaryExpression]: mapUnary,
     // All binary expressions are patched
     [Syntax.BinaryExpression]: (binaryNode, transform) => {
       return balanceTypesInMathExpression({

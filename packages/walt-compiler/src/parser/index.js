@@ -14,7 +14,10 @@ import tokenStream from "../utils/token-stream";
 
 import type { NodeType } from "../flow/types";
 
-export default function parse(source: string): NodeType {
+export default function parse(
+  source: string,
+  rootParser = statement
+): NodeType {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream);
   const tokens = tokenStream(tokenizer.parse());
@@ -42,7 +45,7 @@ export default function parse(source: string): NodeType {
   ctx.token = tokens.next();
 
   while (ctx.stream.peek()) {
-    const child = statement(ctx);
+    const child = rootParser(ctx);
     if (child) {
       node.params.push(child);
     }
