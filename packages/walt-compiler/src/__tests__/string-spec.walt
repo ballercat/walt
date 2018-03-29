@@ -111,7 +111,7 @@ function indexOf(haystack: i32, needle: i32) : i32 {
   next(haystackIterator);
   next(needleIterator);
 
-  while (haystackIterator.done == 0) {
+  while (!haystackIterator.done) {
     result = haystackIterator.index - 1;
     // Keep iterating while characters match
     while(haystackIterator.value == needleIterator.value) {

@@ -5,8 +5,8 @@
  */
 
 // @flow
-import Syntax from "../Syntax";
 import statement from "./statement";
+import expression from "./expression";
 import Context from "./context";
 import Tokenizer from "../tokenizer";
 import Stream from "../utils/stream";
@@ -14,7 +14,10 @@ import tokenStream from "../utils/token-stream";
 
 import type { NodeType } from "../flow/types";
 
-export default function parse(source: string): NodeType {
+export const fragment = (
+  source: string,
+  parser: (ctx: Context) => any
+): NodeType => {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream);
   const tokens = tokenStream(tokenizer.parse());
@@ -26,27 +29,10 @@ export default function parse(source: string): NodeType {
     filename: "unknown.walt",
   });
 
-  const node: NodeType = ctx.makeNode(
-    {
-      value: "ROOT_NODE",
-    },
-    Syntax.Program
-  );
+  return parser(ctx);
+};
 
-  // No code, no problem, empty ast equals
-  // (module) ; the most basic wasm module
-  if (!ctx.stream || !ctx.stream.length) {
-    return node;
-  }
-
-  ctx.token = tokens.next();
-
-  while (ctx.stream.peek()) {
-    const child = statement(ctx);
-    if (child) {
-      node.params.push(child);
-    }
-  }
-
-  return node;
-}
+export const expressionFragment = (source: string) =>
+  fragment(source, expression);
+export const statementFragment = (source: string) =>
+  fragment(source, statement);
