@@ -2,6 +2,7 @@
 import Syntax from "../Syntax";
 import block from "./block";
 import keyword from "./keyword";
+import expression from "./expression";
 import maybeAssignment from "./maybe-assignment";
 import type Context from "./context";
 import type { NodeType } from "../flow/types";
@@ -20,7 +21,7 @@ const statement = (ctx: Context): NodeType | null => {
       if (ctx.token.value === "{") {
         return block(ctx);
       }
-      throw ctx.syntaxError("Unexpected expression");
+      return expression(ctx);
   }
 };
 

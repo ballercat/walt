@@ -77,7 +77,10 @@ type ArgsOnlyClosure = Lambda<ArgsOnly>;
 function getSimpleLambda(): SimpleClosure {
   let x: i32 = 0;
   return (): i32 => {
-    x += 1;
+    // assignment here, we need to cover regular assignment in closures
+    let y: i32 = 0;
+    y = 1;
+    x += y;
     return x;
   }
 }

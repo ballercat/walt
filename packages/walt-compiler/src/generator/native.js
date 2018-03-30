@@ -7,11 +7,25 @@ import type { GeneratorType } from "./flow/types";
 const generateNative: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
-  const operation = node.value.split(".")[1];
-  const params = [2, 0];
-  if (operation.indexOf("load8") > -1) {
-    params[0] = 0;
-  }
+  const operation = node.value.split(".").pop();
+  const alignment = (() => {
+    switch (operation) {
+      case "load8":
+      case "load8_s":
+      case "load8_u":
+      case "store8":
+        return 0;
+      case "load16":
+      case "load16_s":
+      case "load16_u":
+      case "store16":
+        return 1;
+      default:
+        return 2;
+    }
+  })();
+
+  const params = [alignment, 0];
 
   block.push({ kind: textMap[node.value], params });
 

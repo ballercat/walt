@@ -25,7 +25,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
   block.push({ kind: opcode.i32Add, params: [] });
 
   block.push({
-    kind: opcode[(type || "i32") + "Load"],
+    kind: opcode[String(type) + "Load"],
     params: [
       // Alignment
       2,
