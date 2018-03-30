@@ -61,7 +61,6 @@ export default function maybeFunctionDeclaration(ctx: Context): NodeType {
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
-
   ctx.expect(["{"]);
   const statements = [];
   while (ctx.token && ctx.token.value !== "}") {

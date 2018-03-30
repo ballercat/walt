@@ -1,6 +1,7 @@
 // @flow
 import test from "ava";
 import printNode from "../print-node";
+// import { expressionFragment, statementFragment } from "../../parser/fragment";
 import { parser, semantics } from "../..";
 import compose from "../compose";
 
@@ -23,7 +24,6 @@ test("full ast printer", t => {
       return x[0] + x[1];
     }
   `);
-
   t.snapshot(printNode(node));
 });
 
