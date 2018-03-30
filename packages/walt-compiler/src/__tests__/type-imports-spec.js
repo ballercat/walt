@@ -1,6 +1,5 @@
 import test from "ava";
-import { mockContext } from "../utils/mocks";
-import parseImport from "../parser/import";
+import { statementFragment } from "../parser/fragment";
 import generateImportFromNode from "../generator/import";
 import compile from "..";
 
@@ -71,9 +70,8 @@ test("function pointers", t =>
   }));
 
 test("import expression generator", t => {
-  const ctx = mockContext(
+  const node = statementFragment(
     "import { field: i32, foo: CustomType, bar: SomeOtherType } from 'env';"
   );
-  const node = parseImport(ctx);
   t.snapshot(generateImportFromNode(node));
 });
