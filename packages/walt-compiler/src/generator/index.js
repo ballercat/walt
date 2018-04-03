@@ -152,8 +152,6 @@ export default function generator(
           case "Table":
             program.Table.push(generateTable(node));
             break;
-          default:
-            program.Globals.push(generateInitializer(node));
         }
       }
     },
@@ -179,26 +177,13 @@ export default function generator(
       })();
 
       const patched = mapNode({
-        [Syntax.Type]: typeNode => {
-          const userDefinedType = typeMap[typeNode.value];
-          if (userDefinedType != null) {
-            return {
-              ...typeNode,
-              meta: { ...typeNode.meta, [TYPE_INDEX]: userDefinedType.index },
-            };
-          }
-
-          return typeNode;
-        },
         [Syntax.FunctionPointer]: pointer => {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
-          if (metaFunctionIndex) {
-            const functionIndex = metaFunctionIndex;
-            let tableIndex = findTableIndex(functionIndex);
-            if (tableIndex < 0) {
-              tableIndex = program.Element.length;
-              program.Element.push(generateElement(functionIndex));
-            }
+          const functionIndex = metaFunctionIndex;
+          let tableIndex = findTableIndex(functionIndex);
+          if (tableIndex < 0) {
+            tableIndex = program.Element.length;
+            program.Element.push(generateElement(functionIndex));
           }
           return pointer;
         },

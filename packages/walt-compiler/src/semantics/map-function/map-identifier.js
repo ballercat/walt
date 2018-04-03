@@ -55,12 +55,6 @@ const mapIdentifier = curry(
         type: globals[identifier.value].type,
         meta: { ...global.meta },
       };
-    } else if (userTypes[identifier.value] != null) {
-      return {
-        ...identifier,
-        type: "i32",
-        Type: Syntax.UserType,
-      };
     } else if (functions[identifier.value] != null) {
       if (table[identifier.value] == null) {
         table[identifier.value] = functions[identifier.value];

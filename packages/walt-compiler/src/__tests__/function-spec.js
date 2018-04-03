@@ -76,10 +76,11 @@ type ArgsOnlyClosure = Lambda<ArgsOnly>;
 
 function getSimpleLambda(): SimpleClosure {
   let x: i32 = 0;
+  const z: i64 = (1 : i64);
   return (): i32 => {
     // assignment here, we need to cover regular assignment in closures
     let y: i32 = 0;
-    y = 1;
+    y = z: i32;
     x += y;
     return x;
   }
@@ -128,7 +129,7 @@ export function test(): i32 {
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
       WebAssembly.instantiate(
-        compile(source),
+        compile(source, { encodeNames: true }),
         withPlugins({
           closure,
         })

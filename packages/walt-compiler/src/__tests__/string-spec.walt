@@ -132,6 +132,11 @@ function indexOf(haystack: i32, needle: i32) : i32 {
   return -1;
 }
 
+function stringLength(str: String): i32 {
+  const iterator: StringIterator = getStringIterator(str);
+  return iterator.length;
+}
+
 export function run() {
   assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
   // This spec miiiight be a bit misleading. The emoji below is two code points
@@ -143,4 +148,6 @@ export function run() {
     indexOf('Liberté, égalité, fraternité for all utf encodings!', 'égalité'),
     9
   );
+  const text: String = "large string encoding --> We need to test that strings of length of 128+ bytes work. On a plane, so could not post lorem ipsum, this should be of correct length though. Unicode for coverage √";
+  assert(text, stringLength(text), 191);
 }

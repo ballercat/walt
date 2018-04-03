@@ -104,9 +104,7 @@ class Tokenizer {
       }
     }
 
-    if (parsers.length === 1) {
-      token.type = parsers[0].type;
-    }
+    token.type = parsers.pop().type;
 
     return token;
   }

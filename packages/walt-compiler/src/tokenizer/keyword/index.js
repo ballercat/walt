@@ -28,9 +28,8 @@ const supported = [
   "module",
   "type",
   "lambda",
-];
 
-export const nosupport = [
+  // Unsupported
   "catch",
   "extends",
   "super",
@@ -42,7 +41,6 @@ export const nosupport = [
   // no classes in wast
   "class",
   "try",
-  "catch",
   "finally",
   // Everything is statically typed
   "typeof",

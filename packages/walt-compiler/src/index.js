@@ -54,11 +54,15 @@ export const withPlugins = (
   plugins: { [string]: WebAssemblyModuleType },
   importsObj?: { [string]: any }
 ) => {
-  const { closure } = plugins;
-  const resultImports = {};
-  if (closure != null) {
-    resultImports["walt-plugin-closure"] = mapToImports(closure);
-  }
+  const pluginMappers = {
+    closure: (closure, imports) => {
+      imports["walt-plugin-closure"] = mapToImports(closure);
+    },
+  };
+  const resultImports = Object.entries(plugins).reduce((acc, [key, value]) => {
+    pluginMappers[key](value, acc);
+    return acc;
+  }, {});
 
   return {
     ...resultImports,

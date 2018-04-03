@@ -45,17 +45,12 @@ export default class Context {
   }
 
   unexpectedValue(value: string[] | string) {
-    return this.syntaxError(
-      `Expected: ${Array.isArray(value) ? value.join("|") : value}`,
-      "Unexpected value"
-    );
+    return this.syntaxError(`Expected: ${String(value)}`, "Unexpected value");
   }
 
   unexpected(token?: string) {
     return this.syntaxError(
-      `Expected: ${
-        Array.isArray(token) ? token.join(" | ") : JSON.stringify(token)
-      }`,
+      `Expected: ${String(token)}`,
       `Unexpected token ${this.token.type}`
     );
   }
@@ -120,10 +115,6 @@ export default class Context {
     const toString = () => {
       const start = range[0];
       const end = range[range.length - 1];
-      // If markers don't align just return the value
-      if (start.line !== end.line) {
-        return value;
-      }
 
       return start.sourceLine.slice(start.col, end.col);
     };
