@@ -111,7 +111,6 @@ export default class Context {
   endNode(base: NodeType, Type: string): NodeType {
     const token = this.token || this.stream.last() || {};
     const range = base.range.concat(token.start);
-    const { value } = base;
     const toString = () => {
       const start = range[0];
       const end = range[range.length - 1];

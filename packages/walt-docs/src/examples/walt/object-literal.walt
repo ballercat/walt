@@ -13,9 +13,7 @@ export function test(): i32 {
 
   // Objects are compiled to i32 pointers, every property lookup is simply
   // a memory operation from the i32 pointer offset matching the property
-  // key
-  // Property lookups are a more complex array subscript
-  obj['foo'] = 22;
+  obj.foo = 22;
   // Or a dot-operator
   obj.bar = 20;
 

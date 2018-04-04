@@ -44,10 +44,10 @@ function bounce(particle: ParticleType, min: f32) {
   const maxHeight: f32 = height - min;
   const maxWidth: f32 = width - min;
   // destructuring assignment is WIP
-  let y: f32 = particle['y'];
-  let vy: f32 = particle['vy'];
-  let x: f32 = particle['x'];
-  let vx: f32 = particle['vx'];
+  let y: f32 = particle.y;
+  let vy: f32 = particle.vy;
+  let x: f32 = particle.x;
+  let vx: f32 = particle.vx;
 
   if (y > maxHeight) {
     y -= y - maxHeight;
@@ -84,14 +84,14 @@ export function onAnimationFrame(timestamp: i32): i32 {
   let i: i32 = 0;
   for (i = 0; i < total; i += 1) {
     particle = i * particleByteSize;
-    particle['vy'] += 0.001 * delta;
-    particle['vx'] += 0.001 * delta;
-    particle['x'] += particle['vx'] * delta;
-    particle['y'] += particle['vy'] * delta;
+    particle.vy += 0.001 * delta;
+    particle.vx += 0.001 * delta;
+    particle.x += particle.vx * delta;
+    particle.y += particle.vy * delta;
 
     bounce(particle, 10.0);
 
-    fillRect((particle['x'] + 0.5) : i32, (particle['y'] + 0.5): i32, 10, 10);
+    fillRect((particle.x + 0.5) : i32, (particle.y + 0.5): i32, 10, 10);
   }
 
   return 42;

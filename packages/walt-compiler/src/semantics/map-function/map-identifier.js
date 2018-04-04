@@ -4,7 +4,7 @@ import curry from "curry";
 import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
 
 const mapIdentifier = curry(
-  ({ locals, globals, functions, table, userTypes }, identifier) => {
+  ({ locals, globals, functions, table }, identifier) => {
     // Not a function call or pointer, look-up variables
     const local = locals[identifier.value];
     const global = globals[identifier.value];
