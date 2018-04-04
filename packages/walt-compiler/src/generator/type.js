@@ -66,6 +66,10 @@ export default function generateType(
     [Syntax.Type]: (t, __) => {
       params.push(getType(t.value));
     },
+    // Generate Identifiers as UserType pointers, so i32s
+    [Syntax.Identifier]: (t, __) => {
+      params.push(getType(t.value));
+    },
   })(args);
 
   return {

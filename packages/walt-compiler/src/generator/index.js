@@ -5,6 +5,7 @@ import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
+import { stringEncoder } from "../utils/string";
 import generateElement from "./element";
 import generateExport from "./export";
 import generateMemory from "./memory";
@@ -19,6 +20,7 @@ import {
   FUNCTION_INDEX,
   FUNCTION_METADATA,
   TYPE_INDEX,
+  AST_METADATA,
 } from "../semantics/metadata";
 
 import type { NodeType, ConfigType } from "../flow/types";
@@ -80,12 +82,21 @@ export default function generator(
     Memory: [],
     Table: [],
     Artifacts: [],
+    Data: [],
     Name: {
       module: config.filename,
       functions: [],
       locals: [],
     },
   };
+
+  // Encode the static memory values into Data section
+  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce(
+    (acc, [key, val]: [string, any]) => {
+      return [...acc, { offset: Number(val.value), data: stringEncoder(key) }];
+    },
+    []
+  );
 
   const findTypeIndex = (functionNode: NodeType): number => {
     const search = generateImplicitFunctionType(functionNode);
@@ -141,8 +152,6 @@ export default function generator(
           case "Table":
             program.Table.push(generateTable(node));
             break;
-          default:
-            program.Globals.push(generateInitializer(node));
         }
       }
     },
@@ -168,26 +177,13 @@ export default function generator(
       })();
 
       const patched = mapNode({
-        [Syntax.Type]: typeNode => {
-          const userDefinedType = typeMap[typeNode.value];
-          if (userDefinedType != null) {
-            return {
-              ...typeNode,
-              meta: { ...typeNode.meta, [TYPE_INDEX]: userDefinedType.index },
-            };
-          }
-
-          return typeNode;
-        },
         [Syntax.FunctionPointer]: pointer => {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
-          if (metaFunctionIndex) {
-            const functionIndex = metaFunctionIndex;
-            let tableIndex = findTableIndex(functionIndex);
-            if (tableIndex < 0) {
-              tableIndex = program.Element.length;
-              program.Element.push(generateElement(functionIndex));
-            }
+          const functionIndex = metaFunctionIndex;
+          let tableIndex = findTableIndex(functionIndex);
+          if (tableIndex < 0) {
+            tableIndex = program.Element.length;
+            program.Element.push(generateElement(functionIndex));
           }
           return pointer;
         },

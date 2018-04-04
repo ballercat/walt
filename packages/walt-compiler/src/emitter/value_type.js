@@ -16,8 +16,6 @@ export const stringToType = {
 
 export const getTypeString = (type: number) => {
   switch (type) {
-    case I32:
-      return "i32";
     case I64:
       return "i64";
     case F32:
@@ -28,7 +26,8 @@ export const getTypeString = (type: number) => {
       return "func";
     case ANYFUNC:
       return "anyfunc";
+    case I32:
     default:
-      return "?";
+      return "i32";
   }
 };

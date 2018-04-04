@@ -36,6 +36,17 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
     };
   }
 
+  // Native method
+  if (identifier.Type === Syntax.Type && field.Type === Syntax.FunctionCall) {
+    return {
+      ...node,
+      Type: Syntax.NativeMethod,
+      type: identifier.value,
+      value: identifier.value + "." + field.value,
+      params: field.params,
+    };
+  }
+
   const type = identifier.type;
 
   return {

@@ -14,7 +14,6 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
   if (isArray != null) {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
-      // TODO: fix this for user-defined types
       { kind: opcode.i32Const, params: [2] },
       { kind: opcode.i32Shl, params: [] },
     ]);
@@ -26,10 +25,9 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
   block.push({ kind: opcode.i32Add, params: [] });
 
   block.push({
-    kind: opcode[(type || "i32") + "Load"],
+    kind: opcode[String(type) + "Load"],
     params: [
       // Alignment
-      // TODO: make this extendible
       2,
       // Memory. Always 0 in the WASM MVP
       0,

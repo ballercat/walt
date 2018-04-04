@@ -28,7 +28,7 @@ export default function validate(
   if (metadata == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types, functions } = metadata;
+  const { types, functions, userTypes } = metadata;
   const problems = [];
 
   walkNode({
@@ -207,6 +207,9 @@ export default function validate(
           const type = (() => {
             if (expression == null) {
               return null;
+            }
+            if (userTypes[expression.type] != null) {
+              return "i32";
             }
             return [">", "<", ">=", "<=", "==", "!="].includes(expression.value)
               ? "i32"

@@ -3,12 +3,13 @@ import Syntax from "../../Syntax";
 import curry from "curry";
 import mapNode from "../../utils/map-node";
 import walkNode from "../../utils/walk-node";
+import { expressionFragment } from "../../parser/fragment";
 import type { NodeType } from "../../flow/types";
 
 export const CLOSURE_FREE = "closure-free";
 export const CLOSURE_MALLOC = "closure-malloc";
-export const CLOSURE_BASE = "closure-base";
-export const CLOSURE_INNER = "closure-inner";
+export const CLOSURE_BASE = "closure_base";
+export const CLOSURE_INNER = "closure_inner";
 export const CLOSURE_GET = "closure--get";
 export const CLOSURE_SET = "closure--set";
 
@@ -124,26 +125,7 @@ export const collapseClosureIdentifier = (
 export const mapIdentifierToOffset = (
   base: NodeType,
   offset: number
-): NodeType => {
-  return {
-    ...base,
-    value: "+",
-    params: [
-      {
-        ...base,
-        value: String(offset),
-        Type: Syntax.Constant,
-        type: "i32",
-      },
-      {
-        ...base,
-        Type: Syntax.Identifier,
-        params: [],
-      },
-    ],
-    Type: Syntax.BinaryExpression,
-  };
-};
+): NodeType => expressionFragment(`${offset} + ${base.value}`);
 
 /**
  * Walks over a function ndoe and finds any enclosed variables in any closure in

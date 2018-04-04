@@ -21,8 +21,6 @@ const supported = [
   "continue",
   "do",
   "while",
-
-  // walt replacement, matching s-expression syntax
   "function",
 
   // s-expression
@@ -30,9 +28,8 @@ const supported = [
   "module",
   "type",
   "lambda",
-];
 
-export const nosupport = [
+  // Unsupported
   "catch",
   "extends",
   "super",
@@ -44,7 +41,6 @@ export const nosupport = [
   // no classes in wast
   "class",
   "try",
-  "catch",
   "finally",
   // Everything is statically typed
   "typeof",

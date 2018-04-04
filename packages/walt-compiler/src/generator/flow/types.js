@@ -1,6 +1,7 @@
 // @flow
+import type OutputStream from "../../utils/output-stream";
 import type { NodeType } from "../../flow/types";
-export type { NodeType } from "../../flow/types";
+export type { NodeType };
 export type RawOpcodeType = {
   result: ?number,
   first: ?number,
@@ -69,6 +70,10 @@ export type NameSectionType = {
     locals: Array<{ index: number, name: string }>,
   }>,
 };
+export type DataSectionType = Array<{
+  offset: number,
+  data: OutputStream,
+}>;
 
 export type ProgramType = {
   // Setup keys needed for the emitter
@@ -84,4 +89,5 @@ export type ProgramType = {
   Table: IntermediateTableType[],
   Artifacts: NodeType[],
   Name: NameSectionType,
+  Data: DataSectionType,
 };

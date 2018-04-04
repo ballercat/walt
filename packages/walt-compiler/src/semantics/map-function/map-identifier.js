@@ -4,10 +4,40 @@ import curry from "curry";
 import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
 
 const mapIdentifier = curry(
-  ({ locals, globals, functions, table, userTypes }, identifier) => {
+  ({ locals, globals, functions, table }, identifier) => {
     // Not a function call or pointer, look-up variables
     const local = locals[identifier.value];
     const global = globals[identifier.value];
+
+    if (identifier.value === "false") {
+      return {
+        ...identifier,
+        type: "i32",
+        value: "0",
+        Type: Syntax.Constant,
+      };
+    }
+
+    if (identifier.value === "true") {
+      return {
+        ...identifier,
+        type: "i32",
+        value: "1",
+        Type: Syntax.Constant,
+      };
+    }
+
+    if (identifier.value === "__DATA_LENGTH__") {
+      return {
+        ...identifier,
+        type: "i32",
+        Type: Syntax.ArraySubscript,
+        params: [
+          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+        ],
+      };
+    }
 
     if (local != null) {
       const type = (() => {
@@ -24,12 +54,6 @@ const mapIdentifier = curry(
         ...identifier,
         type: globals[identifier.value].type,
         meta: { ...global.meta },
-      };
-    } else if (userTypes[identifier.value] != null) {
-      return {
-        ...identifier,
-        type: "i32",
-        Type: Syntax.UserType,
       };
     } else if (functions[identifier.value] != null) {
       if (table[identifier.value] == null) {

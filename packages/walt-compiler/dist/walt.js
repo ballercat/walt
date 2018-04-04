@@ -20,6 +20,7 @@ const BinaryExpression = "BinaryExpression";
 const TernaryExpression = "TernaryExpression";
 const NumberLiteral = "NumberLiteral";
 const StringLiteral = "StringLiteral";
+const CharacterLiteral = "CharacterLiteral";
 const Punctuator = "Punctuator";
 const Identifier = "Identifier";
 const ArraySubscript = "ArraySubscript";
@@ -60,6 +61,7 @@ const FunctionPointer = "FunctionPointer";
 const FunctionArguments = "FunctionArguments";
 const FunctionResult = "FunctionResult";
 const FunctionLocals = "FunctionLocals";
+const NativeMethod = "NativeMethod";
 
 const i32 = "i32";
 const f32 = "f32";
@@ -124,6 +126,7 @@ var Syntax = {
   TernaryExpression,
   NumberLiteral,
   StringLiteral,
+  CharacterLiteral,
   Punctuator,
   Identifier,
   ArraySubscript,
@@ -166,7 +169,10 @@ var Syntax = {
   FunctionPointer,
   FunctionArguments,
   FunctionResult,
-  FunctionLocals
+  FunctionLocals,
+
+  // Natives
+  NativeMethod
 };
 
 var _extends = Object.assign || function (target) {
@@ -178,6 +184,30 @@ var _extends = Object.assign || function (target) {
         target[key] = source[key];
       }
     }
+  }
+
+  return target;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+var objectWithoutProperties = function (obj, keys) {
+  var target = {};
+
+  for (var i in obj) {
+    if (keys.indexOf(i) >= 0) continue;
+    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+    target[i] = obj[i];
   }
 
   return target;
@@ -298,29 +328,37 @@ function binary(ctx, op, params) {
   return ctx.endNode(node, Type$$1);
 }
 
-const unary = (ctx, op, params) => {
+function unary(ctx, op, params) {
   const [target] = params;
-  if (op.value === "--") {
-    return _extends({}, target, {
-      Type: Syntax.UnaryExpression,
-      value: "-",
-      meta: {},
-      params: [_extends({}, target, {
-        value: "0",
-        Type: Syntax.Constant,
-        params: [],
-        meta: {}
-      }), target]
-    });
+  switch (op.value) {
+    case "--":
+      return _extends({}, target, {
+        Type: Syntax.UnaryExpression,
+        value: "-",
+        meta: {},
+        params: [_extends({}, target, {
+          value: "0",
+          Type: Syntax.Constant,
+          params: [],
+          meta: {}
+        }), target]
+      });
+    case "!":
+    case "~":
+      return _extends({}, target, {
+        value: op.value,
+        params,
+        Type: Syntax.UnaryExpression
+      });
+    default:
+      return _extends({}, op, {
+        range: [op.start, target.range[1]],
+        meta: {},
+        Type: Syntax.Spread,
+        params: [target]
+      });
   }
-
-  return _extends({}, op, {
-    range: [op.start, target.range[1]],
-    meta: {},
-    Type: Syntax.Spread,
-    params: [target]
-  });
-};
+}
 
 function objectLiteral(ctx, op, params) {
   const node = ctx.startNode(op);
@@ -373,6 +411,8 @@ const operator = (ctx, operators, operands) => {
     case "--":
     case "...":
     case "sizeof":
+    case "~":
+    case "!":
       return unary(ctx, op, operands.splice(-1));
     default:
       return binary(ctx, op, operands.splice(-2));
@@ -393,7 +433,8 @@ function parseConstant(ctx) {
 function stringLiteral(ctx) {
   const node = ctx.startNode();
   node.value = ctx.token.value.substring(1, ctx.token.value.length - 1);
-  return ctx.endNode(node, Syntax.StringLiteral);
+  const Type$$1 = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? Syntax.CharacterLiteral : Syntax.StringLiteral;
+  return ctx.endNode(node, Type$$1);
 }
 
 //      
@@ -422,6 +463,7 @@ function builtInType(ctx) {
 
 const PRECEDENCE_MEMBER_ACCESS = 19;
 
+const PRECEDENCE_NOT = 18;
 const PRECEDENCE_ASSIGNMENT = 3;
 
 
@@ -429,6 +471,7 @@ const PRECEDENCE_DIVIDE = 1;
 const PRECEDENCE_MULTIPLY = 1;
 const PRECEDENCE_ADDITION = 0;
 const PRECEDENCE_SUBTRACTION = 0;
+const PRECEDENCE_SHIFT = -1;
 const PRECEDENCE_COMMA = -2;
 const PRECEDENCE_BITWISE_XOR = -2;
 const PRECEDENCE_SPREAD = -1;
@@ -445,6 +488,9 @@ const precedence = {
   "=>": PRECEDENCE_PARAMS,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,
+  ">>": PRECEDENCE_SHIFT,
+  ">>>": PRECEDENCE_SHIFT,
+  "<<": PRECEDENCE_SHIFT,
   "+": PRECEDENCE_ADDITION,
   "-": PRECEDENCE_SUBTRACTION,
   "*": PRECEDENCE_MULTIPLY,
@@ -464,7 +510,9 @@ const precedence = {
   "|": PRECEDENCE_BITWISE_OR,
   "&&": PRECEDENCE_LOGICAL_AND,
   "||": PRECEDENCE_LOGICAL_OR,
-  "...": PRECEDENCE_SPREAD
+  "...": PRECEDENCE_SPREAD,
+  "~": PRECEDENCE_NOT,
+  "!": PRECEDENCE_NOT
 };
 
 //      
@@ -707,9 +755,8 @@ const parseFunctionResult = ctx => {
           return value === "void" ? null : value;
         }
 
-        if (ctx.eat(null, Syntax.Identifier)) {
-          return "i32";
-        }
+        // If we did not find a user-type we default to an i32
+        ctx.expect(null, Syntax.Identifier);
 
         return "i32";
       })()
@@ -730,7 +777,6 @@ function maybeFunctionDeclaration(ctx) {
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
-
   ctx.expect(["{"]);
   const statements$$1 = [];
   while (ctx.token && ctx.token.value !== "}") {
@@ -863,15 +909,6 @@ function typeParser(ctx) {
 }
 
 //      
-const reverse = {
-  ">": "<=",
-  "<": ">=",
-  ">=": "<",
-  "<=": ">",
-  "==": "!=",
-  "!=": "=="
-};
-
 const paramList = ctx => {
   ctx.expect(["("]);
   const params = [];
@@ -897,9 +934,6 @@ const forLoop = ctx => {
   // in the generator accurately. In a for-loop we always want the afterthought
   // to follow the entire body, so here we are.
   const [initializer, condition, afterthought] = paramList(ctx);
-  if (reverse[condition.value]) {
-    condition.value = reverse[condition.value];
-  }
   const body = [];
 
   ctx.expect(["{"]);
@@ -919,16 +953,6 @@ const forLoop = ctx => {
 };
 
 //      
-// Truth tables are tricky.
-const reverse$1 = {
-  ">": "<=",
-  "<": ">=",
-  ">=": "<",
-  "<=": ">",
-  "==": "!=",
-  "!=": "=="
-};
-
 const whileLoop = ctx => {
   const node = ctx.startNode();
   ctx.eat(["while"]);
@@ -936,10 +960,6 @@ const whileLoop = ctx => {
 
   const initializer = ctx.makeNode({}, Syntax.Noop);
   const condition = expression(ctx);
-  // This could also be instead patched with a Eqz instruction
-  if (reverse$1[condition.value]) {
-    condition.value = reverse$1[condition.value];
-  }
   const body = [];
 
   ctx.expect([")"]);
@@ -987,11 +1007,11 @@ class Context {
   }
 
   unexpectedValue(value) {
-    return this.syntaxError(`Expected: ${Array.isArray(value) ? value.join("|") : value}`, "Unexpected value");
+    return this.syntaxError(`Expected: ${String(value)}`, "Unexpected value");
   }
 
   unexpected(token) {
-    return this.syntaxError(`Expected: ${Array.isArray(token) ? token.join(" | ") : JSON.stringify(token)}`, `Unexpected token ${this.token.type}`);
+    return this.syntaxError(`Expected: ${String(token)}`, `Unexpected token ${this.token.type}`);
   }
 
   unknown({ value }) {
@@ -1047,12 +1067,24 @@ class Context {
     };
   }
 
-  endNode(node, Type) {
+  endNode(base, Type) {
     const token = this.token || this.stream.last() || {};
-    return _extends({}, node, {
+    const range = base.range.concat(token.start);
+    const toString = () => {
+      const start = range[0];
+      const end = range[range.length - 1];
+
+      return start.sourceLine.slice(start.col, end.col);
+    };
+    const { toString: omit } = base,
+          seed = objectWithoutProperties(base, ["toString"]);
+    const node = _extends({
+      toString
+    }, seed, {
       Type,
-      range: node.range.concat(token.end)
+      range
     });
+    return node;
   }
 
   makeNode(node, syntax) {
@@ -1224,7 +1256,7 @@ const statement = ctx => {
       if (ctx.token.value === "{") {
         return blockParser(ctx);
       }
-      throw ctx.syntaxError("Unexpected expression");
+      return expression(ctx);
   }
 };
 
@@ -1358,7 +1390,7 @@ const wrap = (predicate, type, supported) => {
 var token = wrap;
 
 //      
-const supported = ["+", "++", "-", "--", ">>", ">>>", "<<", "=", "==", "+=", "-=", "=>", "<=", ">=", "!=", "%", "/", "^", "&", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
+const supported = ["+", "++", "-", "--", ">>", ">>>", "<<", "=", "==", "+=", "-=", "=>", "<=", ">=", "!=", "%", "/", "^", "&", "~", "|", "!", "**", ":", "(", ")", ".", "{", "}", ",", "[", "]", ";", ">", "<", "?", "||", "&&", "{", "}", "..."];
 
 const trie = new trie$1(supported);
 var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
@@ -1485,15 +1517,21 @@ const tokenParser = token(parse$1, Syntax.Identifier);
 //      
 const supported$1 = [
 // EcmaScript
-"break", "if", "else", "import", "from", "export", "return", "switch", "case", "default", "const", "let", "for", "continue", "do", "while",
-
-// walt replacement, matching s-expression syntax
-"function",
+"break", "if", "else", "import", "from", "export", "return", "switch", "case", "default", "const", "let", "for", "continue", "do", "while", "function",
 
 // s-expression
-"global", "module", "type", "lambda"];
+"global", "module", "type", "lambda",
 
-
+// Unsupported
+"catch", "extends", "super",
+// There is no concept of this in wast
+"this", "debugger",
+// vars and lets are replaced with types (i32, f32, etc)
+"var",
+// no classes in wast
+"class", "try", "finally",
+// Everything is statically typed
+"typeof"];
 
 const trie$2 = new trie$1(supported$1);
 const root$1 = trie$2.fsearch;
@@ -1564,7 +1602,7 @@ const parser = char => {
 var comments = token(parser, Syntax.Comment);
 
 //      
-const supported$2 = ["i32", "i64", "f32", "f64", "i32[]", "i64[]", "f32[]", "f64[]", "Function", "Memory", "Table", "void"];
+const supported$2 = ["i32", "i64", "f32", "f64", "i32[]", "i64[]", "f32[]", "f64[]", "u8[]", "Function", "Memory", "Table", "void"];
 const trie$3 = new trie$1(supported$2);
 var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 
@@ -1644,9 +1682,7 @@ class Tokenizer {
       }
     }
 
-    if (parsers.length === 1) {
-      token.type = parsers[0].type;
-    }
+    token.type = parsers.pop().type;
 
     return token;
   }
@@ -1676,8 +1712,8 @@ function tokenStream(tokens) {
   const length = tokens.length;
   let pos = 0;
 
-  const next = () => tokens[pos++];
-  const peek = () => tokens[pos];
+  const next = () => tokens[++pos];
+  const peek = () => tokens[pos + 1];
   const last = () => tokens[length - 1];
 
   return { tokens, next, peek, last, length };
@@ -1711,8 +1747,6 @@ function parse(source) {
   if (!ctx.stream || !ctx.stream.length) {
     return node;
   }
-
-  ctx.token = tokens.next();
 
   while (ctx.stream.peek()) {
     const child = statement(ctx);
@@ -1864,7 +1898,7 @@ var index_14 = index.set;
 var index_16 = index.sizeof;
 
 //      
-const encodeSigned = (value, size = 32) => {
+const encodeSigned = value => {
   const encoding = [];
   while (true) {
     const byte = value & 127;
@@ -1932,7 +1966,7 @@ class OutputStream {
         }
       case "varint64":
         {
-          value = encodeSigned(value, 64);
+          value = encodeSigned(value);
           size = value.length;
           invariant_1(size, `Cannot write a value of size ${size}`);
           break;
@@ -1988,6 +2022,7 @@ function write(version) {
 }
 
 //      
+
 const varuint7 = "varuint7";
 const varuint32 = "varuint32";
 const varint7 = "varint7";
@@ -2013,8 +2048,6 @@ const stringToType = {
 
 const getTypeString = type => {
   switch (type) {
-    case I32:
-      return "i32";
     case I64:
       return "i64";
     case F32:
@@ -2025,8 +2058,9 @@ const getTypeString = type => {
       return "func";
     case ANYFUNC:
       return "anyfunc";
+    case I32:
     default:
-      return "?";
+      return "i32";
   }
 };
 
@@ -2112,7 +2146,7 @@ const emit$2 = exports => {
  */
 const def = {};
 const opcodeMap = [];
-
+const textMap = {};
 const ___ = null;
 
 /**
@@ -2131,6 +2165,8 @@ const opcode = (result, first, second, size, code, name, text) => {
 
   def[name] = definition;
   opcodeMap[code] = definition;
+  textMap[text] = definition;
+
   return definition;
 };
 
@@ -2474,7 +2510,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
     }
 
     // map over all params, if any and encode each on
-    (params || []).forEach(p => {
+    params.forEach(p => {
       let type = varuint32;
       let stringType = "i32.literal";
 
@@ -2485,9 +2521,6 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
       } else {
         // either encode unsigned 32 bit values or floats
         switch (kind.result) {
-          case index_9:
-            type = index_9;
-            break;
           case index_4:
             type = index_4;
             stringType = "f64.literal";
@@ -2575,6 +2608,48 @@ function emitTables(tables) {
 }
 
 //      
+const emitDataSegment = (stream, segment) => {
+  stream.push(varuint32, 0, "memory index");
+
+  const { offset, data } = segment;
+
+  stream.push(index_9, def.i32Const.code, def.i32Const.text);
+  stream.push(varint32, offset, `segment offset (${offset})`);
+  stream.push(index_9, def.End.code, "end");
+
+  stream.push(varuint32, data.size, "segment size");
+  stream.write(data);
+};
+
+const encodeDataLength = (stream, length) => {
+  stream.push(varuint32, 0, "memory index");
+  const offset = 0;
+  const data = new OutputStream();
+  data.push(index_12, length, "dataLength");
+
+  stream.push(index_9, def.i32Const.code, def.i32Const.text);
+  stream.push(varint32, offset, `segment offset (${offset})`);
+  stream.push(index_9, def.End.code, "end");
+
+  stream.push(varuint32, data.size, "");
+  stream.write(data);
+};
+
+function emit$9(dataSection) {
+  const stream = new OutputStream();
+  stream.push(varuint32, dataSection.length + 1, "entries");
+
+  // push an entry for the total size of the data section
+  const lastEntry = dataSection[dataSection.length - 1];
+  const totalDataLength = lastEntry.offset + lastEntry.data.size;
+  encodeDataLength(stream, totalDataLength);
+
+  dataSection.forEach(segment => emitDataSegment(stream, segment));
+
+  return stream;
+}
+
+//      
 // Emit Module name subsection
 const emitModuleName = name => {
   const moduleSubsection = new OutputStream();
@@ -2617,7 +2692,7 @@ const emitLocals = localsMap => {
 };
 
 // Emit the Name custom section.
-const emit$9 = nameSection => {
+const emit$10 = nameSection => {
   const stream = new OutputStream();
   // Name identifier/header as this is a custom section which requires a string id
   emitString(stream, "name", "name_len: name");
@@ -2653,7 +2728,7 @@ const SECTION_EXPORT = 7;
 
 const SECTION_ELEMENT = 9;
 const SECTION_CODE = 10;
-
+const SECTION_DATA = 11;
 // Custom sections
 const SECTION_NAME = 0;
 
@@ -2700,7 +2775,8 @@ var section = {
     emitter: emit$5
   }),
   code: writer({ type: SECTION_CODE, label: "Code", emitter: emit$7 }),
-  name: writer({ type: SECTION_NAME, label: "Name", emitter: emit$9 })
+  data: writer({ type: SECTION_DATA, label: "Data", emitter: emit$9 }),
+  name: writer({ type: SECTION_NAME, label: "Name", emitter: emit$10 })
 };
 
 //      
@@ -2708,7 +2784,7 @@ function emit(program, config) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  const result = stream.write(write(program.Version)).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program));
+  const result = stream.write(write(program.Version)).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program)).write(section.data(program));
 
   if (config.encodeNames) {
     return result.write(section.name(program));
@@ -2751,6 +2827,7 @@ const CLOSURE_TYPE = "closure/type";
 const AST_METADATA = "@@global/ast";
 const FUNCTION_METADATA = "@@function/meta";
 const ALIAS = "alias";
+const STATIC_STRING = "static/string";
 
 //      
 const generateFunctionCall = (node, parent) => {
@@ -3093,9 +3170,7 @@ const generateArraySubscript = (node, parent) => {
 
   if (isArray != null) {
     // For array types, the index is multiplied by the contained object size
-    block.push.apply(block, [
-    // TODO: fix this for user-defined types
-    { kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
+    block.push.apply(block, [{ kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
     type = isArray;
   }
 
@@ -3104,10 +3179,9 @@ const generateArraySubscript = (node, parent) => {
   block.push({ kind: def.i32Add, params: [] });
 
   block.push({
-    kind: def[(type || "i32") + "Load"],
+    kind: def[String(type) + "Load"],
     params: [
     // Alignment
-    // TODO: make this extendible
     2,
     // Memory. Always 0 in the WASM MVP
     0]
@@ -3150,7 +3224,7 @@ const generateMemoryAssignment = (node, parent) => {
 
   // The last piece is the WASM opcode. Either load or store
   block.push({
-    kind: def[(type || "i32") + "Store"],
+    kind: def[String(type) + "Store"],
     params: [
     // Alignment
     // TODO: make this extendible
@@ -3175,6 +3249,7 @@ const generateLoop = (node, parent) => {
   block.push({ kind: def.Loop, params: [0x40] });
 
   block.push.apply(block, [condition].map(mapper).reduce(mergeBlock, []));
+  block.push({ kind: def.i32Eqz, params: [] });
   block.push({ kind: def.BrIf, params: [1] });
 
   block.push.apply(block, body.map(mapper).reduce(mergeBlock, []));
@@ -3245,6 +3320,34 @@ const generateSelect = (node, parent) => {
   }
 
   return [...condition, ...[rightHandSide].map(mapSyntax(parent)).reduce(mergeBlock, []), ...condition, selectOpcode];
+};
+
+//      
+const generateNative = (node, parent) => {
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+
+  const operation = node.value.split(".").pop();
+  const alignment = (() => {
+    switch (operation) {
+      case "load8_s":
+      case "load8_u":
+      case "store8":
+        return 0;
+      case "load16_s":
+      case "load16_u":
+      case "store16":
+        return 1;
+      // "store32" as well
+      default:
+        return 2;
+    }
+  })();
+
+  const params = [alignment, 0];
+
+  block.push({ kind: textMap[node.value], params });
+
+  return block;
 };
 
 //      
@@ -3529,15 +3632,13 @@ const syntaxMap = {
   [Syntax.Sequence]: generateSequence,
   // Typecast
   [Syntax.TypeCast]: generateTypecast,
-  [Syntax.Noop]: generateNoop
+  [Syntax.Noop]: generateNoop,
+  [Syntax.NativeMethod]: generateNative
 };
 
 const mapSyntax = curry_1((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
-  if (!mapping) {
-    const value = operand.id || operand.value || operand.operator && operand.operator.value;
-    throw new Error(`Unexpected Syntax Token ${operand.Type} : ${value}`);
-  }
+  invariant_1(mapping, `Unexpected Syntax Token ${operand.Type} : ${operand.value}`);
 
   const validate = (block, i) => invariant_1(block.kind, "Unknown opcode generated in block index %s %s. \nOperand: \n%s", i, JSON.stringify(block), printNode(operand));
   const blocks = mapping(operand, parent);
@@ -3581,6 +3682,20 @@ function mapNode(visitor) {
   };
 
   return nodeMapper;
+}
+
+function stringEncoder(value) {
+  const resultStream = new OutputStream();
+  const characterStream = new OutputStream();
+
+  characterStream.push("varuint32", value.length, value);
+  let i = 0;
+  for (i = 0; i < value.length; i++) {
+    characterStream.push("varuint32", value.codePointAt(i), value[i]);
+  }
+  resultStream.write(characterStream);
+
+  return resultStream;
 }
 
 //      
@@ -3768,6 +3883,10 @@ function generateType(node) {
   walker({
     [Syntax.Type]: (t, __) => {
       params.push(getType$1(t.value));
+    },
+    // Generate Identifiers as UserType pointers, so i32s
+    [Syntax.Identifier]: (t, __) => {
+      params.push(getType$1(t.value));
     }
   })(args);
 
@@ -3824,12 +3943,18 @@ function generator$1(ast, config) {
     Memory: [],
     Table: [],
     Artifacts: [],
+    Data: [],
     Name: {
       module: config.filename,
       functions: [],
       locals: []
     }
   };
+
+  // Encode the static memory values into Data section
+  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce((acc, [key, val]) => {
+    return [...acc, { offset: Number(val.value), data: stringEncoder(key) }];
+  }, []);
 
   const findTypeIndex = functionNode => {
     const search = generateImplicitFunctionType(functionNode);
@@ -3881,8 +4006,6 @@ function generator$1(ast, config) {
           case "Table":
             program.Table.push(generateMemory$2(node));
             break;
-          default:
-            program.Globals.push(generateInit(node));
         }
       }
     },
@@ -3908,25 +4031,13 @@ function generator$1(ast, config) {
       })();
 
       const patched = mapNode({
-        [Syntax.Type]: typeNode => {
-          const userDefinedType = typeMap[typeNode.value];
-          if (userDefinedType != null) {
-            return _extends({}, typeNode, {
-              meta: _extends({}, typeNode.meta, { [TYPE_INDEX]: userDefinedType.index })
-            });
-          }
-
-          return typeNode;
-        },
         [Syntax.FunctionPointer]: pointer => {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
-          if (metaFunctionIndex) {
-            const functionIndex = metaFunctionIndex;
-            let tableIndex = findTableIndex(functionIndex);
-            if (tableIndex < 0) {
-              tableIndex = program.Element.length;
-              program.Element.push(generateElement(functionIndex));
-            }
+          const functionIndex = metaFunctionIndex;
+          let tableIndex = findTableIndex(functionIndex);
+          if (tableIndex < 0) {
+            tableIndex = program.Element.length;
+            program.Element.push(generateElement(functionIndex));
           }
           return pointer;
         }
@@ -4048,20 +4159,18 @@ const parse$2 = (isConst, { types, scope }, declaration) => {
 
 const parseDeclaration = curry_1((isConst, options, declaration) => {
   const { locals: scope, closures } = options;
-  if (scope[declaration.value] == null) {
-    const [type, meta, index] = parse$2(isConst, _extends({}, options, { scope }), declaration);
-    scope[declaration.value] = _extends({}, declaration, {
-      type,
-      meta: _extends({}, meta, { [LOCAL_INDEX]: index }),
-      Type: Syntax.Declaration
-    });
+  const [type, meta, index] = parse$2(isConst, _extends({}, options, { scope }), declaration);
+  scope[declaration.value] = _extends({}, declaration, {
+    type,
+    meta: _extends({}, meta, { [LOCAL_INDEX]: index }),
+    Type: Syntax.Declaration
+  });
 
-    const { variables } = closures;
-    if (variables[declaration.value] != null && declaration.params[0]) {
-      const { offsets } = closures;
-      offsets[declaration.value] = closures.envSize;
-      closures.envSize += getTypeSize(declaration.type);
-    }
+  const { variables } = closures;
+  if (variables[declaration.value] != null && declaration.params[0]) {
+    const { offsets } = closures;
+    offsets[declaration.value] = closures.envSize;
+    closures.envSize += getTypeSize(declaration.type);
   }
 });
 
@@ -4079,6 +4188,63 @@ const parseGlobalDeclaration = curry_1((isConst, options, node) => {
   }
   return _extends({}, node, { meta: { [GLOBAL_INDEX]: -1 } });
 });
+
+//      
+function mapCharacterLiteral(node) {
+  const codePoint = node.value.codePointAt(0);
+  return _extends({}, node, {
+    Type: Syntax.Constant,
+    type: "i32",
+    value: String(codePoint)
+  });
+}
+
+/**
+ * Syntax Analysis
+ *
+ * The parser below creates the "bare" Abstract Syntax Tree.
+ */
+
+//      
+const fragment = (source, parser) => {
+  const stream = new Stream(source);
+  const tokenizer = new Tokenizer(stream);
+  const tokens = tokenStream(tokenizer.parse());
+
+  const ctx = new Context({
+    stream: tokens,
+    token: tokens.tokens[0],
+    lines: stream.lines,
+    filename: "unknown.walt"
+  });
+
+  return parser(ctx);
+};
+
+const expressionFragment = source => fragment(source, expression);
+
+// Unary expressions need to be patched so that the LHS type matches the RHS
+function mapUnary (unaryNode, transform) {
+  // While it's counter-intuitive that an unary operation would have two operands
+  const [lhs, rhs] = unaryNode.params.map(transform);
+  switch (unaryNode.value) {
+    // Transform bang
+    case "!":
+      const shift = ["i64", "f64"].includes(lhs.type) ? "63" : "31";
+      return transform(expressionFragment(`(((${String(lhs)} >> ${shift}) | ((~${String(lhs)} + 1) >> ${shift})) + 1)`));
+    case "~":
+      const mask = ["i64", "f64"].includes(transform(lhs).type) ? "0xffffffffffff" : "0xffffff";
+      return transform(expressionFragment(`(${String(lhs)} ^ ${mask})`));
+    default:
+      return _extends({}, unaryNode, {
+        type: rhs.type,
+        params: [_extends({}, lhs, {
+          type: rhs.type
+        }), rhs],
+        Type: Syntax.BinaryExpression
+      });
+  }
+}
 
 //      
 const patchStringSubscript = (byteOffsetsByKey, params) => {
@@ -4105,6 +4271,16 @@ const mapArraySubscript = curry_1(({ userTypes }, node, mapChildren) => {
     });
   }
 
+  // Native method
+  if (identifier.Type === Syntax.Type && field.Type === Syntax.FunctionCall) {
+    return _extends({}, node, {
+      Type: Syntax.NativeMethod,
+      type: identifier.value,
+      value: identifier.value + "." + field.value,
+      params: field.params
+    });
+  }
+
   const type = identifier.type;
 
   return _extends({}, node, {
@@ -4114,10 +4290,34 @@ const mapArraySubscript = curry_1(({ userTypes }, node, mapChildren) => {
 });
 
 //      
-const mapIdentifier = curry_1(({ locals, globals, functions, table, userTypes }, identifier) => {
+const mapIdentifier = curry_1(({ locals, globals, functions, table }, identifier) => {
   // Not a function call or pointer, look-up variables
   const local = locals[identifier.value];
   const global = globals[identifier.value];
+
+  if (identifier.value === "false") {
+    return _extends({}, identifier, {
+      type: "i32",
+      value: "0",
+      Type: Syntax.Constant
+    });
+  }
+
+  if (identifier.value === "true") {
+    return _extends({}, identifier, {
+      type: "i32",
+      value: "1",
+      Type: Syntax.Constant
+    });
+  }
+
+  if (identifier.value === "__DATA_LENGTH__") {
+    return _extends({}, identifier, {
+      type: "i32",
+      Type: Syntax.ArraySubscript,
+      params: [_extends({}, identifier, { type: "i32", value: "0", Type: Syntax.Constant }), _extends({}, identifier, { type: "i32", value: "0", Type: Syntax.Constant })]
+    });
+  }
 
   if (local != null) {
     const type = (() => {
@@ -4132,11 +4332,6 @@ const mapIdentifier = curry_1(({ locals, globals, functions, table, userTypes },
     return _extends({}, identifier, {
       type: globals[identifier.value].type,
       meta: _extends({}, global.meta)
-    });
-  } else if (userTypes[identifier.value] != null) {
-    return _extends({}, identifier, {
-      type: "i32",
-      Type: Syntax.UserType
     });
   } else if (functions[identifier.value] != null) {
     if (table[identifier.value] == null) {
@@ -4270,8 +4465,8 @@ var makeAssignment = curry_1(function mapAssignment(options, node, mapChildren) 
 //      
 const CLOSURE_FREE = "closure-free";
 const CLOSURE_MALLOC = "closure-malloc";
-const CLOSURE_BASE = "closure-base";
-const CLOSURE_INNER = "closure-inner";
+const CLOSURE_BASE = "closure_base";
+const CLOSURE_INNER = "closure_inner";
 const CLOSURE_GET = "closure--get";
 const CLOSURE_SET = "closure--set";
 
@@ -4348,20 +4543,7 @@ const collapseClosureIdentifier = (closure, pointer) => {
   });
 };
 
-const mapIdentifierToOffset = (base, offset) => {
-  return _extends({}, base, {
-    value: "+",
-    params: [_extends({}, base, {
-      value: String(offset),
-      Type: Syntax.Constant,
-      type: "i32"
-    }), _extends({}, base, {
-      Type: Syntax.Identifier,
-      params: []
-    })],
-    Type: Syntax.BinaryExpression
-  });
-};
+const mapIdentifierToOffset = (base, offset) => expressionFragment(`${offset} + ${base.value}`);
 
 /**
  * Walks over a function ndoe and finds any enclosed variables in any closure in
@@ -4797,18 +4979,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     [Syntax.FunctionCall]: mapFunctonCall,
     [Syntax.Pair]: mapPair,
     // Unary expressions need to be patched so that the LHS type matches the RHS
-    [Syntax.UnaryExpression]: (unaryNode, transform) => {
-      const lhs = unaryNode.params[0];
-      // Recurse into RHS and determine types
-      const rhs = transform(unaryNode.params[1]);
-      return _extends({}, unaryNode, {
-        type: rhs.type,
-        params: [_extends({}, lhs, {
-          type: rhs.type
-        }), rhs],
-        Type: Syntax.BinaryExpression
-      });
-    },
+    [Syntax.UnaryExpression]: mapUnary,
     // All binary expressions are patched
     [Syntax.BinaryExpression]: (binaryNode, transform) => {
       return balanceTypesInMathExpression(_extends({}, binaryNode, {
@@ -4826,6 +4997,23 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       return balanceTypesInMathExpression(_extends({}, binaryNode, {
         params: binaryNode.params.map(transform)
       }));
+    },
+    [Syntax.CharacterLiteral]: mapCharacterLiteral,
+    [Syntax.StringLiteral]: (stringLiteral, transform) => {
+      const { statics } = options;
+      const { value } = stringLiteral;
+      const index = statics[value] ? statics[value].value : Object.values(statics).map(({ meta: { [STATIC_STRING]: data } }) => data).reduce((a, v) => a + v.size, 4);
+      const transformed = transform(_extends({}, stringLiteral, {
+        value: String(index),
+        meta: _extends({}, stringLiteral.meta, {
+          [STATIC_STRING]: stringEncoder(value)
+        }),
+        Type: Syntax.Constant
+      }));
+      // it really does not matter when we write the key in
+      statics[stringLiteral.value] = transformed;
+
+      return transformed;
     },
     [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, transform) => {
@@ -5004,6 +5192,7 @@ function semantics$1(ast) {
   const table = {};
   const hoist = [];
   const hoistImports = [];
+  const statics = {};
 
   if (hasNode(Syntax.Closure, ast)) {
     ast = _extends({}, ast, { params: [...imports$1(), ...ast.params] });
@@ -5026,6 +5215,7 @@ function semantics$1(ast) {
       globals,
       types
     }),
+    [Syntax.CharacterLiteral]: mapCharacterLiteral,
     [Syntax.Struct]: mapStruct({ userTypes }),
     [Syntax.FunctionDeclaration]: mapFunctionNode$1({
       hoist,
@@ -5034,14 +5224,15 @@ function semantics$1(ast) {
       globals,
       functions,
       userTypes,
-      table
+      table,
+      statics
     })
   })(astWithTypes);
 
   return _extends({}, patched, {
     meta: _extends({}, patched.meta, {
       // Attach information collected to the AST
-      [AST_METADATA]: { functions, globals, types, userTypes }
+      [AST_METADATA]: { functions, globals, types, userTypes, statics }
     }),
     params: [...hoistImports, ...patched.params, ...hoist]
   });
@@ -5060,7 +5251,7 @@ function validate$1(ast, {
   if (metadata == null) {
     throw new Error("Missing AST metadata!");
   }
-  const { types, functions } = metadata;
+  const { types, functions, userTypes } = metadata;
   const problems = [];
 
   walker({
@@ -5152,6 +5343,9 @@ function validate$1(ast, {
           const type = (() => {
             if (expression == null) {
               return null;
+            }
+            if (userTypes[expression.type] != null) {
+              return "i32";
             }
             return [">", "<", ">=", "<=", "==", "!="].includes(expression.value) ? "i32" : expression.type;
           })();
@@ -5317,6 +5511,7 @@ const getIR = (source, {
 } = {}) => {
   const ast = parse(source);
   const semanticAST = semantics(ast);
+
   validate(semanticAST, {
     lines,
     filename
@@ -5337,11 +5532,15 @@ const getIR = (source, {
 };
 
 const withPlugins = (plugins, importsObj) => {
-  const { closure } = plugins;
-  const resultImports = {};
-  if (closure != null) {
-    resultImports["walt-plugin-closure"] = mapToImports(closure);
-  }
+  const pluginMappers = {
+    closure: (closure, imports) => {
+      imports["walt-plugin-closure"] = mapToImports(closure);
+    }
+  };
+  const resultImports = Object.entries(plugins).reduce((acc, [key, value]) => {
+    pluginMappers[key](value, acc);
+    return acc;
+  }, {});
 
   return _extends({}, resultImports, importsObj);
 };

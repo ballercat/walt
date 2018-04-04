@@ -14,6 +14,7 @@ export const BinaryExpression = "BinaryExpression";
 export const TernaryExpression = "TernaryExpression";
 export const NumberLiteral = "NumberLiteral";
 export const StringLiteral = "StringLiteral";
+export const CharacterLiteral = "CharacterLiteral";
 export const Punctuator = "Punctuator";
 export const Identifier = "Identifier";
 export const ArraySubscript = "ArraySubscript";
@@ -54,6 +55,7 @@ export const FunctionPointer = "FunctionPointer";
 export const FunctionArguments = "FunctionArguments";
 export const FunctionResult = "FunctionResult";
 export const FunctionLocals = "FunctionLocals";
+export const NativeMethod = "NativeMethod";
 
 export const i32 = "i32";
 export const f32 = "f32";
@@ -118,6 +120,7 @@ export default {
   TernaryExpression,
   NumberLiteral,
   StringLiteral,
+  CharacterLiteral,
   Punctuator,
   Identifier,
   ArraySubscript,
@@ -161,4 +164,7 @@ export default {
   FunctionArguments,
   FunctionResult,
   FunctionLocals,
+
+  // Natives
+  NativeMethod,
 };

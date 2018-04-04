@@ -18,3 +18,5 @@ export const CLOSURE_TYPE = "closure/type";
 export const AST_METADATA = "@@global/ast";
 export const FUNCTION_METADATA = "@@function/meta";
 export const ALIAS = "alias";
+export const STATIC_STRING = "static/string";
+export const STATIC_INDEX = "static/index";

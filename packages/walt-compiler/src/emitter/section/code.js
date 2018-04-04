@@ -26,7 +26,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
     }
 
     // map over all params, if any and encode each on
-    (params || []).forEach(p => {
+    params.forEach(p => {
       let type = varuint32;
       let stringType = "i32.literal";
 
@@ -37,9 +37,6 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
       } else {
         // either encode unsigned 32 bit values or floats
         switch (kind.result) {
-          case u8:
-            type = u8;
-            break;
           case f64:
             type = f64;
             stringType = "f64.literal";

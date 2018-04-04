@@ -1,5 +1,6 @@
 import Syntax from "../../Syntax";
 import test from "ava";
+import { statementFragment } from "../../parser/fragment";
 import Context from "../context";
 
 const ctx = new Context({
@@ -47,4 +48,8 @@ test("eat returns false if not token specified", t => {
 
 test("expect will throw on a non-expected token", t => {
   t.throws(() => ctx.expect(null, Syntax.Keyword));
+});
+
+test("pre-existing keywords, but which are not supported yet throw", t => {
+  t.throws(() => statementFragment("class"));
 });

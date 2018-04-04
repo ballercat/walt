@@ -39,8 +39,6 @@ export default function parse(source: string): NodeType {
     return node;
   }
 
-  ctx.token = tokens.next();
-
   while (ctx.stream.peek()) {
     const child = statement(ctx);
     if (child) {

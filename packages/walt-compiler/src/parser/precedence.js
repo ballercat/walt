@@ -4,6 +4,7 @@
 
 export const PRECEDENCE_MEMBER_ACCESS = 19;
 export const PRECEDENCE_FUNCTION_CALL = 19;
+export const PRECEDENCE_NOT = 18;
 export const PRECEDENCE_ASSIGNMENT = 3;
 export const PRECEDENCE_INCREMENT = 2;
 export const PRECEDENCE_DECREMENT = 2;
@@ -11,6 +12,7 @@ export const PRECEDENCE_DIVIDE = 1;
 export const PRECEDENCE_MULTIPLY = 1;
 export const PRECEDENCE_ADDITION = 0;
 export const PRECEDENCE_SUBTRACTION = 0;
+export const PRECEDENCE_SHIFT = -1;
 export const PRECEDENCE_COMMA = -2;
 export const PRECEDENCE_BITWISE_XOR = -2;
 export const PRECEDENCE_SPREAD = -1;
@@ -27,6 +29,9 @@ const precedence = {
   "=>": PRECEDENCE_PARAMS,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,
+  ">>": PRECEDENCE_SHIFT,
+  ">>>": PRECEDENCE_SHIFT,
+  "<<": PRECEDENCE_SHIFT,
   "+": PRECEDENCE_ADDITION,
   "-": PRECEDENCE_SUBTRACTION,
   "*": PRECEDENCE_MULTIPLY,
@@ -47,6 +52,8 @@ const precedence = {
   "&&": PRECEDENCE_LOGICAL_AND,
   "||": PRECEDENCE_LOGICAL_OR,
   "...": PRECEDENCE_SPREAD,
+  "~": PRECEDENCE_NOT,
+  "!": PRECEDENCE_NOT,
 };
 
 export default precedence;

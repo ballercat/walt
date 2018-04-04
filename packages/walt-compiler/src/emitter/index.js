@@ -19,7 +19,8 @@ export default function emit(program: ProgramType, config: ConfigType) {
     .write(section.globals(program))
     .write(section.exports(program))
     .write(section.element(program))
-    .write(section.code(program));
+    .write(section.code(program))
+    .write(section.data(program));
 
   if (config.encodeNames) {
     return result.write(section.name(program));

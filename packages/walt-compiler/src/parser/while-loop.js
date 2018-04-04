@@ -5,16 +5,6 @@ import expression from "./expression";
 import statement from "./statement";
 import type { NodeType } from "../flow/types";
 
-// Truth tables are tricky.
-const reverse = {
-  ">": "<=",
-  "<": ">=",
-  ">=": "<",
-  "<=": ">",
-  "==": "!=",
-  "!=": "==",
-};
-
 const whileLoop = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(["while"]);
@@ -22,10 +12,6 @@ const whileLoop = (ctx: Context): NodeType => {
 
   const initializer = ctx.makeNode({}, Syntax.Noop);
   const condition = expression(ctx);
-  // This could also be instead patched with a Eqz instruction
-  if (reverse[condition.value]) {
-    condition.value = reverse[condition.value];
-  }
   const body = [];
 
   ctx.expect([")"]);

@@ -32,9 +32,8 @@ export const parseFunctionResult = (ctx: Context): NodeType => {
             return value === "void" ? null : value;
           }
 
-          if (ctx.eat(null, Syntax.Identifier)) {
-            return "i32";
-          }
+          // If we did not find a user-type we default to an i32
+          ctx.expect(null, Syntax.Identifier);
 
           return "i32";
         })(),
@@ -61,7 +60,6 @@ export default function maybeFunctionDeclaration(ctx: Context): NodeType {
   const value = ctx.expect(null, Syntax.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
-
   ctx.expect(["{"]);
   const statements = [];
   while (ctx.token && ctx.token.value !== "}") {

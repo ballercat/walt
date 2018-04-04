@@ -1,0 +1,63 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
+import { assert: AssertType } from 'env';
+type AssertType = (i32, i32, i32) => void;
+
+function testi32LoadStore(): i32 {
+  i32.store(0, 2);
+  return i32.load(0);
+}
+
+function testf32LoadStore(): f32 {
+  f32.store(0, 4.0);
+  return f32.load(0);
+}
+
+function testi64LoadStore(): i64 {
+  i64.store(0, (1024: i64));
+  return i64.load(0);
+}
+
+function testf64LoadStore(): f64 {
+  f64.store(0, (2048.0 : f64));
+  return f64.load(0);
+}
+
+function test8bitUnsigned(): i32 {
+  i32.store16(0, 0xFFFF);
+  const x: i32 = i32.load8_u(0);
+  const y: i32 = i32.load8_u(1);
+  return x + y;
+}
+
+function test8bitSigned(): i32 {
+  i32.store16(0, 0xFFFF);
+  const x: i32 = i32.load8_s(0);
+  const y: i32 = i32.load8_s(1);
+  return x + y;
+}
+
+function test16BitUnsigned(): i32 {
+  i32.store(0, 0x80008000);
+  const x: i32 = i32.load16_u(0);
+  // offsets are BYTE offsets not half-words. Same thing for i32s/i64s
+  const y: i32 = i32.load16_u(2);
+  return y + x;
+}
+
+function test16BitSigned(): i32 {
+  i32.store(0, 0xffffffff);
+  const x: i32 = i32.load16_s(0);
+  const y: i32 = i32.load16_s(1);
+  return y + x;
+}
+
+export function run() {
+  assert("i32.load & i32.store", testi32LoadStore(), 2);
+  assert("f32.load & f32.store", testf32LoadStore() : i32, 4);
+  assert("i64.load & i64.store", testi64LoadStore() : i32, 1024);
+  assert("f64.load & f64.store", testf64LoadStore() : i32, 2048);
+  assert("8bit load-store, unsigned", test8bitUnsigned(), 510);
+  assert("8bit load-store, signed", test8bitSigned(), -2);
+  assert("16bit load-store, unsigned", test16BitUnsigned(), 0x10000);
+  assert("16bit load-store, signed", test16BitSigned(), -2);
+}

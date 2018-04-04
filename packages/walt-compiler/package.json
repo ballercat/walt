@@ -76,7 +76,8 @@
       "!**/utils.js"
     ],
     "source": [
-      "src/**/*.js"
+      "src/**/*.js",
+      "src/**/*.walt"
     ],
     "failFast": true,
     "failWithoutAssertions": false,

@@ -51,25 +51,23 @@ const parse = (isConst, { types, scope }, declaration) => {
 
 export const parseDeclaration = curry((isConst, options, declaration) => {
   const { locals: scope, closures } = options;
-  if (scope[declaration.value] == null) {
-    const [type, meta, index] = parse(
-      isConst,
-      { ...options, scope },
-      declaration
-    );
-    scope[declaration.value] = {
-      ...declaration,
-      type,
-      meta: { ...meta, [LOCAL_INDEX]: index },
-      Type: Syntax.Declaration,
-    };
+  const [type, meta, index] = parse(
+    isConst,
+    { ...options, scope },
+    declaration
+  );
+  scope[declaration.value] = {
+    ...declaration,
+    type,
+    meta: { ...meta, [LOCAL_INDEX]: index },
+    Type: Syntax.Declaration,
+  };
 
-    const { variables } = closures;
-    if (variables[declaration.value] != null && declaration.params[0]) {
-      const { offsets } = closures;
-      offsets[declaration.value] = closures.envSize;
-      closures.envSize += getTypeSize(declaration.type);
-    }
+  const { variables } = closures;
+  if (variables[declaration.value] != null && declaration.params[0]) {
+    const { offsets } = closures;
+    offsets[declaration.value] = closures.envSize;
+    closures.envSize += getTypeSize(declaration.type);
   }
 });
 
