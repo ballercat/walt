@@ -1,0 +1,18 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
+import { a: i32 } from './import-a.walt';
+import { b: i32 } from './import-b.walt';
+import { c: C } from './import-c.walt';
+
+type C = () => i32;
+
+export function showImportA() : i32 {
+  return a;
+}
+
+export function showImportB(): i32 {
+  return b;
+}
+
+export function run(): i32 {
+  return c();
+}

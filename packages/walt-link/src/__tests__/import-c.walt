@@ -1,0 +1,6 @@
+import { a: i32 } from './import-a.walt';
+import { b: i32 } from './import-b.walt';
+
+export function c(): i32 {
+  return a + b;
+}

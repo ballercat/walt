@@ -1,0 +1,1 @@
+export const a: i32 = 42;

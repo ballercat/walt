@@ -1,0 +1,25 @@
+{
+  "name": "walt-cli",
+  "version": "0.0.1",
+  "description": "CLI for Walt",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "walt",
+    "wasm",
+    "webassembly",
+    "cli",
+    "compiler"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "dependencies": {
+    "meow": "^4.0.0",
+    "walt-compiler": "^0.4.3"
+  },
+  "devDependencies": {
+    "prettier": "^1.11.1"
+  }
+}
