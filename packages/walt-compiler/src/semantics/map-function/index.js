@@ -27,11 +27,13 @@ import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
 import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
+import { generateStringOffset } from "../../utils/string";
 import {
   FUNCTION_INDEX,
   CLOSURE_TYPE,
   FUNCTION_METADATA,
   STATIC_STRING,
+  STATIC_TOTAL_LENGTH,
 } from "../metadata";
 import type { NodeType } from "../../flow/types";
 
@@ -212,24 +214,31 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     [Syntax.StringLiteral]: (stringLiteral, transform) => {
       const { statics } = options;
       const { value } = stringLiteral;
-      const index = statics[value]
-        ? statics[value].value
-        : Object.values(statics)
-            .map(({ meta: { [STATIC_STRING]: data } }: any) => data)
-            .reduce((a, v) => a + v.size, 4);
-      const transformed = transform({
-        ...stringLiteral,
-        value: String(index),
-        meta: {
-          ...stringLiteral.meta,
-          [STATIC_STRING]: stringEncoder(value),
-        },
-        Type: Syntax.Constant,
-      });
-      // it really does not matter when we write the key in
-      statics[stringLiteral.value] = transformed;
 
-      return transformed;
+      // did we already encode the static?
+      if (!(value in statics)) {
+        const offset = statics[STATIC_TOTAL_LENGTH];
+        statics[STATIC_TOTAL_LENGTH] += value.length;
+        statics[value] = offset;
+        console.log(value, value.length, offset);
+      }
+
+      return stringLiteral;
+      // const transformed = transform({
+      //   ...stringLiteral,
+      //   value: String(
+      //     generateStringOffset(statics, value, STATIC_TOTAL_LENGTH)
+      //   ),
+      //   meta: {
+      //     ...stringLiteral.meta,
+      //     [STATIC_STRING]: stringEncoder(value),
+      //   },
+      //   Type: Syntax.Constant,
+      // });
+      // // it really does not matter when we write the key in
+      // statics[stringLiteral.value] = transformed;
+
+      // return transformed;
     },
     [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, transform) => {

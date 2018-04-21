@@ -13,6 +13,7 @@ import generateTable from "./table";
 import generateInitializer from "../generator/initializer";
 import generateImport from "./import";
 import generateType from "./type";
+import generateData from "./generate-data";
 import { generateValueType } from "./utils";
 import { generateImplicitFunctionType } from "./type";
 import {
@@ -29,6 +30,8 @@ import type {
   IntermediateOpcodeType,
   IntermediateVariableType,
 } from "./flow/types";
+
+const DATA_SECTION_HEADER_SIZE = 4;
 
 export const generateCode = (
   func: NodeType
@@ -90,13 +93,18 @@ export default function generator(
     },
   };
 
-  // Encode the static memory values into Data section
-  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce(
-    (acc, [key, val]: [string, any]) => {
-      return [...acc, { offset: Number(val.value), data: stringEncoder(key) }];
-    },
-    []
+  let { statics } = ast.meta[AST_METADATA];
+  if (config.linker != null) {
+    statics = {
+      ...statics,
+      ...config.linker.statics,
+    };
+  }
+  const { map: staticsMap, data } = generateData(
+    statics,
+    DATA_SECTION_HEADER_SIZE
   );
+  program.Data = data;
 
   const findTypeIndex = (functionNode: NodeType): number => {
     const search = generateImplicitFunctionType(functionNode);
@@ -133,6 +141,15 @@ export default function generator(
 
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
+    },
+    [Syntax.Import]: (node, _) => node,
+    [Syntax.StringLiteral]: (node, _ignore) => {
+      const { value } = node;
+      return {
+        ...node,
+        value: String(staticsMap[value]),
+        Type: Syntax.Constant,
+      };
     },
   })(ast);
 
@@ -177,7 +194,7 @@ export default function generator(
       })();
 
       const patched = mapNode({
-        [Syntax.FunctionPointer]: pointer => {
+        FunctionPointer(pointer) {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           const functionIndex = metaFunctionIndex;
           let tableIndex = findTableIndex(functionIndex);

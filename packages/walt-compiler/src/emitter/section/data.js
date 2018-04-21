@@ -34,14 +34,18 @@ const encodeDataLength = (stream, length) => {
 
 export default function emit(dataSection: DataSectionType): OutputStream {
   const stream = new OutputStream();
-  stream.push(varuint32, dataSection.length + 1, "entries");
+  stream.push(varuint32, dataSection.length, "entries");
 
   // push an entry for the total size of the data section
-  const lastEntry = dataSection[dataSection.length - 1];
-  const totalDataLength = lastEntry.offset + lastEntry.data.size;
-  encodeDataLength(stream, totalDataLength);
+  // const lastEntry = dataSection[dataSection.length - 1];
+  // const totalDataLength = 4 + lastEntry.offset + lastEntry.data.size;
+  // encodeDataLength(stream, totalDataLength);
+  console.log(dataSection);
 
-  dataSection.forEach(segment => emitDataSegment(stream, segment));
+  for (let i = 0, len = dataSection.length; i < len; i++) {
+    const segment = dataSection[i];
+    emitDataSegment(stream, segment);
+  }
 
   return stream;
 }

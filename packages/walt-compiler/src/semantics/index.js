@@ -22,10 +22,10 @@ import mapStructNode from "./map-struct";
 import mapCharacterLiteral from "./map-char";
 import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
-import { AST_METADATA } from "./metadata";
+import { AST_METADATA, STATIC_TOTAL_LENGTH } from "./metadata";
 import type { NodeType } from "../flow/types";
 
-export default function semantics(ast: NodeType): NodeType {
+function semantics(ast: NodeType, options: any = {}): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};
@@ -33,7 +33,12 @@ export default function semantics(ast: NodeType): NodeType {
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
   const hoistImports: NodeType[] = [];
-  const statics: { [string]: NodeType } = {};
+  const statics: any = {};
+  if (options.statics != null) {
+    statics[STATIC_TOTAL_LENGTH] = options.statics[STATIC_TOTAL_LENGTH] || 0;
+  } else {
+    statics[STATIC_TOTAL_LENGTH] = 0;
+  }
 
   if (hasNode(Syntax.Closure, ast)) {
     ast = { ...ast, params: [...closureImports(), ...ast.params] };
@@ -80,3 +85,16 @@ export default function semantics(ast: NodeType): NodeType {
     params: [...hoistImports, ...patched.params, ...hoist],
   };
 }
+
+function getStaticsTotalSize(ast: NodeType) {
+  const astMetadata = ast.meta[AST_METADATA];
+  if (astMetadata == null) {
+    return 0;
+  }
+
+  return astMetadata.statics[STATIC_TOTAL_LENGTH] || 0;
+}
+
+semantics.getStaticsTotalSize = getStaticsTotalSize;
+
+export default semantics;
