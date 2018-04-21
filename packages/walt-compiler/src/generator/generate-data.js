@@ -1,7 +1,6 @@
 // @flow
 import { stringEncoder } from "../utils/string";
 import OutputStream from "../utils/output-stream";
-import { STATIC_TOTAL_LENGTH } from "../semantics/metadata";
 
 export default function generateData(
   statics: any,
@@ -12,7 +11,6 @@ export default function generateData(
 
   const map: { [string]: number } = {};
   const data = Object.keys(statics).reduce((acc, key) => {
-    console.log(key);
     const encoded = stringEncoder(key);
     acc.push({ offset: Number(offsetAccumulator), data: encoded });
     map[key] = offsetAccumulator;

@@ -2,10 +2,30 @@
 
 const path = require("path");
 const fs = require("fs");
-const make = require("./get-program");
 const compiler = require("walt-compiler");
 
 const MEMORY_KIND = 2;
+
+function make(filepath, options = {}) {
+  const filename = filepath.split("/").pop();
+  const src = fs.readFileSync(path.resolve(filepath), "utf8");
+
+  options = Object.assign(
+    options,
+    {
+      version: 0x1,
+      filename,
+      lines: src.split("/n"),
+    },
+    options
+  );
+
+  const untypedAST = compiler.parser(src);
+  const typedAST = compiler.semantics(untypedAST);
+  compiler.validate(typedAST, options);
+
+  return compiler.generator(typedAST, options);
+}
 
 function compile(filepath, parent) {
   const main = make(filepath);

@@ -37,6 +37,9 @@ export type ConfigType = {
   encodeNames: boolean,
   lines: string[],
   filename: string,
+  linker?: {
+    statics: { [string]: number },
+  },
 };
 
 export type TypeCastType = {
