@@ -104,7 +104,9 @@ export default function generator(
     statics,
     DATA_SECTION_HEADER_SIZE
   );
-  program.Data = data;
+  if (Object.keys(statics).length > 0) {
+    program.Data = data;
+  }
 
   const findTypeIndex = (functionNode: NodeType): number => {
     const search = generateImplicitFunctionType(functionNode);
@@ -144,6 +146,9 @@ export default function generator(
     },
     [Syntax.Import]: (node, _) => node,
     [Syntax.StringLiteral]: (node, _ignore) => {
+      if (Object.keys(statics).length === 0) {
+        return node;
+      }
       const { value } = node;
       return {
         ...node,
