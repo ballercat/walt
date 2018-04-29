@@ -24,7 +24,7 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
     env: { memory },
   });
   t.is(typeof wasm.instance.exports.run === "function", true);
-  t.is(wasm.instance.exports.run(), 62);
+  t.is(wasm.instance.exports.run(), 1);
 
   const view = new DataView(memory.buffer);
   // The two static strings returned here are stored in different module imports
