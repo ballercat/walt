@@ -143,19 +143,22 @@ export default function generator(
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     },
-    [Syntax.Import]: (node, _) => node,
-    [Syntax.StringLiteral]: (node, _ignore) => {
-      if (Object.keys(statics).length === 0) {
-        return node;
-      }
-      const { value } = node;
-      return {
-        ...node,
-        value: String(staticsMap[value]),
-        Type: Syntax.Constant,
-      };
-    },
-  })(ast);
+  })(
+    mapNode({
+      [Syntax.Import]: (node, _) => node,
+      [Syntax.StringLiteral]: (node, _ignore) => {
+        if (Object.keys(statics).length === 0) {
+          return node;
+        }
+        const { value } = node;
+        return {
+          ...node,
+          value: String(staticsMap[value]),
+          Type: Syntax.Constant,
+        };
+      },
+    })(ast)
+  );
 
   const nodeMap = {
     [Syntax.Typedef]: (_, __) => _,

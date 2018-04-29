@@ -1,10 +1,10 @@
 import test from "ava";
 import { statementFragment } from "../parser/fragment";
 import generateImportFromNode from "../generator/import";
-import compile, { parser, semantics, printNode } from "..";
+import compile, { parser, semantics } from "..";
 
 const compileAndRun = (src, importsObj = {}) =>
-  WebAssembly.instantiate(compile(src), importsObj);
+  WebAssembly.instantiate(compile(src, { encodeNames: true }), importsObj);
 
 test("missing function types", t => {
   const ast = semantics(
