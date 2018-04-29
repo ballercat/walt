@@ -137,19 +137,7 @@ function patchInferedTypes(ast, deps) {
 
 // Build a dependency tree of ASTs given a root module
 function buildTree(options) {
-  const rootBasic = compiler.parser(options.src);
-  const rootImports = parseImports(rootBasic);
-  const mod = {
-    deps: {},
-    filepath: options.filepath,
-  };
-  const modules = {
-    [options.filepath]: mod,
-  };
-
-  const tree = {
-    root: mod,
-  };
+  const modules = {};
 
   const dependency = (module, resolve) => {
     const filepath = resolve(module);
@@ -191,29 +179,12 @@ function buildTree(options) {
     return result;
   };
 
-  // Kick off the process of building child deps, everything else is recursive
-  Object.keys(rootImports).forEach(module => {
-    if (module.indexOf(".") === 0) {
-      // parse the import into an ast
-      const dep = dependency(module, file =>
-        path.resolve(path.dirname(options.filepath), file)
-      );
-
-      tree.root.deps[module] = dep;
-    }
-  });
-
-  const patched = patchInferedTypes(rootBasic, mod.deps);
-  const ast = compiler.semantics(patched);
-  compiler.validate(ast, {
-    lines: options.src.split("\n"),
-    filname: module,
-  });
-
-  mod.ast = ast;
+  const root = dependency(options.filepath, file => file);
 
   return {
-    tree,
+    tree: {
+      root,
+    },
     modules,
   };
 }
