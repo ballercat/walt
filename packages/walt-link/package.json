@@ -4,7 +4,7 @@
   "description": "Links .walt WebAssembly programs",
   "main": "index.js",
   "scripts": {
-    "test": "nyc --cache ava --no-color --no-power-assert --tap | tap-nyc",
+    "test": "nyc --cache ava --no-color --no-power-assert",
     "validate": "npm run prettier && npm run lint",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
@@ -23,6 +23,9 @@
     "ava": "^0.25.0",
     "prettier": "^1.12.0",
     "walt-compiler": "^0.4.3"
+  },
+  "peerDependencies": {
+    "walt-compiler:": "^0.4.3"
   },
   "prettier": {
     "trailingComma": "es5"

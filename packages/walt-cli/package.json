@@ -4,7 +4,7 @@
   "description": "CLI for Walt",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "echo 'nothing to test'"
   },
   "keywords": [
     "walt",
