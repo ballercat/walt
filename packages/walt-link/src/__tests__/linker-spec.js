@@ -38,14 +38,6 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   return wasm;
 });
 
-test("merge Statics", t => {
-  const filepath = path.resolve(__dirname, "./index.walt");
-  const tree = buildTree(filepath);
-
-  const statics = mergeStatics(tree);
-  t.snapshot(statics);
-});
-
 test("assemble", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
   const filename = filepath.split("/").pop();
