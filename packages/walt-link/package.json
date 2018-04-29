@@ -4,11 +4,8 @@
   "description": "Links .walt WebAssembly programs",
   "main": "index.js",
   "scripts": {
-    "test": "nyc --cache ava --no-color --no-power-assert",
-    "validate": "npm run prettier && npm run lint",
-    "tdd": "ava",
+    "test": "ava",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
-    "lint": "eslint src",
     "prettier": "prettier --list-different src/**/*.js"
   },
   "keywords": [
