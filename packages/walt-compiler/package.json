@@ -65,7 +65,8 @@
     "rollup-plugin-replace": "2.0.0",
     "rollup-plugin-uglify": "2.0.1",
     "tap-nyc": "1.0.3",
-    "uglify-es": "3.0.17"
+    "uglify-es": "3.0.17",
+    "walt-link": "^0.1.0"
   },
   "prettier": {
     "trailingComma": "es5"
