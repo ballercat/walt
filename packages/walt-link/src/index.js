@@ -18,7 +18,7 @@ function mergeStatics(tree = {}) {
 
   Object.values(tree.modules).forEach(mod => {
     const localStatics = mod.ast.meta.AST_METADATA.statics;
-    statics = { ...statics, ...localStatics };
+    Object.assign(statics, localStatics);
   });
 
   return statics;
@@ -41,7 +41,7 @@ function parseImports(ast) {
           // Import pairs consist of identifier and type
           const [identifier] = pair.params;
           imports[module.value] = Array.from(
-            new Set([...imports[module.value], identifier.value])
+            new Set(imports[module.value].concat(identifier.value))
           );
         },
       })(fields);
@@ -113,15 +113,14 @@ function assemble(tree, options) {
       // Use global statics object
       statics = options.linker.statics;
     }
-    const instructions = compiler.generator(mod.ast, {
-      ...options,
-      linker: { statics },
-    });
+    const instructions = compiler.generator(
+      mod.ast,
+      Object.assign({}, options, { linker: { statics } })
+    );
 
-    return {
-      ...opcodes,
+    return Object.assign({}, opcodes, {
       [filepath]: instructions,
-    };
+    });
   }, {});
 }
 
@@ -136,14 +135,16 @@ function compile(filepath) {
 
   const tree = buildTree(filepath);
   const statics = mergeStatics(tree);
-  const opcodes = assemble(tree, { ...options, linker: { statics } });
+  const opcodes = assemble(
+    tree,
+    Object.assign({}, options, { linker: { statics } })
+  );
 
-  return {
-    ...tree,
+  return Object.assign(tree, {
     statics,
     opcodes,
     options,
-  };
+  });
 }
 
 // Build the final binary Module set
@@ -167,7 +168,7 @@ function build(importsObj, modules, tree) {
 
         return WebAssembly.instantiate(
           compiler.emitter(tree.opcodes[filepath], tree.options).buffer(),
-          { ...imports, ...importsObj }
+          Object.assign({}, imports, importsObj)
         );
       })
       .catch(e => {

@@ -21,31 +21,35 @@ function inferImportTypes(ast, deps) {
           if (fun != null) {
             // function arguments and params are _always_ the first two params
             const [args, result] = fun.params;
-            const typeArgs = {
-              ...args,
+            const typeArgs = Object.assign(
+              {},
+              args,
               // function arguments are a identifier : type pairs
               // for type declarations we only need the types
-              params: args.params.filter(Boolean).map(argNode => {
-                return argNode.params[1];
-              }),
-            };
-            const newType = {
-              ...identifier,
+              {
+                params: args.params.filter(Boolean).map(argNode => {
+                  return argNode.params[1];
+                }),
+              }
+            );
+            const newType = Object.assign({}, identifier, {
               type: result.type,
               params: [typeArgs, result],
               value: `__auto_type_${identifier.value}`,
               Type: "Typedef",
-            };
+            });
             newTypes.push(newType);
 
             // for an import to become valid at this point it only needs to be an
             // identifier : identifier pair :)
-            const patched = {
-              ...identifier,
+            const patched = Object.assign({}, identifier, {
               value: ":",
-              params: [identifier, { ...identifier, value: newType.value }],
+              params: [
+                identifier,
+                Object.assign({}, identifier, { value: newType.value }),
+              ],
               Type: "Pair",
-            };
+            });
 
             return patched;
           }
@@ -53,20 +57,18 @@ function inferImportTypes(ast, deps) {
           const glbl = globals[identifier.value];
           if (glbl != null) {
             // just set to the global type pair and peace out
-            return {
-              ...identifier,
+            return Object.assign({}, identifier, {
               value: ":",
               params: [
                 identifier,
-                {
-                  ...identifier,
+                Object.assign({}, identifier, {
                   value: glbl.type,
                   type: glbl.type,
                   Type: "Type",
-                },
+                }),
               ],
               Type: "Pair",
-            };
+            });
           }
 
           return identifier;
@@ -76,10 +78,7 @@ function inferImportTypes(ast, deps) {
   })(ast);
 
   // types can be defined anywhere in a program, even as the very last bit
-  return {
-    ...patch,
-    params: [...patch.params, ...newTypes],
-  };
+  return Object.assign({}, patch, { params: patch.params.concat(newTypes) });
 }
 
 module.exports = {

@@ -2,7 +2,7 @@
   "name": "walt-link",
   "version": "0.1.0",
   "description": "Links .walt WebAssembly programs",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "ava",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
