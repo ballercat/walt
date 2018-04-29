@@ -1,0 +1,8 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
+
+let offset: i32 = 0;
+export function malloc(size: i32) : i32 {
+  const pointer: i32 = __DATA_LENGTH__ + offset;
+  offset += size;
+  return pointer;
+}
