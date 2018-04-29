@@ -5,32 +5,69 @@ const fs = require("fs");
 const compiler = require("walt-compiler");
 
 const MEMORY_KIND = 2;
+const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
 
-function make(filepath, options = {}) {
-  const filename = filepath.split("/").pop();
-  const src = fs.readFileSync(path.resolve(filepath), "utf8");
+const parseIntoAST = compose(compiler.semantics, compiler.parser);
 
-  options = Object.assign(
-    options,
-    {
-      version: 0x1,
-      filename,
-      lines: src.split("/n"),
+function mergeDataSections(syntaxTrees = []) {}
+
+function parseImports(ast) {
+  const imports = {};
+
+  compiler.walkNode({
+    Import(node, _) {
+      // Import nodes consist of field and a string literal node
+      const [fields, module] = node.params;
+      if (imports[module.value] == null) {
+        imports[module.value] = [];
+      }
+
+      compiler.walkNode({
+        Pair(pair, __) {
+          // Import pairs consist of identifier and type
+          const [identifier] = pair.params;
+          imports[module.value] = Array.from(
+            new Set([...imports[module.value], identifier.value])
+          );
+        },
+      })(fields);
     },
-    options
-  );
+  })(ast);
 
-  const untypedAST = compiler.parser(src);
-  const typedAST = compiler.semantics(untypedAST);
-  compiler.validate(typedAST, options);
-
-  return compiler.generator(typedAST, options);
+  return imports;
 }
 
 function compile(filepath, parent) {
-  const main = make(filepath);
+  const filename = filepath.split("/").pop();
+  const src = fs.readFileSync(path.resolve(filepath), "utf8");
+  // console.log("parent", parent.filename, parent.statics);
+  const options = {
+    version: 0x1,
+    filename,
+    lines: src.split("/n"),
 
-  return {
+    linker: {
+      statics: parent.statics,
+    },
+  };
+
+  const ast = parseIntoAST(src);
+  const imports = parseImports(ast);
+
+  // If the child does not define any static data then we should not attempt to
+  // generate any. Even if there are GLOBAL data sections.
+  let statics = ast.meta.AST_METADATA.statics;
+  if (Object.keys(statics).length > 0) {
+    // merge statics with parent
+    statics = { ...parent.statics, statics };
+    parent.statics = statics;
+  }
+  const main = compiler.generator(ast, {
+    ...options,
+    linker: { statics },
+  });
+
+  const program = {
     filepath,
     root: path.dirname(filepath),
     main,
@@ -44,16 +81,10 @@ function compile(filepath, parent) {
     ),
     options: parent.options,
     resolve,
+    statics: ast.meta.AST_METADATA.statics,
   };
-}
 
-function instantiate(filepath, parent) {
-  if (parent.programs[filepath]) {
-    return parent.programs[filepath];
-  }
-
-  const program = compile(filepath, parent);
-  program.imports = program.main.Imports.reduce((acc, dep) => {
+  program.imports = main.Imports.reduce((acc, dep) => {
     const resolved = program.resolve(dep, program);
     if (resolved == null) {
       return acc;
@@ -63,6 +94,16 @@ function instantiate(filepath, parent) {
 
     return acc;
   }, {});
+
+  return program;
+}
+
+function instantiate(filepath, parent) {
+  if (parent.programs[filepath]) {
+    return parent.programs[filepath];
+  }
+
+  const program = compile(filepath, parent);
 
   parent.programs[filepath] = program;
 
@@ -91,6 +132,7 @@ function resolve(dep, parent) {
   return program;
 }
 
+// Build the final binary Module set
 function build(importsObj, modules, field, dep) {
   if (modules[dep.filepath] != null) {
     return modules[dep.filepath];
@@ -141,4 +183,4 @@ function link(filepath, options = { logger: console }) {
   return (importsObj = {}) => build(importsObj, {}, "root", program);
 }
 
-module.exports = { link };
+module.exports = { link, parseImports, parseIntoAST };
