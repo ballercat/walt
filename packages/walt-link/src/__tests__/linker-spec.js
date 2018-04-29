@@ -24,7 +24,7 @@ const decodeText = (view, ptr) => {
   return text;
 };
 
-test.only("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
+test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const factory = link(path.resolve(__dirname, "./index.walt"));
   t.is(typeof factory === "function", true, "linker returns a factory");
