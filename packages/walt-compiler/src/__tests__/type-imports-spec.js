@@ -1,10 +1,26 @@
 import test from "ava";
 import { statementFragment } from "../parser/fragment";
 import generateImportFromNode from "../generator/import";
-import compile from "..";
+import compile, { parser, semantics, printNode } from "..";
 
 const compileAndRun = (src, importsObj = {}) =>
   WebAssembly.instantiate(compile(src), importsObj);
+
+test("missing function types", t => {
+  const ast = semantics(
+    parser(`
+    import { test } from './test.walt';
+    import { foo: FooType } from 'env';
+    type FooType = () => i32;
+
+    export function run(): i32 {
+      return test();
+    }
+    `)
+  );
+
+  t.snapshot(ast);
+});
 
 test("function typed imports", t => {
   // What is happening here:

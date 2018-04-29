@@ -1,9 +1,7 @@
 import { memory: Memory<{ initial: 1 }> } from 'env';
-import { a: i32, hello: Geti32 } from './import-a.walt';
+import { a: i32, hello } from './import-a.walt';
 import { b: i32 } from './import-b.walt';
-import { c: Geti32, world: Geti32 } from './import-c.walt';
-
-type Geti32 = () => i32;
+import { c, world, cConstant } from './import-c.walt';
 
 export function showImportA() : i32 {
   return a;

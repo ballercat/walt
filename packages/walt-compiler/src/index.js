@@ -11,6 +11,7 @@ import { VERSION_1 } from "./emitter/preamble";
 import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
 import { stringEncoder, stringDecoder } from "./utils/string";
 import walkNode from "./utils/walk-node";
+import mapNode from "./utils/map-node";
 
 export const debug = _debug;
 export const prettyPrintNode = printNode;
@@ -25,6 +26,7 @@ export {
   stringEncoder,
   stringDecoder,
   walkNode,
+  mapNode,
 };
 
 // Used for deugging purposes

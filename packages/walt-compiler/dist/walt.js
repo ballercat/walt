@@ -3441,6 +3441,10 @@ const getPrinters = add => ({
         } else {
           add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
         }
+      },
+      [Syntax.Identifier]: (missing, _) => {
+        const { value } = missing;
+        add(`(import "${mod.value}" "${value}" (type ??))`);
       }
     })(nodes);
   },
@@ -5333,6 +5337,10 @@ function validate$1(ast, {
     },
     [Syntax.Import]: (importNode, _) => {
       walker({
+        [Syntax.Identifier]: (identifier, __) => {
+          const [start, end] = identifier.range;
+          problems.push(generateErrorString("Infered type not supplied.", "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.", { start, end }, filename, GLOBAL_LABEL));
+        },
         [Syntax.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
@@ -5628,6 +5636,7 @@ exports.closurePlugin = closurePlugin$$1;
 exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
+exports.mapNode = mapNode;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;
 exports['default'] = compileWalt;

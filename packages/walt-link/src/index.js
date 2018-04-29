@@ -1,3 +1,11 @@
+/**
+ * Walt linker
+ *
+ * here be dragons
+ *
+ * @author Arthur Buldauskas arthurbuldauskas@gmail.com
+ */
+
 "use strict";
 
 const path = require("path");
@@ -47,12 +55,91 @@ function parseImports(ast) {
   return imports;
 }
 
+// Patch missing type imports with the give dependencies
+function patchInferedTypes(ast, deps) {
+  const newTypes = [];
+  const patch = compiler.mapNode({
+    Import(importNode, _) {
+      const module = importNode.params[1];
+
+      return compiler.mapNode({
+        Pair(pair, _) {
+          return pair;
+        },
+        // Fix any identifiers here
+        Identifier(identifier, _) {
+          const depAST = deps[module.value].ast;
+          const { functions, globals } = depAST.meta.AST_METADATA;
+          const fun = functions[identifier.value];
+          if (fun != null) {
+            // function arguments and params are _always_ the first two params
+            const [args, result] = fun.params;
+            const typeArgs = {
+              ...args,
+              // function arguments are a identifier : type pairs
+              // for type declarations we only need the types
+              params: args.params.filter(Boolean).map(argNode => {
+                return argNode.params[1];
+              }),
+            };
+            const newType = {
+              ...identifier,
+              type: result.type,
+              params: [typeArgs, result],
+              value: `__auto_type_${identifier.value}`,
+              Type: "Typedef",
+            };
+            newTypes.push(newType);
+
+            // for an import to become valid at this point it only needs to be an
+            // identifier : identifier pair :)
+            const patched = {
+              ...identifier,
+              value: ":",
+              params: [identifier, { ...identifier, value: newType.value }],
+              Type: "Pair",
+            };
+
+            return patched;
+          }
+
+          const glbl = globals[identifier.value];
+          if (glbl != null) {
+            // just set to the global type pair and peace out
+            return {
+              ...identifier,
+              value: ":",
+              params: [
+                identifier,
+                {
+                  ...identifier,
+                  value: glbl.type,
+                  type: glbl.type,
+                  Type: "Type",
+                },
+              ],
+              Type: "Pair",
+            };
+          }
+
+          return identifier;
+        },
+      })(importNode);
+    },
+  })(ast);
+
+  // types can be defined anywhere in a program, even as the very last bit
+  return {
+    ...patch,
+    params: [...patch.params, ...newTypes],
+  };
+}
+
 // Build a dependency tree of ASTs given a root module
 function buildTree(options, rootResolve) {
-  const rootAST = parseIntoAST(options.src);
-  const rootImports = parseImports(rootAST);
+  const rootBasic = compiler.parser(options.src);
+  const rootImports = parseImports(rootBasic);
   const mod = {
-    ast: rootAST,
     deps: {},
     filepath: options.filepath,
   };
@@ -71,24 +158,33 @@ function buildTree(options, rootResolve) {
     }
 
     const src = fs.readFileSync(filepath, "utf8");
-    const ast = parseIntoAST(src);
-    const nestedImports = parseImports(ast);
-    const deps = {};
+    const basic = compiler.parser(src);
+    const nestedImports = parseImports(basic);
 
-    const result = {
-      ast,
-      deps: {},
-      filepath,
-    };
+    const deps = {};
 
     Object.keys(nestedImports).forEach(mod => {
       if (mod.indexOf(".") === 0) {
         const dep = dependency(mod, file =>
           path.resolve(path.dirname(filepath), file)
         );
-        result.deps[mod] = dep;
+        deps[mod] = dep;
       }
     });
+
+    const patched = patchInferedTypes(basic, deps);
+    const ast = compiler.semantics(patched);
+
+    compiler.validate(ast, {
+      lines: src.split("\n"),
+      filname: module,
+    });
+
+    const result = {
+      ast,
+      deps,
+      filepath,
+    };
 
     modules[filepath] = result;
 
@@ -106,6 +202,15 @@ function buildTree(options, rootResolve) {
       tree.root.deps[module] = dep;
     }
   });
+
+  const patched = patchInferedTypes(rootBasic, mod.deps);
+  const ast = compiler.semantics(patched);
+  compiler.validate(ast, {
+    lines: options.src.split("\n"),
+    filname: module,
+  });
+
+  mod.ast = ast;
 
   return {
     tree,
@@ -205,7 +310,7 @@ function build(importsObj, modules, field, tree) {
         );
       })
       .catch(e => {
-        // mod.options.logger.warn(`Issue building ${field} `, e);
+        // TODO: do some logging here
         throw e;
       });
   };
