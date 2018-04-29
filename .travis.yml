@@ -4,7 +4,7 @@ node_js:
 install:
   - npm install
   - npm run postinstall
-script: "cd packages/walt-link && npm run $TEST_SUITE"
+script: "npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
 env:
