@@ -136,7 +136,7 @@ function patchInferedTypes(ast, deps) {
 }
 
 // Build a dependency tree of ASTs given a root module
-function buildTree(options, rootResolve) {
+function buildTree(options) {
   const rootBasic = compiler.parser(options.src);
   const rootImports = parseImports(rootBasic);
   const mod = {
@@ -251,7 +251,7 @@ function compile(filepath) {
     src,
   };
 
-  const tree = buildTree(options, resolve);
+  const tree = buildTree(options);
   const statics = mergeStatics(tree);
   const binaries = buildBinaries(tree, { ...options, linker: { statics } });
 
@@ -263,30 +263,8 @@ function compile(filepath) {
   };
 }
 
-function resolve(dep, parent) {
-  const { logger } = parent.options;
-  if (dep.module.indexOf(".") !== 0) {
-    return null;
-  }
-
-  const { programs, root } = parent;
-  const resolved = path.resolve(parent.root, dep.module);
-  if (!fs.existsSync(resolved)) {
-    logger.warn(`Top level dependency which is not a module ${resolved}`);
-    return null;
-  }
-
-  const program = instantiate(resolved, parent);
-
-  if (!program.main.Exports.find(({ field }) => field === dep.field)) {
-    logger.warn(`Field ${dep.field} is not exported by ${dep.module}`);
-  }
-
-  return program;
-}
-
 // Build the final binary Module set
-function build(importsObj, modules, field, tree) {
+function build(importsObj, modules, tree) {
   const instantiate = filepath => {
     if (modules[filepath] != null) {
       return modules[filepath];
@@ -323,7 +301,7 @@ function build(importsObj, modules, field, tree) {
 function link(filepath, options = { logger: console }) {
   const tree = compile(filepath);
 
-  return (importsObj = {}) => build(importsObj, {}, "root", tree);
+  return (importsObj = {}) => build(importsObj, {}, tree);
 }
 
 module.exports = {
