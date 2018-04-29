@@ -63,7 +63,7 @@ test("getFullSyntaxTree", t => {
   t.snapshot(asts);
 });
 
-test.only("merge Statics", t => {
+test("merge Statics", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(filepath, "utf8");
@@ -82,4 +82,26 @@ test.only("merge Statics", t => {
 
   const statics = mergeStatics(asts);
   t.snapshot(statics);
+});
+
+test.only("build binaries", t => {
+  const filepath = path.resolve(__dirname, "./index.walt");
+  const filename = filepath.split("/").pop();
+  const src = fs.readFileSync(filepath, "utf8");
+  const options = {
+    version: 0x1,
+    filename,
+    filepath,
+    lines: src.split("/n"),
+    src,
+  };
+  const resolve = file => {
+    return path.resolve(path.dirname(filepath), file);
+  };
+
+  const asts = getFullSyntaxTree(options, resolve);
+  const statics = mergeStatics(asts);
+  const binaries = buildBinaries(asts, { ...options, linker: { statics } });
+
+  t.snapshot(binaries);
 });

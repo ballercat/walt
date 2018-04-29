@@ -65,7 +65,7 @@ function getFullSyntaxTree(options, rootResolve) {
 
     Object.keys(nestedImports).forEach(mod => {
       if (mod.indexOf(".") === 0 && syntaxTrees[mod] == null) {
-        parseChildAst(mod, file => resolve(path.dirname(filepath), mod));
+        parseChildAst(mod, file => resolve(mod));
       }
     });
   };
@@ -80,7 +80,26 @@ function getFullSyntaxTree(options, rootResolve) {
   return syntaxTrees;
 }
 
-function buildBinaries(asts, options) {}
+function buildBinaries(asts, options) {
+  const binaries = {};
+
+  Object.entries(asts).forEach(([mod, ast]) => {
+    // If the child does not define any static data then we should not attempt to
+    // generate any. Even if there are GLOBAL data sections.
+    let statics = ast.meta.AST_METADATA.statics;
+    if (Object.keys(statics).length > 0) {
+      // Use global statics object
+      statics = options.linker.statics;
+    }
+    const binary = compiler.generator(ast, {
+      ...options,
+      linker: { statics },
+    });
+    binaries[mod] = binary;
+  });
+
+  return binaries;
+}
 
 function compile(filepath, parent) {
   const filename = filepath.split("/").pop();
@@ -98,19 +117,6 @@ function compile(filepath, parent) {
   const statics = mergeStatics(asts);
   const binaries = buildBinaries(asts, { ...options, linker: { statics } });
 
-  // If the child does not define any static data then we should not attempt to
-  // generate any. Even if there are GLOBAL data sections.
-  let statics = ast.meta.AST_METADATA.statics;
-  if (Object.keys(statics).length > 0) {
-    // merge statics with parent
-    statics = { ...parent.statics, statics };
-    parent.statics = statics;
-  }
-  const main = compiler.generator(ast, {
-    ...options,
-    linker: { statics },
-  });
-
   const program = {
     filepath,
     root: path.dirname(filepath),
@@ -125,7 +131,6 @@ function compile(filepath, parent) {
     ),
     options: parent.options,
     resolve,
-    statics: ast.meta.AST_METADATA.statics,
   };
 
   return program;
