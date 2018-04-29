@@ -4,7 +4,7 @@ node_js:
 install:
   - npm install
   - npm run postinstall
-script: "npm run $TEST_SUITE"
+script: "cd packages/walt-link && npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
 env:
@@ -17,4 +17,5 @@ cache:
     - packages/webpack-walt-examples/node_modules
     - packages/walt-compiler/node_modules
     - packages/walt-docs/node_modules
+    - packages/walt-link/node_modules
 

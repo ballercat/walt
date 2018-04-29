@@ -4045,7 +4045,8 @@ function generator$1(ast, config) {
 
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
-    },
+    }
+  })(mapNode({
     [Syntax.Import]: (node, _) => node,
     [Syntax.StringLiteral]: (node, _ignore) => {
       if (Object.keys(statics).length === 0) {
@@ -4057,7 +4058,7 @@ function generator$1(ast, config) {
         Type: Syntax.Constant
       });
     }
-  })(ast);
+  })(ast));
 
   const nodeMap = {
     [Syntax.Typedef]: (_, __) => _,
@@ -5575,6 +5576,8 @@ const semantics = semantics$1;
 const generator = generator$1;
 const validate = validate$1;
 const emitter = emit;
+const VERSION = "0.4.4";
+
 // Used for deugging purposes
 const getIR = (source, {
   version = VERSION_1,
@@ -5637,6 +5640,7 @@ exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
 exports.mapNode = mapNode;
+exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;
 exports['default'] = compileWalt;

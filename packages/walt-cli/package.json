@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo 'nothing to test'"
   },
+  "private": true,
   "keywords": [
     "walt",
     "wasm",

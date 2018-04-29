@@ -187,6 +187,8 @@ function link(filepath, options = { logger: console }) {
   return (importsObj = {}) => build(importsObj, {}, tree);
 }
 
+console.log("COMPILER VERSION", compiler.VERSION);
+
 module.exports = {
   link,
   parseImports,
