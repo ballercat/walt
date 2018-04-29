@@ -1,2 +1,1 @@
-import { memory: Memory<{ initial: 1 }> } from 'env';
 export const b: i32 = 20;
