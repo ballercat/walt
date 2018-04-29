@@ -9,8 +9,9 @@ const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
 
 const parseIntoAST = compose(compiler.semantics, compiler.parser);
 
-function mergeDataSections(syntaxTrees = []) {}
+function mergeStatics(syntaxTrees = []) {}
 
+// Parse imports out of an ast
 function parseImports(ast) {
   const imports = {};
 
@@ -37,22 +38,57 @@ function parseImports(ast) {
   return imports;
 }
 
+function getFullSyntaxTree(options, rootResolve) {
+  const rootAST = parseIntoAST(options.src);
+  const rootImports = parseImports(rootAST);
+
+  const imports = {
+    root: rootAST,
+  };
+
+  const parseChildAst = (module, resolve) => {
+    const filepath = resolve(module);
+    console.log(filepath);
+    const src = fs.readFileSync(filepath, "utf8");
+    const ast = parseIntoAST(src);
+    const nestedImports = parseImports(ast);
+
+    imports[module] = ast;
+
+    Object.keys(nestedImports).forEach(mod => {
+      if (mod.indexOf(".") === 0 && imports[mod] == null) {
+        parseChildAst(mod, file => resolve(path.dirname(filepath), mod));
+      }
+    });
+  };
+
+  Object.keys(rootImports).forEach(module => {
+    if (module.indexOf(".") === 0 && imports[module] == null) {
+      // parse the import into an ast
+      parseChildAst(module, file => rootResolve(file));
+    }
+  });
+
+  return imports;
+}
+
+function buildBinaries(asts, options) {}
+
 function compile(filepath, parent) {
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(path.resolve(filepath), "utf8");
-  // console.log("parent", parent.filename, parent.statics);
+
   const options = {
     version: 0x1,
     filename,
+    filepath,
     lines: src.split("/n"),
-
-    linker: {
-      statics: parent.statics,
-    },
+    src,
   };
 
-  const ast = parseIntoAST(src);
-  const imports = parseImports(ast);
+  const asts = getFullSyntaxTree(options, resolve);
+  const statics = mergeStatics(asts);
+  const binaries = buildBinaries(asts, { ...options, linker: { statics } });
 
   // If the child does not define any static data then we should not attempt to
   // generate any. Even if there are GLOBAL data sections.
@@ -83,17 +119,6 @@ function compile(filepath, parent) {
     resolve,
     statics: ast.meta.AST_METADATA.statics,
   };
-
-  program.imports = main.Imports.reduce((acc, dep) => {
-    const resolved = program.resolve(dep, program);
-    if (resolved == null) {
-      return acc;
-    }
-
-    acc[dep.module] = resolved;
-
-    return acc;
-  }, {});
 
   return program;
 }
@@ -183,4 +208,11 @@ function link(filepath, options = { logger: console }) {
   return (importsObj = {}) => build(importsObj, {}, "root", program);
 }
 
-module.exports = { link, parseImports, parseIntoAST };
+module.exports = {
+  link,
+  parseImports,
+  parseIntoAST,
+  compile,
+  getFullSyntaxTree,
+  buildBinaries,
+};

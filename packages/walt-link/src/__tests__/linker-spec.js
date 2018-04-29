@@ -1,5 +1,12 @@
 const test = require("ava");
-const { link, parseImports, parseIntoAST } = require("..");
+const {
+  getFullSyntaxTree,
+  buildBinaries,
+  compile,
+  link,
+  parseImports,
+  parseIntoAST,
+} = require("..");
 const path = require("path");
 const fs = require("fs");
 const { stringDecoder } = require("walt-compiler");
@@ -30,8 +37,29 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   return wasm;
 });
 
-test.only("parse imports", t => {
+test("parse imports", t => {
   const src = fs.readFileSync(path.resolve(__dirname, "./index.walt"), "utf8");
   const imports = parseImports(parseIntoAST(src));
   t.snapshot(imports);
 });
+
+test("getFullSyntaxTree", t => {
+  const filepath = path.resolve(__dirname, "./index.walt");
+  const filename = filepath.split("/").pop();
+  const src = fs.readFileSync(filepath, "utf8");
+  const options = {
+    version: 0x1,
+    filename,
+    filepath,
+    lines: src.split("/n"),
+    src,
+  };
+  const resolve = file => {
+    return path.resolve(path.dirname(filepath), file);
+  };
+
+  const asts = getFullSyntaxTree(options, resolve);
+  t.snapshot(asts);
+});
+
+test.only("build Binaries", t => {});
