@@ -2,6 +2,7 @@ const test = require("ava");
 const {
   getFullSyntaxTree,
   buildBinaries,
+  mergeStatics,
   compile,
   link,
   parseImports,
@@ -62,4 +63,23 @@ test("getFullSyntaxTree", t => {
   t.snapshot(asts);
 });
 
-test.only("build Binaries", t => {});
+test.only("merge Statics", t => {
+  const filepath = path.resolve(__dirname, "./index.walt");
+  const filename = filepath.split("/").pop();
+  const src = fs.readFileSync(filepath, "utf8");
+  const options = {
+    version: 0x1,
+    filename,
+    filepath,
+    lines: src.split("/n"),
+    src,
+  };
+  const resolve = file => {
+    return path.resolve(path.dirname(filepath), file);
+  };
+
+  const asts = getFullSyntaxTree(options, resolve);
+
+  const statics = mergeStatics(asts);
+  t.snapshot(statics);
+});

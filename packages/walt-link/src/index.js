@@ -9,7 +9,16 @@ const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
 
 const parseIntoAST = compose(compiler.semantics, compiler.parser);
 
-function mergeStatics(syntaxTrees = []) {}
+function mergeStatics(syntaxTrees = {}) {
+  let statics = {};
+
+  Object.values(syntaxTrees).forEach(ast => {
+    const localStatics = ast.meta.AST_METADATA.statics;
+    statics = { ...statics, ...localStatics };
+  });
+
+  return statics;
+}
 
 // Parse imports out of an ast
 function parseImports(ast) {
@@ -42,34 +51,33 @@ function getFullSyntaxTree(options, rootResolve) {
   const rootAST = parseIntoAST(options.src);
   const rootImports = parseImports(rootAST);
 
-  const imports = {
+  const syntaxTrees = {
     root: rootAST,
   };
 
   const parseChildAst = (module, resolve) => {
     const filepath = resolve(module);
-    console.log(filepath);
     const src = fs.readFileSync(filepath, "utf8");
     const ast = parseIntoAST(src);
     const nestedImports = parseImports(ast);
 
-    imports[module] = ast;
+    syntaxTrees[module] = ast;
 
     Object.keys(nestedImports).forEach(mod => {
-      if (mod.indexOf(".") === 0 && imports[mod] == null) {
+      if (mod.indexOf(".") === 0 && syntaxTrees[mod] == null) {
         parseChildAst(mod, file => resolve(path.dirname(filepath), mod));
       }
     });
   };
 
   Object.keys(rootImports).forEach(module => {
-    if (module.indexOf(".") === 0 && imports[module] == null) {
+    if (module.indexOf(".") === 0 && syntaxTrees[module] == null) {
       // parse the import into an ast
       parseChildAst(module, file => rootResolve(file));
     }
   });
 
-  return imports;
+  return syntaxTrees;
 }
 
 function buildBinaries(asts, options) {}
@@ -214,5 +222,6 @@ module.exports = {
   parseIntoAST,
   compile,
   getFullSyntaxTree,
+  mergeStatics,
   buildBinaries,
 };
