@@ -1,13 +1,5 @@
 const test = require("ava");
-const {
-  buildTree,
-  buildBinaries,
-  mergeStatics,
-  compile,
-  link,
-  parseImports,
-  parseIntoAST,
-} = require("..");
+const { link, buildTree, assemble, mergeStatics, parseImports } = require("..");
 const path = require("path");
 const fs = require("fs");
 const { stringDecoder } = require("walt-compiler");
@@ -46,53 +38,21 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   return wasm;
 });
 
-test("parse imports", t => {
-  const src = fs.readFileSync(path.resolve(__dirname, "./index.walt"), "utf8");
-  const imports = parseImports(parseIntoAST(src));
-  t.snapshot(imports);
-});
-
 test("build Tree", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
-  const filename = filepath.split("/").pop();
-  const src = fs.readFileSync(filepath, "utf8");
-  const options = {
-    version: 0x1,
-    filename,
-    filepath,
-    lines: src.split("/n"),
-    src,
-  };
-  const resolve = file => {
-    return path.resolve(path.dirname(filepath), file);
-  };
-
-  const tree = buildTree(options, resolve);
+  const tree = buildTree(filepath);
   t.snapshot(tree);
 });
 
 test("merge Statics", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
-  const filename = filepath.split("/").pop();
-  const src = fs.readFileSync(filepath, "utf8");
-  const options = {
-    version: 0x1,
-    filename,
-    filepath,
-    lines: src.split("/n"),
-    src,
-  };
-  const resolve = file => {
-    return path.resolve(path.dirname(filepath), file);
-  };
-
-  const tree = buildTree(options, resolve);
+  const tree = buildTree(filepath);
 
   const statics = mergeStatics(tree);
   t.snapshot(statics);
 });
 
-test("build binaries", t => {
+test("assemble", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(filepath, "utf8");
@@ -103,13 +63,10 @@ test("build binaries", t => {
     lines: src.split("/n"),
     src,
   };
-  const resolve = file => {
-    return path.resolve(path.dirname(filepath), file);
-  };
 
-  const tree = buildTree(options, resolve);
+  const tree = buildTree(filepath);
   const statics = mergeStatics(tree);
-  const binaries = buildBinaries(tree, { ...options, linker: { statics } });
+  const opcodes = assemble(tree, { ...options, linker: { statics } });
 
-  t.snapshot(binaries);
+  t.snapshot(opcodes);
 });

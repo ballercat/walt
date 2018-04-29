@@ -11,11 +11,7 @@
 const path = require("path");
 const fs = require("fs");
 const compiler = require("walt-compiler");
-
-const MEMORY_KIND = 2;
-const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
-
-const parseIntoAST = compose(compiler.semantics, compiler.parser);
+const { inferImportTypes } = require("./patches");
 
 function mergeStatics(tree = {}) {
   let statics = {};
@@ -55,88 +51,8 @@ function parseImports(ast) {
   return imports;
 }
 
-// Patch missing type imports with the give dependencies
-function patchInferedTypes(ast, deps) {
-  const newTypes = [];
-  const patch = compiler.mapNode({
-    Import(importNode, _) {
-      const module = importNode.params[1];
-
-      return compiler.mapNode({
-        Pair(pair, _) {
-          return pair;
-        },
-        // Fix any identifiers here
-        Identifier(identifier, _) {
-          const depAST = deps[module.value].ast;
-          const { functions, globals } = depAST.meta.AST_METADATA;
-          const fun = functions[identifier.value];
-          if (fun != null) {
-            // function arguments and params are _always_ the first two params
-            const [args, result] = fun.params;
-            const typeArgs = {
-              ...args,
-              // function arguments are a identifier : type pairs
-              // for type declarations we only need the types
-              params: args.params.filter(Boolean).map(argNode => {
-                return argNode.params[1];
-              }),
-            };
-            const newType = {
-              ...identifier,
-              type: result.type,
-              params: [typeArgs, result],
-              value: `__auto_type_${identifier.value}`,
-              Type: "Typedef",
-            };
-            newTypes.push(newType);
-
-            // for an import to become valid at this point it only needs to be an
-            // identifier : identifier pair :)
-            const patched = {
-              ...identifier,
-              value: ":",
-              params: [identifier, { ...identifier, value: newType.value }],
-              Type: "Pair",
-            };
-
-            return patched;
-          }
-
-          const glbl = globals[identifier.value];
-          if (glbl != null) {
-            // just set to the global type pair and peace out
-            return {
-              ...identifier,
-              value: ":",
-              params: [
-                identifier,
-                {
-                  ...identifier,
-                  value: glbl.type,
-                  type: glbl.type,
-                  Type: "Type",
-                },
-              ],
-              Type: "Pair",
-            };
-          }
-
-          return identifier;
-        },
-      })(importNode);
-    },
-  })(ast);
-
-  // types can be defined anywhere in a program, even as the very last bit
-  return {
-    ...patch,
-    params: [...patch.params, ...newTypes],
-  };
-}
-
 // Build a dependency tree of ASTs given a root module
-function buildTree(options) {
+function buildTree(index) {
   const modules = {};
 
   const dependency = (module, resolve) => {
@@ -160,7 +76,7 @@ function buildTree(options) {
       }
     });
 
-    const patched = patchInferedTypes(basic, deps);
+    const patched = inferImportTypes(basic, deps);
     const ast = compiler.semantics(patched);
 
     compiler.validate(ast, {
@@ -179,20 +95,17 @@ function buildTree(options) {
     return result;
   };
 
-  const root = dependency(options.filepath, file => file);
+  const root = dependency(index, file => file);
 
   return {
-    tree: {
-      root,
-    },
+    root,
     modules,
   };
 }
 
-function buildBinaries(tree, options) {
-  const binaries = {};
-
-  Object.entries(tree.modules).forEach(([filepath, mod]) => {
+// Assemble all AST into opcodes/instructions
+function assemble(tree, options) {
+  return Object.entries(tree.modules).reduce((opcodes, [filepath, mod]) => {
     // If the child does not define any static data then we should not attempt to
     // generate any. Even if there are GLOBAL data sections.
     let statics = mod.ast.meta.AST_METADATA.statics;
@@ -200,36 +113,35 @@ function buildBinaries(tree, options) {
       // Use global statics object
       statics = options.linker.statics;
     }
-    const binary = compiler.generator(mod.ast, {
+    const instructions = compiler.generator(mod.ast, {
       ...options,
       linker: { statics },
     });
-    binaries[filepath] = binary;
-  });
 
-  return binaries;
+    return {
+      ...opcodes,
+      [filepath]: instructions,
+    };
+  }, {});
 }
 
 function compile(filepath) {
   const filename = filepath.split("/").pop();
-  const src = fs.readFileSync(path.resolve(filepath), "utf8");
 
   const options = {
     version: 0x1,
     filename,
     filepath,
-    lines: src.split("/n"),
-    src,
   };
 
-  const tree = buildTree(options);
+  const tree = buildTree(filepath);
   const statics = mergeStatics(tree);
-  const binaries = buildBinaries(tree, { ...options, linker: { statics } });
+  const opcodes = assemble(tree, { ...options, linker: { statics } });
 
   return {
     ...tree,
     statics,
-    binaries,
+    opcodes,
     options,
   };
 }
@@ -254,7 +166,7 @@ function build(importsObj, modules, tree) {
         }, {});
 
         return WebAssembly.instantiate(
-          compiler.emitter(tree.binaries[filepath], tree.options).buffer(),
+          compiler.emitter(tree.opcodes[filepath], tree.options).buffer(),
           { ...imports, ...importsObj }
         );
       })
@@ -264,9 +176,9 @@ function build(importsObj, modules, tree) {
       });
   };
 
-  modules[tree.tree.root.filepath] = instantiate(tree.tree.root.filepath);
+  modules[tree.root.filepath] = instantiate(tree.root.filepath);
 
-  return modules[tree.tree.root.filepath];
+  return modules[tree.root.filepath];
 }
 
 function link(filepath, options = { logger: console }) {
@@ -278,9 +190,8 @@ function link(filepath, options = { logger: console }) {
 module.exports = {
   link,
   parseImports,
-  parseIntoAST,
   compile,
   buildTree,
   mergeStatics,
-  buildBinaries,
+  assemble,
 };
