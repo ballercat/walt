@@ -35,8 +35,9 @@ export const mapImport = curry((options, node, _) =>
         };
       }
 
-      if (typeNode.type !== "Table" && typeNode.type !== "Memory") {
+      if (!["Table", "Memory"].includes(typeNode.type)) {
         const index = Object.keys(globals).length;
+
         globals[identifierNode.value] = {
           ...identifierNode,
           meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },

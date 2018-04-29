@@ -5,7 +5,6 @@ import mapSyntax from "./map-syntax";
 import mergeBlock from "./merge-block";
 import walkNode from "../utils/walk-node";
 import mapNode from "../utils/map-node";
-import { stringEncoder } from "../utils/string";
 import generateElement from "./element";
 import generateExport from "./export";
 import generateMemory from "./memory";
@@ -96,8 +95,8 @@ export default function generator(
   let { statics } = ast.meta[AST_METADATA];
   if (config.linker != null) {
     statics = {
-      ...statics,
       ...config.linker.statics,
+      ...statics,
     };
   }
   const { map: staticsMap, data } = generateData(

@@ -1,6 +1,6 @@
 const test = require("ava");
 const {
-  getFullSyntaxTree,
+  buildTree,
   buildBinaries,
   mergeStatics,
   compile,
@@ -12,6 +12,18 @@ const path = require("path");
 const fs = require("fs");
 const { stringDecoder } = require("walt-compiler");
 
+const decodeText = (view, ptr) => {
+  const decoder = stringDecoder(view, ptr);
+  let iterator = decoder.next();
+  let text = "";
+  while (!iterator.done) {
+    text += String.fromCodePoint(iterator.value);
+    iterator = decoder.next();
+  }
+
+  return text;
+};
+
 test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const factory = link(path.resolve(__dirname, "./index.walt"));
@@ -22,18 +34,12 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   t.is(typeof wasm.instance.exports.run === "function", true);
   t.is(wasm.instance.exports.run(), 62);
 
-  const helloPtr = wasm.instance.exports.helloTest();
-
   const view = new DataView(memory.buffer);
-  const decoder = stringDecoder(view, helloPtr);
-  let iterator = decoder.next();
-  let text = "";
-  while (!iterator.done) {
-    text += String.fromCodePoint(iterator.value);
-    iterator = decoder.next();
-  }
+  const helloPtr = wasm.instance.exports.helloTest();
+  t.is(decodeText(view, helloPtr), "hello");
 
-  console.log(text);
+  const worldPtr = wasm.instance.exports.worldTest();
+  t.is(decodeText(view, worldPtr), "world");
 
   return wasm;
 });
@@ -44,7 +50,7 @@ test("parse imports", t => {
   t.snapshot(imports);
 });
 
-test("getFullSyntaxTree", t => {
+test("build Tree", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(filepath, "utf8");
@@ -59,8 +65,8 @@ test("getFullSyntaxTree", t => {
     return path.resolve(path.dirname(filepath), file);
   };
 
-  const asts = getFullSyntaxTree(options, resolve);
-  t.snapshot(asts);
+  const tree = buildTree(options, resolve);
+  t.snapshot(tree);
 });
 
 test("merge Statics", t => {
@@ -78,13 +84,13 @@ test("merge Statics", t => {
     return path.resolve(path.dirname(filepath), file);
   };
 
-  const asts = getFullSyntaxTree(options, resolve);
+  const tree = buildTree(options, resolve);
 
-  const statics = mergeStatics(asts);
+  const statics = mergeStatics(tree);
   t.snapshot(statics);
 });
 
-test.only("build binaries", t => {
+test("build binaries", t => {
   const filepath = path.resolve(__dirname, "./index.walt");
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(filepath, "utf8");
@@ -99,9 +105,9 @@ test.only("build binaries", t => {
     return path.resolve(path.dirname(filepath), file);
   };
 
-  const asts = getFullSyntaxTree(options, resolve);
-  const statics = mergeStatics(asts);
-  const binaries = buildBinaries(asts, { ...options, linker: { statics } });
+  const tree = buildTree(options, resolve);
+  const statics = mergeStatics(tree);
+  const binaries = buildBinaries(tree, { ...options, linker: { statics } });
 
   t.snapshot(binaries);
 });

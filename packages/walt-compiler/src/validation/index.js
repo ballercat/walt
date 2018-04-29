@@ -86,7 +86,8 @@ export default function validate(
       const [initializer] = decl.params;
       if (decl.meta[TYPE_CONST] != null) {
         const [start, end] = decl.range;
-        if (initializer != null && initializer.Type !== Syntax.Constant) {
+        const validTypes = [Syntax.Constant, Syntax.StringLiteral];
+        if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(
             error(
               "Global Constants must be initialized with a Number literal.",

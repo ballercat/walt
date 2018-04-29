@@ -147,6 +147,9 @@ const getPrinters = add => ({
       add(")", 0, -2);
     }
   },
+  [Syntax.StringLiteral]: node => {
+    add("(i32.const ??)", 0, 0, ` string "${node.value}"`);
+  },
   [Syntax.Type]: node => {
     add(node.value);
   },

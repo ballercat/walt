@@ -1,5 +1,11 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
 import { a: i32 } from './import-a.walt';
 import { b: i32 } from './import-b.walt';
+
+export function world(): i32 {
+  const world: i32 = 'world';
+  return world;
+}
 
 export function c(): i32 {
   return a + b;

@@ -9,11 +9,11 @@ const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
 
 const parseIntoAST = compose(compiler.semantics, compiler.parser);
 
-function mergeStatics(syntaxTrees = {}) {
+function mergeStatics(tree = {}) {
   let statics = {};
 
-  Object.values(syntaxTrees).forEach(ast => {
-    const localStatics = ast.meta.AST_METADATA.statics;
+  Object.values(tree.modules).forEach(mod => {
+    const localStatics = mod.ast.meta.AST_METADATA.statics;
     statics = { ...statics, ...localStatics };
   });
 
@@ -47,61 +47,94 @@ function parseImports(ast) {
   return imports;
 }
 
-function getFullSyntaxTree(options, rootResolve) {
+// Build a dependency tree of ASTs given a root module
+function buildTree(options, rootResolve) {
   const rootAST = parseIntoAST(options.src);
   const rootImports = parseImports(rootAST);
-
-  const syntaxTrees = {
-    root: rootAST,
+  const mod = {
+    ast: rootAST,
+    deps: {},
+    filepath: options.filepath,
+  };
+  const modules = {
+    [options.filepath]: mod,
   };
 
-  const parseChildAst = (module, resolve) => {
+  const tree = {
+    root: mod,
+  };
+
+  const dependency = (module, resolve) => {
     const filepath = resolve(module);
+    if (modules[filepath] != null) {
+      return modules[filepath];
+    }
+
     const src = fs.readFileSync(filepath, "utf8");
     const ast = parseIntoAST(src);
     const nestedImports = parseImports(ast);
+    const deps = {};
 
-    syntaxTrees[module] = ast;
+    const result = {
+      ast,
+      deps: {},
+      filepath,
+    };
 
     Object.keys(nestedImports).forEach(mod => {
-      if (mod.indexOf(".") === 0 && syntaxTrees[mod] == null) {
-        parseChildAst(mod, file => resolve(mod));
+      if (mod.indexOf(".") === 0) {
+        const dep = dependency(mod, file =>
+          path.resolve(path.dirname(filepath), file)
+        );
+        result.deps[mod] = dep;
       }
     });
+
+    modules[filepath] = result;
+
+    return result;
   };
 
+  // Kick off the process of building child deps, everything else is recursive
   Object.keys(rootImports).forEach(module => {
-    if (module.indexOf(".") === 0 && syntaxTrees[module] == null) {
+    if (module.indexOf(".") === 0) {
       // parse the import into an ast
-      parseChildAst(module, file => rootResolve(file));
+      const dep = dependency(module, file =>
+        path.resolve(path.dirname(options.filepath), file)
+      );
+
+      tree.root.deps[module] = dep;
     }
   });
 
-  return syntaxTrees;
+  return {
+    tree,
+    modules,
+  };
 }
 
-function buildBinaries(asts, options) {
+function buildBinaries(tree, options) {
   const binaries = {};
 
-  Object.entries(asts).forEach(([mod, ast]) => {
+  Object.entries(tree.modules).forEach(([filepath, mod]) => {
     // If the child does not define any static data then we should not attempt to
     // generate any. Even if there are GLOBAL data sections.
-    let statics = ast.meta.AST_METADATA.statics;
+    let statics = mod.ast.meta.AST_METADATA.statics;
     if (Object.keys(statics).length > 0) {
       // Use global statics object
       statics = options.linker.statics;
     }
-    const binary = compiler.generator(ast, {
+    const binary = compiler.generator(mod.ast, {
       ...options,
       linker: { statics },
     });
-    binaries[mod] = binary;
+    binaries[filepath] = binary;
   });
 
   return binaries;
 }
 
-function compile(filepath, parent) {
+function compile(filepath) {
   const filename = filepath.split("/").pop();
   const src = fs.readFileSync(path.resolve(filepath), "utf8");
 
@@ -113,39 +146,16 @@ function compile(filepath, parent) {
     src,
   };
 
-  const asts = getFullSyntaxTree(options, resolve);
-  const statics = mergeStatics(asts);
-  const binaries = buildBinaries(asts, { ...options, linker: { statics } });
+  const tree = buildTree(options, resolve);
+  const statics = mergeStatics(tree);
+  const binaries = buildBinaries(tree, { ...options, linker: { statics } });
 
-  const program = {
-    filepath,
-    root: path.dirname(filepath),
-    main,
-    imports: {},
-    exports: main.exports,
-    programs: Object.assign(
-      {
-        [filepath]: main,
-      },
-      parent.programs
-    ),
-    options: parent.options,
-    resolve,
+  return {
+    ...tree,
+    statics,
+    binaries,
+    options,
   };
-
-  return program;
-}
-
-function instantiate(filepath, parent) {
-  if (parent.programs[filepath]) {
-    return parent.programs[filepath];
-  }
-
-  const program = compile(filepath, parent);
-
-  parent.programs[filepath] = program;
-
-  return parent.programs[filepath];
 }
 
 function resolve(dep, parent) {
@@ -171,54 +181,44 @@ function resolve(dep, parent) {
 }
 
 // Build the final binary Module set
-function build(importsObj, modules, field, dep) {
-  if (modules[dep.filepath] != null) {
-    return modules[dep.filepath];
-  }
+function build(importsObj, modules, field, tree) {
+  const instantiate = filepath => {
+    if (modules[filepath] != null) {
+      return modules[filepath];
+    }
 
-  const P = Promise.all(
-    Object.entries(dep.imports).map(([key, value]) => {
-      return build(importsObj, modules, key, value).then(result => [
-        key,
-        result,
-      ]);
-    })
-  )
-    .then(importsMap => {
-      const imports = importsMap.reduce((acc, [key, mod]) => {
-        acc[key] = mod.instance.exports;
-        return acc;
-      }, {});
+    const mod = tree.modules[filepath];
+    return Promise.all(
+      Object.entries(mod.deps).map(([key, dep]) => {
+        return instantiate(dep.filepath).then(result => [key, result]);
+      })
+    )
+      .then(importsMap => {
+        const imports = importsMap.reduce((acc, [key, module]) => {
+          acc[key] = module.instance.exports;
+          return acc;
+        }, {});
 
-      return WebAssembly.instantiate(
-        compiler.emitter(dep.main, dep.options).buffer(),
-        Object.assign({}, imports, importsObj)
-      );
-    })
-    .catch(e => {
-      dep.options.logger.warn(`Issue building ${field} `, e);
-      throw e;
-    });
+        return WebAssembly.instantiate(
+          compiler.emitter(tree.binaries[filepath], tree.options).buffer(),
+          { ...imports, ...importsObj }
+        );
+      })
+      .catch(e => {
+        // mod.options.logger.warn(`Issue building ${field} `, e);
+        throw e;
+      });
+  };
 
-  modules[dep.filepath] = P;
-  return P;
+  modules[tree.tree.root.filepath] = instantiate(tree.tree.root.filepath);
+
+  return modules[tree.tree.root.filepath];
 }
 
 function link(filepath, options = { logger: console }) {
-  const program = instantiate(filepath, {
-    programs: {},
-    options: Object.assign(
-      {
-        version: 0x1,
-      },
-      options
-    ),
-    resolve,
-  });
+  const tree = compile(filepath);
 
-  const wasm = compiler.emitter(program.main, program.options);
-
-  return (importsObj = {}) => build(importsObj, {}, "root", program);
+  return (importsObj = {}) => build(importsObj, {}, "root", tree);
 }
 
 module.exports = {
@@ -226,7 +226,7 @@ module.exports = {
   parseImports,
   parseIntoAST,
   compile,
-  getFullSyntaxTree,
+  buildTree,
   mergeStatics,
   buildBinaries,
 };
