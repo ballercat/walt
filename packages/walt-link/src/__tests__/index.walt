@@ -1,6 +1,6 @@
 import { memory: Memory<{ initial: 1 }> } from 'env';
-import { a: i32, hello } from './import-a.walt';
-import { b: i32 } from './import-b.walt';
+import { a, hello } from './import-a.walt';
+import { b } from './import-b.walt';
 import { c, world, cConstant } from './import-c.walt';
 
 export function showImportA() : i32 {
