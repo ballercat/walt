@@ -89,7 +89,6 @@ function buildTree(index) {
       deps,
       filepath,
     };
-
     modules[filepath] = result;
 
     return result;

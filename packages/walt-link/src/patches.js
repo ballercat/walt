@@ -16,7 +16,12 @@ function inferImportTypes(ast, deps) {
         // Fix any identifiers here
         Identifier(identifier, _) {
           const depAST = deps[module.value].ast;
-          const { functions, globals } = depAST.meta.AST_METADATA;
+          const {
+            functions,
+            globals,
+            types,
+            userTypes,
+          } = depAST.meta.AST_METADATA;
           const fun = functions[identifier.value];
           if (fun != null) {
             // function arguments and params are _always_ the first two params
@@ -71,14 +76,24 @@ function inferImportTypes(ast, deps) {
             });
           }
 
-          return identifier;
+          const externType = types[identifier.value];
+          if (externType != null) {
+            newTypes.push(Object.assign({}, externType));
+          }
+
+          const userType = userTypes[identifier.value];
+          if (userType != null) {
+            newTypes.push(Object.assign({}, userType));
+          }
+
+          return null;
         },
       })(importNode);
     },
   })(ast);
 
   // types can be defined anywhere in a program, even as the very last bit
-  return Object.assign({}, patch, { params: patch.params.concat(newTypes) });
+  return Object.assign({}, patch, { params: newTypes.concat(patch.params) });
 }
 
 module.exports = {
