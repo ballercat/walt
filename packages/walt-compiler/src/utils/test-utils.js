@@ -1,4 +1,3 @@
-import compile from "..";
 import { link } from "walt-link";
 import { stringDecoder } from "../utils/string";
 

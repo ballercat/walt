@@ -1,0 +1,5 @@
+// Shared test types
+
+// TODO: This really needs better syntax support
+type Assert = (i32, i32, i32) => void;
+

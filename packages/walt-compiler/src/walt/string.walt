@@ -77,3 +77,46 @@ export function reset(iterator: StringIterator) {
   };
 }
 
+export function stringLength(str: i32): i32 {
+  const iterator: StringIterator = getStringIterator(str);
+  return iterator.length;
+}
+
+export function indexOf(haystack: i32, needle: i32) : i32 {
+  let result: i32 = -1;
+  const haystackIterator: StringIterator = getStringIterator(haystack);
+  const needleIterator: StringIterator = getStringIterator(needle);
+
+  if (
+    haystackIterator.length == 0 ||
+    needleIterator.length == 0 ||
+    (haystackIterator.length < needleIterator.length)
+  ) {
+    return result;
+  }
+
+  // Get initial values of both iterators
+  next(haystackIterator);
+  next(needleIterator);
+
+  while (!haystackIterator.done) {
+    result = haystackIterator.index - 1;
+    // Keep iterating while characters match
+    while(haystackIterator.value == needleIterator.value) {
+      next(haystackIterator);
+      next(needleIterator);
+      if (needleIterator.done) {
+        return result;
+      }
+    }
+
+    // Reset needle as we are about to start matching again
+    reset(needleIterator);
+    next(needleIterator);
+
+    next(haystackIterator);
+  }
+
+  return -1;
+}
+

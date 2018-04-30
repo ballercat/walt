@@ -79,10 +79,10 @@ function buildTree(index) {
     const patched = inferImportTypes(basic, deps);
     const ast = compiler.semantics(patched);
 
-    compiler.validate(ast, {
-      lines: src.split("\n"),
-      filname: module,
-    });
+    // compiler.validate(ast, {
+    //   lines: src.split("\n"),
+    //   filname: module,
+    // });
 
     const result = {
       ast,

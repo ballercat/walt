@@ -2,19 +2,21 @@ import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
 import {
   getStringIterator,
   next,
-  reset
+  reset,
+  stringLength,
+  indexOf
 } from '../walt/string.walt';
 
-type Assert = (i32, i32, i32) => void;
-type StringIterator = {
-  length: i32,
-  index: i32,
-  addr: i32,
-  start: i32,
-  value: i32,
-  done: i32
-};
-
+// Type Imports
+//
+// TODO: Update this to be more explicit once type _exports_ and _imports_ have
+// a better syntax...
+import {
+  StringIterator
+} from '../walt/string.walt';
+import {
+  Assert
+} from '../walt/tests.walt';
 
 function countCharacter(ptr: i32, character: i32) : i32 {
   const iterator: StringIterator = getStringIterator(ptr);
@@ -31,49 +33,6 @@ function countCharacter(ptr: i32, character: i32) : i32 {
   return result;
 }
 
-function indexOf(haystack: i32, needle: i32) : i32 {
-  let result: i32 = -1;
-  const haystackIterator: StringIterator = getStringIterator(haystack);
-  const needleIterator: StringIterator = getStringIterator(needle);
-
-  if (
-    haystackIterator.length == 0 ||
-    needleIterator.length == 0 ||
-    (haystackIterator.length < needleIterator.length)
-  ) {
-    return result;
-  }
-
-  // Get initial values of both iterators
-  next(haystackIterator);
-  next(needleIterator);
-
-  while (!haystackIterator.done) {
-    result = haystackIterator.index - 1;
-    // Keep iterating while characters match
-    while(haystackIterator.value == needleIterator.value) {
-      next(haystackIterator);
-      next(needleIterator);
-      if (needleIterator.done) {
-        return result;
-      }
-    }
-
-    // Reset needle as we are about to start matching again
-    reset(needleIterator);
-    next(needleIterator);
-
-    next(haystackIterator);
-  }
-
-  return -1;
-}
-
-function stringLength(str: String): i32 {
-  const iterator: StringIterator = getStringIterator(str);
-  return iterator.length;
-}
-
 export function run() {
   assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
   // This spec miiiight be a bit misleading. The emoji below is two code points
@@ -85,6 +44,6 @@ export function run() {
     indexOf('Liberté, égalité, fraternité for all utf encodings!', 'égalité'),
     9
   );
-  const text: String = "large string encoding --> We need to test that strings of length of 128+ bytes work. On a plane, so could not post lorem ipsum, this should be of correct length though. Unicode for coverage √";
+  const text: i32 = "large string encoding --> We need to test that strings of length of 128+ bytes work. On a plane, so could not post lorem ipsum, this should be of correct length though. Unicode for coverage √";
   assert(text, stringLength(text), 191);
 }
