@@ -1,11 +1,32 @@
 import { link } from "walt-link";
 import { stringDecoder } from "../utils/string";
+import {
+  mapNode,
+  walkNode,
+  parser,
+  semantics,
+  validate,
+  emitter,
+  generator,
+} from "..";
 
 export const harness = filepath => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
 
-  const build = link(filepath);
+  const build = link(
+    filepath,
+    { logger: console },
+    {
+      mapNode,
+      walkNode,
+      parser,
+      semantics,
+      validate,
+      emitter,
+      generator,
+    }
+  );
   return build({
     env: {
       memory,

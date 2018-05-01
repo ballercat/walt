@@ -10,7 +10,7 @@
 
 const path = require("path");
 const fs = require("fs");
-const compiler = require("walt-compiler");
+const walt = require("walt-compiler");
 const { inferImportTypes } = require("./patches");
 
 function mergeStatics(tree = {}) {
@@ -25,7 +25,7 @@ function mergeStatics(tree = {}) {
 }
 
 // Parse imports out of an ast
-function parseImports(ast) {
+function parseImports(ast, compiler) {
   const imports = {};
 
   compiler.walkNode({
@@ -52,7 +52,7 @@ function parseImports(ast) {
 }
 
 // Build a dependency tree of ASTs given a root module
-function buildTree(index) {
+function buildTree(index, compiler) {
   const modules = {};
 
   const dependency = (module, resolve) => {
@@ -63,7 +63,7 @@ function buildTree(index) {
 
     const src = fs.readFileSync(filepath, "utf8");
     const basic = compiler.parser(src);
-    const nestedImports = parseImports(basic);
+    const nestedImports = parseImports(basic, compiler);
 
     const deps = {};
 
@@ -79,13 +79,13 @@ function buildTree(index) {
       }
     });
 
-    const patched = inferImportTypes(basic, deps);
+    const patched = inferImportTypes(basic, deps, compiler);
     const ast = compiler.semantics(patched);
 
-    // compiler.validate(ast, {
-    //   lines: src.split("\n"),
-    //   filname: module,
-    // });
+    compiler.validate(ast, {
+      lines: src.split("\n"),
+      filname: module,
+    });
 
     const result = {
       ast,
@@ -106,7 +106,7 @@ function buildTree(index) {
 }
 
 // Assemble all AST into opcodes/instructions
-function assemble(tree, options) {
+function assemble(tree, options, compiler) {
   return Object.entries(tree.modules).reduce((opcodes, [filepath, mod]) => {
     // If the child does not define any static data then we should not attempt to
     // generate any. Even if there are GLOBAL data sections.
@@ -126,7 +126,7 @@ function assemble(tree, options) {
   }, {});
 }
 
-function compile(filepath) {
+function compile(filepath, compiler) {
   const filename = filepath.split("/").pop();
 
   const options = {
@@ -135,11 +135,12 @@ function compile(filepath) {
     filepath,
   };
 
-  const tree = buildTree(filepath);
+  const tree = buildTree(filepath, compiler);
   const statics = mergeStatics(tree);
   const opcodes = assemble(
     tree,
-    Object.assign({}, options, { linker: { statics } })
+    Object.assign({}, options, { linker: { statics } }),
+    compiler
   );
 
   return Object.assign(tree, {
@@ -150,7 +151,9 @@ function compile(filepath) {
 }
 
 // Build the final binary Module set
-function build(importsObj, modules, tree) {
+function build(importsObj, tree, compiler) {
+  const modules = {};
+
   const instantiate = filepath => {
     if (modules[filepath] != null) {
       return modules[filepath];
@@ -184,10 +187,25 @@ function build(importsObj, modules, tree) {
   return modules[tree.root.filepath];
 }
 
-function link(filepath, options = { logger: console }) {
-  const tree = compile(filepath);
+/**
+ * Link Walt programs together.
+ *
+ * @param {String} filepath The full path to the index file
+ * @param {Object} options  Reserved
+ * @param {Object} compiler Custom compiler. Is the node module by default.
+ *
+ *                          This is here to allow for the compiler to test itself
+ *                          during development. It's a simple object which has the
+ *                          collection of functions which make up the entire compiler.
+ *                          This is useful for any sort of diagnostics you'd like to
+ *                          run while linking modules as well.
+ *
+ * @return {Function} The build function which takes an importsObj and returns a {Promise}
+ */
+function link(filepath, options = { logger: console }, compiler = walt) {
+  const tree = compile(filepath, compiler);
 
-  return (importsObj = {}) => build(importsObj, {}, tree);
+  return (importsObj = {}) => build(importsObj, tree, compiler);
 }
 
 module.exports = {

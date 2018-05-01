@@ -1,9 +1,9 @@
 "use strict";
 
-const compiler = require("walt-compiler");
+const walt = require("walt-compiler");
 
 // Patch missing type imports with the give dependencies
-function inferImportTypes(ast, deps) {
+function inferImportTypes(ast, deps, compiler = walt) {
   const newTypes = [];
   const patch = compiler.mapNode({
     Import(importNode, _) {
@@ -26,17 +26,25 @@ function inferImportTypes(ast, deps) {
           if (fun != null) {
             // function arguments and params are _always_ the first two params
             const [args, result] = fun.params;
-            const typeArgs = Object.assign(
-              {},
-              args,
-              // function arguments are a identifier : type pairs
-              // for type declarations we only need the types
-              {
-                params: args.params.filter(Boolean).map(argNode => {
-                  return argNode.params[1];
-                }),
-              }
-            );
+
+            // since arguments is a single Node it may represent a single argument,
+            // zero arguments or a sequence of arguments (a , list). All this means
+            // is that we need to walk the node instead of mapping the parameters
+            const typesOfArguments = [];
+            compiler.walkNode({
+              Pair(argumentPair, _) {
+                // function arguments are an identifier : type pairs
+                // for type declarations we only need the types
+                typesOfArguments.push(argumentPair.params[1]);
+              },
+            })(args);
+
+            const typeArgs = Object.assign({}, args, {
+              params: typesOfArguments,
+            });
+
+            // This will be the new typedef node added to the AST and compiled
+            // into the binary.
             const newType = Object.assign({}, identifier, {
               type: result.type,
               params: [typeArgs, result],
@@ -76,6 +84,8 @@ function inferImportTypes(ast, deps) {
             });
           }
 
+          // Unlike function types, user defined types are only needed for the
+          // compiler to produce a valid binary.
           const externType = types[identifier.value];
           if (externType != null) {
             newTypes.push(Object.assign({}, externType));

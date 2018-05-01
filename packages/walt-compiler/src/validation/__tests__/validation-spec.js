@@ -121,3 +121,10 @@ test("constants must be initialized", t => {
   );
   t.snapshot(error);
 });
+
+test("untyped imports need to be compiled out via a linker/build step", t => {
+  const error = t.throws(() =>
+    parseAndValidate("import { foo } from './foo';")
+  );
+  t.snapshot(error);
+});
