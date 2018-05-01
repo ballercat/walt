@@ -1,0 +1,121 @@
+// Internal walt string utilities, used by the compiler
+// :)
+import { malloc } from './memory';
+// Needed for decoding
+import { memory: Memory } from 'env';
+
+type StringIterator = {
+  length: i32,
+  index: i32,
+  addr: i32,
+  start: i32,
+  value: i32,
+  done: i32
+};
+
+// Create string iterator object.
+export function getStringIterator(addr: i32) : StringIterator {
+  const iterator: StringIterator = malloc(sizeof(StringIterator));
+  let length: i32 = 0;
+  let byte: i32 = 0;
+  let shift: i32 = 0;
+
+  // Decode varuint32 length header
+  while (true) {
+    byte = i32.load8_u(addr);
+    length = length | ((byte & 0x7f) << shift);
+    addr += 1;
+    if ((byte & 0x80) == 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  iterator = { done: false, length, index: 0, addr, start: addr };
+
+  return iterator;
+}
+
+export function next(iterator: StringIterator): StringIterator {
+  if (iterator.length == 0 || iterator.index == iterator.length) {
+    iterator.done = true;
+    iterator.value = 0;
+    return iterator;
+  }
+
+  let value: i32 = 0;
+  let shift: i32 = 0;
+  let byte: i32 = 0;
+  let addr: i32 = iterator.addr;
+
+  while (true) {
+    byte = i32.load8_u(addr);
+    value = value | ((byte & 0x7f) << shift);
+    addr += 1;
+    if ((byte & 0x80) == 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  iterator = {
+    index: iterator.index + 1,
+    addr,
+    value
+  };
+
+  return iterator;
+}
+
+export function reset(iterator: StringIterator) {
+  iterator = {
+    addr: iterator.start,
+    index: 0,
+    done: 0,
+    value: 0
+  };
+}
+
+export function stringLength(str: i32): i32 {
+  const iterator: StringIterator = getStringIterator(str);
+  return iterator.length;
+}
+
+export function indexOf(haystack: i32, needle: i32) : i32 {
+  let result: i32 = -1;
+  const haystackIterator: StringIterator = getStringIterator(haystack);
+  const needleIterator: StringIterator = getStringIterator(needle);
+
+  if (
+    haystackIterator.length == 0 ||
+    needleIterator.length == 0 ||
+    (haystackIterator.length < needleIterator.length)
+  ) {
+    return result;
+  }
+
+  // Get initial values of both iterators
+  next(haystackIterator);
+  next(needleIterator);
+
+  while (!haystackIterator.done) {
+    result = haystackIterator.index - 1;
+    // Keep iterating while characters match
+    while(haystackIterator.value == needleIterator.value) {
+      next(haystackIterator);
+      next(needleIterator);
+      if (needleIterator.done) {
+        return result;
+      }
+    }
+
+    // Reset needle as we are about to start matching again
+    reset(needleIterator);
+    next(needleIterator);
+
+    next(haystackIterator);
+  }
+
+  return -1;
+}
+

@@ -1,9 +1,9 @@
 "use strict";
 
+const path = require("path");
+const fs = require("fs");
 const compiler = require("walt-compiler");
 const meow = require("meow");
-const getProgram = require("./src/get-program");
-const { link } = require("./src/link");
 
 const cli = meow(
   `
@@ -45,11 +45,20 @@ const cli = meow(
 if (cli.flags.link && !cli.flags.wrap) {
   throw new Error("--link can only link wrapped modules. Specify --wrap");
 }
-
+const wrap = cli.flags.link && cli.flags.wrap;
 const filepath = cli.input[0];
 const options = {
   encodeNames: cli.flags.names
 };
-const Program = getProgram(filepath, options);
-link(Program, filepath);
-const binary = compiler.emitter(Program, options);
+
+if (wrap) {
+  return wrapper(filepath, options);
+  process.exit();
+}
+
+const wasm = compiler.default(
+  fs.readFileSync(path.resolve(__dirname, filepath), "utf8")
+);
+// Hot take - node writeFile should just accept an ArrayBuffer
+const buffer = new Uint8Array(wasm);
+fs.writeFileSync(path.resolve(__dirname, cli.flags.output), buffer, "binary");

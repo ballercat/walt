@@ -1,7 +1,7 @@
 import test from "ava";
 import { statementFragment } from "../parser/fragment";
 import generateImportFromNode from "../generator/import";
-import compile, { parser, semantics } from "..";
+import compile from "..";
 
 const compileAndRun = (src, importsObj = {}) =>
   WebAssembly.instantiate(compile(src, { encodeNames: true }), importsObj);
