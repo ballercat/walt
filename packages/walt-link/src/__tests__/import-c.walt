@@ -1,6 +1,6 @@
-import { memory: Memory<{ initial: 1 }> } from 'env';
-import { a } from './import-a.walt';
-import { b } from './import-b.walt';
+import { memory: Memory } from 'env';
+import { a } from './import-a';
+import { b } from './import-b';
 
 export function hello_2(): i32 {
   const hello: i32 = 'hello';

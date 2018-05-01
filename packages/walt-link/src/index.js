@@ -70,7 +70,10 @@ function buildTree(index) {
     Object.keys(nestedImports).forEach(mod => {
       if (mod.indexOf(".") === 0) {
         const dep = dependency(mod, file =>
-          path.resolve(path.dirname(filepath), file)
+          path.resolve(
+            path.dirname(filepath),
+            file.slice(-5) === ".walt" ? file : file + ".walt"
+          )
         );
         deps[mod] = dep;
       }

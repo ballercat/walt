@@ -1,7 +1,7 @@
-import { memory: Memory<{ initial: 1 }> } from 'env';
-import { a, hello, GetAType, getA, AType } from './import-a.walt';
-import { b } from './import-b.walt';
-import { c, world, hello_2 } from './import-c.walt';
+import { memory: Memory } from 'env';
+import { a, hello, GetAType, getA, AType } from './import-a';
+import { b } from './import-b';
+import { c, world, hello_2 } from './import-c';
 
 const table: Table<{ element: 'anyfunc', initial: 1 }>;
 
