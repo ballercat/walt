@@ -1,6 +1,6 @@
 {
   "name": "webpack-walt-examples",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Examples with Webpack",
   "main": "index.js",
   "scripts": {
@@ -48,8 +48,8 @@
     "sass-loader": "6.0.6",
     "style-loader": "0.18.2",
     "url-loader": "0.5.9",
-    "walt-compiler": "^0.5.0",
-    "walt-loader": "^1.0.15",
+    "walt-compiler": "^0.5.1",
+    "walt-loader": "^1.0.16",
     "webpack": "3.6.0",
     "webpack-dev-server": "2.8.2"
   },
