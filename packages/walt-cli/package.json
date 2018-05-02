@@ -4,7 +4,7 @@
   "description": "CLI for Walt",
   "main": "index.js",
   "scripts": {
-    "test": "echo 'nothing to test'"
+    "test": "ava"
   },
   "private": true,
   "keywords": [
@@ -22,6 +22,21 @@
     "walt-link": "^0.1.0"
   },
   "devDependencies": {
+    "ava": "^0.25.0",
     "prettier": "^1.11.1"
+  },
+  "ava": {
+    "files": [
+      "src/**/*[sS]pec.js",
+      "!**/utils.js"
+    ],
+    "source": [
+      "src/**/*.js",
+      "src/**/*.walt"
+    ],
+    "failFast": false,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false
   }
 }

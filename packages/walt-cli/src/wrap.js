@@ -1,5 +1,7 @@
-const { link } = require("walt-compiler");
+const { link } = require("walt-link");
 
 module.exports = function wrap(filepath) {
-  console.warn("Not yet implemented :(");
+  return `
+  console.warn('Not yet implemented :(');
+  `;
 };

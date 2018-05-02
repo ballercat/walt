@@ -10,7 +10,7 @@
 
 const path = require("path");
 const fs = require("fs");
-const walt = require("walt-compiler");
+const waltCompiler = require("walt-compiler");
 const { inferImportTypes } = require("./patches");
 
 function mergeStatics(tree = {}) {
@@ -202,10 +202,20 @@ function build(importsObj, tree, compiler) {
  *
  * @return {Function} The build function which takes an importsObj and returns a {Promise}
  */
-function link(filepath, options = { logger: console }, compiler = walt) {
+function link(
+  filepath,
+  options = { logger: console },
+  compiler = waltCompiler
+) {
   const tree = compile(filepath, compiler);
 
-  return (importsObj = {}) => build(importsObj, tree, compiler);
+  function walt(importsObj = {}) {
+    return build(importsObj, tree, compiler);
+  }
+
+  walt.tree = tree;
+
+  return walt;
 }
 
 module.exports = {
