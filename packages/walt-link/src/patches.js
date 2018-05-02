@@ -1,5 +1,5 @@
 "use strict";
-
+const invariant = require("invariant");
 const walt = require("walt-compiler");
 
 // Patch missing type imports with the give dependencies
@@ -88,11 +88,25 @@ function inferImportTypes(ast, deps, compiler = walt) {
           // compiler to produce a valid binary.
           const externType = types[identifier.value];
           if (externType != null) {
+            invariant(
+              externType.meta.EXPORTED,
+              "Imported type " +
+                `"${externType.value}"` +
+                " exists, but is not explicitly exported from " +
+                module.value
+            );
             newTypes.push(Object.assign({}, externType));
           }
 
           const userType = userTypes[identifier.value];
           if (userType != null) {
+            invariant(
+              userType.meta.EXPORTED,
+              "Imported type " +
+                `"${userType.value}"` +
+                " exists, but is not explicitly exported from " +
+                module.value
+            );
             newTypes.push(Object.assign({}, userType));
           }
 

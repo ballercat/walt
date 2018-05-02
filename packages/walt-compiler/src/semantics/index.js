@@ -40,6 +40,22 @@ function semantics(ast: NodeType): NodeType {
   }
   // Types have to be pre-parsed before the rest of the program
   const astWithTypes = mapNode({
+    [Syntax.Export]: (node, transform) => {
+      const [maybeType] = node.params;
+      if (
+        maybeType != null &&
+        [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
+      ) {
+        return transform({
+          ...maybeType,
+          meta: {
+            ...maybeType.meta,
+            EXPORTED: true,
+          },
+        });
+      }
+      return node;
+    },
     [Syntax.Typedef]: (node, _) => {
       types[node.value] = node;
       return node;

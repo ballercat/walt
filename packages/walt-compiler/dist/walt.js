@@ -794,42 +794,6 @@ function maybeFunctionDeclaration(ctx) {
 }
 
 //      
-function parseExport(ctx) {
-  const node = ctx.startNode();
-  ctx.eat(["export"]);
-
-  const params = [maybeFunctionDeclaration(ctx)];
-
-  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
-}
-
-//      
-function parseImport(ctx) {
-  const baseNode = ctx.startNode();
-  ctx.eat(["import"]);
-
-  if (!ctx.eat(["{"])) {
-    throw ctx.syntaxError("expected {");
-  }
-
-  const fields = expression(ctx);
-
-  ctx.expect(["}"]);
-  ctx.expect(["from"]);
-
-  const module = expression(ctx);
-
-  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
-}
-
-//      
-function breakParser(ctx) {
-  const node = ctx.startNode();
-  ctx.expect(["break"]);
-  return ctx.endNode(node, Syntax.Break);
-}
-
-//      
 
 function generateErrorString(msg, error, marker, filename, func) {
   let line;
@@ -916,6 +880,48 @@ function typeParser(ctx) {
     params: [expression(ctx)],
     type: "i32"
   }), Syntax.Struct);
+}
+
+//      
+function parseExport(ctx) {
+  const node = ctx.startNode();
+  ctx.eat(["export"]);
+
+  if (ctx.token.value === "type") {
+    const typedef = typeParser(ctx);
+    return ctx.endNode(_extends({}, node, {
+      params: [typedef]
+    }), Syntax.Export);
+  }
+  const params = [maybeFunctionDeclaration(ctx)];
+
+  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
+}
+
+//      
+function parseImport(ctx) {
+  const baseNode = ctx.startNode();
+  ctx.eat(["import"]);
+
+  if (!ctx.eat(["{"])) {
+    throw ctx.syntaxError("expected {");
+  }
+
+  const fields = expression(ctx);
+
+  ctx.expect(["}"]);
+  ctx.expect(["from"]);
+
+  const module = expression(ctx);
+
+  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
+}
+
+//      
+function breakParser(ctx) {
+  const node = ctx.startNode();
+  ctx.expect(["break"]);
+  return ctx.endNode(node, Syntax.Break);
 }
 
 //      
@@ -5197,11 +5203,11 @@ const mapStruct = curry_1(({ userTypes }, node, _ignore) => {
   const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(node.params[0]);
 
   const struct = _extends({}, node, {
-    meta: {
+    meta: _extends({}, node.meta, {
       [TYPE_OBJECT]: offsetsByKey,
       [OBJECT_SIZE]: totalSize,
       [OBJECT_KEY_TYPES]: keyTypeMap
-    }
+    })
   });
 
   userTypes[struct.value] = struct;
@@ -5278,6 +5284,17 @@ function semantics$1(ast) {
   }
   // Types have to be pre-parsed before the rest of the program
   const astWithTypes = mapNode({
+    [Syntax.Export]: (node, transform) => {
+      const [maybeType] = node.params;
+      if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
+        return transform(_extends({}, maybeType, {
+          meta: _extends({}, maybeType.meta, {
+            EXPORTED: true
+          })
+        }));
+      }
+      return node;
+    },
     [Syntax.Typedef]: (node, _) => {
       types[node.value] = node;
       return node;

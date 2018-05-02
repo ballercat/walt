@@ -1,6 +1,6 @@
 import { memory: Memory<{ initial: 1 }> } from 'env';
-type GetAType = () => i32;
-type AType = { foobar: i32 };
+export type GetAType = () => i32;
+export type AType = { foobar: i32 };
 
 export const a: i32 = 42;
 export function getA(): i32 {

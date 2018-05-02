@@ -41,5 +41,8 @@
     "failWithoutAssertions": false,
     "tap": false,
     "powerAssert": false
+  },
+  "dependencies": {
+    "invariant": "^2.2.4"
   }
 }

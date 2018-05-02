@@ -5,7 +5,7 @@ import { malloc } from './malloc.walt';
 // Needed for decoding
 import { memory: Memory<{ initial: 1 }> } from 'env';
 
-type StringIterator = {
+export type StringIterator = {
   length: i32,
   index: i32,
   addr: i32,

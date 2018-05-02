@@ -8,6 +8,7 @@ import {
   validate,
   emitter,
   generator,
+  prettyPrintNode,
 } from "..";
 
 export const harness = filepath => t => {
@@ -25,6 +26,7 @@ export const harness = filepath => t => {
       validate,
       emitter,
       generator,
+      prettyPrintNode,
     }
   );
   return build({

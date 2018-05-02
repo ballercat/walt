@@ -84,7 +84,7 @@ function buildTree(index, compiler) {
 
     compiler.validate(ast, {
       lines: src.split("\n"),
-      filname: module,
+      filename: module.split("/").pop(),
     });
 
     const result = {

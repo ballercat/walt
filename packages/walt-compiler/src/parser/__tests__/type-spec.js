@@ -54,3 +54,7 @@ test("invalid type definition", t => {
   const error = t.throws(() => compile("type Type = i32 => void;"));
   t.snapshot(error);
 });
+
+test("export type statements compile", t => {
+  t.notThrows(() => compile("export type Foo = (i32, i32) => i32;"));
+});
