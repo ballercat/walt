@@ -62,6 +62,18 @@ export default function validate(
     },
     [Syntax.Import]: (importNode, _) => {
       walkNode({
+        [Syntax.Identifier]: (identifier, __) => {
+          const [start, end] = identifier.range;
+          problems.push(
+            error(
+              "Infered type not supplied.",
+              "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.",
+              { start, end },
+              filename,
+              GLOBAL_LABEL
+            )
+          );
+        },
         [Syntax.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
@@ -86,7 +98,8 @@ export default function validate(
       const [initializer] = decl.params;
       if (decl.meta[TYPE_CONST] != null) {
         const [start, end] = decl.range;
-        if (initializer != null && initializer.Type !== Syntax.Constant) {
+        const validTypes = [Syntax.Constant, Syntax.StringLiteral];
+        if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(
             error(
               "Global Constants must be initialized with a Number literal.",

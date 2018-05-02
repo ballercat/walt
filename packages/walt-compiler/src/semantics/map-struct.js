@@ -47,6 +47,7 @@ const mapStruct = curry(({ userTypes }, node, _ignore) => {
   const struct = {
     ...node,
     meta: {
+      ...node.meta,
       [TYPE_OBJECT]: offsetsByKey,
       [OBJECT_SIZE]: totalSize,
       [OBJECT_KEY_TYPES]: keyTypeMap,

@@ -4,7 +4,7 @@
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
-    "test": "nyc --cache ava --no-color --no-power-assert --tap | tap-nyc",
+    "test": "nyc --cache ava --no-color --no-power-assert",
     "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
@@ -65,7 +65,8 @@
     "rollup-plugin-replace": "2.0.0",
     "rollup-plugin-uglify": "2.0.1",
     "tap-nyc": "1.0.3",
-    "uglify-es": "3.0.17"
+    "uglify-es": "3.0.17",
+    "walt-link": "^0.1.0"
   },
   "prettier": {
     "trailingComma": "es5"
@@ -98,7 +99,8 @@
     "cache": true,
     "exclude": [
       "src/**/print-node.js",
-      "src/**/__tests__/*.js"
+      "src/**/__tests__/*.js",
+      "dist/*.js"
     ]
   }
 }

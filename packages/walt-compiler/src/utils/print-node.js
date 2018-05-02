@@ -68,6 +68,10 @@ const getPrinters = add => ({
           add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
         }
       },
+      [Syntax.Identifier]: (missing, _) => {
+        const { value } = missing;
+        add(`(import "${mod.value}" "${value}" (type ??))`);
+      },
     })(nodes);
   },
   [Syntax.Export]: (node, print) => {
@@ -146,6 +150,9 @@ const getPrinters = add => ({
       node.params.forEach(print);
       add(")", 0, -2);
     }
+  },
+  [Syntax.StringLiteral]: node => {
+    add("(i32.const ??)", 0, 0, ` string "${node.value}"`);
   },
   [Syntax.Type]: node => {
     add(node.value);

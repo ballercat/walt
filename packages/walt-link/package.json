@@ -1,0 +1,48 @@
+{
+  "name": "walt-link",
+  "version": "0.1.0",
+  "description": "Links .walt WebAssembly programs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "ava",
+    "debug": "node --inspect-brk node_modules/ava/profile.js",
+    "prettier": "prettier --list-different src/**/*.js"
+  },
+  "keywords": [
+    "walt",
+    "javascript",
+    "webassembly"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "coveralls": "^3.0.0",
+    "nyc": "^11.7.1",
+    "prettier": "^1.12.0",
+    "walt-compiler": "^0.4.3"
+  },
+  "peerDependencies": {
+    "walt-compiler:": "^0.4.3"
+  },
+  "prettier": {
+    "trailingComma": "es5"
+  },
+  "ava": {
+    "files": [
+      "src/**/*[sS]pec.js",
+      "!**/utils.js"
+    ],
+    "source": [
+      "src/**/*.js",
+      "src/**/*.walt"
+    ],
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false
+  },
+  "dependencies": {
+    "invariant": "^2.2.4"
+  }
+}

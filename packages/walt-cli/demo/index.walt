@@ -1,0 +1,9 @@
+import { memory: Memory } from 'env';
+import {
+  indexOf
+} from './string';
+
+export function run(): i32 {
+  const helloWorld: i32 = 'Hello World!';
+  return indexOf(helloWorld, 'World');
+}

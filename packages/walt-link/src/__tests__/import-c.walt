@@ -1,0 +1,17 @@
+import { memory: Memory } from 'env';
+import { a } from './import-a';
+import { b } from './import-b';
+
+export function hello_2(): i32 {
+  const hello: i32 = 'hello';
+  return hello;
+}
+
+export function world(): i32 {
+  const world: i32 = 'world';
+  return world;
+}
+
+export function c(): i32 {
+  return a + b;
+}

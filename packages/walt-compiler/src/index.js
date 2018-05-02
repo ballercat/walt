@@ -9,6 +9,9 @@ import printNode from "./utils/print-node";
 import closurePlugin, { mapToImports } from "./closure-plugin";
 import { VERSION_1 } from "./emitter/preamble";
 import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
+import { stringEncoder, stringDecoder } from "./utils/string";
+import walkNode from "./utils/walk-node";
+import mapNode from "./utils/map-node";
 
 export const debug = _debug;
 export const prettyPrintNode = printNode;
@@ -16,7 +19,16 @@ export const semantics = semanticAnalyzer;
 export const generator = codeGenerator;
 export const validate = astValidator;
 export const emitter = emit;
-export { parser, printNode, closurePlugin };
+export {
+  parser,
+  printNode,
+  closurePlugin,
+  stringEncoder,
+  stringDecoder,
+  walkNode,
+  mapNode,
+};
+export const VERSION = "0.4.4";
 
 // Used for deugging purposes
 export const getIR = (

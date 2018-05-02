@@ -17,4 +17,5 @@ cache:
     - packages/webpack-walt-examples/node_modules
     - packages/walt-compiler/node_modules
     - packages/walt-docs/node_modules
+    - packages/walt-link/node_modules
 

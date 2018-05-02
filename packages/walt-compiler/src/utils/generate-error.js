@@ -10,8 +10,18 @@ export default function generateErrorString(
   filename: string,
   func: string
 ): string {
-  const { line, col } = marker.start;
-  const { col: end } = marker.end;
+  let line;
+  let col;
+  let end;
+  if (marker.start.line !== marker.end.line) {
+    end = marker.start.col + 1;
+    col = marker.start.col;
+    line = marker.start.line;
+  } else {
+    line = marker.start.line;
+    col = marker.start.col;
+    end = marker.end.col;
+  }
   const Line = (() => {
     if (marker.start.sourceLine !== marker.end.sourceLine) {
       return marker.start.sourceLine + "\n" + marker.end.sourceLine;

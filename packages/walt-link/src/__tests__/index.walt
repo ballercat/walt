@@ -1,0 +1,32 @@
+import { memory: Memory } from 'env';
+import { a, hello, GetAType, getA, AType } from './import-a';
+import { b } from './import-b';
+import { c, world, hello_2 } from './import-c';
+
+const table: Table<{ element: 'anyfunc', initial: 1 }>;
+
+export function showImportA() : i32 {
+  const funPtr: GetAType = getA;
+  const _a: i32 = funPtr();
+
+  const A: AType = 0;
+  A.foobar = _a;
+  return A.foobar;
+}
+
+export function showImportB(): i32 {
+  return b;
+}
+
+export function helloTest(): i32 {
+  return hello();
+}
+
+export function worldTest(): i32 {
+  return world();
+}
+
+export function run(): i32 {
+  // Proof that statics are _shared_ in different modules
+  return hello_2() == hello();
+}

@@ -794,46 +794,20 @@ function maybeFunctionDeclaration(ctx) {
 }
 
 //      
-function parseExport(ctx) {
-  const node = ctx.startNode();
-  ctx.eat(["export"]);
-
-  const params = [maybeFunctionDeclaration(ctx)];
-
-  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
-}
-
-//      
-function parseImport(ctx) {
-  const baseNode = ctx.startNode();
-  ctx.eat(["import"]);
-
-  if (!ctx.eat(["{"])) {
-    throw ctx.syntaxError("expected {");
-  }
-
-  const fields = expression(ctx);
-
-  ctx.expect(["}"]);
-  ctx.expect(["from"]);
-
-  const module = expression(ctx);
-
-  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
-}
-
-//      
-function breakParser(ctx) {
-  const node = ctx.startNode();
-  ctx.expect(["break"]);
-  return ctx.endNode(node, Syntax.Break);
-}
-
-//      
 
 function generateErrorString(msg, error, marker, filename, func) {
-  const { line, col } = marker.start;
-  const { col: end } = marker.end;
+  let line;
+  let col;
+  let end;
+  if (marker.start.line !== marker.end.line) {
+    end = marker.start.col + 1;
+    col = marker.start.col;
+    line = marker.start.line;
+  } else {
+    line = marker.start.line;
+    col = marker.start.col;
+    end = marker.end.col;
+  }
   const Line = (() => {
     if (marker.start.sourceLine !== marker.end.sourceLine) {
       return marker.start.sourceLine + "\n" + marker.end.sourceLine;
@@ -906,6 +880,48 @@ function typeParser(ctx) {
     params: [expression(ctx)],
     type: "i32"
   }), Syntax.Struct);
+}
+
+//      
+function parseExport(ctx) {
+  const node = ctx.startNode();
+  ctx.eat(["export"]);
+
+  if (ctx.token.value === "type") {
+    const typedef = typeParser(ctx);
+    return ctx.endNode(_extends({}, node, {
+      params: [typedef]
+    }), Syntax.Export);
+  }
+  const params = [maybeFunctionDeclaration(ctx)];
+
+  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
+}
+
+//      
+function parseImport(ctx) {
+  const baseNode = ctx.startNode();
+  ctx.eat(["import"]);
+
+  if (!ctx.eat(["{"])) {
+    throw ctx.syntaxError("expected {");
+  }
+
+  const fields = expression(ctx);
+
+  ctx.expect(["}"]);
+  ctx.expect(["from"]);
+
+  const module = expression(ctx);
+
+  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
+}
+
+//      
+function breakParser(ctx) {
+  const node = ctx.startNode();
+  ctx.expect(["break"]);
+  return ctx.endNode(node, Syntax.Break);
 }
 
 //      
@@ -2618,33 +2634,20 @@ const emitDataSegment = (stream, segment) => {
   stream.push(index_9, def.End.code, "end");
 
   stream.push(varuint32, data.size, "segment size");
-  stream.write(data);
-};
-
-const encodeDataLength = (stream, length) => {
-  stream.push(varuint32, 0, "memory index");
-  const offset = 0;
-  const data = new OutputStream();
-  data.push(index_12, length, "dataLength");
-
-  stream.push(index_9, def.i32Const.code, def.i32Const.text);
-  stream.push(varint32, offset, `segment offset (${offset})`);
-  stream.push(index_9, def.End.code, "end");
-
-  stream.push(varuint32, data.size, "");
+  // We invert the control here a bit so that any sort of data could be written
+  // into the data section. This buys us a bit of flexibility for the cost of
+  // doing encoding earlier in the funnel
   stream.write(data);
 };
 
 function emit$9(dataSection) {
   const stream = new OutputStream();
-  stream.push(varuint32, dataSection.length + 1, "entries");
+  stream.push(varuint32, dataSection.length, "entries");
 
-  // push an entry for the total size of the data section
-  const lastEntry = dataSection[dataSection.length - 1];
-  const totalDataLength = lastEntry.offset + lastEntry.data.size;
-  encodeDataLength(stream, totalDataLength);
-
-  dataSection.forEach(segment => emitDataSegment(stream, segment));
+  for (let i = 0, len = dataSection.length; i < len; i++) {
+    const segment = dataSection[i];
+    emitDataSegment(stream, segment);
+  }
 
   return stream;
 }
@@ -2824,10 +2827,11 @@ const OBJECT_SIZE = "object/size";
 const TYPE_CAST = "type/cast";
 const OBJECT_KEY_TYPES = "object/key-types";
 const CLOSURE_TYPE = "closure/type";
-const AST_METADATA = "@@global/ast";
+const AST_METADATA = "AST_METADATA";
 const FUNCTION_METADATA = "@@function/meta";
 const ALIAS = "alias";
-const STATIC_STRING = "static/string";
+
+// Statics
 
 //      
 const generateFunctionCall = (node, parent) => {
@@ -3453,6 +3457,10 @@ const getPrinters = add => ({
         } else {
           add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
         }
+      },
+      [Syntax.Identifier]: (missing, _) => {
+        const { value } = missing;
+        add(`(import "${mod.value}" "${value}" (type ??))`);
       }
     })(nodes);
   },
@@ -3522,6 +3530,9 @@ const getPrinters = add => ({
       node.params.forEach(print);
       add(")", 0, -2);
     }
+  },
+  [Syntax.StringLiteral]: node => {
+    add("(i32.const ??)", 0, 0, ` string "${node.value}"`);
   },
   [Syntax.Type]: node => {
     add(node.value);
@@ -3682,20 +3693,6 @@ function mapNode(visitor) {
   };
 
   return nodeMapper;
-}
-
-function stringEncoder(value) {
-  const resultStream = new OutputStream();
-  const characterStream = new OutputStream();
-
-  characterStream.push("varuint32", value.length, value);
-  let i = 0;
-  for (i = 0; i < value.length; i++) {
-    characterStream.push("varuint32", value.codePointAt(i), value[i]);
-  }
-  resultStream.write(characterStream);
-
-  return resultStream;
 }
 
 //      
@@ -3897,7 +3894,80 @@ function generateType(node) {
   };
 }
 
+function* stringDecoder(view, start) {
+  let length = 0;
+  let index = 0;
+  let shift = 0;
+  let addr = start;
+  while (true) {
+    const byte = view.getUint8(addr, true);
+    length |= (byte & 0x7f) << shift;
+    addr += 1;
+    if ((byte & 0x80) === 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  let result = 0;
+  while (index < length) {
+    result = 0;
+    shift = 0;
+    while (true) {
+      const byte = view.getUint8(addr, true);
+      result |= (byte & 0x7f) << shift;
+      addr += 1;
+      if ((byte & 0x80) === 0) {
+        break;
+      }
+      shift += 7;
+    }
+    index += 1;
+    yield result;
+  }
+}
+
+function stringEncoder(value) {
+  const resultStream = new OutputStream();
+  const characterStream = new OutputStream();
+
+  characterStream.push("varuint32", value.length, value);
+  let i = 0;
+  for (i = 0; i < value.length; i++) {
+    characterStream.push("varuint32", value.codePointAt(i), value[i]);
+  }
+  resultStream.write(characterStream);
+
+  return resultStream;
+}
+
 //      
+function generateData(statics, DATA_SECTION_HEADER_SIZE) {
+  // Reserve N bytes for data size header
+  let offsetAccumulator = DATA_SECTION_HEADER_SIZE;
+
+  const map = {};
+  const data = Object.keys(statics).reduce((acc, key) => {
+    const encoded = stringEncoder(key);
+    acc.push({ offset: Number(offsetAccumulator), data: encoded });
+    map[key] = offsetAccumulator;
+    offsetAccumulator += encoded.size;
+    return acc;
+  }, []);
+
+  // reserved stream for the size header
+  const lengthStream = new OutputStream();
+  lengthStream.push("varuint32", offsetAccumulator, String(offsetAccumulator));
+
+  return {
+    data: [{ offset: 0, data: lengthStream }, ...data],
+    map
+  };
+}
+
+//      
+const DATA_SECTION_HEADER_SIZE = 4;
+
 const generateCode = func => {
   // eslint-disable-next-line
   const [argsNode, resultNode, ...body] = func.params;
@@ -3951,10 +4021,14 @@ function generator$1(ast, config) {
     }
   };
 
-  // Encode the static memory values into Data section
-  program.Data = Object.entries(ast.meta[AST_METADATA].statics).reduce((acc, [key, val]) => {
-    return [...acc, { offset: Number(val.value), data: stringEncoder(key) }];
-  }, []);
+  let { statics } = ast.meta[AST_METADATA];
+  if (config.linker != null) {
+    statics = _extends({}, config.linker.statics, statics);
+  }
+  const { map: staticsMap, data } = generateData(statics, DATA_SECTION_HEADER_SIZE);
+  if (Object.keys(statics).length > 0) {
+    program.Data = data;
+  }
 
   const findTypeIndex = functionNode => {
     const search = generateImplicitFunctionType(functionNode);
@@ -3988,7 +4062,19 @@ function generator$1(ast, config) {
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     }
-  })(ast);
+  })(mapNode({
+    [Syntax.Import]: (node, _) => node,
+    [Syntax.StringLiteral]: (node, _ignore) => {
+      if (Object.keys(statics).length === 0) {
+        return node;
+      }
+      const { value } = node;
+      return _extends({}, node, {
+        value: String(staticsMap[value]),
+        Type: Syntax.Constant
+      });
+    }
+  })(ast));
 
   const nodeMap = {
     [Syntax.Typedef]: (_, __) => _,
@@ -4031,7 +4117,7 @@ function generator$1(ast, config) {
       })();
 
       const patched = mapNode({
-        [Syntax.FunctionPointer]: pointer => {
+        FunctionPointer(pointer) {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           const functionIndex = metaFunctionIndex;
           let tableIndex = findTableIndex(functionIndex);
@@ -4105,8 +4191,9 @@ const mapImport = curry_1((options, node, _) => mapNode({
       });
     }
 
-    if (typeNode.type !== "Table" && typeNode.type !== "Memory") {
+    if (!["Table", "Memory"].includes(typeNode.type)) {
       const index = Object.keys(globals).length;
+
       globals[identifierNode.value] = _extends({}, identifierNode, {
         meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
         type: typeNode.type
@@ -4999,21 +5086,19 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       }));
     },
     [Syntax.CharacterLiteral]: mapCharacterLiteral,
-    [Syntax.StringLiteral]: (stringLiteral, transform) => {
+    [Syntax.StringLiteral]: (stringLiteral, _) => {
       const { statics } = options;
       const { value } = stringLiteral;
-      const index = statics[value] ? statics[value].value : Object.values(statics).map(({ meta: { [STATIC_STRING]: data } }) => data).reduce((a, v) => a + v.size, 4);
-      const transformed = transform(_extends({}, stringLiteral, {
-        value: String(index),
-        meta: _extends({}, stringLiteral.meta, {
-          [STATIC_STRING]: stringEncoder(value)
-        }),
-        Type: Syntax.Constant
-      }));
-      // it really does not matter when we write the key in
-      statics[stringLiteral.value] = transformed;
 
-      return transformed;
+      // did we already encode the static?
+      if (!(value in statics)) {
+        statics[value] = null;
+      }
+
+      // It's too early to tranform a string at this point
+      // we need additional information, only available in the generator.
+      // This also avoids doing the work in two places, in semantics AND gen
+      return stringLiteral;
     },
     [Syntax.Assignment]: mapAssignment,
     [Syntax.MemoryAssignment]: (inputNode, transform) => {
@@ -5118,11 +5203,11 @@ const mapStruct = curry_1(({ userTypes }, node, _ignore) => {
   const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(node.params[0]);
 
   const struct = _extends({}, node, {
-    meta: {
+    meta: _extends({}, node.meta, {
       [TYPE_OBJECT]: offsetsByKey,
       [OBJECT_SIZE]: totalSize,
       [OBJECT_KEY_TYPES]: keyTypeMap
-    }
+    })
   });
 
   userTypes[struct.value] = struct;
@@ -5199,6 +5284,17 @@ function semantics$1(ast) {
   }
   // Types have to be pre-parsed before the rest of the program
   const astWithTypes = mapNode({
+    [Syntax.Export]: (node, transform) => {
+      const [maybeType] = node.params;
+      if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
+        return transform(_extends({}, maybeType, {
+          meta: _extends({}, maybeType.meta, {
+            EXPORTED: true
+          })
+        }));
+      }
+      return node;
+    },
     [Syntax.Typedef]: (node, _) => {
       types[node.value] = node;
       return node;
@@ -5269,6 +5365,10 @@ function validate$1(ast, {
     },
     [Syntax.Import]: (importNode, _) => {
       walker({
+        [Syntax.Identifier]: (identifier, __) => {
+          const [start, end] = identifier.range;
+          problems.push(generateErrorString("Infered type not supplied.", "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.", { start, end }, filename, GLOBAL_LABEL));
+        },
         [Syntax.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
@@ -5285,7 +5385,8 @@ function validate$1(ast, {
       const [initializer] = decl.params;
       if (decl.meta[TYPE_CONST] != null) {
         const [start, end] = decl.range;
-        if (initializer != null && initializer.Type !== Syntax.Constant) {
+        const validTypes = [Syntax.Constant, Syntax.StringLiteral];
+        if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(generateErrorString("Global Constants must be initialized with a Number literal.", "WebAssembly does not allow for non number literal constant initializers.", { start, end }, filename, GLOBAL_LABEL));
         }
 
@@ -5502,6 +5603,8 @@ const semantics = semantics$1;
 const generator = generator$1;
 const validate = validate$1;
 const emitter = emit;
+const VERSION = "0.4.4";
+
 // Used for deugging purposes
 const getIR = (source, {
   version = VERSION_1,
@@ -5560,6 +5663,11 @@ exports.emitter = emitter;
 exports.parser = parse;
 exports.printNode = printNode;
 exports.closurePlugin = closurePlugin$$1;
+exports.stringEncoder = stringEncoder;
+exports.stringDecoder = stringDecoder;
+exports.walkNode = walker;
+exports.mapNode = mapNode;
+exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;
 exports['default'] = compileWalt;

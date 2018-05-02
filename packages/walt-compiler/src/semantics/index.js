@@ -25,7 +25,7 @@ import hasNode from "../utils/has-node";
 import { AST_METADATA } from "./metadata";
 import type { NodeType } from "../flow/types";
 
-export default function semantics(ast: NodeType): NodeType {
+function semantics(ast: NodeType): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};
@@ -33,13 +33,29 @@ export default function semantics(ast: NodeType): NodeType {
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
   const hoistImports: NodeType[] = [];
-  const statics: { [string]: NodeType } = {};
+  const statics: { [string]: null } = {};
 
   if (hasNode(Syntax.Closure, ast)) {
     ast = { ...ast, params: [...closureImports(), ...ast.params] };
   }
   // Types have to be pre-parsed before the rest of the program
   const astWithTypes = mapNode({
+    [Syntax.Export]: (node, transform) => {
+      const [maybeType] = node.params;
+      if (
+        maybeType != null &&
+        [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
+      ) {
+        return transform({
+          ...maybeType,
+          meta: {
+            ...maybeType.meta,
+            EXPORTED: true,
+          },
+        });
+      }
+      return node;
+    },
     [Syntax.Typedef]: (node, _) => {
       types[node.value] = node;
       return node;
@@ -80,3 +96,5 @@ export default function semantics(ast: NodeType): NodeType {
     params: [...hoistImports, ...patched.params, ...hoist],
   };
 }
+
+export default semantics;

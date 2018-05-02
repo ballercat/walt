@@ -4,7 +4,7 @@ import generateImportFromNode from "../generator/import";
 import compile from "..";
 
 const compileAndRun = (src, importsObj = {}) =>
-  WebAssembly.instantiate(compile(src), importsObj);
+  WebAssembly.instantiate(compile(src, { encodeNames: true }), importsObj);
 
 test("function typed imports", t => {
   // What is happening here:
