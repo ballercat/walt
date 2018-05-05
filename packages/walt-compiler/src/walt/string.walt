@@ -1,9 +1,7 @@
 // Internal walt string utilities, used by the compiler
-// :)
-//
 import { malloc } from './malloc.walt';
 // Needed for decoding
-import { memory: Memory<{ initial: 1 }> } from 'env';
+import { memory: Memory } from 'env';
 
 export type StringIterator = {
   length: i32,
@@ -14,17 +12,15 @@ export type StringIterator = {
   done: i32
 };
 
-// Create string iterator object.
-export function getStringIterator(addr: i32) : StringIterator {
-  const iterator: StringIterator = malloc(sizeof(StringIterator));
-  let length: i32 = 0;
+export function decodeLEB(addr: i32): i64 {
+  let value: i32 = 0;
   let byte: i32 = 0;
   let shift: i32 = 0;
 
   // Decode varuint32 length header
   while (true) {
     byte = i32.load8_u(addr);
-    length = length | ((byte & 0x7f) << shift);
+    value = value | ((byte & 0x7f) << shift);
     addr += 1;
     if ((byte & 0x80) == 0) {
       break;
@@ -32,7 +28,28 @@ export function getStringIterator(addr: i32) : StringIterator {
     shift += 7;
   }
 
-  iterator = { done: false, length, index: 0, addr, start: addr };
+  // TODO: Looks like shifts are not auto-promoted as they should be
+  const addr64: i64 = addr << (32: i64);
+  const result: i64 = value | addr64;
+  return result;
+}
+
+// Create string iterator object.
+export function getStringIterator(addr: i32) : StringIterator {
+  const iterator: StringIterator = malloc(sizeof(StringIterator));
+  const leb: i64 = decodeLEB(addr);
+
+  // unroll the i32 | i32 pair
+  const length: i32 = (leb: i32);
+  addr = (leb >> 32): i32;
+
+  iterator = {
+    done: false,
+    length,
+    index: 0,
+    addr,
+    start: addr
+  };
 
   return iterator;
 }
@@ -44,20 +61,9 @@ export function next(iterator: StringIterator): StringIterator {
     return iterator;
   }
 
-  let value: i32 = 0;
-  let shift: i32 = 0;
-  let byte: i32 = 0;
-  let addr: i32 = iterator.addr;
-
-  while (true) {
-    byte = i32.load8_u(addr);
-    value = value | ((byte & 0x7f) << shift);
-    addr += 1;
-    if ((byte & 0x80) == 0) {
-      break;
-    }
-    shift += 7;
-  }
+  const leb: i64 = decodeLEB(iterator.addr);
+  const value: i32 = (leb: i32);
+  const addr: i32 = (leb >> 32): i32;
 
   iterator = {
     index: iterator.index + 1,

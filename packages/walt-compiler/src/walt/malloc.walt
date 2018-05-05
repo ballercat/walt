@@ -1,8 +1,9 @@
-import { memory: Memory<{ initial: 1 }> } from 'env';
+import { memory: Memory, MEMORY_OFFSET: i32 } from 'env';
 
 let offset: i32 = 0;
 export function malloc(size: i32) : i32 {
-  const pointer: i32 = __DATA_LENGTH__ + offset;
+  const base: i32 = MEMORY_OFFSET || __DATA_LENGTH__;
+  const pointer: i32 = base + offset;
   offset += size;
   return pointer;
 }

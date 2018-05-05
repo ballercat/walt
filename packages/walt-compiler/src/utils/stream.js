@@ -1,4 +1,43 @@
 // @flow
+import { link } from "walt-link";
+import path from "path";
+import { stringEncoder } from "./string";
+
+const buildStream = link(path.resolve(__dirname, "../walt/utils/stream.walt"));
+export const stream = input => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const stringStream = stringEncoder(input);
+  stringStream.buffer(memory.buffer);
+
+  return buildStream({
+    env: {
+      memory,
+      // TODO: figure out a nicer way of doing this, currently this is fed into
+      // malloc
+      MEMORY_OFFSET: stringStream.size,
+    },
+  }).then(module => {
+    const {
+      initialize,
+      wasmNext,
+      wasmPeek,
+      wasmColumn,
+      wasmLine,
+    } = module.instance.exports;
+    initialize();
+
+    return {
+      next: () => String.fromCodePoint(wasmNext()),
+      peek: () => String.fromCodePoint(wasmPeek()),
+      get col() {
+        return wasmColumn();
+      },
+      get line() {
+        return wasmLine();
+      },
+    };
+  });
+};
 
 // Base Character stream class
 class Stream {

@@ -1,0 +1,47 @@
+import { memory: Memory } from 'env';
+// TODO: add "import as" syntax, this is why all methods are prefixed with wasm
+// below for now.
+import { getStringIterator, next, decodeLEB } from '../string';
+import { StringIterator } from '../string';
+
+const EOL: i32 = 10;
+const EOF: i32 = 0;
+
+let byteOffset: i32 = 0;
+let pos: i32 = 0;
+let col: i32 = 0;
+let line: i32 = 1;
+// TODO: an unknown type here does _not_ error, fix that
+let iterator: StringIterator = 0;
+
+export function initialize() {
+  iterator = getStringIterator(0);
+}
+
+export function wasmNext(): i32 {
+  next(iterator);
+  const character: i32 = iterator.value;
+  if (character == EOL) {
+    col = 0;
+    line += 1;
+  } else {
+    col += 1;
+  }
+
+  return character;
+}
+
+export function wasmColumn() : i32 {
+  return col;
+}
+
+export function wasmLine(): i32 {
+  return line;
+}
+
+export function wasmPeek(): i32 {
+  // decodeLEB gives a i64 so that it can return an updated address and value
+  // we only need the value, since the address is not changed for the iterator
+  const result: i64 = decodeLEB(iterator.addr);
+  return (result : i32);
+}
