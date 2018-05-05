@@ -29,7 +29,7 @@ export const balanceTypesInMathExpression = (
     }
 
     return acc;
-  }, null);
+  }, expression.type);
 
   // iterate again, this time, patching any lighter types
   const params = expression.params.map(paramNode => {

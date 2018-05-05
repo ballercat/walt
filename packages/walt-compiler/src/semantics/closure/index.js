@@ -221,7 +221,6 @@ export const injectEnvironmentMaybe = (
 export const transformClosedDeclaration = curry((options, decl, transform) => {
   const { closures, locals } = options;
   const [init] = decl.params;
-
   // We don't know the size of the environment until all locals are walked. This
   // means we need to patch in the size of the env here where we can map nodes
   if (decl.value === CLOSURE_BASE) {
