@@ -3,7 +3,6 @@ node_js:
   - "lts/*"
 install:
   - npm install
-  - npm run postinstall
 script: "npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
