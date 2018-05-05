@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "8.9.4"
+  - "lts/*"
 install:
   - npm install
   - npm run postinstall
@@ -10,12 +10,3 @@ after_success:
 env:
   - TEST_SUITE=validate
   - TEST_SUITE=test
-cache:
-  directories:
-    - node_modules
-    - packages/walt-loader/node_modules
-    - packages/webpack-walt-examples/node_modules
-    - packages/walt-compiler/node_modules
-    - packages/walt-docs/node_modules
-    - packages/walt-link/node_modules
-
