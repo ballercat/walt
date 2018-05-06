@@ -1,8 +1,11 @@
 language: node_js
 node_js:
   - "lts/*"
+before_script:
+    - PATH=${PATH//:\.\/node_modules\/\.bin/}
 install:
   - npm install
+  - npm run postinstall
 script: "npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
