@@ -90,4 +90,5 @@ export type ProgramType = {
   Artifacts: NodeType[],
   Name: NameSectionType,
   Data: DataSectionType,
+  Start: number[],
 };
