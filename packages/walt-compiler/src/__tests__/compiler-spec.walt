@@ -165,6 +165,13 @@ function comparison_testf64(lhs: f64, mode: i32): i32 {
   return -1;
 }
 
+function testPromotions(): i32 {
+  const k: i32 = 42;
+  const i: i64 = k << 32;
+
+  return (i >> 32): i32;
+}
+
 export function run() {
   assert("array subscripts - (math should work)", testArraySubscript(), 4);
   assert("large signed constant encoding", testLargeSignedConstant(), 126);
@@ -211,4 +218,5 @@ export function run() {
   assert("LTE_UNSIGNED f64", comparison_testf64((1: f64), LTE_UNSIGNED), 1);
   assert("LTE_SIGNED f64", comparison_testf64((-1: f64), LTE_SIGNED), 1);
 
+  assert("type promotions", testPromotions(), 42);
 }

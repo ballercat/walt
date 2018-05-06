@@ -132,3 +132,15 @@ test("untyped imports need to be compiled out via a linker/build step", t => {
   );
   t.snapshot(error);
 });
+
+test("unknown user types at global scope, error", t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    let t: unknown = 0;
+    function foo() {
+      let k: unknown = 0;
+    }
+    `)
+  );
+  t.snapshot(error);
+});

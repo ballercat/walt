@@ -56,8 +56,15 @@ export const parseDeclaration = curry((isConst, options, declaration) => {
     { ...options, scope },
     declaration
   );
+
+  const params = declaration.params.map(node => ({
+    ...node,
+    type: declaration.type,
+  }));
+
   scope[declaration.value] = {
     ...declaration,
+    params,
     type,
     meta: { ...meta, [LOCAL_INDEX]: index },
     Type: Syntax.Declaration,

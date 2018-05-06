@@ -4,10 +4,11 @@
   "description": "Walt packages",
   "main": "index.js",
   "scripts": {
-    "postinstall": "lerna bootstrap --stream --hoist walt-compiler",
+    "postinstall": "lerna bootstrap --hoist walt-compiler",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
-    "coverage": "lerna run coverage --stream"
+    "coverage": "lerna run coverage --stream",
+    "clean": "lerna clean"
   },
   "repository": {
     "type": "git",
@@ -28,8 +29,9 @@
     "url": "https://github.com/ballercat/walt/issues"
   },
   "homepage": "https://github.com/ballercat/walt#readme",
-  "dependencies": {
-    "lerna": "2.5.1"
+  "devDependencies": {
+    "lerna": "^2.11.0",
+    "walt-compiler": "^0.5.3"
   },
   "nyc": {
     "cache": true
