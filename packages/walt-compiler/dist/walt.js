@@ -4247,7 +4247,13 @@ const parse$2 = (isConst, { types, scope }, declaration) => {
 const parseDeclaration = curry_1((isConst, options, declaration) => {
   const { locals: scope, closures } = options;
   const [type, meta, index] = parse$2(isConst, _extends({}, options, { scope }), declaration);
+
+  const params = declaration.params.map(node => _extends({}, node, {
+    type: declaration.type
+  }));
+
   scope[declaration.value] = _extends({}, declaration, {
+    params,
     type,
     meta: _extends({}, meta, { [LOCAL_INDEX]: index }),
     Type: Syntax.Declaration
@@ -4709,7 +4715,6 @@ const injectEnvironmentMaybe = ({
 const transformClosedDeclaration = curry_1((options, decl, transform) => {
   const { closures, locals } = options;
   const [init] = decl.params;
-
   // We don't know the size of the environment until all locals are walked. This
   // means we need to patch in the size of the env here where we can map nodes
   if (decl.value === CLOSURE_BASE) {
@@ -4906,7 +4911,7 @@ const balanceTypesInMathExpression = expression => {
     }
 
     return acc;
-  }, null);
+  }, expression.type);
 
   // iterate again, this time, patching any lighter types
   const params = expression.params.map(paramNode => {
@@ -5382,9 +5387,9 @@ function validate$1(ast, {
     [Syntax.Struct]: (_, __) => {},
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (decl, _validator) => {
+      const [start, end] = decl.range;
       const [initializer] = decl.params;
       if (decl.meta[TYPE_CONST] != null) {
-        const [start, end] = decl.range;
         const validTypes = [Syntax.Constant, Syntax.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(generateErrorString("Global Constants must be initialized with a Number literal.", "WebAssembly does not allow for non number literal constant initializers.", { start, end }, filename, GLOBAL_LABEL));
@@ -5394,22 +5399,27 @@ function validate$1(ast, {
           problems.push(generateErrorString("Constant declaration without an initializer.", "Global constants must be initialized with a Number literal.", { start, end }, filename, GLOBAL_LABEL));
         }
       }
+      if (!isBuiltinType(decl.type) && !types[decl.type] && !userTypes[decl.type]) {
+        problems.push(generateErrorString("Unknown type used in a declartion, " + `"${String(decl.type)}"`, "Variables must be assigned with a known type.", { start, end }, filename, GLOBAL_LABEL));
+      }
     },
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walker({
         [Syntax.Declaration]: (node, _validator) => {
+          const [start, end] = node.range;
           const [initializer] = node.params;
           if (initializer != null && statements[initializer.Type] != null) {
-            const [start, end] = node.range;
             problems.push(generateErrorString(`Unexpected statement ${initializer.Type}`, "Attempting to assign a statement to a variable. Did you miss a semicolon(;)?", { start, end }, filename, functionName));
           }
           if (node.meta[TYPE_CONST] != null) {
-            const [start, end] = node.range;
-
             if (initializer == null) {
-              problems.push(generateErrorString("Constant declaration without an initializer.", "Local Constants must be initialized with an expression.", { start, end }, filename, GLOBAL_LABEL));
+              problems.push(generateErrorString("Constant declaration without an initializer.", "Local Constants must be initialized with an expression.", { start, end }, filename, functionName));
             }
+          }
+
+          if (!isBuiltinType(node.type) && !types[node.type] && !userTypes[node.type]) {
+            problems.push(generateErrorString("Unknown type used in a declartion, " + `"${String(node.type)}"`, "Variables must be assigned with a known type.", { start, end }, filename, functionName));
           }
         },
         [Syntax.Assignment]: node => {
@@ -5603,7 +5613,7 @@ const semantics = semantics$1;
 const generator = generator$1;
 const validate = validate$1;
 const emitter = emit;
-const VERSION = "0.4.4";
+const VERSION = "0.5.3";
 
 // Used for deugging purposes
 const getIR = (source, {

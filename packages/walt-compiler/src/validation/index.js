@@ -95,9 +95,9 @@ export default function validate(
     [Syntax.Struct]: (_, __) => {},
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (decl, _validator) => {
+      const [start, end] = decl.range;
       const [initializer] = decl.params;
       if (decl.meta[TYPE_CONST] != null) {
-        const [start, end] = decl.range;
         const validTypes = [Syntax.Constant, Syntax.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(
@@ -123,17 +123,32 @@ export default function validate(
           );
         }
       }
+      if (
+        !isBuiltinType(decl.type) &&
+        !types[decl.type] &&
+        !userTypes[decl.type]
+      ) {
+        problems.push(
+          error(
+            "Unknown type used in a declartion, " + `"${String(decl.type)}"`,
+            "Variables must be assigned with a known type.",
+            { start, end },
+            filename,
+            GLOBAL_LABEL
+          )
+        );
+      }
     },
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walkNode({
         [Syntax.Declaration]: (node, _validator) => {
+          const [start, end] = node.range;
           const [initializer] = node.params;
           if (
             initializer != null &&
             ALL_POSSIBLE_STATEMENTS[initializer.Type] != null
           ) {
-            const [start, end] = node.range;
             problems.push(
               error(
                 `Unexpected statement ${initializer.Type}`,
@@ -145,8 +160,6 @@ export default function validate(
             );
           }
           if (node.meta[TYPE_CONST] != null) {
-            const [start, end] = node.range;
-
             if (initializer == null) {
               problems.push(
                 error(
@@ -154,10 +167,27 @@ export default function validate(
                   "Local Constants must be initialized with an expression.",
                   { start, end },
                   filename,
-                  GLOBAL_LABEL
+                  functionName
                 )
               );
             }
+          }
+
+          if (
+            !isBuiltinType(node.type) &&
+            !types[node.type] &&
+            !userTypes[node.type]
+          ) {
+            problems.push(
+              error(
+                "Unknown type used in a declartion, " +
+                  `"${String(node.type)}"`,
+                "Variables must be assigned with a known type.",
+                { start, end },
+                filename,
+                functionName
+              )
+            );
           }
         },
         [Syntax.Assignment]: node => {

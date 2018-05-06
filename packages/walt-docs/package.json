@@ -1,6 +1,6 @@
 {
   "name": "walt-docs",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "WAlt documentation",
   "main": "index.js",
   "scripts": {
