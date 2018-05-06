@@ -129,11 +129,13 @@ export default function validate(
         !userTypes[decl.type]
       ) {
         problems.push(
-          "Unknown type used in a declartion, " + `"${String(decl.type)}"`,
-          "Variables must be assigned with a known type.",
-          { start, end },
-          filename,
-          GLOBAL_LABEL
+          error(
+            "Unknown type used in a declartion, " + `"${String(decl.type)}"`,
+            "Variables must be assigned with a known type.",
+            { start, end },
+            filename,
+            GLOBAL_LABEL
+          )
         );
       }
     },
@@ -177,11 +179,14 @@ export default function validate(
             !userTypes[node.type]
           ) {
             problems.push(
-              "Unknown type used in a declartion, " + `"${String(node.type)}"`,
-              "Variables must be assigned with a known type.",
-              { start, end },
-              filename,
-              functionName
+              error(
+                "Unknown type used in a declartion, " +
+                  `"${String(node.type)}"`,
+                "Variables must be assigned with a known type.",
+                { start, end },
+                filename,
+                functionName
+              )
             );
           }
         },
