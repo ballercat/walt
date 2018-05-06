@@ -4813,8 +4813,13 @@ var makeClosure = curry_1(function mapClosure(options, node, topLevelTransform) 
 
 //      
 const withDefaultArguments = (call, target) => {
+  // Most likely a built-in funciton
+  if (target == null) {
+    return call;
+  }
+
   const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
-  const count = call.params[0].Type === Syntax.Sequence ? call.params[0].length : call.params.length;
+  const count = call.params.length > 0 && call.params[0].Type === Syntax.Sequence ? call.params[0].length : call.params.length;
   const difference = expectedArguments - count;
   if (difference > 0) {
     return _extends({}, call, {
@@ -5329,7 +5334,6 @@ function semantics$1(ast) {
       return node;
     },
     [Syntax.Typedef]: (node, _) => {
-      debugger;
       let argumentsCount = 0;
       const defaultArgs = [];
       walker({
@@ -5342,12 +5346,12 @@ function semantics$1(ast) {
         }
       })(node);
       const parsed = _extends({}, node, {
-        meta: {
+        meta: _extends({}, node.meta, {
           FUNCTION_METADATA: {
             argumentsCount
           },
           DEFAULT_ARGUMENTS: defaultArgs
-        }
+        })
       });
       types[node.value] = parsed;
       return parsed;

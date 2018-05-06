@@ -32,6 +32,17 @@ function inferImportTypes(ast, deps, compiler = walt) {
             // is that we need to walk the node instead of mapping the parameters
             const typesOfArguments = [];
             compiler.walkNode({
+              Assignment(assignment, _) {
+                // assignments in type definitions are default arguments
+                typesOfArguments.push(
+                  Object.assign(assignment, {
+                    params: [
+                      assignment.params[0].params[1],
+                      assignment.params[1],
+                    ],
+                  })
+                );
+              },
               Pair(argumentPair, _) {
                 // function arguments are an identifier : type pairs
                 // for type declarations we only need the types

@@ -15,8 +15,8 @@ export type StringIterator = {
 };
 
 // Create string iterator object.
-export function getStringIterator(addr: i32) : StringIterator {
-  const iterator: StringIterator = malloc(sizeof(StringIterator));
+export function getStringIterator(addr: i32, pointer: i32 = 0) : StringIterator {
+  const iterator: StringIterator = pointer || malloc(sizeof(StringIterator));
   let length: i32 = 0;
   let byte: i32 = 0;
   let shift: i32 = 0;

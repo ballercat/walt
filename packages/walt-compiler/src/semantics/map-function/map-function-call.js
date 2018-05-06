@@ -5,9 +5,14 @@ import { expandClosureIdentifier } from "../closure";
 import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
 
 const withDefaultArguments = (call, target) => {
+  // Most likely a built-in funciton
+  if (target == null) {
+    return call;
+  }
+
   const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
   const count =
-    call.params[0].Type === Syntax.Sequence
+    call.params.length > 0 && call.params[0].Type === Syntax.Sequence
       ? call.params[0].length
       : call.params.length;
   const difference = expectedArguments - count;

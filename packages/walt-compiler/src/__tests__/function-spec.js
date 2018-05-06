@@ -2,7 +2,7 @@ import test from "ava";
 import compile, { getIR, debug, withPlugins } from "..";
 import closurePlugin from "../closure-plugin";
 
-test.only("default arguments", t => {
+test("default arguments", t => {
   const walt = `
   import { extern: Add } from 'env';
   type Add = (i32, i32 = 0) => i32;

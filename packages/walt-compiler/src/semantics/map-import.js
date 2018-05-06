@@ -31,7 +31,6 @@ export const mapImport = curry((options, node, _) =>
             DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS,
           },
         };
-        debugger;
         functions[identifierNode.value] = functionNode;
         return {
           ...pairNode,

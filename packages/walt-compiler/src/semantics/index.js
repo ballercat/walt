@@ -58,7 +58,6 @@ function semantics(ast: NodeType): NodeType {
       return node;
     },
     [Syntax.Typedef]: (node, _) => {
-      debugger;
       let argumentsCount = 0;
       const defaultArgs = [];
       walkNode({
@@ -73,6 +72,7 @@ function semantics(ast: NodeType): NodeType {
       const parsed = {
         ...node,
         meta: {
+          ...node.meta,
           FUNCTION_METADATA: {
             argumentsCount,
           },
