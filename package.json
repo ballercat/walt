@@ -4,7 +4,7 @@
   "description": "Walt packages",
   "main": "index.js",
   "scripts": {
-    "postinstall": "lerna bootstrap --hoist",
+    "postinstall": "lerna bootstrap --hoist walt-compiler",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
     "coverage": "lerna run coverage --stream",
@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "devDependencies": {
-    "lerna": "^2.11.0"
+    "lerna": "^2.11.0",
+    "walt-compiler": "^0.5.3"
   },
   "nyc": {
     "cache": true
