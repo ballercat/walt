@@ -7,7 +7,7 @@
     "postinstall": "lerna bootstrap --hoist walt-compiler",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
-    "coverage": "lerna run coverage --stream",
+    "publish": "lerna publish",
     "clean": "lerna clean"
   },
   "repository": {
