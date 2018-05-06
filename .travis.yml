@@ -1,14 +1,21 @@
+sudo: false
 language: node_js
 node_js:
   - "lts/*"
-before_script:
-    - PATH=${PATH//:\.\/node_modules\/\.bin/}
 install:
   - npm install
-  - npm run postinstall
 script: "npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
 env:
   - TEST_SUITE=validate
   - TEST_SUITE=test
+cache:
+  directories:
+    - node_modules
+    - packages/walt-loader/node_modules
+    - packages/webpack-walt-examples/node_modules
+    - packages/walt-compiler/node_modules
+    - packages/walt-docs/node_modules
+    - packages/walt-link/node_modules
+
