@@ -37,7 +37,7 @@ export function decodeLEB(addr: i32): i64 {
 }
 
 // Create string iterator object.
-export function getStringIterator(addr: i32) : StringIterator {
+export function getStringIterator(addr: i32, pointer: i32) : StringIterator {
   const iterator: StringIterator = malloc(sizeof(StringIterator));
   const leb: i64 = decodeLEB(addr);
 
