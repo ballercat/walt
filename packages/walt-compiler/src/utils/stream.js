@@ -3,8 +3,10 @@ import { link } from "walt-link";
 import path from "path";
 import { stringEncoder } from "./string";
 
+declare var WebAssembly: any;
+
 const buildStream = link(path.resolve(__dirname, "../walt/utils/stream.walt"));
-export const stream = input => {
+export const stream = (input: string) => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const stringStream = stringEncoder(input);
   stringStream.buffer(memory.buffer);
@@ -19,21 +21,21 @@ export const stream = input => {
   }).then(module => {
     const {
       initialize,
-      wasmNext,
-      wasmPeek,
-      wasmColumn,
-      wasmLine,
+      _next,
+      _peek,
+      _column,
+      _line,
     } = module.instance.exports;
     initialize();
 
     return {
-      next: () => String.fromCodePoint(wasmNext()),
-      peek: () => String.fromCodePoint(wasmPeek()),
+      next: () => String.fromCodePoint(_next()),
+      peek: () => String.fromCodePoint(_peek()),
       get col() {
-        return wasmColumn();
+        return _column();
       },
       get line() {
-        return wasmLine();
+        return _line();
       },
     };
   });

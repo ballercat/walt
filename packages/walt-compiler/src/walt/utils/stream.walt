@@ -11,14 +11,13 @@ let byteOffset: i32 = 0;
 let pos: i32 = 0;
 let col: i32 = 0;
 let line: i32 = 1;
-// TODO: an unknown type here does _not_ error, fix that
 let iterator: StringIterator = 0;
 
 export function initialize() {
   iterator = getStringIterator(0);
 }
 
-export function wasmNext(): i32 {
+export function _next(): i32 {
   next(iterator);
   const character: i32 = iterator.value;
   if (character == EOL) {
@@ -31,15 +30,15 @@ export function wasmNext(): i32 {
   return character;
 }
 
-export function wasmColumn() : i32 {
+export function _column() : i32 {
   return col;
 }
 
-export function wasmLine(): i32 {
+export function _line(): i32 {
   return line;
 }
 
-export function wasmPeek(): i32 {
+export function _peek(): i32 {
   // decodeLEB gives a i64 so that it can return an updated address and value
   // we only need the value, since the address is not changed for the iterator
   const result: i64 = decodeLEB(iterator.addr);

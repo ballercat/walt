@@ -12,6 +12,9 @@ export type StringIterator = {
   done: i32
 };
 
+// Decode a single LEB128 encoded value
+// Returns a 64 bit integer with MSW being the address at the end of encoded value
+// and LSW being the value decode.
 export function decodeLEB(addr: i32): i64 {
   let value: i32 = 0;
   let byte: i32 = 0;
@@ -28,10 +31,9 @@ export function decodeLEB(addr: i32): i64 {
     shift += 7;
   }
 
-  // TODO: Looks like shifts are not auto-promoted as they should be
-  const addr64: i64 = addr << (32: i64);
-  const result: i64 = value | addr64;
-  return result;
+  // Interesting case, addr is 32 bits wide so shifting left 32 bits is not what
+  // you want. Hence the typecast to 64 bit integer.
+  return value | ((addr: i64) << 32);
 }
 
 // Create string iterator object.
@@ -41,14 +43,14 @@ export function getStringIterator(addr: i32) : StringIterator {
 
   // unroll the i32 | i32 pair
   const length: i32 = (leb: i32);
-  addr = (leb >> 32): i32;
+  const baseAddress: i32 = (leb >> 32): i32;
 
   iterator = {
     done: false,
     length,
     index: 0,
-    addr,
-    start: addr
+    addr: baseAddress,
+    start: baseAddress
   };
 
   return iterator;
@@ -62,13 +64,11 @@ export function next(iterator: StringIterator): StringIterator {
   }
 
   const leb: i64 = decodeLEB(iterator.addr);
-  const value: i32 = (leb: i32);
-  const addr: i32 = (leb >> 32): i32;
 
   iterator = {
     index: iterator.index + 1,
-    addr,
-    value
+    addr: ((leb >> 32): i32),
+    value: (leb: i32)
   };
 
   return iterator;
