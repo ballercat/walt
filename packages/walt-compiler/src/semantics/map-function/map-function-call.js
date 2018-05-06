@@ -4,6 +4,31 @@ import curry from "curry";
 import { expandClosureIdentifier } from "../closure";
 import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
 
+const withDefaultArguments = (call, target) => {
+  // Most likely a built-in funciton
+  if (target == null) {
+    return call;
+  }
+
+  const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
+  const count =
+    call.params.length > 0 && call.params[0].Type === Syntax.Sequence
+      ? call.params[0].length
+      : call.params.length;
+  const difference = expectedArguments - count;
+  if (difference > 0) {
+    return {
+      ...call,
+      params: [
+        ...call.params,
+        ...target.meta.DEFAULT_ARGUMENTS.slice(difference - 1),
+      ],
+    };
+  }
+
+  return call;
+};
+
 export default curry(function mapFunctonCall(options, call) {
   const { functions, types, locals, mapIdentifier, mapSizeof } = options;
 
@@ -55,9 +80,13 @@ export default curry(function mapFunctonCall(options, call) {
 
   // Regular function calls
   const index = Object.keys(functions).indexOf(call.value);
-  return {
-    ...call,
-    type: functions[call.value] != null ? functions[call.value].type : null,
-    meta: { [FUNCTION_INDEX]: index },
-  };
+
+  return withDefaultArguments(
+    {
+      ...call,
+      type: functions[call.value] != null ? functions[call.value].type : null,
+      meta: { [FUNCTION_INDEX]: index },
+    },
+    functions[call.value]
+  );
 });

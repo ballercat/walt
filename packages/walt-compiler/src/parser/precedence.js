@@ -39,7 +39,7 @@ const precedence = {
   "==": 2,
   "!=": 2,
   ".": PRECEDENCE_MEMBER_ACCESS,
-  "=": PRECEDENCE_ASSIGNMENT,
+  "=": -1,
   "-=": PRECEDENCE_ASSIGNMENT,
   "+=": PRECEDENCE_ASSIGNMENT,
   "?": 4,

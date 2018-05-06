@@ -498,7 +498,7 @@ const precedence = {
   "==": 2,
   "!=": 2,
   ".": PRECEDENCE_MEMBER_ACCESS,
-  "=": PRECEDENCE_ASSIGNMENT,
+  "=": -1,
   "-=": PRECEDENCE_ASSIGNMENT,
   "+=": PRECEDENCE_ASSIGNMENT,
   "?": 4,
@@ -2828,7 +2828,7 @@ const TYPE_CAST = "type/cast";
 const OBJECT_KEY_TYPES = "object/key-types";
 const CLOSURE_TYPE = "closure/type";
 const AST_METADATA = "AST_METADATA";
-const FUNCTION_METADATA = "@@function/meta";
+const FUNCTION_METADATA = "FUNCTION_METADATA";
 const ALIAS = "alias";
 
 // Statics
@@ -4175,6 +4175,7 @@ const mapImport = curry_1((options, node, _) => mapNode({
 
     if (types[typeNode.value] != null) {
       // crate a new type
+
       const functionIndex = Object.keys(functions).length;
       const typeIndex = Object.keys(types).indexOf(typeNode.value);
       const functionNode = _extends({}, identifierNode, {
@@ -4182,9 +4183,12 @@ const mapImport = curry_1((options, node, _) => mapNode({
         type: types[typeNode.value].type,
         meta: {
           [FUNCTION_INDEX]: functionIndex,
-          [TYPE_INDEX]: typeIndex
+          [TYPE_INDEX]: typeIndex,
+          FUNCTION_METADATA: types[typeNode.value].meta.FUNCTION_METADATA,
+          DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS
         }
       });
+      debugger;
       functions[identifierNode.value] = functionNode;
       return _extends({}, pairNode, {
         params: [functionNode, types[typeNode.value]]
@@ -4808,6 +4812,24 @@ var makeClosure = curry_1(function mapClosure(options, node, topLevelTransform) 
 });
 
 //      
+const withDefaultArguments = (call, target) => {
+  // Most likely a built-in funciton
+  if (target == null) {
+    return call;
+  }
+
+  const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
+  const count = call.params.length > 0 && call.params[0].Type === Syntax.Sequence ? call.params[0].length : call.params.length;
+  const difference = expectedArguments - count;
+  if (difference > 0) {
+    return _extends({}, call, {
+      params: [...call.params, ...target.meta.DEFAULT_ARGUMENTS.slice(difference - 1)]
+    });
+  }
+
+  return call;
+};
+
 var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
   const { functions, types, locals, mapIdentifier, mapSizeof } = options;
 
@@ -4855,10 +4877,11 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
 
   // Regular function calls
   const index = Object.keys(functions).indexOf(call.value);
-  return _extends({}, call, {
+
+  return withDefaultArguments(_extends({}, call, {
     type: functions[call.value] != null ? functions[call.value].type : null,
     meta: { [FUNCTION_INDEX]: index }
-  });
+  }), functions[call.value]);
 });
 
 //      
@@ -4951,6 +4974,8 @@ const initialize = (options, node) => {
   const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
+  // default arguments
+  const defaultArgs = [];
   // Count the number of arguments to help with generating bytecode
   let argumentsCount = 0;
   const closures = {
@@ -4966,6 +4991,10 @@ const initialize = (options, node) => {
     // Function arguments need to be accounted for as well
     [Syntax.FunctionArguments]: (args, _) => {
       walker({
+        [Syntax.Assignment]: defaultArg => {
+          const defaultValue = defaultArg.params[1];
+          defaultArgs.push(defaultValue);
+        },
         [Syntax.Pair]: pairNode => {
           argumentsCount += 1;
           const [identifierNode, typeNode] = pairNode.params;
@@ -5003,7 +5032,8 @@ const initialize = (options, node) => {
         get argumentsCount() {
           return argumentsCount;
         }
-      }
+      },
+      DEFAULT_ARGUMENTS: defaultArgs
     }),
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
@@ -5051,6 +5081,9 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     // Patch function arguments so that they mirror locals
     [Syntax.FunctionArguments]: (args, _) => {
       return mapNode({
+        [Syntax.Assignment]: argument => {
+          return argument.params[0];
+        },
         [Syntax.Pair]: pairNode => {
           const [identifierNode, typeNode] = pairNode.params;
           return _extends({}, pairNode, {
@@ -5301,8 +5334,27 @@ function semantics$1(ast) {
       return node;
     },
     [Syntax.Typedef]: (node, _) => {
-      types[node.value] = node;
-      return node;
+      let argumentsCount = 0;
+      const defaultArgs = [];
+      walker({
+        Assignment(assignment) {
+          const defaultValue = assignment.params[1];
+          defaultArgs.push(defaultValue);
+        },
+        Type() {
+          argumentsCount += 1;
+        }
+      })(node);
+      const parsed = _extends({}, node, {
+        meta: _extends({}, node.meta, {
+          FUNCTION_METADATA: {
+            argumentsCount
+          },
+          DEFAULT_ARGUMENTS: defaultArgs
+        })
+      });
+      types[node.value] = parsed;
+      return parsed;
     },
     [Syntax.GenericType]: mapGeneric({ types })
   })(ast);

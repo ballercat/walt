@@ -14,6 +14,7 @@
 // @flow
 import Syntax from "../Syntax";
 import mapNode from "../utils/map-node";
+import walkNode from "../utils/walk-node";
 import { mapImport } from "./map-import";
 import mapFunctionNode from "./map-function";
 import closureImports from "../closure-plugin/imports";
@@ -57,8 +58,29 @@ function semantics(ast: NodeType): NodeType {
       return node;
     },
     [Syntax.Typedef]: (node, _) => {
-      types[node.value] = node;
-      return node;
+      let argumentsCount = 0;
+      const defaultArgs = [];
+      walkNode({
+        Assignment(assignment) {
+          const defaultValue = assignment.params[1];
+          defaultArgs.push(defaultValue);
+        },
+        Type() {
+          argumentsCount += 1;
+        },
+      })(node);
+      const parsed = {
+        ...node,
+        meta: {
+          ...node.meta,
+          FUNCTION_METADATA: {
+            argumentsCount,
+          },
+          DEFAULT_ARGUMENTS: defaultArgs,
+        },
+      };
+      types[node.value] = parsed;
+      return parsed;
     },
     [Syntax.GenericType]: mapGeneric({ types }),
   })(ast);

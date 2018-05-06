@@ -2,6 +2,27 @@ import test from "ava";
 import compile, { getIR, debug, withPlugins } from "..";
 import closurePlugin from "../closure-plugin";
 
+test("default arguments", t => {
+  const walt = `
+  import { extern: Add } from 'env';
+  type Add = (i32, i32 = 0) => i32;
+  function add(x: i32, y: i32 = 1): i32 {
+    return x + y;
+  }
+
+  export function test(): i32 {
+    const x: i32 = add(2);
+    const y: i32 = extern(1);
+    return x + y;
+  }`;
+
+  return WebAssembly.instantiate(compile(walt), {
+    env: { extern: (k, i) => k + i },
+  }).then(mod => {
+    t.is(mod.instance.exports.test(), 4);
+  });
+});
+
 test("functions", t => {
   const walt = `
   // For pointers
