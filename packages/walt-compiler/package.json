@@ -1,6 +1,6 @@
 {
   "name": "walt-compiler",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
@@ -66,7 +66,7 @@
     "rollup-plugin-uglify": "2.0.1",
     "tap-nyc": "1.0.3",
     "uglify-es": "3.0.17",
-    "walt-link": "^0.1.2"
+    "walt-link": "^0.1.3"
   },
   "prettier": {
     "trailingComma": "es5"
