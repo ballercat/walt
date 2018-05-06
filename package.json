@@ -29,8 +29,11 @@
     "url": "https://github.com/ballercat/walt/issues"
   },
   "homepage": "https://github.com/ballercat/walt#readme",
+  "devDependencies": {
+    "lerna": "^2.5.1"
+  },
   "dependencies": {
-    "lerna": "2.5.1"
+    "lerna": "^2.5.1"
   },
   "nyc": {
     "cache": true
