@@ -7,6 +7,8 @@ install:
 script: "npm run $TEST_SUITE"
 after_success:
   - "npm run coverage"
+after_failure:
+  - "cat /home/travis/.npm/_logs/2018-05-05T19_22_09_250Z-debug.log"
 env:
   - TEST_SUITE=validate
   - TEST_SUITE=test
