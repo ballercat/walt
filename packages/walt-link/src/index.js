@@ -27,6 +27,7 @@ function mergeStatics(tree = {}) {
 // Parse imports out of an ast
 function parseImports(ast, compiler) {
   const imports = {};
+  let hasMemory = false;
 
   compiler.walkNode({
     Import(node, _) {
@@ -39,16 +40,19 @@ function parseImports(ast, compiler) {
       compiler.walkNode({
         Pair(pair, __) {
           // Import pairs consist of identifier and type
-          const [identifier] = pair.params;
+          const [identifier, type] = pair.params;
           imports[module.value] = Array.from(
             new Set(imports[module.value].concat(identifier.value))
           );
+          if (type === "Memory") {
+            hasMemory = true;
+          }
         },
       })(fields);
     },
   })(ast);
 
-  return imports;
+  return [imports, hasMemory];
 }
 
 // Build a dependency tree of ASTs given a root module
@@ -63,7 +67,7 @@ function buildTree(index, compiler) {
 
     const src = fs.readFileSync(filepath, "utf8");
     const basic = compiler.parser(src);
-    const nestedImports = parseImports(basic, compiler);
+    const [nestedImports, hasMemory] = parseImports(basic, compiler);
 
     const deps = {};
 
@@ -91,6 +95,7 @@ function buildTree(index, compiler) {
       ast,
       deps,
       filepath,
+      hasMemory,
     };
     modules[filepath] = result;
 
@@ -108,10 +113,11 @@ function buildTree(index, compiler) {
 // Assemble all AST into opcodes/instructions
 function assemble(tree, options, compiler) {
   return Object.entries(tree.modules).reduce((opcodes, [filepath, mod]) => {
-    // If the child does not define any static data then we should not attempt to
-    // generate any. Even if there are GLOBAL data sections.
+    // There are two cases when we should generate a DATA section for module,
+    // it has statics OR it imports a memory. As then it needs to share the
+    // same information about the memory layout as the rest of the application.
     let statics = mod.ast.meta.AST_METADATA.statics;
-    if (Object.keys(statics).length > 0) {
+    if (Object.keys(statics).length > 0 || mod.hasMemory) {
       // Use global statics object
       statics = options.linker.statics;
     }

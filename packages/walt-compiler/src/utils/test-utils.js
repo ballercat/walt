@@ -32,6 +32,7 @@ export const harness = filepath => t => {
   return build({
     env: {
       memory,
+      log: console.log,
       assert(strPointer, value, expected) {
         let text = "";
 

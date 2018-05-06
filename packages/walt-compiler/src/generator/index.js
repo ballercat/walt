@@ -75,11 +75,12 @@ export default function generator(
   const program: ProgramType = {
     Version: config.version,
     Types: [],
+    Start: [],
+    Element: [],
     Code: [],
     Exports: [],
     Imports: [],
     Globals: [],
-    Element: [],
     Functions: [],
     Memory: [],
     Table: [],
@@ -221,6 +222,10 @@ export default function generator(
       program.Functions[index] = typeIndex;
       // We will need to filter out the empty slots later
       program.Code[index] = generateCode(patched);
+
+      if (patched.value === "start") {
+        program.Start.push(index);
+      }
 
       if (config.encodeNames) {
         program.Name.functions.push({
