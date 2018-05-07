@@ -10,6 +10,7 @@
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
+    "build-prod": "cross-env NODE_ENV=production node_modules/rollup/bin/rollup -c rollup.config.js",
     "flow": "flow",
     "lint": "eslint src",
     "prettier": "prettier --list-different src/**/*.js",
