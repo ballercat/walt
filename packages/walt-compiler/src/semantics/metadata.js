@@ -16,7 +16,7 @@ export const TYPE_CAST = "type/cast";
 export const OBJECT_KEY_TYPES = "object/key-types";
 export const CLOSURE_TYPE = "closure/type";
 export const AST_METADATA = "AST_METADATA";
-export const FUNCTION_METADATA = "@@function/meta";
+export const FUNCTION_METADATA = "FUNCTION_METADATA";
 export const ALIAS = "alias";
 
 // Statics

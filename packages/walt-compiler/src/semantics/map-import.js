@@ -17,6 +17,7 @@ export const mapImport = curry((options, node, _) =>
 
       if (types[typeNode.value] != null) {
         // crate a new type
+
         const functionIndex = Object.keys(functions).length;
         const typeIndex = Object.keys(types).indexOf(typeNode.value);
         const functionNode = {
@@ -26,6 +27,8 @@ export const mapImport = curry((options, node, _) =>
           meta: {
             [FUNCTION_INDEX]: functionIndex,
             [TYPE_INDEX]: typeIndex,
+            FUNCTION_METADATA: types[typeNode.value].meta.FUNCTION_METADATA,
+            DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS,
           },
         };
         functions[identifierNode.value] = functionNode;

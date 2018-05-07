@@ -1,7 +1,7 @@
 import {
   Assert
 } from '../walt/tests';
-import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
+import { assert: Assert, memory: Memory } from 'env';
 import {
   getStringIterator,
   next,
@@ -31,8 +31,8 @@ function countCharacter(ptr: i32, character: i32) : i32 {
 }
 
 export function run() {
-  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
   assert("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", '😂'), 4);
+  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
   assert("string iterator, indexOf ascii", indexOf("quick brown fox", "brown"), 6);
   assert(
     "string iterator, indexOf utf8",

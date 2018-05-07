@@ -1,8 +1,9 @@
-import { memory: Memory } from 'env';
-// TODO: add "import as" syntax, this is why all methods are prefixed with wasm
-// below for now.
+import { memory: Memory, STRING_BYTE_LENGTH: i32, log: Log } from 'env';
+import { setBaseAddress } from '../malloc';
 import { getStringIterator, next, decodeLEB } from '../string';
 import { StringIterator } from '../string';
+
+type Log = (i32) => void;
 
 const EOL: i32 = 10;
 const EOF: i32 = 0;
@@ -13,7 +14,9 @@ let col: i32 = 0;
 let line: i32 = 1;
 let iterator: StringIterator = 0;
 
-export function initialize() {
+function start() {
+  log(42);
+  setBaseAddress(STRING_BYTE_LENGTH);
   iterator = getStringIterator(0);
 }
 

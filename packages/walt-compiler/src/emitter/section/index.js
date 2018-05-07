@@ -3,6 +3,7 @@ import imports from "./imports";
 import exports_ from "./exports";
 import globals from "./globals";
 import functions from "./functions";
+import start from "./start";
 import element from "./element";
 import types from "./types";
 import code from "./code";
@@ -18,6 +19,7 @@ import {
   SECTION_TABLE,
   SECTION_GLOBAL,
   SECTION_EXPORT,
+  SECTION_START,
   SECTION_ELEMENT,
   SECTION_CODE,
   SECTION_DATA,
@@ -42,6 +44,7 @@ export default {
     emitter: exports_,
   }),
   globals: writer({ type: SECTION_GLOBAL, label: "Globals", emitter: globals }),
+  start: writer({ type: SECTION_START, label: "Start", emitter: start }),
   element: writer({
     type: SECTION_ELEMENT,
     label: "Element",

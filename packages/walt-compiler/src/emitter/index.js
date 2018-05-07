@@ -18,6 +18,7 @@ export default function emit(program: ProgramType, config: ConfigType) {
     .write(section.memory(program))
     .write(section.globals(program))
     .write(section.exports(program))
+    .write(section.start(program))
     .write(section.element(program))
     .write(section.code(program))
     .write(section.data(program));

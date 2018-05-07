@@ -36,6 +36,8 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
   const { functions, types } = options;
   // All of the local variables need to be mapped
   const locals = {};
+  // default arguments
+  const defaultArgs = [];
   // Count the number of arguments to help with generating bytecode
   let argumentsCount = 0;
   const closures = {
@@ -51,6 +53,10 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
     // Function arguments need to be accounted for as well
     [Syntax.FunctionArguments]: (args, _) => {
       walkNode({
+        [Syntax.Assignment]: defaultArg => {
+          const defaultValue = defaultArg.params[1];
+          defaultArgs.push(defaultValue);
+        },
         [Syntax.Pair]: pairNode => {
           argumentsCount += 1;
           const [identifierNode, typeNode] = pairNode.params;
@@ -102,6 +108,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
           return argumentsCount;
         },
       },
+      DEFAULT_ARGUMENTS: defaultArgs,
     },
     // If we are generating closures for this function, then we need to inject a
     // declaration for the environment local. This local cannot be referenced or
@@ -157,6 +164,9 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     // Patch function arguments so that they mirror locals
     [Syntax.FunctionArguments]: (args, _) => {
       return mapNode({
+        [Syntax.Assignment]: argument => {
+          return argument.params[0];
+        },
         [Syntax.Pair]: pairNode => {
           const [identifierNode, typeNode] = pairNode.params;
           return {

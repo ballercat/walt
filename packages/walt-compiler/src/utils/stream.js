@@ -14,19 +14,11 @@ export const stream = (input: string) => {
   return buildStream({
     env: {
       memory,
-      // TODO: figure out a nicer way of doing this, currently this is fed into
-      // malloc
-      MEMORY_OFFSET: stringStream.size,
+      STRING_BYTE_LENGTH: stringStream.size,
+      log: console.log,
     },
   }).then(module => {
-    const {
-      initialize,
-      _next,
-      _peek,
-      _column,
-      _line,
-    } = module.instance.exports;
-    initialize();
+    const { _next, _peek, _column, _line } = module.instance.exports;
 
     return {
       next: () => String.fromCodePoint(_next()),
