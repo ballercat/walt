@@ -2463,6 +2463,16 @@ const emit$4 = functions => {
 };
 
 //      
+function emitTables(start) {
+  const stream = new OutputStream();
+  if (start.length) {
+    stream.push(varuint32, start[0], "start function");
+  }
+
+  return stream;
+}
+
+//      
 const emitElement = stream => ({ functionIndex }, index$$1) => {
   stream.push(varuint32, 0, "table index");
   stream.push(index_9, def.i32Const.code, "offset");
@@ -2615,7 +2625,7 @@ const emitEntry$1 = (payload, entry) => {
   }
 };
 
-function emitTables(tables) {
+function emitTables$1(tables) {
   const stream = new OutputStream();
   stream.push(varuint32, tables.length, "count");
   tables.forEach(entry => emitEntry$1(stream, entry));
@@ -2728,7 +2738,7 @@ const SECTION_TABLE = 4;
 const SECTION_MEMORY = 5;
 const SECTION_GLOBAL = 6;
 const SECTION_EXPORT = 7;
-
+const SECTION_START = 8;
 const SECTION_ELEMENT = 9;
 const SECTION_CODE = 10;
 const SECTION_DATA = 11;
@@ -2764,7 +2774,7 @@ var section = {
     label: "Functions",
     emitter: emit$4
   }),
-  table: writer({ type: SECTION_TABLE, label: "Table", emitter: emitTables }),
+  table: writer({ type: SECTION_TABLE, label: "Table", emitter: emitTables$1 }),
   memory: writer({ type: SECTION_MEMORY, label: "Memory", emitter: emit$8 }),
   exports: writer({
     type: SECTION_EXPORT,
@@ -2772,6 +2782,7 @@ var section = {
     emitter: emit$2
   }),
   globals: writer({ type: SECTION_GLOBAL, label: "Globals", emitter: emit$3 }),
+  start: writer({ type: SECTION_START, label: "Start", emitter: emitTables }),
   element: writer({
     type: SECTION_ELEMENT,
     label: "Element",
@@ -2787,7 +2798,7 @@ function emit(program, config) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
-  const result = stream.write(write(program.Version)).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.element(program)).write(section.code(program)).write(section.data(program));
+  const result = stream.write(write(program.Version)).write(section.type(program)).write(section.imports(program)).write(section.function(program)).write(section.table(program)).write(section.memory(program)).write(section.globals(program)).write(section.exports(program)).write(section.start(program)).write(section.element(program)).write(section.code(program)).write(section.data(program));
 
   if (config.encodeNames) {
     return result.write(section.name(program));
@@ -4004,11 +4015,12 @@ function generator$1(ast, config) {
   const program = {
     Version: config.version,
     Types: [],
+    Start: [],
+    Element: [],
     Code: [],
     Exports: [],
     Imports: [],
     Globals: [],
-    Element: [],
     Functions: [],
     Memory: [],
     Table: [],
@@ -4138,6 +4150,10 @@ function generator$1(ast, config) {
       // We will need to filter out the empty slots later
       program.Code[index] = generateCode(patched);
 
+      if (patched.value === "start") {
+        program.Start.push(index);
+      }
+
       if (config.encodeNames) {
         program.Name.functions.push({
           index,
@@ -4188,7 +4204,6 @@ const mapImport = curry_1((options, node, _) => mapNode({
           DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS
         }
       });
-      debugger;
       functions[identifierNode.value] = functionNode;
       return _extends({}, pairNode, {
         params: [functionNode, types[typeNode.value]]
