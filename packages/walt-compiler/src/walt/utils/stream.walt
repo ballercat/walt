@@ -1,5 +1,5 @@
 import { memory: Memory, STRING_BYTE_LENGTH: i32, log: Log } from 'env';
-import { setBaseAddress } from '../malloc';
+import { setBaseAddress, next_pow2 } from '../malloc';
 import { getStringIterator, next, decodeLEB } from '../string';
 import { StringIterator } from '../string';
 
@@ -15,8 +15,8 @@ let line: i32 = 1;
 let iterator: StringIterator = 0;
 
 function start() {
-  log(42);
-  setBaseAddress(STRING_BYTE_LENGTH);
+  log(next_pow2(STRING_BYTE_LENGTH));
+  setBaseAddress(next_pow2(STRING_BYTE_LENGTH));
   iterator = getStringIterator(0);
 }
 
@@ -33,14 +33,9 @@ export function _next(): i32 {
   return character;
 }
 
-export function _column() : i32 {
-  return col;
-}
-
-export function _line(): i32 {
-  return line;
-}
-
+export function _column() : i32 { return col; }
+export function _line(): i32 { return line; }
+export function _iterator(): i32 { return iterator; }
 export function _peek(): i32 {
   // decodeLEB gives a i64 so that it can return an updated address and value
   // we only need the value, since the address is not changed for the iterator

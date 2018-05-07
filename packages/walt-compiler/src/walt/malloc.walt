@@ -3,6 +3,17 @@ import { memory: Memory } from 'env';
 let offset: i32 = 0;
 let BASE_ADDRESS: i32;
 
+export function next_pow2(num: i32): i32 {
+  if (num < 2)
+    return 0;
+  if (num == 2)
+    return num;
+
+  const result: i64 = (1 << 31) >> i32.clz(num - 1);
+
+  return result: i32;
+}
+
 export function malloc(size: i32) : i32 {
   const pointer: i32 = BASE_ADDRESS + offset;
   offset += size;

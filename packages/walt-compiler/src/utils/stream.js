@@ -2,11 +2,34 @@
 import { link } from "walt-link";
 import path from "path";
 import { stringEncoder } from "./string";
+import {
+  mapNode,
+  walkNode,
+  parser,
+  semantics,
+  validate,
+  emitter,
+  generator,
+  prettyPrintNode,
+} from "..";
 
 declare var WebAssembly: any;
 
-const buildStream = link(path.resolve(__dirname, "../walt/utils/stream.walt"));
 export const stream = (input: string) => {
+  const buildStream = link(
+    path.resolve(__dirname, "../walt/utils/stream.walt"),
+    {},
+    {
+      mapNode,
+      walkNode,
+      parser,
+      semantics,
+      validate,
+      emitter,
+      generator,
+      prettyPrintNode,
+    }
+  );
   const memory = new WebAssembly.Memory({ initial: 1 });
   const stringStream = stringEncoder(input);
   stringStream.buffer(memory.buffer);
@@ -15,11 +38,13 @@ export const stream = (input: string) => {
     env: {
       memory,
       STRING_BYTE_LENGTH: stringStream.size,
-      log: console.log,
+      log: i => {
+        console.log("LOGGGGEEER", i);
+      },
     },
   }).then(module => {
-    const { _next, _peek, _column, _line } = module.instance.exports;
-
+    const { _iterator, _next, _peek, _column, _line } = module.instance.exports;
+    console.log("Iterator", _iterator());
     return {
       next: () => String.fromCodePoint(_next()),
       peek: () => String.fromCodePoint(_peek()),

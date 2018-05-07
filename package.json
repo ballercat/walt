@@ -9,8 +9,7 @@
     "test": "lerna run test --stream",
     "coverage": "lerna run coverage",
     "publish": "lerna publish",
-    "clean": "lerna clean",
-    "coverage": "lerna run coverage"
+    "clean": "lerna clean"
   },
   "repository": {
     "type": "git",
