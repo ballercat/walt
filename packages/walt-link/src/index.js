@@ -166,7 +166,7 @@ function build(importsObj, tree, compiler) {
     }
 
     const mod = tree.modules[filepath];
-    return Promise.all(
+    const modPromise = Promise.all(
       Object.entries(mod.deps).map(([key, dep]) => {
         return instantiate(dep.filepath).then(result => [key, result]);
       })
@@ -186,6 +186,9 @@ function build(importsObj, tree, compiler) {
         // TODO: do some logging here
         throw e;
       });
+    modules[filepath] = modPromise;
+
+    return modPromise;
   };
 
   modules[tree.root.filepath] = instantiate(tree.root.filepath);

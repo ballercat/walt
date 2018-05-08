@@ -1,5 +1,6 @@
 // @flow
 import { stringEncoder } from "../utils/string";
+import { i32, u32 } from "wasm-types";
 import OutputStream from "../utils/output-stream";
 
 export default function generateData(
@@ -20,7 +21,7 @@ export default function generateData(
 
   // reserved stream for the size header
   const lengthStream = new OutputStream();
-  lengthStream.push("varuint32", offsetAccumulator, String(offsetAccumulator));
+  lengthStream.push(u32, offsetAccumulator, String(offsetAccumulator));
 
   return {
     data: [{ offset: 0, data: lengthStream }, ...data],

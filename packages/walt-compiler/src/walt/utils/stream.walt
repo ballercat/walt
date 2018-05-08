@@ -1,5 +1,5 @@
 import { memory: Memory, STRING_BYTE_LENGTH: i32, log: Log } from 'env';
-import { setBaseAddress, next_pow2 } from '../malloc';
+import { setBaseAddress, align } from '../malloc';
 import { getStringIterator, next, decodeLEB } from '../string';
 import { StringIterator } from '../string';
 
@@ -15,8 +15,7 @@ let line: i32 = 1;
 let iterator: StringIterator = 0;
 
 function start() {
-  log(next_pow2(STRING_BYTE_LENGTH));
-  setBaseAddress(next_pow2(STRING_BYTE_LENGTH));
+  setBaseAddress(align(STRING_BYTE_LENGTH));
   iterator = getStringIterator(0);
 }
 

@@ -33,18 +33,21 @@ export const stream = (input: string) => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const stringStream = stringEncoder(input);
   stringStream.buffer(memory.buffer);
+  const view = new DataView(memory.buffer);
+
+  const withText = text => i => console.log(text, i);
 
   return buildStream({
     env: {
       memory,
       STRING_BYTE_LENGTH: stringStream.size,
-      log: i => {
-        console.log("LOGGGGEEER", i);
-      },
+      log: withText("logger - "),
+      start: withText("start - "),
+      set_base: withText("set_base - "),
     },
   }).then(module => {
     const { _iterator, _next, _peek, _column, _line } = module.instance.exports;
-    console.log("Iterator", _iterator());
+
     return {
       next: () => String.fromCodePoint(_next()),
       peek: () => String.fromCodePoint(_peek()),

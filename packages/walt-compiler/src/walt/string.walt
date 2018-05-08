@@ -1,8 +1,9 @@
 // Internal walt string utilities, used by the compiler
 import { malloc } from './malloc.walt';
 // Needed for decoding
-import { memory: Memory } from 'env';
+import { memory: Memory, log: Log } from 'env';
 
+type Log = (i32) => void;
 export type StringIterator = {
   length: i32,
   index: i32,

@@ -1,6 +1,7 @@
 // @flow
 import Syntax from "../../Syntax";
 import curry from "curry";
+import { expressionFragment } from "../../parser/fragment";
 import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
 
 const mapIdentifier = curry(
@@ -28,15 +29,16 @@ const mapIdentifier = curry(
     }
 
     if (identifier.value === "__DATA_LENGTH__") {
-      return {
-        ...identifier,
-        type: "i32",
-        Type: Syntax.ArraySubscript,
-        params: [
-          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
-          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
-        ],
-      };
+      return expressionFragment("i32.load(0)");
+      // return {
+      //   ...identifier,
+      //   type: "i32",
+      //   Type: Syntax.ArraySubscript,
+      //   params: [
+      //     { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+      //     { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+      //   ],
+      // };
     }
 
     if (local != null) {
