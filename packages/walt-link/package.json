@@ -1,6 +1,6 @@
 {
   "name": "walt-link",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Links .walt WebAssembly programs",
   "main": "src/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "coveralls": "^3.0.0",
     "nyc": "^11.7.1",
     "prettier": "^1.12.0",
-    "walt-compiler": "^0.6.1"
+    "walt-compiler": "^0.6.2"
   },
   "peerDependencies": {
     "walt-compiler": "^0.5.3"
