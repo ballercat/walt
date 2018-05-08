@@ -33,6 +33,7 @@ export const harness = filepath => t => {
     env: {
       memory,
       MEMORY_OFFSET: 0,
+      log: console.log,
       assert(strPointer, value, expected) {
         let text = "";
 

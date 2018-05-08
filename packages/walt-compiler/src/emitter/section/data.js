@@ -4,7 +4,6 @@ import { varint32, varuint32 } from "../numbers";
 import opcode from "../opcode";
 import OutputStream from "../../utils/output-stream";
 import type { DataSectionType } from "../../generator/flow/types";
-import debug from "../../utils/debug";
 
 const emitDataSegment = (stream, segment) => {
   stream.push(varuint32, 0, "memory index");
@@ -30,8 +29,6 @@ export default function emit(dataSection: DataSectionType): OutputStream {
     const segment = dataSection[i];
     emitDataSegment(stream, segment);
   }
-
-  console.log(debug(stream));
 
   return stream;
 }

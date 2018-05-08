@@ -16,7 +16,7 @@ test("stream", t => {
   t.is(stream.peek(), "1", "peek after newline");
 });
 
-test.only("walt stream", t => {
+test("walt stream", t => {
   return makeStream("ab" + "\n" + "12").then(stream => {
     t.is(stream.next(), "a", "next");
     t.is(stream.peek(), "b", "peek");

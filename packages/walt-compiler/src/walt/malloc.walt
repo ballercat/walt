@@ -1,4 +1,4 @@
-import { memory: Memory, log: Log, start: Log, set_base: Log } from 'env';
+import { memory: Memory, log: Log } from 'env';
 type Log = (i32) => void;
 let offset: i32 = 0;
 let BASE_ADDRESS: i32 = 0;
