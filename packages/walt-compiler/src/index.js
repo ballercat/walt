@@ -1,5 +1,5 @@
 // @flow
-import parser from "./parser";
+import parser, { async as asyncParser } from "./parser";
 import emit from "./emitter";
 import codeGenerator from "./generator";
 import semanticAnalyzer from "./semantics";
@@ -80,6 +80,35 @@ export const withPlugins = (
     ...resultImports,
     ...importsObj,
   };
+};
+
+export const async = (source: string): Promise<any> => {
+  const lines = source.split("\n");
+  const filename = "??";
+  const encodeNames = true;
+  const version = 0x1;
+  return asyncParser(source)
+    .then(semantics)
+    .then(ast => {
+      validate(ast, { lines, filename });
+      return ast;
+    })
+    .then(ast => {
+      const intermediateCode = generator(ast, {
+        version,
+        encodeNames,
+        lines,
+        filename,
+      });
+      const wasm = emitter(intermediateCode, {
+        version,
+        encodeNames,
+        filename,
+        lines,
+      });
+
+      return wasm;
+    });
 };
 
 // Compiles a raw binary wasm buffer

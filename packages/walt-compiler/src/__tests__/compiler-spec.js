@@ -1,5 +1,5 @@
 import test from "ava";
-import compile from "..";
+import compile, { async as asyncCompiler } from "..";
 import { stringDecoder } from "../utils/string";
 import { readFileSync } from "fs";
 import path from "path";
@@ -44,4 +44,34 @@ test("compiler tests", t => {
   }).then(module => {
     module.instance.exports.run();
   });
+});
+
+test.only("async compiler", t => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const view = new DataView(memory.buffer);
+
+  return asyncCompiler(compilerWalt)
+    .then(wasm =>
+      WebAssembly.instantiate(wasm.buffer(), {
+        env: {
+          memory,
+          externalConst: 42,
+          assert(strPointer, value, expected) {
+            let text = "";
+
+            const decoder = stringDecoder(view, strPointer);
+            let iterator = decoder.next();
+            while (!iterator.done) {
+              text += String.fromCodePoint(iterator.value);
+              iterator = decoder.next();
+            }
+
+            t.is(value, expected, text);
+          },
+        },
+      })
+    )
+    .then(module => {
+      module.instance.exports.run();
+    });
 });

@@ -1,7 +1,7 @@
 // @flow
 import { link } from "walt-link";
 import path from "path";
-import { getText, stringEncoder } from "./string";
+import { stringEncoder } from "./string";
 import {
   mapNode,
   walkNode,
@@ -14,6 +14,7 @@ import {
 } from "..";
 
 declare var WebAssembly: any;
+export const eol = (char: string) => char === "\n";
 
 export const stream = (input: string) => {
   const buildStream = link(
@@ -49,16 +50,8 @@ export const stream = (input: string) => {
       _peek,
       _column,
       _line,
-      getLine,
       whitespace,
     } = module.instance.exports;
-
-    const linesHandler = {
-      get(target, prop) {
-        return getLine(prop);
-      },
-    };
-    const lines = new Proxy([], linesHandler);
 
     return {
       next: () => String.fromCodePoint(_next()),
@@ -69,7 +62,13 @@ export const stream = (input: string) => {
       get line() {
         return _line();
       },
-      lines,
+      eof(char) {
+        return char === "" || char === String.fromCodePoint(0);
+      },
+      eol(char) {
+        return char === "\n";
+      },
+      lines: input.split("\n"),
       whitespace,
     };
   });
@@ -99,7 +98,7 @@ class Stream {
   next(): string {
     const char = this.input.charAt(this.pos++);
 
-    if (Stream.eol(char)) {
+    if (this.eol(char)) {
       this.newLine();
     } else {
       this.col++;
@@ -115,12 +114,12 @@ class Stream {
   }
 
   // Is the character an end of line
-  static eol(char: string): boolean {
+  eol(char: string): boolean {
     return char === "\n";
   }
 
   // Is the character an end of file
-  static eof(char: string): boolean {
+  eof(char: string): boolean {
     return char === "";
   }
 

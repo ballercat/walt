@@ -81,7 +81,7 @@ export function reset(iterator: StringIterator) {
     index: 0,
     done: 0,
     value: 0
-  };
+  ;
 }
 
 export function stringLength(str: i32): i32 {
