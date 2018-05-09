@@ -8,6 +8,7 @@
     "validate": "npm run prettier && npm run lint && npm run flow",
     "tdd": "ava",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage-local": "nyc report --reporter=html",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
     "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
     "build-prod": "cross-env NODE_ENV=production node_modules/rollup/bin/rollup -c rollup.config.js",

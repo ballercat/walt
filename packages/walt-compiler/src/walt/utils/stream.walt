@@ -1,30 +1,31 @@
-import { memory: Memory, STRING_BYTE_LENGTH: i32, log: Log } from 'env';
+import { memory: Memory, STRING_BYTE_LENGTH : i32, log : Log } from 'env';
 import { setBaseAddress, align } from '../malloc';
-import { getStringIterator, next, decodeLEB } from '../string';
+import { getStringIterator, next, decodeLEB, done } from '../string';
 import { StringIterator } from '../string';
 
 type Log = (i32) => void;
 
-const EOL: i32 = 10;
-const EOF: i32 = 0;
+let EOL : i32;
+let EOF : i32;
 
-let byteOffset: i32 = 0;
-let pos: i32 = 0;
-let col: i32 = 0;
-let line: i32 = 1;
-let iterator: StringIterator = 0;
+let byteOffset : i32 = 0;
+let pos : i32 = 0;
+let col : i32 = 0;
+let line : i32 = 0;
+let iterator : StringIterator = 0;
+let linesArray : i32;
 
-function start() {
-  setBaseAddress(align(STRING_BYTE_LENGTH));
-  iterator = getStringIterator(0);
+export function _newLine() {
+  line += 1;
+  col = 0;
 }
 
-export function _next(): i32 {
+// Get next character in the stream
+export function _next() : i32 {
   next(iterator);
-  const character: i32 = iterator.value;
+  const character : i32 = iterator.value;
   if (character == EOL) {
-    col = 0;
-    line += 1;
+    _newLine();
   } else {
     col += 1;
   }
@@ -32,12 +33,50 @@ export function _next(): i32 {
   return character;
 }
 
-export function _column() : i32 { return col; }
-export function _line(): i32 { return line; }
-export function _iterator(): i32 { return iterator; }
-export function _peek(): i32 {
+// Get current column number
+export function _column() : i32 {
+  return col;
+}
+
+// Get current line number
+export function _line() : i32 {
+  return line;
+}
+
+// Peek at the next character in the stream
+export function _peek() : i32 {
   // decodeLEB gives a i64 so that it can return an updated address and value
   // we only need the value, since the address is not changed for the iterator
-  const result: i64 = decodeLEB(iterator.addr);
+  const result : i64 = decodeLEB(iterator.addr);
   return (result : i32);
+}
+
+// Is the charater a whitespace
+export function whitespace(char : i32) : i32 {
+  return (
+    char == '\n' ||
+    char == ' ' ||
+    char == '\t' ||
+    char == '\v' ||
+    char == '\r' ||
+    char == '\f'
+  );
+}
+
+// Initializer
+function start() {
+  // Fix this once global strings work
+  EOL = '\n';
+  EOF = 0;
+
+  setBaseAddress(align(STRING_BYTE_LENGTH));
+  iterator = getStringIterator(0);
+
+  let lineStart : i32 = 0;
+  let offset : i32 = 0;
+  let linesCount : i32 = 0;
+  const size : i32 = sizeof(StringIterator);
+  linesArray = STRING_BYTE_LENGTH + size;
+
+  _newLine();
 }

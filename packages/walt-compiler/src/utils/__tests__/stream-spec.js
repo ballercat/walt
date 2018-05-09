@@ -23,9 +23,22 @@ test("walt stream", t => {
     const start = performance.now();
     stream.next();
     stream.next();
+    t.is(stream.whitespace("\n".codePointAt(0)), 1);
+    t.is(stream.whitespace(" ".codePointAt(0)), 1);
+    t.is(stream.whitespace("\t".codePointAt(0)), 1);
+    t.is(stream.whitespace("\v".codePointAt(0)), 1);
+    t.is(stream.whitespace("\r".codePointAt(0)), 1);
+    t.is(stream.whitespace("\f".codePointAt(0)), 1);
     console.log("WASM TIME", performance.now() - start);
     t.is(stream.col, 0, "column");
     t.is(stream.line, 2, "line");
     t.is(stream.peek(), "1", "peek after newline");
+
+    t.is(stream.whitespace("\n".codePointAt(0)), 1);
+    t.is(stream.whitespace(" ".codePointAt(0)), 1);
+    t.is(stream.whitespace("\t".codePointAt(0)), 1);
+    t.is(stream.whitespace("\v".codePointAt(0)), 1);
+    t.is(stream.whitespace("\r".codePointAt(0)), 1);
+    t.is(stream.whitespace("\f".codePointAt(0)), 1);
   });
 });

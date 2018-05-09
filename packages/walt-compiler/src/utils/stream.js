@@ -1,7 +1,7 @@
 // @flow
 import { link } from "walt-link";
 import path from "path";
-import { stringEncoder } from "./string";
+import { getText, stringEncoder } from "./string";
 import {
   mapNode,
   walkNode,
@@ -44,7 +44,21 @@ export const stream = (input: string) => {
       start: withText("start - "),
     },
   }).then(module => {
-    const { _next, _peek, _column, _line } = module.instance.exports;
+    const {
+      _next,
+      _peek,
+      _column,
+      _line,
+      getLine,
+      whitespace,
+    } = module.instance.exports;
+
+    const linesHandler = {
+      get(target, prop) {
+        return getLine(prop);
+      },
+    };
+    const lines = new Proxy([], linesHandler);
 
     return {
       next: () => String.fromCodePoint(_next()),
@@ -55,6 +69,8 @@ export const stream = (input: string) => {
       get line() {
         return _line();
       },
+      lines,
+      whitespace,
     };
   });
 };
