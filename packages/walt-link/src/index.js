@@ -121,13 +121,14 @@ function assemble(tree, options, compiler) {
       // Use global statics object
       statics = options.linker.statics;
     }
-    const instructions = compiler.generator(
+    const code = compiler.generator(
       mod.ast,
       Object.assign({}, options, { linker: { statics } })
     );
+    const wasm = compiler.emitter(code, options).buffer();
 
     return Object.assign({}, opcodes, {
-      [filepath]: instructions,
+      [filepath]: wasm,
     });
   }, {});
 }
@@ -178,7 +179,8 @@ function build(importsObj, tree, compiler) {
         }, {});
 
         return WebAssembly.instantiate(
-          compiler.emitter(tree.opcodes[filepath], tree.options).buffer(),
+          // compiler.emitter(tree.opcodes[filepath], tree.options).buffer(),
+          tree.opcodes[filepath],
           Object.assign({}, imports, importsObj)
         );
       })
