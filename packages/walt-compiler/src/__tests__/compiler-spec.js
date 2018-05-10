@@ -1,6 +1,6 @@
 import test from "ava";
 import compile, { unstableAsyncCompile } from "..";
-import { stringDecoder } from "../utils/string";
+import { getText } from "../utils/string";
 import { readFileSync } from "fs";
 import path from "path";
 
@@ -24,6 +24,7 @@ test("invalid imports throw", t =>
 test("async compiler", t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
+  const decodeText = getText(view);
 
   return unstableAsyncCompile(compilerWalt)
     .then(wasm =>
@@ -32,14 +33,7 @@ test("async compiler", t => {
           memory,
           externalConst: 42,
           assert(strPointer, value, expected) {
-            let text = "";
-
-            const decoder = stringDecoder(view, strPointer);
-            let iterator = decoder.next();
-            while (!iterator.done) {
-              text += String.fromCodePoint(iterator.value);
-              iterator = decoder.next();
-            }
+            const text = decodeText(strPointer);
 
             t.is(value, expected, text);
           },
