@@ -65,9 +65,6 @@ export const stream = (input: string) => {
       eof(char) {
         return char === "" || char === String.fromCodePoint(0);
       },
-      eol(char) {
-        return char === "\n";
-      },
       lines: input.split("\n"),
       whitespace,
     };
