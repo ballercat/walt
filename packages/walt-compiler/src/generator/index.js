@@ -68,10 +68,7 @@ export const generateCode = (
   return block;
 };
 
-export default function generator(
-  ast: NodeType,
-  config: ConfigType
-): ProgramType {
+function generator(ast: NodeType, config: ConfigType): ProgramType {
   const program: ProgramType = {
     Version: config.version,
     Types: [],
@@ -260,3 +257,11 @@ export default function generator(
 
   return program;
 }
+
+export const async = (): Promise<
+  (ast: NodeType, config: ConfigType) => ProgramType
+> => {
+  return Promise.resolve(generator);
+};
+
+export default generator;

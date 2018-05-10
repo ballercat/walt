@@ -5,7 +5,7 @@ import OutputStream from "../utils/output-stream";
 import type { ProgramType } from "../generator/flow/types";
 import type { ConfigType } from "../flow/types";
 
-export default function emit(program: ProgramType, config: ConfigType) {
+function emit(program: ProgramType, config: ConfigType) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module
@@ -29,3 +29,9 @@ export default function emit(program: ProgramType, config: ConfigType) {
 
   return result;
 }
+
+export const async = (): Promise<any> => {
+  return Promise.resolve(emit);
+};
+
+export default emit;

@@ -1,11 +1,13 @@
 // @flow
 import parser, { async as asyncParser } from "./parser";
-import emit from "./emitter";
-import codeGenerator from "./generator";
-import semanticAnalyzer from "./semantics";
-import astValidator from "./validation";
-import _debug from "./utils/debug";
-import printNode from "./utils/print-node";
+import semantics, { async as asyncSemantics } from "./semantics";
+import validate from "./validation";
+import generator, { async as asyncGenerator } from "./generator";
+import emitter, { async as asyncEmitter } from "./emitter";
+
+import debug from "./utils/debug";
+import prettyPrintNode from "./utils/print-node";
+
 import closurePlugin, { mapToImports } from "./closure-plugin";
 import { VERSION_1 } from "./emitter/preamble";
 import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
@@ -13,15 +15,14 @@ import { stringEncoder, stringDecoder } from "./utils/string";
 import walkNode from "./utils/walk-node";
 import mapNode from "./utils/map-node";
 
-export const debug = _debug;
-export const prettyPrintNode = printNode;
-export const semantics = semanticAnalyzer;
-export const generator = codeGenerator;
-export const validate = astValidator;
-export const emitter = emit;
 export {
   parser,
-  printNode,
+  semantics,
+  validate,
+  generator,
+  emitter,
+  prettyPrintNode,
+  debug,
   closurePlugin,
   stringEncoder,
   stringDecoder,
@@ -82,33 +83,44 @@ export const withPlugins = (
   };
 };
 
-export const async = (source: string): Promise<any> => {
-  const lines = source.split("\n");
-  const filename = "??";
-  const encodeNames = true;
-  const version = 0x1;
-  return asyncParser(source)
-    .then(semantics)
-    .then(ast => {
-      validate(ast, { lines, filename });
-      return ast;
-    })
-    .then(ast => {
-      const intermediateCode = generator(ast, {
-        version,
-        encodeNames,
-        lines,
-        filename,
-      });
-      const wasm = emitter(intermediateCode, {
-        version,
-        encodeNames,
-        filename,
-        lines,
-      });
+/**
+ * Async compiler. UNSTABLE
+ *
+ * Uses WebAssembly internally/is self-hosted
+ *
+ * @param {String} source Source input
+ */
+export const unstableAsyncCompile = (source: string): Promise<any> => {
+  return Promise.all([asyncSemantics(), asyncGenerator(), asyncEmitter()]).then(
+    ([sem, gen, emit]) => {
+      const lines = source.split("\n");
+      const filename = "??";
+      const encodeNames = true;
+      const version = 0x1;
+      return asyncParser(source)
+        .then(sem)
+        .then(ast => {
+          validate(ast, { lines, filename });
+          return ast;
+        })
+        .then(ast => {
+          const code = gen(ast, {
+            version,
+            encodeNames,
+            lines,
+            filename,
+          });
+          const wasm = emit(code, {
+            version,
+            encodeNames,
+            filename,
+            lines,
+          });
 
-      return wasm;
-    });
+          return wasm;
+        });
+    }
+  );
 };
 
 // Compiles a raw binary wasm buffer
