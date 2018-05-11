@@ -16,7 +16,7 @@ import {
 declare var WebAssembly: any;
 export const eol = (char: string) => char === "\n";
 
-export const stream = (input: string) => {
+export const async = (input: string) => {
   const buildStream = link(
     path.resolve(__dirname, "../walt/utils/stream.walt"),
     {},
@@ -63,7 +63,7 @@ export const stream = (input: string) => {
         return _line();
       },
       eof(char) {
-        return char === "" || char === String.fromCodePoint(0);
+        return char === "" || char === "\0";
       },
       lines: input.split("\n"),
       whitespace,

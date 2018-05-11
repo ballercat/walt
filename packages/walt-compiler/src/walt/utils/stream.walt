@@ -23,7 +23,9 @@ export function _newLine() {
 // Get next character in the stream
 export function _next() : i32 {
   next(iterator);
+
   const character : i32 = iterator.value;
+
   if (character == EOL) {
     _newLine();
   } else {
@@ -45,6 +47,9 @@ export function _line() : i32 {
 
 // Peek at the next character in the stream
 export function _peek() : i32 {
+  if (iterator.length == 0 || iterator.index == iterator.length) {
+    return 0;
+  }
   // decodeLEB gives a i64 so that it can return an updated address and value
   // we only need the value, since the address is not changed for the iterator
   const result : i64 = decodeLEB(iterator.addr);
@@ -71,12 +76,6 @@ function start() {
 
   setBaseAddress(align(STRING_BYTE_LENGTH));
   iterator = getStringIterator(0);
-
-  let lineStart : i32 = 0;
-  let offset : i32 = 0;
-  let linesCount : i32 = 0;
-  const size : i32 = sizeof(StringIterator);
-  linesArray = STRING_BYTE_LENGTH + size;
 
   _newLine();
 }

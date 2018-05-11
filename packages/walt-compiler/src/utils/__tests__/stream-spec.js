@@ -1,8 +1,8 @@
 import test from "ava";
-import { stream as makeStream } from "../stream";
+import { stream as asyncStream } from "../stream";
 
 test("walt stream", t => {
-  return makeStream("ab" + "\n" + "12").then(stream => {
+  return asyncStream("ab" + "\n" + "12").then(stream => {
     t.is(stream.next(), "a", "next");
     t.is(stream.peek(), "b", "peek");
     stream.next();

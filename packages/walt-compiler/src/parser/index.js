@@ -10,11 +10,11 @@ import statement from "./statement";
 import Context from "./context";
 import Tokenizer from "../tokenizer";
 import tokenStream from "../utils/token-stream";
-import Stream, { stream as makeStream } from "../utils/stream";
+import Stream, { async as asyncStream } from "../utils/stream";
 import type { NodeType } from "../flow/types";
 
 export const async = (source: string): Promise<NodeType> => {
-  return makeStream(source).then(stream => {
+  return asyncStream(source).then(stream => {
     const tokenizer = new Tokenizer(stream);
     const tokens = tokenStream(tokenizer.parse());
     const ctx = new Context({

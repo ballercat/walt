@@ -28,6 +28,10 @@ export {
   stringDecoder,
   walkNode,
   mapNode,
+  // Unstable, Asynchronous APIs
+  asyncParser,
+  asyncSemantics,
+  asyncGenerator,
 };
 export const VERSION = "0.5.3";
 

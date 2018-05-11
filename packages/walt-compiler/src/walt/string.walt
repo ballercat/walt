@@ -21,7 +21,7 @@ export function decodeLEB(addr: i32): i64 {
   let byte: i32 = 0;
   let shift: i32 = 0;
 
-  // Decode varuint32 length header
+  // Decode
   while (true) {
     byte = i32.load8_u(addr);
     value = value | ((byte & 0x7f) << shift);
@@ -40,11 +40,14 @@ export function decodeLEB(addr: i32): i64 {
 // Create string iterator object.
 export function getStringIterator(addr: i32) : StringIterator {
   const iterator: StringIterator = malloc(sizeof(StringIterator));
-  const leb: i64 = decodeLEB(addr);
+  let leb: i64 = decodeLEB(addr);
 
   // unroll the i32 | i32 pair
   const length: i32 = (leb: i32);
   const baseAddress: i32 = (leb >> 32): i32;
+
+  // read the first character
+  leb = decodeLEB(baseAddress);
 
   iterator = {
     done: false,
@@ -68,8 +71,8 @@ export function next(iterator: StringIterator): StringIterator {
 
   iterator = {
     index: iterator.index + 1,
-    addr: ((leb >> 32): i32),
-    value: (leb: i32)
+    addr: ((leb >> 32) : i32),
+    value: (leb : i32)
   };
 
   return iterator;
