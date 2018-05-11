@@ -1,5 +1,5 @@
 import test from "ava";
-import { stream as asyncStream } from "../stream";
+import { async as asyncStream } from "../stream";
 
 test("walt stream", t => {
   return asyncStream("ab" + "\n" + "12").then(stream => {
