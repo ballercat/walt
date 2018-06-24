@@ -8,9 +8,7 @@
 
 "use strict";
 
-const path = require("path");
-const fs = require("fs");
-const waltCompiler = require("walt-compiler");
+const invariant = require("invariant");
 const { inferImportTypes } = require("./patches");
 
 function mergeStatics(tree = {}) {
@@ -56,37 +54,32 @@ function parseImports(ast, compiler) {
 }
 
 // Build a dependency tree of ASTs given a root module
-function buildTree(index, compiler) {
+function buildTree(index, api) {
   const modules = {};
 
-  const dependency = (module, resolve) => {
-    const filepath = resolve(module);
+  const dependency = (module, parent) => {
+    const filepath = api.resolve(module);
     if (modules[filepath] != null) {
       return modules[filepath];
     }
 
-    const src = fs.readFileSync(filepath, "utf8");
-    const basic = compiler.parser(src);
-    const [nestedImports, hasMemory] = parseImports(basic, compiler);
+    const src = api.getFileContents(module, parent, "utf8");
+    const basic = api.parser(src);
+    const [nestedImports, hasMemory] = parseImports(basic, api);
 
     const deps = {};
 
     Object.keys(nestedImports).forEach(mod => {
       if (mod.indexOf(".") === 0) {
-        const dep = dependency(mod, file =>
-          path.resolve(
-            path.dirname(filepath),
-            file.slice(-5) === ".walt" ? file : file + ".walt"
-          )
-        );
+        const dep = dependency(mod, filepath);
         deps[mod] = dep;
       }
     });
 
-    const patched = inferImportTypes(basic, deps, compiler);
-    const ast = compiler.semantics(patched);
+    const patched = inferImportTypes(basic, deps, api);
+    const ast = api.semantics(patched);
 
-    compiler.validate(ast, {
+    api.validate(ast, {
       lines: src.split("\n"),
       filename: module.split("/").pop(),
     });
@@ -102,7 +95,7 @@ function buildTree(index, compiler) {
     return result;
   };
 
-  const root = dependency(index, file => file);
+  const root = dependency(index, null);
 
   return {
     root,
@@ -111,7 +104,7 @@ function buildTree(index, compiler) {
 }
 
 // Assemble all AST into opcodes/instructions
-function assemble(tree, options, compiler) {
+function assemble(tree, options, api) {
   return Object.entries(tree.modules).reduce((opcodes, [filepath, mod]) => {
     // There are two cases when we should generate a DATA section for module,
     // it has statics OR it imports a memory. As then it needs to share the
@@ -121,11 +114,11 @@ function assemble(tree, options, compiler) {
       // Use global statics object
       statics = options.linker.statics;
     }
-    const code = compiler.generator(
+    const code = api.generator(
       mod.ast,
       Object.assign({}, options, { linker: { statics } })
     );
-    const wasm = compiler.emitter(code, options).buffer();
+    const wasm = api.emitter(code, options).buffer();
 
     return Object.assign({}, opcodes, {
       [filepath]: wasm,
@@ -133,7 +126,7 @@ function assemble(tree, options, compiler) {
   }, {});
 }
 
-function compile(filepath, compiler) {
+function compile(filepath, api) {
   const filename = filepath.split("/").pop();
 
   const options = {
@@ -142,12 +135,12 @@ function compile(filepath, compiler) {
     filepath,
   };
 
-  const tree = buildTree(filepath, compiler);
+  const tree = buildTree(filepath, api);
   const statics = mergeStatics(tree);
   const opcodes = assemble(
     tree,
     Object.assign({}, options, { linker: { statics } }),
-    compiler
+    api
   );
 
   return Object.assign(tree, {
@@ -158,7 +151,7 @@ function compile(filepath, compiler) {
 }
 
 // Build the final binary Module set
-function build(importsObj, tree, compiler) {
+function build(importsObj, tree, api) {
   const modules = {};
 
   const instantiate = filepath => {
@@ -179,7 +172,6 @@ function build(importsObj, tree, compiler) {
         }, {});
 
         return WebAssembly.instantiate(
-          // compiler.emitter(tree.opcodes[filepath], tree.options).buffer(),
           tree.opcodes[filepath],
           Object.assign({}, imports, importsObj)
         );
@@ -204,7 +196,7 @@ function build(importsObj, tree, compiler) {
  *
  * @param {String} filepath The full path to the index file
  * @param {Object} options  Reserved
- * @param {Object} compiler Custom compiler. Is the node module by default.
+ * @param {Object} api      Custom compiler. Is the node module by default.
  *
  *                          This is here to allow for the compiler to test itself
  *                          during development. It's a simple object which has the
@@ -214,15 +206,13 @@ function build(importsObj, tree, compiler) {
  *
  * @return {Function} The build function which takes an importsObj and returns a {Promise}
  */
-function link(
-  filepath,
-  options = { logger: console },
-  compiler = waltCompiler
-) {
-  const tree = compile(filepath, compiler);
+function link(file, options = { logger: console }, api) {
+  invariant(api, "An API needs to be provided to the linker.");
+
+  const tree = compile(file, api);
 
   function walt(importsObj = {}) {
-    return build(importsObj, tree, compiler);
+    return build(importsObj, tree, api);
   }
 
   walt.tree = tree;

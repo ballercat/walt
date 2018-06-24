@@ -1,4 +1,6 @@
 import { link } from "walt-link";
+import path from "path";
+import fs from "fs";
 import { getText } from "../utils/string";
 import {
   mapNode,
@@ -11,6 +13,16 @@ import {
   prettyPrintNode,
 } from "..";
 
+function resolve(file, parent) {
+  const root = parent ? path.dirname(parent) : __dirname;
+  return path.resolve(root, file.slice(-5) === ".walt" ? file : file + ".walt");
+}
+
+function getFileContents(file, parent, mode) {
+  debugger;
+  return fs.readFileSync(resolve(file, parent), mode);
+}
+
 export const harness = filepath => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
@@ -19,6 +31,8 @@ export const harness = filepath => t => {
     filepath,
     { logger: console },
     {
+      resolve,
+      getFileContents,
       mapNode,
       walkNode,
       parser,
