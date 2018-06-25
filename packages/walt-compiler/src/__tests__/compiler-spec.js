@@ -1,9 +1,7 @@
 import test from "ava";
-import compile, { UNSTABLE_asyncCompile } from "..";
-import { getText } from "../utils/string";
-import { readFileSync } from "fs";
+import compile from "..";
 import path from "path";
-import waltSource from "./compiler-spec.walt";
+import { harness } from "../utils/test-utils";
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src, { encodeNames: true }), imports);
@@ -16,3 +14,10 @@ test("empty module compilation", t =>
 
 test("invalid imports throw", t =>
   t.throws(() => compile("import foo from 'bar'")));
+
+test(
+  "compiler",
+  harness(path.resolve(__dirname, "./compiler-spec.walt"), {
+    externalConst: 42,
+  })
+);

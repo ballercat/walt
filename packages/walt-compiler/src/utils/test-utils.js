@@ -19,11 +19,10 @@ function resolve(file, parent) {
 }
 
 function getFileContents(file, parent, mode) {
-  debugger;
   return fs.readFileSync(resolve(file, parent), mode);
 }
 
-export const harness = filepath => t => {
+export const harness = (filepath, env) => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
   const decodeText = getText(view);
@@ -53,6 +52,7 @@ export const harness = filepath => t => {
 
         t.is(value, expected, text);
       },
+      ...env,
     },
   }).then(module => module.instance.exports.run());
 };

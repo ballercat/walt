@@ -258,8 +258,4 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
   return program;
 }
 
-export const async = (): Promise<any> => {
-  return Promise.resolve(generator);
-};
-
 export default generator;

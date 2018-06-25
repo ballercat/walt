@@ -1,5 +1,4 @@
 // Custom require setup, babel-register + .walt to strings
-const fs = require("fs");
 const pirates = require("pirates");
 
 require("babel-register")({
@@ -11,7 +10,7 @@ require("babel-register")({
 // to strings just fine.
 const matcher = filename => filename.indexOf(".walt") > -1;
 
-pirates.addHook((code, filename) => `module.exports = \`${code}\`;`, {
+pirates.addHook(code => `module.exports = \`${code}\`;`, {
   exts: [".walt"],
   matcher,
 });
