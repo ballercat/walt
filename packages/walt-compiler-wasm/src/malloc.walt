@@ -1,0 +1,45 @@
+import { memory: Memory, log: Log } from 'env';
+type Log = (i32) => void;
+let offset: i32 = 0;
+let BASE_ADDRESS: i32 = 0;
+
+// Returns nearest power of 2
+export function next_pow2(num: i32): i32 {
+  if (num < 2) {
+    return 0;
+  }
+  if (num == 2) {
+    return num;
+  }
+  return (
+    (1: i64) << (32 - i32.clz(num - 1))
+  ) : i32;
+}
+
+// Returns a number aligned to a specific alignment
+//
+// Memory operations should be aligned so when setting base address we want to
+// be able to align arbitrary addresses
+export function align(num: i32, alignment: i32 = 2): i32 {
+  const remainder: i32 = num % alignment;
+  if (remainder) {
+    return num + remainder;
+  }
+
+  return num;
+}
+
+export function malloc(size: i32) : i32 {
+  const pointer: i32 = BASE_ADDRESS + offset;
+  offset += size;
+  return pointer;
+}
+
+export function setBaseAddress(address: i32) {
+  BASE_ADDRESS = address;
+}
+
+// Initialize with the dataLength
+function start() {
+  BASE_ADDRESS = align(i32.load(0));
+}

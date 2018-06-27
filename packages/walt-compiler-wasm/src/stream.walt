@@ -1,0 +1,81 @@
+import { memory: Memory, STRING_BYTE_LENGTH : i32, log : Log } from 'env';
+import { setBaseAddress, align } from '../malloc';
+import { getStringIterator, next, decodeLEB, done } from '../string';
+import { StringIterator } from '../string';
+
+type Log = (i32) => void;
+
+let EOL : i32;
+let EOF : i32;
+
+let byteOffset : i32 = 0;
+let pos : i32 = 0;
+let col : i32 = 0;
+let line : i32 = 0;
+let iterator : StringIterator = 0;
+let linesArray : i32;
+
+export function _newLine() {
+  line += 1;
+  col = 0;
+}
+
+// Get next character in the stream
+export function _next() : i32 {
+  next(iterator);
+
+  const character : i32 = iterator.value;
+
+  if (character == EOL) {
+    _newLine();
+  } else {
+    col += 1;
+  }
+
+  return character;
+}
+
+// Get current column number
+export function _column() : i32 {
+  return col;
+}
+
+// Get current line number
+export function _line() : i32 {
+  return line;
+}
+
+// Peek at the next character in the stream
+export function _peek() : i32 {
+  if (iterator.length == 0 || iterator.index == iterator.length) {
+    return 0;
+  }
+  // decodeLEB gives a i64 so that it can return an updated address and value
+  // we only need the value, since the address is not changed for the iterator
+  const result : i64 = decodeLEB(iterator.addr);
+  return (result : i32);
+}
+
+// Is the charater a whitespace
+export function whitespace(char : i32) : i32 {
+  return (
+    char == '\n' ||
+    char == ' ' ||
+    char == '\t' ||
+    char == '\v' ||
+    char == '\r' ||
+    char == '\f'
+  );
+}
+
+// Initializer
+function start() {
+  // Fix this once global strings work
+  EOL = '\n';
+  EOF = 0;
+
+  setBaseAddress(align(STRING_BYTE_LENGTH));
+  iterator = getStringIterator(0);
+
+  _newLine();
+}
