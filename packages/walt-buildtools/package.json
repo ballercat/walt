@@ -4,7 +4,7 @@
   "description": "Walt build utils",
   "main": "src/index.js",
   "scripts": {
-    "test": "test"
+    "test": "echo 'no tests'"
   },
   "keywords": [
     "walt",
