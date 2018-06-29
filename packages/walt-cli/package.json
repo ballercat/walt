@@ -4,7 +4,8 @@
   "description": "CLI for Walt",
   "main": "index.js",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "debug": "node --inspect-brk node_modules/ava/profile.js"
   },
   "private": true,
   "keywords": [

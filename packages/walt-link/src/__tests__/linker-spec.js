@@ -1,5 +1,5 @@
 const test = require("ava");
-const { link, buildTree, assemble, mergeStatics, parseImports } = require("..");
+const link = require("..");
 const path = require("path");
 const fs = require("fs");
 const compiler = require("walt-compiler");

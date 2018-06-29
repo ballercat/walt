@@ -72,7 +72,7 @@
     "rollup-plugin-uglify": "2.0.1",
     "tap-nyc": "1.0.3",
     "uglify-es": "3.0.17",
-    "walt-link": "^0.1.6"
+    "walt-buildtools": "^0.0.1"
   },
   "prettier": {
     "trailingComma": "es5"

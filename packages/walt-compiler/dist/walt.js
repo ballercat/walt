@@ -1,10 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('walt-link'), require('path')) :
-	typeof define === 'function' && define.amd ? define(['exports', 'walt-link', 'path'], factory) :
-	(factory((global.Walt = {}),global.waltLink,global.path));
-}(this, (function (exports,waltLink,path) { 'use strict';
-
-path = path && path.hasOwnProperty('default') ? path['default'] : path;
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.Walt = {})));
+}(this, (function (exports) { 'use strict';
 
 //      
 
@@ -832,6 +830,7 @@ function generateErrorString(msg, error, marker, filename, func) {
   let line;
   let col;
   let end;
+
   if (marker.start.line !== marker.end.line) {
     end = marker.start.col + 1;
     col = marker.start.col;
@@ -1310,358 +1309,7 @@ const statement = ctx => {
 };
 
 //      
-const encodeSigned = value => {
-  const encoding = [];
-  while (true) {
-    const byte = value & 127;
-    value = value >> 7;
-    const signbit = byte & 0x40;
-
-    if (value === 0 && !signbit || value === -1 && signbit) {
-      encoding.push(byte);
-      break;
-    } else {
-      encoding.push(byte | 0x80);
-    }
-  }
-  return encoding;
-};
-
-const encodeUnsigned = value => {
-  const encoding = [];
-  while (true) {
-    const i = value & 127;
-    value = value >>> 7;
-    if (value === 0) {
-      encoding.push(i);
-      break;
-    }
-
-    encoding.push(i | 0x80);
-  }
-
-  return encoding;
-};
-
-/* eslint-env es6 */
-/**
- * WASM types
- *
- * https://github.com/WebAssembly/spec/tree/master/interpreter#s-expression-syntax
- *
- * Plus some extra C type mappings
- *
- * @author arthrubuldauskas@gmail.com
- * @license MIT
- */
-
-const i32$1 = 1;
-const i64$1 = 1 << 1;
-const f32$1 = 1 << 2;
-const f64$1 = 1 << 3;
-const anyfunc = 1 << 4;
-const func = 1 << 5;
-const block_type = 1 << 6;
-
-// C type mappings
-const i8 = 1 << 7;
-const u8 = 1 << 8;
-const i16 = 1 << 9;
-const u16 = 1 << 10;
-const u32 = 1 << 11;
-const u64 = 1 << 12;
-
-// In _bytes_
-const word = 4;
-
-const sizeof = {
-  [i32$1]: word,
-  [i64$1]: word * 2,
-  [f32$1]: word,
-  [f64$1]: word * 2,
-  [u32]: word,
-  [u16]: word >> 1,
-  [u8]: word >> 2,
-  [i8]: word >> 2,
-  [i16]: word >> 1,
-  [anyfunc]: word,
-  [func]: word,
-  [block_type]: word
-};
-
-// TODO: Make this configurable.
-const LITTLE_ENDIAN = true;
-
-const get$1 = (type, index, dataView) => {
-  switch (type) {
-    case i32$1:
-      return dataView.getInt32(index, LITTLE_ENDIAN);
-    case i64$1:
-      return dataView.getInt64(index, LITTLE_ENDIAN);
-    case f32$1:
-      return dataView.getFloat32(index, LITTLE_ENDIAN);
-    case f64$1:
-      return dataView.getFloat64(index, LITTLE_ENDIAN);
-    case anyfunc:
-      return dataView.getUint32(index, LITTLE_ENDIAN);
-    case func:
-      return dataView.getUint32(index, LITTLE_ENDIAN);
-    case i8:
-      return dataView.getInt8(index, LITTLE_ENDIAN);
-    case u8:
-      return dataView.getUint8(index, LITTLE_ENDIAN);
-    case i16:
-      return dataView.getInt16(index, LITTLE_ENDIAN);
-    case u16:
-      return dataView.getUint16(index, LITTLE_ENDIAN);
-    case u32:
-      return dataView.getUint32(index, LITTLE_ENDIAN);
-    case u64:
-      return dataView.getUint64(index, LITTLE_ENDIAN);
-    default:
-      return dataView.getUint8(index, LITTLE_ENDIAN);
-  }
-};
-
-const set$1 = (type, index, dataView, value) => {
-  switch (type) {
-    case i32$1:
-      return dataView.setInt32(index, value, LITTLE_ENDIAN);
-    case i64$1:
-      return dataView.setInt64(index, value, LITTLE_ENDIAN);
-    case f32$1:
-      return dataView.setFloat32(index, value, LITTLE_ENDIAN);
-    case f64$1:
-      return dataView.setFloat64(index, value, LITTLE_ENDIAN);
-    case anyfunc:
-      return dataView.setUint32(index, value, LITTLE_ENDIAN);
-    case func:
-      return dataView.setUint32(index, value, LITTLE_ENDIAN);
-    case i8:
-      return dataView.setInt8(index, value, LITTLE_ENDIAN);
-    case u8:
-      return dataView.setUint8(index, value, LITTLE_ENDIAN);
-    case i16:
-      return dataView.setInt16(index, value, LITTLE_ENDIAN);
-    case u16:
-      return dataView.setUint16(index, value, LITTLE_ENDIAN);
-    case u32:
-      return dataView.setUint32(index, value, LITTLE_ENDIAN);
-    case u64:
-      return dataView.setUint64(index, value, LITTLE_ENDIAN);
-    default:
-      return dataView.setUint8(index, value, LITTLE_ENDIAN);
-  }
-};
-
-var index = {
-  i32: i32$1,
-  i64: i64$1,
-  f32: f32$1,
-  f64: f64$1,
-  anyfunc,
-  func,
-  block_type,
-  i8,
-  u8,
-  i16,
-  u16,
-  u32,
-  u64,
-  set: set$1,
-  get: get$1,
-  sizeof
-};
-
-var index_1 = index.i32;
-var index_2 = index.i64;
-var index_3 = index.f32;
-var index_4 = index.f64;
-var index_9 = index.u8;
-var index_12 = index.u32;
-var index_14 = index.set;
-var index_16 = index.sizeof;
-
-//      
-// Used to output raw binary, holds values and types in a large array 'stream'
-class OutputStream {
-
-  constructor() {
-    // Our data, expand it
-    this.data = [];
-
-    // start at the beginning
-    this.size = 0;
-  }
-
-  push(type, value, debug) {
-    let size = 0;
-    switch (type) {
-      case "varuint7":
-      case "varuint32":
-      case "varint7":
-      case "varint1":
-        {
-          // Encode all of the LEB128 aka 'var*' types
-          value = encodeUnsigned(value);
-          size = value.length;
-          invariant_1(size, `Cannot write a value of size ${size}`);
-          break;
-        }
-      case "varint32":
-        {
-          value = encodeSigned(value);
-          size = value.length;
-          invariant_1(size, `Cannot write a value of size ${size}`);
-          break;
-        }
-      case "varint64":
-        {
-          value = encodeSigned(value);
-          size = value.length;
-          invariant_1(size, `Cannot write a value of size ${size}`);
-          break;
-        }
-      default:
-        {
-          size = index_16[type];
-          invariant_1(size, `Cannot write a value of size ${size}, type ${type}`);
-        }
-    }
-
-    this.data.push({ type, value, debug });
-    this.size += size;
-
-    return this;
-  }
-
-  // Get the BUFFER, not data array.
-  // Returns a new buffer unless one is passed in to be written to.
-  buffer(buffer = new ArrayBuffer(this.size)) {
-    const view = new DataView(buffer);
-    let pc = 0;
-    this.data.forEach(({ type, value }) => {
-      if (Array.isArray(value)) {
-        value.forEach(v => index_14(index_9, pc++, view, v));
-      } else {
-        index_14(type, pc, view, value);
-        pc += index_16[type];
-      }
-    });
-    return buffer;
-  }
-
-  // Writes source OutputStream into the current buffer
-  write(source) {
-    if (source) {
-      this.data = this.data.concat(source.data);
-      this.size += source.size;
-    }
-
-    return this;
-  }
-}
-
-function* stringDecoder(view, start) {
-  let length = 0;
-  let index = 0;
-  let shift = 0;
-  let addr = start;
-  while (true) {
-    const byte = view.getUint8(addr, true);
-    length |= (byte & 0x7f) << shift;
-    addr += 1;
-    if ((byte & 0x80) === 0) {
-      break;
-    }
-    shift += 7;
-  }
-
-  let result = 0;
-  while (index < length) {
-    result = 0;
-    shift = 0;
-    while (true) {
-      const byte = view.getUint8(addr, true);
-      result |= (byte & 0x7f) << shift;
-      addr += 1;
-      if ((byte & 0x80) === 0) {
-        break;
-      }
-      shift += 7;
-    }
-    index += 1;
-    yield result;
-  }
-}
-
-function stringEncoder(value) {
-  const resultStream = new OutputStream();
-  const characterStream = new OutputStream();
-
-  characterStream.push("varuint32", value.length, value);
-  let i = 0;
-  for (i = 0; i < value.length; i++) {
-    characterStream.push("varuint32", value.codePointAt(i), value[i]);
-  }
-  resultStream.write(characterStream);
-
-  return resultStream;
-}
-
-//      
 const eol = char => char === "\n";
-
-const async$1 = input => {
-  const buildStream = waltLink.link(path.resolve(__dirname, "../walt/utils/stream.walt"), {}, {
-    mapNode,
-    walkNode: walker,
-    parser: parse,
-    semantics,
-    validate,
-    emitter: emit,
-    generator,
-    prettyPrintNode: printNode
-  });
-  const memory = new WebAssembly.Memory({ initial: 1 });
-  const stringStream = stringEncoder(input);
-  stringStream.buffer(memory.buffer);
-
-  const withText = text => i => console.log(text, i);
-
-  return buildStream({
-    env: {
-      memory,
-      STRING_BYTE_LENGTH: stringStream.size,
-      log: withText("logger - "),
-      start: withText("start - ")
-    }
-  }).then(module => {
-    const {
-      _next,
-      _peek,
-      _column,
-      _line,
-      whitespace
-    } = module.instance.exports;
-
-    return {
-      next: () => String.fromCodePoint(_next()),
-      peek: () => String.fromCodePoint(_peek()),
-      get col() {
-        return _column();
-      },
-      get line() {
-        return _line();
-      },
-      eof(char) {
-        return char === "" || char === "\0";
-      },
-      lines: input.split("\n"),
-      whitespace
-    };
-  });
-};
 
 // Base Character stream class
 class Stream {
@@ -2116,7 +1764,7 @@ function tokenStream(tokens) {
   const peek = () => tokens[pos + 1];
   const last = () => tokens[length - 1];
 
-  return { tokens, next, peek, last, length };
+  return { pos, tokens, next, peek, last, length };
 }
 
 /**
@@ -2126,38 +1774,6 @@ function tokenStream(tokens) {
  */
 
 //      
-const async$$1 = source => {
-  return async$1(source).then(stream => {
-    const tokenizer = new Tokenizer(stream);
-    const tokens = tokenStream(tokenizer.parse());
-    const ctx = new Context({
-      stream: tokens,
-      token: tokens.tokens[0],
-      lines: stream.lines,
-      filename: "unknown.walt"
-    });
-
-    const node = ctx.makeNode({
-      value: "ROOT_NODE"
-    }, Syntax.Program);
-
-    // No code, no problem, empty ast equals
-    // (module) ; the most basic wasm module
-    if (!ctx.stream || !ctx.stream.length) {
-      return node;
-    }
-
-    while (ctx.stream.peek()) {
-      const child = statement(ctx);
-      if (child) {
-        node.params.push(child);
-      }
-    }
-
-    return node;
-  });
-};
-
 function parse(source) {
   const stream = new Stream(source);
   const tokenizer = new Tokenizer(stream);
@@ -3642,9 +3258,144 @@ function semantics(ast) {
   });
 }
 
-const async$2 = () => {
-  return Promise.resolve(semantics);
+/* eslint-env es6 */
+/**
+ * WASM types
+ *
+ * https://github.com/WebAssembly/spec/tree/master/interpreter#s-expression-syntax
+ *
+ * Plus some extra C type mappings
+ *
+ * @author arthrubuldauskas@gmail.com
+ * @license MIT
+ */
+
+const i32$1 = 1;
+const i64$1 = 1 << 1;
+const f32$1 = 1 << 2;
+const f64$1 = 1 << 3;
+const anyfunc = 1 << 4;
+const func = 1 << 5;
+const block_type = 1 << 6;
+
+// C type mappings
+const i8 = 1 << 7;
+const u8 = 1 << 8;
+const i16 = 1 << 9;
+const u16 = 1 << 10;
+const u32 = 1 << 11;
+const u64 = 1 << 12;
+
+// In _bytes_
+const word = 4;
+
+const sizeof = {
+  [i32$1]: word,
+  [i64$1]: word * 2,
+  [f32$1]: word,
+  [f64$1]: word * 2,
+  [u32]: word,
+  [u16]: word >> 1,
+  [u8]: word >> 2,
+  [i8]: word >> 2,
+  [i16]: word >> 1,
+  [anyfunc]: word,
+  [func]: word,
+  [block_type]: word
 };
+
+// TODO: Make this configurable.
+const LITTLE_ENDIAN = true;
+
+const get$1 = (type, index, dataView) => {
+  switch (type) {
+    case i32$1:
+      return dataView.getInt32(index, LITTLE_ENDIAN);
+    case i64$1:
+      return dataView.getInt64(index, LITTLE_ENDIAN);
+    case f32$1:
+      return dataView.getFloat32(index, LITTLE_ENDIAN);
+    case f64$1:
+      return dataView.getFloat64(index, LITTLE_ENDIAN);
+    case anyfunc:
+      return dataView.getUint32(index, LITTLE_ENDIAN);
+    case func:
+      return dataView.getUint32(index, LITTLE_ENDIAN);
+    case i8:
+      return dataView.getInt8(index, LITTLE_ENDIAN);
+    case u8:
+      return dataView.getUint8(index, LITTLE_ENDIAN);
+    case i16:
+      return dataView.getInt16(index, LITTLE_ENDIAN);
+    case u16:
+      return dataView.getUint16(index, LITTLE_ENDIAN);
+    case u32:
+      return dataView.getUint32(index, LITTLE_ENDIAN);
+    case u64:
+      return dataView.getUint64(index, LITTLE_ENDIAN);
+    default:
+      return dataView.getUint8(index, LITTLE_ENDIAN);
+  }
+};
+
+const set$1 = (type, index, dataView, value) => {
+  switch (type) {
+    case i32$1:
+      return dataView.setInt32(index, value, LITTLE_ENDIAN);
+    case i64$1:
+      return dataView.setInt64(index, value, LITTLE_ENDIAN);
+    case f32$1:
+      return dataView.setFloat32(index, value, LITTLE_ENDIAN);
+    case f64$1:
+      return dataView.setFloat64(index, value, LITTLE_ENDIAN);
+    case anyfunc:
+      return dataView.setUint32(index, value, LITTLE_ENDIAN);
+    case func:
+      return dataView.setUint32(index, value, LITTLE_ENDIAN);
+    case i8:
+      return dataView.setInt8(index, value, LITTLE_ENDIAN);
+    case u8:
+      return dataView.setUint8(index, value, LITTLE_ENDIAN);
+    case i16:
+      return dataView.setInt16(index, value, LITTLE_ENDIAN);
+    case u16:
+      return dataView.setUint16(index, value, LITTLE_ENDIAN);
+    case u32:
+      return dataView.setUint32(index, value, LITTLE_ENDIAN);
+    case u64:
+      return dataView.setUint64(index, value, LITTLE_ENDIAN);
+    default:
+      return dataView.setUint8(index, value, LITTLE_ENDIAN);
+  }
+};
+
+var index = {
+  i32: i32$1,
+  i64: i64$1,
+  f32: f32$1,
+  f64: f64$1,
+  anyfunc,
+  func,
+  block_type,
+  i8,
+  u8,
+  i16,
+  u16,
+  u32,
+  u64,
+  set: set$1,
+  get: get$1,
+  sizeof
+};
+
+var index_1 = index.i32;
+var index_2 = index.i64;
+var index_3 = index.f32;
+var index_4 = index.f64;
+var index_9 = index.u8;
+var index_12 = index.u32;
+var index_14 = index.set;
+var index_16 = index.sizeof;
 
 //      
 /**
@@ -4517,7 +4268,7 @@ const parseBounds = node => {
 
 /* istanbul ignore file */
 //      
-const getText$1 = node => {
+const getText = node => {
   const value = node.value || "??";
   const hasType = node.type;
   const type = hasType || "i32";
@@ -4594,7 +4345,7 @@ const getPrinters = add => ({
     }
   },
   [Syntax.BinaryExpression]: (node, print) => {
-    const text = getText$1(node);
+    const text = getText(node);
     add("(" + text, 2);
     node.params.forEach(print);
     add(")", 0, -2);
@@ -4978,6 +4729,167 @@ function generateType(node) {
 }
 
 //      
+const encodeSigned = value => {
+  const encoding = [];
+  while (true) {
+    const byte = value & 127;
+    value = value >> 7;
+    const signbit = byte & 0x40;
+
+    if (value === 0 && !signbit || value === -1 && signbit) {
+      encoding.push(byte);
+      break;
+    } else {
+      encoding.push(byte | 0x80);
+    }
+  }
+  return encoding;
+};
+
+const encodeUnsigned = value => {
+  const encoding = [];
+  while (true) {
+    const i = value & 127;
+    value = value >>> 7;
+    if (value === 0) {
+      encoding.push(i);
+      break;
+    }
+
+    encoding.push(i | 0x80);
+  }
+
+  return encoding;
+};
+
+//      
+// Used to output raw binary, holds values and types in a large array 'stream'
+class OutputStream {
+
+  constructor() {
+    // Our data, expand it
+    this.data = [];
+
+    // start at the beginning
+    this.size = 0;
+  }
+
+  push(type, value, debug) {
+    let size = 0;
+    switch (type) {
+      case "varuint7":
+      case "varuint32":
+      case "varint7":
+      case "varint1":
+        {
+          // Encode all of the LEB128 aka 'var*' types
+          value = encodeUnsigned(value);
+          size = value.length;
+          invariant_1(size, `Cannot write a value of size ${size}`);
+          break;
+        }
+      case "varint32":
+        {
+          value = encodeSigned(value);
+          size = value.length;
+          invariant_1(size, `Cannot write a value of size ${size}`);
+          break;
+        }
+      case "varint64":
+        {
+          value = encodeSigned(value);
+          size = value.length;
+          invariant_1(size, `Cannot write a value of size ${size}`);
+          break;
+        }
+      default:
+        {
+          size = index_16[type];
+          invariant_1(size, `Cannot write a value of size ${size}, type ${type}`);
+        }
+    }
+
+    this.data.push({ type, value, debug });
+    this.size += size;
+
+    return this;
+  }
+
+  // Get the BUFFER, not data array.
+  // Returns a new buffer unless one is passed in to be written to.
+  buffer(buffer = new ArrayBuffer(this.size)) {
+    const view = new DataView(buffer);
+    let pc = 0;
+    this.data.forEach(({ type, value }) => {
+      if (Array.isArray(value)) {
+        value.forEach(v => index_14(index_9, pc++, view, v));
+      } else {
+        index_14(type, pc, view, value);
+        pc += index_16[type];
+      }
+    });
+    return buffer;
+  }
+
+  // Writes source OutputStream into the current buffer
+  write(source) {
+    if (source) {
+      this.data = this.data.concat(source.data);
+      this.size += source.size;
+    }
+
+    return this;
+  }
+}
+
+function* stringDecoder(view, start) {
+  let length = 0;
+  let index = 0;
+  let shift = 0;
+  let addr = start;
+  while (true) {
+    const byte = view.getUint8(addr, true);
+    length |= (byte & 0x7f) << shift;
+    addr += 1;
+    if ((byte & 0x80) === 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  let result = 0;
+  while (index < length) {
+    result = 0;
+    shift = 0;
+    while (true) {
+      const byte = view.getUint8(addr, true);
+      result |= (byte & 0x7f) << shift;
+      addr += 1;
+      if ((byte & 0x80) === 0) {
+        break;
+      }
+      shift += 7;
+    }
+    index += 1;
+    yield result;
+  }
+}
+
+function stringEncoder(value) {
+  const resultStream = new OutputStream();
+  const characterStream = new OutputStream();
+
+  characterStream.push("varuint32", value.length, value);
+  let i = 0;
+  for (i = 0; i < value.length; i++) {
+    characterStream.push("varuint32", value.codePointAt(i), value[i]);
+  }
+  resultStream.write(characterStream);
+
+  return resultStream;
+}
+
+//      
 function generateData(statics, DATA_SECTION_HEADER_SIZE) {
   // Reserve N bytes for data size header
   let offsetAccumulator = DATA_SECTION_HEADER_SIZE;
@@ -5207,10 +5119,6 @@ function generator(ast, config) {
 
   return program;
 }
-
-const async$3 = () => {
-  return Promise.resolve(generator);
-};
 
 //      
 const VERSION_1 = 0x1;
@@ -5691,10 +5599,6 @@ function emit(program, config) {
   return result;
 }
 
-const async$4 = () => {
-  return Promise.resolve(emit);
-};
-
 //      
 const _debug = (stream, begin = 0, end) => {
   let pc = 0;
@@ -5852,41 +5756,6 @@ const withPlugins = (plugins, importsObj) => {
   return _extends({}, resultImports, importsObj);
 };
 
-/**
- * Async compiler. UNSTABLE
- *
- * Uses WebAssembly internally/is self-hosted
- *
- * @param {String} source Source input
- */
-const unstableAsyncCompile = source => {
-  return Promise.all([async$2(), async$3(), async$4()]).then(([sem, gen, emit$$1]) => {
-    const lines = source.split("\n");
-    const filename = "??";
-    const encodeNames = true;
-    const version = 0x1;
-    return async$$1(source).then(sem).then(ast => {
-      validate(ast, { lines, filename });
-      return ast;
-    }).then(ast => {
-      const code = gen(ast, {
-        version,
-        encodeNames,
-        lines,
-        filename
-      });
-      const wasm = emit$$1(code, {
-        version,
-        encodeNames,
-        filename,
-        lines
-      });
-
-      return wasm;
-    });
-  });
-};
-
 // Compiles a raw binary wasm buffer
 function compileWalt(source, config) {
   const wasm = getIR(source, config);
@@ -5905,13 +5774,9 @@ exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
 exports.mapNode = mapNode;
-exports.asyncParser = async$$1;
-exports.asyncSemantics = async$2;
-exports.asyncGenerator = async$3;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;
-exports.unstableAsyncCompile = unstableAsyncCompile;
 exports['default'] = compileWalt;
 
 Object.defineProperty(exports, '__esModule', { value: true });
