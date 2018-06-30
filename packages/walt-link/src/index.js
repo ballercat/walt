@@ -46,7 +46,7 @@ function link(file, options = { logger: console }, api = compiler) {
     api = Object.assign(
       {
         resolve: resolve(path.dirname(file)),
-        getFileContents: resolve(path.dirname(file)),
+        getFileContents: getFileContents(resolve(path.dirname(file))),
       },
       api
     );

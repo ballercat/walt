@@ -151,7 +151,7 @@ function compile(filepath, api) {
 }
 
 // Build the final binary Module set
-function build(importsObj, tree, api) {
+function build(importsObj, tree) {
   const modules = {};
 
   const instantiate = filepath => {
