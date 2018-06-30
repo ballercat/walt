@@ -1,6 +1,6 @@
 {
   "name": "walt-link",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Links .walt WebAssembly programs",
   "main": "src/index.js",
   "scripts": {
