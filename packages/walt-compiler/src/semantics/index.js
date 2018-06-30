@@ -119,4 +119,8 @@ function semantics(ast: NodeType): NodeType {
   };
 }
 
+export const async = (): Promise<(ast: NodeType) => NodeType> => {
+  return Promise.resolve(semantics);
+};
+
 export default semantics;

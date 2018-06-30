@@ -1,11 +1,11 @@
 const test = require("ava");
-const { link, buildTree, assemble, mergeStatics, parseImports } = require("..");
+const link = require("..");
 const path = require("path");
 const fs = require("fs");
-const { stringDecoder } = require("walt-compiler");
+const compiler = require("walt-compiler");
 
 const decodeText = (view, ptr) => {
-  const decoder = stringDecoder(view, ptr);
+  const decoder = compiler.stringDecoder(view, ptr);
   let iterator = decoder.next();
   let text = "";
   while (!iterator.done) {
@@ -16,9 +16,32 @@ const decodeText = (view, ptr) => {
   return text;
 };
 
+const resolve = (file, parent) => {
+  if (parent != null) {
+    return path.resolve(
+      path.dirname(parent),
+      file.slice(-5) === ".walt" ? file : file + ".walt"
+    );
+  }
+
+  return path.resolve(__dirname, file);
+};
+
+const getFileContents = (file, parent, mode) => {
+  if (parent != null) {
+    return fs.readFileSync(resolve(file, parent), mode);
+  }
+
+  return fs.readFileSync(resolve(file, null), mode);
+};
+
 test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
-  const factory = link(path.resolve(__dirname, "./index.walt"));
+  const factory = link("./index.walt", null, {
+    ...compiler,
+    getFileContents,
+    resolve,
+  });
   t.is(typeof factory === "function", true, "linker returns a factory");
   const wasm = await factory({
     env: { memory },

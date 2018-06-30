@@ -1,16 +1,16 @@
 {
   "name": "walt-packages",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Walt packages",
+  "private": true,
   "main": "index.js",
   "scripts": {
-    "postinstall": "lerna bootstrap --hoist walt-compiler",
+    "postinstall": "lerna bootstrap",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
     "coverage": "lerna run coverage",
     "publish": "lerna publish",
-    "clean": "lerna clean",
-    "coverage": "lerna run coverage"
+    "clean": "lerna clean"
   },
   "repository": {
     "type": "git",
@@ -32,8 +32,7 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "devDependencies": {
-    "lerna": "^2.11.0",
-    "walt-compiler": "^0.5.3"
+    "lerna": "^2.11.0"
   },
   "nyc": {
     "cache": true

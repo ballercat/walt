@@ -7,6 +7,7 @@ import resolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
 import replace from "rollup-plugin-replace";
 import flow from "rollup-plugin-flow";
+import string from "rollup-plugin-string";
 
 const PROD = process.env.NODE_ENV === "production";
 
@@ -20,6 +21,9 @@ export default {
     flow(),
     replace({
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+    }),
+    string({
+      include: "**/*.walt",
     }),
     babel({
       babelrc: false,
@@ -37,7 +41,9 @@ export default {
       ],
       plugins: ["external-helpers", "transform-object-rest-spread"],
     }),
-    resolve(),
+    resolve({
+      jail: __dirname,
+    }),
     commonjs({
       namedExports: {
         "node_modules/wasm-types/index.js": [

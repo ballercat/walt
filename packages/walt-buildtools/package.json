@@ -1,0 +1,20 @@
+{
+  "name": "walt-buildtools",
+  "version": "0.0.2",
+  "description": "Walt build utils",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo 'no tests'"
+  },
+  "keywords": [
+    "walt",
+    "wasm",
+    "js",
+    "compiler"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "dependencies": {
+    "invariant": "^2.2.4"
+  }
+}

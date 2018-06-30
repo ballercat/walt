@@ -1,9 +1,8 @@
 "use strict";
 const invariant = require("invariant");
-const walt = require("walt-compiler");
 
 // Patch missing type imports with the give dependencies
-function inferImportTypes(ast, deps, compiler = walt) {
+function inferImportTypes(ast, deps, compiler) {
   const newTypes = [];
   const patch = compiler.mapNode({
     Import(importNode, _) {

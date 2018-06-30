@@ -53,9 +53,9 @@ export default class OutputStream {
     return this;
   }
 
-  // Get the BUFFER, not data array. **Always creates new buffer**
-  buffer() {
-    const buffer = new ArrayBuffer(this.size);
+  // Get the BUFFER, not data array.
+  // Returns a new buffer unless one is passed in to be written to.
+  buffer(buffer: ArrayBuffer = new ArrayBuffer(this.size)) {
     const view = new DataView(buffer);
     let pc = 0;
     this.data.forEach(({ type, value }) => {

@@ -46,3 +46,15 @@ export function stringEncoder(value) {
 
   return resultStream;
 }
+
+export const getText = view => ptr => {
+  let text = "";
+  const decoder = stringDecoder(view, ptr);
+  let iterator = decoder.next();
+  while (!iterator.done) {
+    text += String.fromCodePoint(iterator.value);
+    iterator = decoder.next();
+  }
+
+  return text;
+};

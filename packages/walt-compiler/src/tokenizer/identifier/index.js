@@ -4,13 +4,11 @@ import punctuator from "../punctuator";
 import constant from "../constant";
 import string from "../string";
 import Syntax from "../../Syntax";
-import Stream from "../../utils/stream";
+import { eol } from "../../utils/stream";
 
 const isValidIdentifier = char => {
   // Don't allow these
-  return (
-    !string(char) && !punctuator(char) && !Stream.eol(char) && char !== " "
-  );
+  return !string(char) && !punctuator(char) && !eol(char) && char !== " ";
 };
 
 const supportAny = char => {

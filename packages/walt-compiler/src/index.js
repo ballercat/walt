@@ -1,11 +1,13 @@
 // @flow
 import parser from "./parser";
-import emit from "./emitter";
-import codeGenerator from "./generator";
-import semanticAnalyzer from "./semantics";
-import astValidator from "./validation";
-import _debug from "./utils/debug";
-import printNode from "./utils/print-node";
+import semantics from "./semantics";
+import validate from "./validation";
+import generator from "./generator";
+import emitter from "./emitter";
+
+import debug from "./utils/debug";
+import prettyPrintNode from "./utils/print-node";
+
 import closurePlugin, { mapToImports } from "./closure-plugin";
 import { VERSION_1 } from "./emitter/preamble";
 import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
@@ -13,15 +15,14 @@ import { stringEncoder, stringDecoder } from "./utils/string";
 import walkNode from "./utils/walk-node";
 import mapNode from "./utils/map-node";
 
-export const debug = _debug;
-export const prettyPrintNode = printNode;
-export const semantics = semanticAnalyzer;
-export const generator = codeGenerator;
-export const validate = astValidator;
-export const emitter = emit;
 export {
   parser,
-  printNode,
+  semantics,
+  validate,
+  generator,
+  emitter,
+  prettyPrintNode,
+  debug,
   closurePlugin,
   stringEncoder,
   stringDecoder,

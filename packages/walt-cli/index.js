@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const compiler = require("walt-compiler");
 const meow = require("meow");
+const wrap = require("./src/wrap");
 
 const cli = meow(
   `
@@ -13,7 +14,6 @@ const cli = meow(
         Options
           --output, -o  Output filepath. default: o.wasm
           --wrap, -w    Wrap with JS. default: false
-          --link, -l    Link with imports, requires -w. default: false.
           --names, -n   Emit names section for debugging. default: false
 `,
   {
@@ -42,17 +42,14 @@ const cli = meow(
   }
 );
 
-if (cli.flags.link && !cli.flags.wrap) {
-  throw new Error("--link can only link wrapped modules. Specify --wrap");
-}
-const wrap = cli.flags.link && cli.flags.wrap;
 const filepath = cli.input[0];
 const options = {
   encodeNames: cli.flags.names
 };
 
-if (wrap) {
-  return wrapper(filepath, options);
+if (cli.flags.wrap) {
+  const output = wrap(path.resolve(__dirname, filepath), options);
+  fs.writeFileSync(path.resolve(__dirname, cli.flags.output), output, "utf8");
   process.exit();
 }
 
