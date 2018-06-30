@@ -1,6 +1,6 @@
 {
   "name": "walt-link",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "Links .walt WebAssembly programs",
   "main": "src/index.js",
   "scripts": {
@@ -16,15 +16,14 @@
   "author": "Arthur Buldauskas",
   "license": "MIT",
   "dependencies": {
-    "walt-compiler": "^0.6.2",
-    "walt-buildtools": "^0.0.1"
+    "invariant": "^2.2.4"
   },
   "devDependencies": {
     "ava": "^0.25.0",
     "coveralls": "^3.0.0",
     "nyc": "^11.7.1",
     "prettier": "^1.12.0",
-    "walt-buildtools": "^0.0.1"
+    "walt-buildtools": "^0.0.2"
   },
   "prettier": {
     "trailingComma": "es5"
@@ -42,8 +41,5 @@
     "failWithoutAssertions": false,
     "tap": false,
     "powerAssert": false
-  },
-  "dependencies": {
-    "invariant": "^2.2.4"
   }
 }
