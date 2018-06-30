@@ -35,8 +35,8 @@ npm run walt -- index.walt -o index.wasm
 
 For walt programs which has imports use the _wrap flag_ `-w`. Wrap option will
 link and compile all dependencies starting from the entry file. The result is a
-self contained JavaScript module which exports a factory function which when called
-will generate the WebAssembly instance of your walt program.
+self contained JavaScript module which exports a factory function. Use it to
+generate the WebAssembly instance of your walt program.
 
 ```bash
 npm run walt -- src/walt/entry.walt -o walt-program.js -w
