@@ -55,6 +55,30 @@ export function testExternalImport(): i32 {
   return externalConst;
 }
 
+// Test that escape sequences work
+function testEscapeSequences(char : i32) : i32 {
+  if (char == '\b') {
+    return true;
+  } else if (char == '\f') {
+    return true;
+  } else if (char == '\n') {
+    return true;
+  } else if (char == '\r') {
+    return true;
+  } else if (char == '\t') {
+    return true;
+  } else if (char == '\v') {
+    return true;
+  } else if (char == '\0') {
+    return true;
+  } else if (char == '\'') {
+    return true;
+  } else if (char == '\"') {
+    return true;
+  }
+  return false;
+}
+
 export function testNumberLiterals(): i32 {
   const hex: i32 = 0xff; // 255
   const HEX: i32 = 0xff; // 255

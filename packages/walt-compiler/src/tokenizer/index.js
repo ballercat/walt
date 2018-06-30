@@ -57,10 +57,10 @@ class Tokenizer {
       this.stream.next();
       next = this.stream.peek();
       nextMatchers = this.match(next, matchers);
-    } while (!Stream.eof(next) && nextMatchers.length > 0);
+    } while (!this.stream.eof(next) && nextMatchers.length > 0);
 
     // If we fell off the end then bail out
-    if (Stream.eof(value)) {
+    if (this.stream.eof(value)) {
       return null;
     }
 
@@ -119,10 +119,9 @@ class Tokenizer {
   }
 
   parse() {
-    while (!Stream.eof(this.stream.peek())) {
+    while (!this.stream.eof(this.stream.peek())) {
       this.next();
     }
-
     return this.tokens;
   }
 }

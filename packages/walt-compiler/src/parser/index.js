@@ -9,9 +9,8 @@ import Syntax from "../Syntax";
 import statement from "./statement";
 import Context from "./context";
 import Tokenizer from "../tokenizer";
-import Stream from "../utils/stream";
 import tokenStream from "../utils/token-stream";
-
+import Stream from "../utils/stream";
 import type { NodeType } from "../flow/types";
 
 export default function parse(source: string): NodeType {

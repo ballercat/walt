@@ -16,5 +16,5 @@ export default function tokenStream(tokens: TokenType[]): TokenStream {
   const peek = () => tokens[pos + 1];
   const last = () => tokens[length - 1];
 
-  return { tokens, next, peek, last, length };
+  return { pos, tokens, next, peek, last, length };
 }

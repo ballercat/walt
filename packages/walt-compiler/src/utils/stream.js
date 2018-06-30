@@ -1,4 +1,5 @@
 // @flow
+export const eol = (char: string) => char === "\n";
 
 // Base Character stream class
 class Stream {
@@ -24,7 +25,7 @@ class Stream {
   next(): string {
     const char = this.input.charAt(this.pos++);
 
-    if (Stream.eol(char)) {
+    if (this.eol(char)) {
       this.newLine();
     } else {
       this.col++;
@@ -40,12 +41,12 @@ class Stream {
   }
 
   // Is the character an end of line
-  static eol(char: string): boolean {
+  eol(char: string): boolean {
     return char === "\n";
   }
 
   // Is the character an end of file
-  static eof(char: string): boolean {
+  eof(char: string): boolean {
     return char === "";
   }
 

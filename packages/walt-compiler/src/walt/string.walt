@@ -1,10 +1,9 @@
 // Internal walt string utilities, used by the compiler
-// :)
-//
 import { malloc } from './malloc.walt';
 // Needed for decoding
-import { memory: Memory<{ initial: 1 }> } from 'env';
+import { memory: Memory, log: Log } from 'env';
 
+type Log = (i32) => void;
 export type StringIterator = {
   length: i32,
   index: i32,
@@ -14,17 +13,18 @@ export type StringIterator = {
   done: i32
 };
 
-// Create string iterator object.
-export function getStringIterator(addr: i32, pointer: i32 = 0) : StringIterator {
-  const iterator: StringIterator = pointer || malloc(sizeof(StringIterator));
-  let length: i32 = 0;
+// Decode a single LEB128 encoded value
+// Returns a 64 bit integer with MSW being the address at the end of encoded value
+// and LSW being the value decode.
+export function decodeLEB(addr: i32): i64 {
+  let value: i32 = 0;
   let byte: i32 = 0;
   let shift: i32 = 0;
 
-  // Decode varuint32 length header
+  // Decode
   while (true) {
     byte = i32.load8_u(addr);
-    length = length | ((byte & 0x7f) << shift);
+    value = value | ((byte & 0x7f) << shift);
     addr += 1;
     if ((byte & 0x80) == 0) {
       break;
@@ -32,7 +32,30 @@ export function getStringIterator(addr: i32, pointer: i32 = 0) : StringIterator 
     shift += 7;
   }
 
-  iterator = { done: false, length, index: 0, addr, start: addr };
+  // Interesting case, addr is 32 bits wide so shifting left 32 bits is not what
+  // you want. Hence the typecast to 64 bit integer.
+  return value | ((addr: i64) << 32);
+}
+
+// Create string iterator object.
+export function getStringIterator(addr: i32) : StringIterator {
+  const iterator: StringIterator = malloc(sizeof(StringIterator));
+  let leb: i64 = decodeLEB(addr);
+
+  // unroll the i32 | i32 pair
+  const length: i32 = (leb: i32);
+  const baseAddress: i32 = (leb >> 32): i32;
+
+  // read the first character
+  leb = decodeLEB(baseAddress);
+
+  iterator = {
+    done: false,
+    length,
+    index: 0,
+    addr: baseAddress,
+    start: baseAddress
+  };
 
   return iterator;
 }
@@ -44,25 +67,12 @@ export function next(iterator: StringIterator): StringIterator {
     return iterator;
   }
 
-  let value: i32 = 0;
-  let shift: i32 = 0;
-  let byte: i32 = 0;
-  let addr: i32 = iterator.addr;
-
-  while (true) {
-    byte = i32.load8_u(addr);
-    value = value | ((byte & 0x7f) << shift);
-    addr += 1;
-    if ((byte & 0x80) == 0) {
-      break;
-    }
-    shift += 7;
-  }
+  const leb: i64 = decodeLEB(iterator.addr);
 
   iterator = {
     index: iterator.index + 1,
-    addr,
-    value
+    addr: ((leb >> 32) : i32),
+    value: (leb : i32)
   };
 
   return iterator;
@@ -74,7 +84,7 @@ export function reset(iterator: StringIterator) {
     index: 0,
     done: 0,
     value: 0
-  };
+  ;
 }
 
 export function stringLength(str: i32): i32 {

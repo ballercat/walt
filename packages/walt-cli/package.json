@@ -1,12 +1,12 @@
 {
   "name": "walt-cli",
-  "version": "0.1.6",
+  "version": "0.1.0",
   "description": "CLI for Walt",
   "main": "index.js",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "debug": "node --inspect-brk node_modules/ava/profile.js"
   },
-  "private": true,
   "keywords": [
     "walt",
     "wasm",
@@ -19,7 +19,8 @@
   "dependencies": {
     "meow": "^4.0.0",
     "walt-compiler": "^0.4.3",
-    "walt-link": "^0.1.6"
+    "walt-link": "^0.1.6",
+    "walt-buildtools": "^0.0.1"
   },
   "devDependencies": {
     "ava": "^0.25.0",

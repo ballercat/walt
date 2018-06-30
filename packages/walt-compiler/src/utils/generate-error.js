@@ -13,6 +13,7 @@ export default function generateErrorString(
   let line;
   let col;
   let end;
+
   if (marker.start.line !== marker.end.line) {
     end = marker.start.col + 1;
     col = marker.start.col;

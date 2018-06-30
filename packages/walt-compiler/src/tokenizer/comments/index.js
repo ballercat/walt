@@ -1,7 +1,7 @@
 // @flow
 import token from "../token";
 import Syntax from "../../Syntax";
-import Stream from "../../utils/stream";
+import { eol } from "../../utils/stream";
 
 import {
   SLASH,
@@ -17,7 +17,7 @@ const parser = char => {
   let previous: string;
 
   const isComment = (current: string) => {
-    if (Stream.eol(current)) {
+    if (eol(current)) {
       isSingleLine = false;
     }
 
