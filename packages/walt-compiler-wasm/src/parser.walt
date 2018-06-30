@@ -1,0 +1,7 @@
+export type Parser = {
+
+};
+
+export function parser(): Parser {
+  return 0;
+}

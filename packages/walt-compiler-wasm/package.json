@@ -5,12 +5,38 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "ava",
+    "prettier": "prettier --list-different src/**/*.js"
   },
   "keywords": [
     "wasm",
     "webassembly"
   ],
+  "dependencies": {
+    "walt-link": "^0.2.1"
+  },
+  "prettier": {
+    "trailingComma": "es5"
+  },
   "author": "Arthur Buldauskas",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "eslint": "^5.0.1",
+    "prettier": "^1.13.7"
+  },
+  "ava": {
+    "files": [
+      "src/**/*[sS]pec.js",
+      "!**/utils.js"
+    ],
+    "source": [
+      "src/**/*.js",
+      "src/**/*.walt"
+    ],
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false
+  }
 }

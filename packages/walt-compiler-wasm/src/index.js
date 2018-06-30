@@ -1,4 +1,7 @@
-// TODO: import compiler.walt
+const link = require("walt-link");
+const path = require("path");
+const wasmBuffer = require("./wasm-buffer");
+const build = link(path.resolve(__dirname, "index.walt"));
 
 /**
  * Walt Compiler
@@ -7,37 +10,15 @@
  *
  * @param {String} source Source input
  */
-export default function compile(source) {
-  // return Promise.all([asyncSemantics(), asyncGenerator(), asyncEmitter()]).then(
-  //   ([sem, gen, emit]) => {
-  //     const lines = source.split("\n");
-  //     const filename = "??";
-  //     const encodeNames = true;
-  //     const version = 0x1;
-  //     return asyncParser(source)
-  //       .then(sem)
-  //       .then(ast => {
-  //         validate(ast, { lines, filename });
-  //         return ast;
-  //       })
-  //       .then(ast => {
-  //         const code = gen(ast, {
-  //           version,
-  //           encodeNames,
-  //           lines,
-  //           filename,
-  //         });
-  //         const wasm = emit(code, {
-  //           version,
-  //           encodeNames,
-  //           filename,
-  //           lines,
-  //         });
-
-  //         return wasm;
-  //       });
-  //   }
-  // );
+module.exports = function compile(source) {
+  const memory = new WebAssembly.Memory({
+    initial: 1,
+  });
+  return build({
+    env: {
+      memory,
+    },
+  }).then(result => {
+    const buffer = wasmBuffer({ memory }, result.instance.exports.compile());
+  });
 };
-
-
