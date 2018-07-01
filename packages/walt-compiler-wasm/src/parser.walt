@@ -1,7 +1,8 @@
-export type Parser = {
+import { readChar: ReadCharType } from 'buffer';
+import { Node } from './node';
 
-};
+type ReadCharType = () => i32;
 
-export function parser(): Parser {
+export function parse(): Node {
   return 0;
 }

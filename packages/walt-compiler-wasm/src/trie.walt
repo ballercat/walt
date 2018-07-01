@@ -1,0 +1,66 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
+import { getStringIterator, next } from './string';
+import { StringIterator } from './string';
+import { malloc } from './malloc';
+
+export type TrieNode = {
+  char: i32,
+  next: i32,
+  child: i32,
+  leaf: i32
+};
+
+const SPACE : i32 = 0x20;
+
+function getWord(offset: i32, words: i32): i32 {
+  return 0;
+}
+
+function addChild(parent: TrieNode, child: TrieNode) {
+  if (parent.child == 0) {
+    parent.child = child;
+    return;
+  }
+
+  let k : TrieNode = parent.child;
+  while (k != 0) {
+    if (k.next) {
+      k.next = child;
+    }
+    k = k.next;
+  }
+}
+
+function add(root: TrieNode, iterator: StringIterator) {
+  let current : TrieNode = root;
+  let child : TrieNode = current.child;
+
+  next(iterator);
+
+  while(child != 0 && iterator.value != SPACE && iterator.value != 0) {
+    child = child.next;
+    next(iterator);
+  }
+
+  if (child != 0) {
+    current = child;
+  }
+
+  while(iterator.value != SPACE && iterator.value != 0) {
+    const node: TrieNode = malloc(sizeof(TrieNode));
+    node.char = iterator.value,
+    addChild(current, node);
+    current = node;
+  }
+}
+
+export function trie(words: i32): TrieNode {
+  const root: TrieNode = malloc(sizeof(TrieNode));
+  root.leaf = false;
+
+  const iterator : StringIterator = getStringIterator(words);
+
+  return root;
+}
+
+

@@ -14,9 +14,14 @@ module.exports = function compile(source) {
   const memory = new WebAssembly.Memory({
     initial: 1,
   });
+  let index = 0;
+  const readChar = () => source.charCodeAt(index++);
   return build({
     env: {
       memory,
+    },
+    buffer: {
+      readChar,
     },
   }).then(result => {
     const buffer = wasmBuffer({ memory }, result.instance.exports.compile());

@@ -47,7 +47,7 @@ export function getStringIterator(addr: i32) : StringIterator {
   const baseAddress: i32 = (leb >> 32): i32;
 
   // read the first character
-  leb = decodeLEB(baseAddress);
+  // leb = decodeLEB(baseAddress);
 
   iterator = {
     done: false,
@@ -110,7 +110,7 @@ export function indexOf(haystack: i32, needle: i32) : i32 {
   next(needleIterator);
 
   while (!haystackIterator.done) {
-    result = haystackIterator.index - 1;
+   result = haystackIterator.index - 1;
     // Keep iterating while characters match
     while(haystackIterator.value == needleIterator.value) {
       next(haystackIterator);

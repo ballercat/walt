@@ -1,0 +1,29 @@
+import { memory: Memory<{ initial: 1 }> } from 'env';
+import { malloc } from './malloc';
+import { readChar: ReadChar } from 'buffer';
+import { trie } from './trie';
+
+type ReadChar = () => i32;
+export type Token = {
+  offset: i32,
+  length: i32,
+  Type: i32
+};
+export type TokenCollection = {
+  array: i32,
+  index: i32,
+  size: i32
+};
+
+export function tokenize(): i32 {
+  let collection: TokenCollection = malloc(sizeof(TokenCollection));
+  collection = {
+    array: 0,
+    index: 0,
+    size: 0
+  };
+
+  let char: i32 = readChar();
+
+  return collection;
+}
