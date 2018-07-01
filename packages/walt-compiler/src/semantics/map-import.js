@@ -11,6 +11,22 @@ import {
 
 export const mapImport = curry((options, node, _) =>
   mapNode({
+    [Syntax.BinaryExpression]: (as, transform) => {
+      const [original, pair] = as.params;
+      return transform({
+        ...pair,
+        params: [
+          {
+            ...pair.params[0],
+            meta: {
+              ...pair.params[0].meta,
+              AS: original.value,
+            },
+          },
+          ...pair.params.slice(1),
+        ],
+      });
+    },
     [Syntax.Pair]: (pairNode, __) => {
       const { types, functions, globals } = options;
       const [identifierNode, typeNode] = pairNode.params;

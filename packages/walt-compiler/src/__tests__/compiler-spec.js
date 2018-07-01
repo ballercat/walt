@@ -1,5 +1,8 @@
 import test from "ava";
+import parse from "../parser";
+import semantics from "../semantics";
 import compile from "..";
+import print from "../utils/print-node";
 import path from "path";
 import { harness } from "../utils/test-utils";
 
@@ -21,3 +24,8 @@ test(
     externalConst: 42,
   })
 );
+
+test.only("import as", t => {
+  const node = semantics(parse(`import { foo as bar, baz } from './file';`));
+  console.log(print(node));
+});

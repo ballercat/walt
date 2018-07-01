@@ -41,6 +41,11 @@ class MenuBar extends React.PureComponent {
           onClick={onMenuClick}
         />
         <Menu.Item
+          name="AST"
+          active={activeItem === "AST"}
+          onClick={onMenuClick}
+        />
+        <Menu.Item
           name="Canvas"
           active={activeItem === "Canvas"}
           onClick={onMenuClick}

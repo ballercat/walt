@@ -21,7 +21,12 @@ function inferImportTypes(ast, deps, compiler) {
             types,
             userTypes,
           } = depAST.meta.AST_METADATA;
+
           const fun = functions[identifier.value];
+          const glbl = globals[identifier.value];
+          const externType = types[identifier.value];
+          const userType = userTypes[identifier.value];
+
           if (fun != null) {
             // function arguments and params are _always_ the first two params
             const [args, result] = fun.params;
@@ -64,7 +69,7 @@ function inferImportTypes(ast, deps, compiler) {
             newTypes.push(newType);
 
             // for an import to become valid at this point it only needs to be an
-            // identifier : identifier pair :)
+            // <identifier : identifier> pair :)
             const patched = Object.assign({}, identifier, {
               value: ":",
               params: [
@@ -77,7 +82,6 @@ function inferImportTypes(ast, deps, compiler) {
             return patched;
           }
 
-          const glbl = globals[identifier.value];
           if (glbl != null) {
             // just set to the global type pair and peace out
             return Object.assign({}, identifier, {
@@ -96,7 +100,6 @@ function inferImportTypes(ast, deps, compiler) {
 
           // Unlike function types, user defined types are only needed for the
           // compiler to produce a valid binary.
-          const externType = types[identifier.value];
           if (externType != null) {
             invariant(
               externType.meta.EXPORTED,
@@ -108,7 +111,6 @@ function inferImportTypes(ast, deps, compiler) {
             newTypes.push(Object.assign({}, externType));
           }
 
-          const userType = userTypes[identifier.value];
           if (userType != null) {
             invariant(
               userType.meta.EXPORTED,

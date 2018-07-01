@@ -1,4 +1,10 @@
 // @flow
+/**
+ * The expression parser for generating all parsed nodes, uses a modified Shunting
+ * Yard algo.
+ *
+ * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
+ */
 import Syntax from "../Syntax";
 import operator from "./operator";
 import constant from "./constant";
@@ -125,6 +131,9 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
 
   const process = () => {
     switch (ctx.token.type) {
+      case Syntax.Keyword:
+        operators.push(ctx.token);
+        break;
       case Syntax.Constant:
         operands.push(constant(ctx));
         break;

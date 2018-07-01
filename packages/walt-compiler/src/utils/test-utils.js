@@ -49,6 +49,7 @@ export const harness = (filepath, env) => t => {
     generator,
     prettyPrintNode,
   });
+  debugger;
   return build({
     env: {
       memory,

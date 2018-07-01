@@ -4,7 +4,7 @@ import {
 import { assert: Assert, memory: Memory } from 'env';
 import {
   getStringIterator,
-  next,
+  next as string_next,
   reset,
   stringLength,
   indexOf

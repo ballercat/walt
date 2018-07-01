@@ -28,6 +28,15 @@ export const getKindConstant = (value: string) => {
   }
 };
 
+const getFieldName = node => {
+  let name = node.value;
+  if (node.meta.AS != null) {
+    return node.meta.AS;
+  }
+
+  return name;
+};
+
 export default function generateImportFromNode(
   node: NodeType
 ): IntermediateImportType[] {
@@ -39,7 +48,8 @@ export default function generateImportFromNode(
   walkNode({
     [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
-      const { value: field } = fieldIdentifierNode;
+      const field = getFieldName(fieldIdentifierNode);
+      // const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
       const kind = getKindConstant(importTypeValue);
       const typeIndex = (() => {

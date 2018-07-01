@@ -5,6 +5,7 @@ import { Header, Image, Segment } from "semantic-ui-react";
 import MenuBar from "./menu-bar";
 import "./css/app";
 import examples from "./examples";
+import AstView from "./ast-view";
 import waltCompiler, {
   parser,
   semantics,
@@ -43,6 +44,7 @@ class Explorer extends React.Component {
   state = {
     code: examples.Default.code,
     js: examples.Default.js,
+    ast: getAST(examples.Default.code),
     wasm: printNode(getAST(examples.Default.code)),
     compiling: false,
     logs: [],
@@ -82,7 +84,7 @@ class Explorer extends React.Component {
           const ast = getAST(this.state.code);
           validate(ast, config);
           this.bytecode = emitter(generator(ast, config), config);
-          this.setState({ wasm: printNode(ast) }, this.compileAndRun);
+          this.setState({ wasm: printNode(ast), ast }, this.compileAndRun);
         } catch (e) {
           this.setState({ compiling: false });
           setTimeout(() => {
@@ -115,7 +117,9 @@ class Explorer extends React.Component {
   handleSelectExample = (e, { value }) => {
     const { js, code } = examples[value];
     this.setState({ compiling: true, example: value });
-    requestAnimationFrame(() => this.setState({ code, js, compiling: false }));
+    requestAnimationFrame(() =>
+      this.setState({ code, js, compiling: false, ast: getAST(code) })
+    );
   };
 
   render() {
@@ -168,6 +172,8 @@ class Explorer extends React.Component {
                     <canvas id="canvas" width="500" height="400" />
                   </div>
                 );
+              case "AST":
+                return <AstView ast={this.state.ast} />;
             }
           })(activeItem)}
         </Segment>
