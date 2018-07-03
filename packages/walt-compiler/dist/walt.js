@@ -587,6 +587,12 @@ const maybeIdentifier = ctx => {
 };
 
 //      
+/**
+ * The expression parser for generating all parsed nodes, uses a modified Shunting
+ * Yard algo.
+ *
+ * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
+ */
 const last = list => list[list.length - 1];
 
 const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
@@ -690,6 +696,9 @@ const expression = (ctx, check = predicate) => {
 
   const process = () => {
     switch (ctx.token.type) {
+      case Syntax.Keyword:
+        operators.push(ctx.token);
+        break;
       case Syntax.Constant:
         operands.push(parseConstant(ctx));
         break;
@@ -1566,7 +1575,7 @@ const tokenParser = token(parse$1, Syntax.Identifier);
 //      
 const supported$1 = [
 // EcmaScript
-"break", "if", "else", "import", "from", "export", "return", "switch", "case", "default", "const", "let", "for", "continue", "do", "while", "function",
+"break", "if", "else", "import", "as", "from", "export", "return", "switch", "case", "default", "const", "let", "for", "continue", "do", "while", "function",
 
 // s-expression
 "global", "module", "type", "lambda",
@@ -2037,6 +2046,16 @@ const ALIAS = "alias";
 
 //      
 const mapImport = curry_1((options, node, _) => mapNode({
+  [Syntax.BinaryExpression]: (as, transform) => {
+    const [original, pair] = as.params;
+    return transform(_extends({}, pair, {
+      params: [_extends({}, pair.params[0], {
+        meta: _extends({}, pair.params[0].meta, {
+          AS: original.value
+        })
+      }), ...pair.params.slice(1)]
+    }));
+  },
   [Syntax.Pair]: (pairNode, __) => {
     const { types, functions, globals } = options;
     const [identifierNode, typeNode] = pairNode.params;
@@ -4627,6 +4646,15 @@ const getKindConstant = value => {
   }
 };
 
+const getFieldName = node => {
+  let name = node.value;
+  if (node.meta.AS != null) {
+    return node.meta.AS;
+  }
+
+  return name;
+};
+
 function generateImportFromNode(node) {
   const [importsNode, moduleStringLiteralNode] = node.params;
   const { value: module } = moduleStringLiteralNode;
@@ -4636,7 +4664,8 @@ function generateImportFromNode(node) {
   walker({
     [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
-      const { value: field } = fieldIdentifierNode;
+      const field = getFieldName(fieldIdentifierNode);
+      // const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
       const kind = getKindConstant(importTypeValue);
       const typeIndex = (() => {

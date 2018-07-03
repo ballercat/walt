@@ -12,7 +12,7 @@ import waltCompiler, {
   validate,
   generator,
   emitter,
-  printNode
+  prettyPrintNode as printNode
 } from "walt-compiler";
 
 const getAST = source => semantics(parser(source));
@@ -107,7 +107,7 @@ class Explorer extends React.Component {
   };
 
   handleUpdate = code => {
-    this.setState({ code });
+    this.setState({ code, ast: getAST(code) });
   };
 
   handleMenuClick = (e, { name: activeItem }) => {

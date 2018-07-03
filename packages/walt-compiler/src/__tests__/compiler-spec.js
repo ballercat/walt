@@ -26,6 +26,16 @@ test(
 );
 
 test.only("import as", t => {
-  const node = semantics(parse(`import { foo as bar, baz } from './file';`));
+  const node = semantics(
+    parse(`
+import {
+  getStringIterator,
+  next as string_next,
+  reset,
+  stringLength,
+  indexOf
+} from '../walt/string';
+`)
+  );
   console.log(print(node));
 });
