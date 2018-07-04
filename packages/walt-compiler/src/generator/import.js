@@ -48,10 +48,12 @@ export default function generateImportFromNode(
   walkNode({
     [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
+
       const field = getFieldName(fieldIdentifierNode);
-      // const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
+
       const kind = getKindConstant(importTypeValue);
+
       const typeIndex = (() => {
         const typeIndexMeta = typeOrIdentifierNode.meta[TYPE_INDEX];
         if (typeIndexMeta) {

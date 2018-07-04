@@ -29,6 +29,7 @@ const precedence = {
   "=>": PRECEDENCE_PARAMS,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,
+  as: PRECEDENCE_COMMA + 1,
   ">>": PRECEDENCE_SHIFT,
   ">>>": PRECEDENCE_SHIFT,
   "<<": PRECEDENCE_SHIFT,

@@ -1,10 +1,10 @@
 import {
   Assert
 } from '../walt/tests';
-import { assert: Assert, memory: Memory } from 'env';
+import { assert: Assert as test, memory: Memory } from 'env';
 import {
   getStringIterator,
-  next as string_next,
+  next as stringNext,
   reset,
   stringLength,
   indexOf
@@ -19,26 +19,26 @@ function countCharacter(ptr: i32, character: i32) : i32 {
   const iterator: StringIterator = getStringIterator(ptr);
   let result: i32 = 0;
 
-  next(iterator);
+  stringNext(iterator);
   while(iterator.done == false) {
     if (iterator.value == character) {
       result += 1;
     }
-    next(iterator);
+    stringNext(iterator);
   }
 
   return result;
 }
 
 export function run() {
-  assert("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", '😂'), 4);
-  assert("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
-  assert("string iterator, indexOf ascii", indexOf("quick brown fox", "brown"), 6);
-  assert(
+  test("string iterator, count emojis", countCharacter("aabb😂😂😂 aaa😂", '😂'), 4);
+  test("string iterator, count ASCII", countCharacter("aabbccddaa   aaa", 'a'), 7);
+  test("string iterator, indexOf ascii", indexOf("quick brown fox", "brown"), 6);
+  test(
     "string iterator, indexOf utf8",
     indexOf('Liberté, égalité, fraternité for all utf encodings!', 'égalité'),
     9
   );
   const text: i32 = "large string encoding --> We need to test that strings of length of 128+ bytes work. On a plane, so could not post lorem ipsum, this should be of correct length though. Unicode for coverage √";
-  assert(text, stringLength(text), 191);
+  test(text, stringLength(text), 191);
 }

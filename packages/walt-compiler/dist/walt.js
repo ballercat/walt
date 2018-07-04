@@ -519,6 +519,7 @@ const precedence = {
   "=>": PRECEDENCE_PARAMS,
   "(": PRECEDENCE_PARAMS,
   ",": PRECEDENCE_COMMA,
+  as: PRECEDENCE_COMMA + 1,
   ">>": PRECEDENCE_SHIFT,
   ">>>": PRECEDENCE_SHIFT,
   "<<": PRECEDENCE_SHIFT,
@@ -593,11 +594,30 @@ const maybeIdentifier = ctx => {
  *
  * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
  */
+// PLEASE READ BEFORE EDITING:
+//
+// 100% of the program is statements which are made up of expressions. The code
+// below is the "engine" to parsing just about everything(useful) in the syntax.
+// Take great care editing it.
+//
+// * Avoid special cases as much as possible.
+// * Leverage precednece and other Shunting Yard rules.
+// * Simplify whenever possible, avoid adding code.
+//
+// Thanks.
+
 const last = list => list[list.length - 1];
 
 const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
 
+// Because expressions can be anywhere and likely nested inside another expression
+// this nesting is represented with a depth. If we reach an "exit" like a ) or a }
+// and drop our depth below zero we know we have escaped our intended expression
+// and we bail out.
 const predicate = (token, depth) => token.value !== ";" && depth > 0;
+
+// Exceptions to no-keywords-in-expressions
+const validKeywordsInExpressions = ["as"];
 
 // Shunting yard
 const expression = (ctx, check = predicate) => {
@@ -613,20 +633,32 @@ const expression = (ctx, check = predicate) => {
   const consume = () => operands.push(operator(ctx, operators, operands));
 
   const eatUntil = condition => {
-    let prev = last(operators);
-    while (prev && prev.value !== condition) {
+    let previous = last(operators);
+    while (previous && previous.value !== condition) {
       consume();
-      prev = last(operators);
+      previous = last(operators);
     }
   };
 
+  // The rules for consuming punctuators(+ - , etc.)
   const flushOperators = precedence => {
-    let previous = null;
-    while ((previous = last(operators)) && previous.Type !== Syntax.Sequence && getPrecedence(previous) >= precedence && getAssociativty(previous) === "left") {
+    let previous = last(operators);
+    while (previous &&
+    // A sequence is a special case. Note that this is a check for a Sequence NODE.
+    // This is so that math operators don't "eat" already parsed sequences of nodes.
+    // To put it plainly a comma separated list should never be added to a number.
+    // Examples include code like: 1, 2, 3, 2 + 2.
+    previous.Type !== Syntax.Sequence &&
+    // The rest of this is Shunting Yard rules
+    getPrecedence(previous) >= precedence && getAssociativty(previous) === "left") {
       consume();
+      previous = last(operators);
     }
   };
 
+  // Process individual punctuators, below are the rules for handling things like
+  // brackets and code blocks. Other punctuators follow a precedence rule parsing
+  // approach.
   const processPunctuator = () => {
     switch (ctx.token.value) {
       case "=>":
@@ -694,11 +726,10 @@ const expression = (ctx, check = predicate) => {
     }
   };
 
+  // Process individual tokens, this will either push to an operand stack or
+  // process an operator.
   const process = () => {
     switch (ctx.token.type) {
-      case Syntax.Keyword:
-        operators.push(ctx.token);
-        break;
       case Syntax.Constant:
         operands.push(parseConstant(ctx));
         break;
@@ -713,7 +744,16 @@ const expression = (ctx, check = predicate) => {
       case Syntax.Type:
         operands.push(builtInType(ctx));
         break;
+      case Syntax.Keyword:
       case Syntax.Punctuator:
+        // Some special keywords may show up in expressions, but only a small
+        // subset. These keywords are treated as punctuators and processed by
+        // the overall punctuator rules
+        // EXAMPLE: the 'as' keyword - import statements consist of a sequence of
+        // expressions but the as keyword can be used to rename an import within.
+        if (ctx.token.type === Syntax.Keyword && !validKeywordsInExpressions.includes(ctx.token.value)) {
+          break;
+        }
         const punctuatorResult = processPunctuator();
         if (punctuatorResult != null) {
           return punctuatorResult;
@@ -731,11 +771,13 @@ const expression = (ctx, check = predicate) => {
     }
   }
 
+  // If we get to the end of our available tokens then proceed to eat any left over
+  // operators and finalize the expression.
   while (operators.length) {
     consume();
   }
 
-  // Should be a node
+  // Last operand should be a node that is at the "root" of this expression
   return operands.pop();
 };
 
@@ -2045,54 +2087,66 @@ const ALIAS = "alias";
 // Statics
 
 //      
-const mapImport = curry_1((options, node, _) => mapNode({
-  [Syntax.BinaryExpression]: (as, transform) => {
-    const [original, pair] = as.params;
-    return transform(_extends({}, pair, {
-      params: [_extends({}, pair.params[0], {
-        meta: _extends({}, pair.params[0].meta, {
-          AS: original.value
-        })
-      }), ...pair.params.slice(1)]
-    }));
-  },
-  [Syntax.Pair]: (pairNode, __) => {
-    const { types, functions, globals } = options;
-    const [identifierNode, typeNode] = pairNode.params;
+const mapImport = curry_1((options, node, _) => {
+  return mapNode({
+    [Syntax.BinaryExpression]: (as, transform) => {
+      const [maybePair, asIdentifier] = as.params;
+      // if the original import is not typed this isn't a valid import and is ignored
+      if (maybePair.Type !== Syntax.Pair) {
+        // No transform happens here (the transform is what creates the global fn to reference)
+        return as;
+      }
+      // Continue transforming the import as before, the AS metadata will notify
+      // the generator to ask for the original import.
+      const [original, typeNode] = maybePair.params;
 
-    if (types[typeNode.value] != null) {
-      // crate a new type
+      return transform(_extends({}, maybePair, {
+        params: [_extends({}, asIdentifier, {
+          meta: _extends({}, original.meta, {
+            // <new-value> AS <original-value>
+            AS: original.value
+          })
+        }), typeNode]
+      }));
+    },
+    [Syntax.Pair]: (pairNode, __) => {
+      const { types, functions, globals } = options;
+      const [identifierNode, typeNode] = pairNode.params;
 
-      const functionIndex = Object.keys(functions).length;
-      const typeIndex = Object.keys(types).indexOf(typeNode.value);
-      const functionNode = _extends({}, identifierNode, {
-        id: identifierNode.value,
-        type: types[typeNode.value].type,
-        meta: {
-          [FUNCTION_INDEX]: functionIndex,
-          [TYPE_INDEX]: typeIndex,
-          FUNCTION_METADATA: types[typeNode.value].meta.FUNCTION_METADATA,
-          DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS
-        }
-      });
-      functions[identifierNode.value] = functionNode;
-      return _extends({}, pairNode, {
-        params: [functionNode, types[typeNode.value]]
-      });
+      if (types[typeNode.value] != null) {
+        // crate a new type
+
+        const functionIndex = Object.keys(functions).length;
+        const typeIndex = Object.keys(types).indexOf(typeNode.value);
+        const functionNode = _extends({}, identifierNode, {
+          id: identifierNode.value,
+          type: types[typeNode.value].type,
+          meta: _extends({}, identifierNode.meta, {
+            [FUNCTION_INDEX]: functionIndex,
+            [TYPE_INDEX]: typeIndex,
+            FUNCTION_METADATA: types[typeNode.value].meta.FUNCTION_METADATA,
+            DEFAULT_ARGUMENTS: types[typeNode.value].meta.DEFAULT_ARGUMENTS
+          })
+        });
+        functions[identifierNode.value] = functionNode;
+        return _extends({}, pairNode, {
+          params: [functionNode, types[typeNode.value]]
+        });
+      }
+
+      if (!["Table", "Memory"].includes(typeNode.type)) {
+        const index = Object.keys(globals).length;
+
+        globals[identifierNode.value] = _extends({}, identifierNode, {
+          meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+          type: typeNode.type
+        });
+      }
+
+      return pairNode;
     }
-
-    if (!["Table", "Memory"].includes(typeNode.type)) {
-      const index = Object.keys(globals).length;
-
-      globals[identifierNode.value] = _extends({}, identifierNode, {
-        meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
-        type: typeNode.type
-      });
-    }
-
-    return pairNode;
-  }
-})(node));
+  })(node);
+});
 
 //      
 const getTypeSize = typeString => {
@@ -3799,6 +3853,10 @@ function validate(ast, {
     },
     [Syntax.Import]: (importNode, _) => {
       walker({
+        [Syntax.BinaryExpression]: (binary, __) => {
+          const [start, end] = binary.range;
+          problems.push(generateErrorString("Using an 'as' import without a type.", "A type for original import " + binary.params[0].value + " is not defined nor could it be inferred.", { start, end }, filename, GLOBAL_LABEL));
+        },
         [Syntax.Identifier]: (identifier, __) => {
           const [start, end] = identifier.range;
           problems.push(generateErrorString("Infered type not supplied.", "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.", { start, end }, filename, GLOBAL_LABEL));
@@ -4664,10 +4722,12 @@ function generateImportFromNode(node) {
   walker({
     [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
+
       const field = getFieldName(fieldIdentifierNode);
-      // const { value: field } = fieldIdentifierNode;
       const { value: importTypeValue } = typeOrIdentifierNode;
+
       const kind = getKindConstant(importTypeValue);
+
       const typeIndex = (() => {
         const typeIndexMeta = typeOrIdentifierNode.meta[TYPE_INDEX];
         if (typeIndexMeta) {

@@ -1,4 +1,5 @@
 "use strict";
+const print = require("./print");
 const invariant = require("invariant");
 
 // Patch missing type imports with the give dependencies
@@ -11,6 +12,19 @@ function inferImportTypes(ast, deps, compiler) {
       return compiler.mapNode({
         Pair(pair, _) {
           return pair;
+        },
+        BinaryExpression(binary, transform) {
+          // "as" keywords only
+          if (binary.value !== "as") {
+            return binary;
+          }
+
+          return Object.assign({}, binary, {
+            params: [
+              transform(binary.params[0]),
+              binary.params[1]
+            ]
+          });
         },
         // Fix any identifiers here
         Identifier(identifier, _) {
