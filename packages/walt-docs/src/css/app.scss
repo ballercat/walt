@@ -3,9 +3,9 @@ $color-primary: #EFDF6B;
 $color-primary--light: #f7efbb;
 $color-secondary: #FF9933;
 $color-secondary--light: #c1f8d5;
+$color-tree-text: #A7CEB4;
 $color-black: #343530;
 $color-white: #fff;
-
 html,
 body {
   box-sizing: border-box;
@@ -80,4 +80,64 @@ body {
   .CodeMirror {
     height: 100%;
     width: 100%;
+  }
+
+  .Tree {
+    font-family: monospace;
+    user-select: none;
+    background-color: #F1F0F8;
+    overflow-y: auto;
+    width: 100%;
+
+    li {
+      margin: 0;
+      list-style: none;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    ul {
+    }
+  }
+
+  .Node {
+    padding-left: 10px;
+    margin: 0;
+
+    .is-open {
+      &::before {
+        content: "-";
+        left: -10px;
+      }
+    }
+
+    &::before {
+      content: "+";
+      left: -10px;
+    }
+
+    &-param {
+      li {
+        padding-left: 20px;
+      }
+    }
+
+    &-preview {
+      padding-left: 10px;
+      font-style: italic;
+      color: #b4b4b4;
+    }
+
+    &-expand {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    &-key {
+      color: #F4982C;
+    }
+
+    &-value {
+      color: #054D92;
+    }
   }

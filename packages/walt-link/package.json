@@ -16,14 +16,15 @@
   "author": "Arthur Buldauskas",
   "license": "MIT",
   "dependencies": {
-    "invariant": "^2.2.4"
+    "invariant": "^2.2.4",
+    "walt-compiler": "^0.6.3",
+    "walt-buildtools": "^0.0.2"
   },
   "devDependencies": {
     "ava": "^0.25.0",
     "coveralls": "^3.0.0",
     "nyc": "^11.7.1",
-    "prettier": "^1.12.0",
-    "walt-buildtools": "^0.0.2"
+    "prettier": "^1.12.0"
   },
   "prettier": {
     "trailingComma": "es5"

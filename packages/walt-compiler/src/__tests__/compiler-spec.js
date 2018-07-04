@@ -1,5 +1,9 @@
 import test from "ava";
+import parse from "../parser";
+import validate from "../validation";
+import semantics from "../semantics";
 import compile from "..";
+import print from "walt-buildtools/print";
 import path from "path";
 import { harness } from "../utils/test-utils";
 
@@ -21,3 +25,20 @@ test(
     externalConst: 42,
   })
 );
+
+test("import as", t => {
+  const node = semantics(
+    parse(`
+import {
+  getStringIterator,
+  next as string_next,
+  reset,
+  stringLength,
+  indexOf
+} from '../walt/string';
+`)
+  );
+  const error = t.throws(() => validate(node, {}));
+  t.snapshot(print(node));
+  t.snapshot(error.message);
+});

@@ -200,7 +200,7 @@
     "operator-assignment": 0,       // require assignment operator shorthand where possible or prohibit it entirely (off by default)
     "padded-blocks": 0,             // enforce padding within blocks (off by default)
     "quote-props": [                // require quotes around object literal property names (off by default)
-      2,
+      1,
       "consistent-as-needed",
       { "keywords": false }
     ],

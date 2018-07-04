@@ -62,6 +62,20 @@ export default function validate(
     },
     [Syntax.Import]: (importNode, _) => {
       walkNode({
+        [Syntax.BinaryExpression]: (binary, __) => {
+          const [start, end] = binary.range;
+          problems.push(
+            error(
+              "Using an 'as' import without a type.",
+              "A type for original import " +
+                binary.params[0].value +
+                " is not defined nor could it be inferred.",
+              { start, end },
+              filename,
+              GLOBAL_LABEL
+            )
+          );
+        },
         [Syntax.Identifier]: (identifier, __) => {
           const [start, end] = identifier.range;
           problems.push(

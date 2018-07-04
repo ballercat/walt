@@ -9,6 +9,7 @@ const supported = [
   "if",
   "else",
   "import",
+  "as",
   "from",
   "export",
   "return",

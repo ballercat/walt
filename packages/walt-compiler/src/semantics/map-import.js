@@ -9,8 +9,34 @@ import {
   GLOBAL_INDEX,
 } from "./metadata";
 
-export const mapImport = curry((options, node, _) =>
-  mapNode({
+export const mapImport = curry((options, node, _) => {
+  return mapNode({
+    [Syntax.BinaryExpression]: (as, transform) => {
+      const [maybePair, asIdentifier] = as.params;
+      // if the original import is not typed this isn't a valid import and is ignored
+      if (maybePair.Type !== Syntax.Pair) {
+        // No transform happens here (the transform is what creates the global fn to reference)
+        return as;
+      }
+      // Continue transforming the import as before, the AS metadata will notify
+      // the generator to ask for the original import.
+      const [original, typeNode] = maybePair.params;
+
+      return transform({
+        ...maybePair,
+        params: [
+          {
+            ...asIdentifier,
+            meta: {
+              ...original.meta,
+              // <new-value> AS <original-value>
+              AS: original.value,
+            },
+          },
+          typeNode,
+        ],
+      });
+    },
     [Syntax.Pair]: (pairNode, __) => {
       const { types, functions, globals } = options;
       const [identifierNode, typeNode] = pairNode.params;
@@ -25,6 +51,7 @@ export const mapImport = curry((options, node, _) =>
           id: identifierNode.value,
           type: types[typeNode.value].type,
           meta: {
+            ...identifierNode.meta,
             [FUNCTION_INDEX]: functionIndex,
             [TYPE_INDEX]: typeIndex,
             FUNCTION_METADATA: types[typeNode.value].meta.FUNCTION_METADATA,
@@ -50,5 +77,5 @@ export const mapImport = curry((options, node, _) =>
 
       return pairNode;
     },
-  })(node)
-);
+  })(node);
+});

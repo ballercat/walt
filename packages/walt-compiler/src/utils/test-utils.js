@@ -2,16 +2,12 @@ import buildTools from "walt-buildtools";
 import path from "path";
 import fs from "fs";
 import { getText } from "../utils/string";
-import {
-  mapNode,
-  walkNode,
-  parser,
-  semantics,
-  validate,
-  emitter,
-  generator,
-  prettyPrintNode,
-} from "..";
+import semantics from "../semantics";
+import validate from "../validation";
+import parser from "../parser";
+import emitter from "../emitter";
+import generator from "../generator";
+import { mapNode, walkNode, prettyPrintNode } from "..";
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;
@@ -37,6 +33,7 @@ export const harness = (filepath, env) => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
   const decodeText = getText(view);
+
   const build = link(filepath, {
     resolve,
     getFileContents,
@@ -49,6 +46,7 @@ export const harness = (filepath, env) => t => {
     generator,
     prettyPrintNode,
   });
+
   return build({
     env: {
       memory,
