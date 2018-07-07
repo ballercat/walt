@@ -13,6 +13,7 @@ const supported = [
   "f32[]",
   "f64[]",
   "u8[]",
+  "bool",
   "Function",
   "Memory",
   "Table",

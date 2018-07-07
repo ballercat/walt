@@ -19,7 +19,7 @@ test("empty module compilation", t =>
 test("invalid imports throw", t =>
   t.throws(() => compile("import foo from 'bar'")));
 
-test(
+test.only(
   "compiler",
   harness(path.resolve(__dirname, "./compiler-spec.walt"), {
     externalConst: 42,
@@ -41,4 +41,20 @@ import {
   const error = t.throws(() => validate(node, {}));
   t.snapshot(print(node));
   t.snapshot(error.message);
+});
+
+test("bool types", _t => {
+  const node = semantics(
+    parse(`
+    const b : bool = false;
+    function foo() : bool {
+      return true;
+    }
+
+    export function test() : bool {
+      return foo();
+    }
+  `)
+  );
+  console.log(print(node));
 });

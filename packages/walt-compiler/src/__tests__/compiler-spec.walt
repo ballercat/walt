@@ -27,6 +27,11 @@ let foo: i32 = 3;
 let baz: i32 = 0;
 let x: i32;
 
+// const boolean : bool = false;
+// function testBooleans() : bool {
+//   return boolean || true;
+// }
+
 export function testLargeSignedConstant(): i32 {
   return 126;
 }
