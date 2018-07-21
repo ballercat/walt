@@ -9,6 +9,12 @@ const maybeIdentifier = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   ctx.eat(null, Syntax.Identifier);
 
+  if (node.value === "false" || node.value === "true") {
+    node.type = "bool";
+    node.value = node.value === "true" ? "1" : "0";
+    return ctx.endNode(node, Syntax.Constant);
+  }
+
   if (ctx.eat(["("])) {
     const params = [expression(ctx)];
     const functionCall = ctx.endNode(

@@ -67,14 +67,19 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
     `Unexpected Syntax Token ${operand.Type} : ${operand.value}`
   );
 
-  const validate = (block, i) =>
-    invariant(
-      block.kind,
-      "Unknown opcode generated in block index %s %s. \nOperand: \n%s",
-      i,
-      JSON.stringify(block),
-      printNode(operand)
-    );
+  const validate = (block, i) => {
+    // Only invariant a block if it's falsy, otherwise we will print _every_
+    // opcode generated.
+    if (!block.kind) {
+      invariant(
+        block.kind,
+        "Unknown opcode generated in block index %s %s. \nOperand: \n%s",
+        i,
+        JSON.stringify(block),
+        printNode(operand)
+      );
+    }
+  };
   const blocks = mapping(operand, parent);
   if (Array.isArray(blocks)) {
     blocks.forEach(validate);

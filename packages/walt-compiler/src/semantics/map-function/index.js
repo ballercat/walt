@@ -22,6 +22,7 @@ import makeClosure, {
   transformClosedDeclaration,
   getEnclosedVariables,
 } from "../closure";
+import { typeWeight } from "../../types";
 import makePair from "./map-pair";
 import walkNode from "../../utils/walk-node";
 import { balanceTypesInMathExpression } from "./patch-typecasts";
@@ -238,7 +239,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
       if (
         expression != null &&
         expression.Type === Syntax.Constant &&
-        expression.type !== fun.type
+        typeWeight(expression.type) !== typeWeight(fun.type)
       ) {
         return {
           ...returnNode,

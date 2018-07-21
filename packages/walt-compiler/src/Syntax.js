@@ -63,6 +63,7 @@ export const i64 = "i64";
 export const f64 = "f64";
 export const Memory = "Memory";
 export const Table = "Table";
+export const bool = "bool";
 
 export const builtinTypes = {
   i32,
@@ -71,6 +72,7 @@ export const builtinTypes = {
   f64,
   Memory,
   Table,
+  bool,
 };
 
 export const statements = {
