@@ -220,10 +220,10 @@ opcode(f32, i64, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64");
 export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
   const toType = to[0];
 
-  if (to === "i32" && from === "i64") {
+  if (["i32", "bool"].includes(to) && from === "i64") {
     return def.i32Wrapi64;
   }
-  if (to === "i64" && from === "i32") {
+  if (to === "i64" && ["i32", "bool"].includes(from)) {
     return def.i64ExtendSi32;
   }
 

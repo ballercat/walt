@@ -11,10 +11,10 @@ function getValue(node) {
 
 function print(node) {
   if (!node.params.length) {
-    return `<${node.Type} value="${getValue(node)}" />`
+    return `<${node.Type} value="${getValue(node)}" type=${JSON.stringify(node.type)} />`
   }
 
-  return `<${node.Type} value="${getValue(node)}" >
+  return `<${node.Type} value="${getValue(node)}" type=${JSON.stringify(node.type)} >
 
 ${node.params.filter(Boolean).map(child => {
   const childStr = print(child);

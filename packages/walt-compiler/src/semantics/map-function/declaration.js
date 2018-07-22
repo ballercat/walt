@@ -1,6 +1,8 @@
 // @flow
 import Syntax from "../../Syntax";
 import curry from "curry";
+import { extendNode } from "../../utils/extend-node";
+import { getTypeSize } from "../../utils/types";
 import {
   CLOSURE_TYPE,
   TYPE_ARRAY,
@@ -10,86 +12,71 @@ import {
   GLOBAL_INDEX,
 } from "../metadata";
 
-const getTypeSize = typeString => {
-  switch (typeString) {
-    case "i64":
-    case "f64":
-      return 8;
-    case "i32":
-    case "f32":
-    default:
-      return 4;
-  }
-};
-
-const isClosureType = (types, type): boolean => {
-  return types[type] != null && !!types[type].meta[CLOSURE_TYPE];
-};
-const parse = (isConst, { types, scope }, declaration) => {
-  const index = Object.keys(scope).length;
-  const typeString = declaration.type;
-  const modifier = declaration.type.slice(-2);
-  const isArray = modifier === "[]";
-  const isClosure = isClosureType(types, typeString);
-  const type = (() => {
-    if (isArray) {
-      return "i32";
-    } else if (isClosure) {
-      return "i64";
-    }
-    return declaration.type;
-  })();
-  const meta = {
-    [TYPE_ARRAY]: isArray ? typeString.slice(0, -2) : null,
-    [CLOSURE_TYPE]: isClosure || null,
-    [TYPE_CONST]: isConst || null,
-    [TYPE_INDEX]: isClosure ? Object.keys(types).indexOf(typeString) : null,
+const parseArray = type => {
+  const subscriptType = type.slice(-2) === "[]" ? "i32" : null;
+  return {
+    arrayType: subscriptType ? type.slice(0, -2) : null,
+    subscriptType,
   };
-
-  return [type, meta, index];
 };
 
-export const parseDeclaration = curry((isConst, options, declaration) => {
-  const { locals: scope, closures } = options;
-  const [type, meta, index] = parse(
-    isConst,
-    { ...options, scope },
-    declaration
+// Parse and return a fully typed declaration options
+// [ type, meta, index ]
+const parse = ({ isConst, types, scope, node }) => {
+  const { subscriptType, arrayType } = parseArray(node.type);
+  const closureType =
+    types[node.type] && types[node.type].meta[CLOSURE_TYPE] ? "i64" : null;
+
+  return [
+    subscriptType || closureType || node.type,
+    {
+      [TYPE_ARRAY]: arrayType,
+      [TYPE_CONST]: isConst || null,
+      [CLOSURE_TYPE]: closureType,
+      [TYPE_INDEX]: Object.keys(types).indexOf(node.type),
+    },
+    Object.keys(scope).length,
+  ];
+};
+
+// Parse a local declaration
+export const parseDeclaration = curry((isConst, options, node) => {
+  const { locals: scope, closures, types } = options;
+  const [type, meta, index] = parse({ isConst, types, scope, node });
+
+  scope[node.value] = extendNode(
+    {
+      params: node.params.map(extendNode({ type: node.type })),
+      type,
+      meta: { ...meta, [LOCAL_INDEX]: index },
+      Type: Syntax.Declaration,
+    },
+    node
   );
 
-  const params = declaration.params.map(node => ({
-    ...node,
-    type: declaration.type,
-  }));
-
-  scope[declaration.value] = {
-    ...declaration,
-    params,
-    type,
-    meta: { ...meta, [LOCAL_INDEX]: index },
-    Type: Syntax.Declaration,
-  };
-
-  const { variables } = closures;
-  if (variables[declaration.value] != null && declaration.params[0]) {
-    const { offsets } = closures;
-    offsets[declaration.value] = closures.envSize;
-    closures.envSize += getTypeSize(declaration.type);
+  if (closures.variables[node.value] != null && node.params[0]) {
+    closures.offsets[node.value] = closures.envSize;
+    closures.envSize += getTypeSize(node.type);
   }
 });
 
+// Map a global declaration
 export const parseGlobalDeclaration = curry((isConst, options, node) => {
-  const { globals: scope } = options;
-  if (node.type !== "Table" && node.type !== "Memory") {
-    const [type, meta, index] = parse(isConst, { ...options, scope }, node);
-    scope[node.value] = {
-      ...node,
+  const { globals: scope, types } = options;
+  const [type, meta, index] = parse({ isConst, types, scope, node });
+
+  if (["Table", "Memory"].includes(node.type)) {
+    return extendNode({ meta: { [GLOBAL_INDEX]: -1 } }, node);
+  }
+
+  scope[node.value] = extendNode(
+    {
       meta: { ...meta, [GLOBAL_INDEX]: index },
       type,
       Type: Syntax.Declaration,
-    };
+    },
+    node
+  );
 
-    return scope[node.value];
-  }
-  return { ...node, meta: { [GLOBAL_INDEX]: -1 } };
+  return scope[node.value];
 });

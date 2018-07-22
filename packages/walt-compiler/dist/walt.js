@@ -69,6 +69,7 @@ const i64 = "i64";
 const f64 = "f64";
 const Memory = "Memory";
 const Table = "Table";
+const bool = "bool";
 
 const builtinTypes = {
   i32,
@@ -76,7 +77,8 @@ const builtinTypes = {
   i64,
   f64,
   Memory,
-  Table
+  Table,
+  bool
 };
 
 const statements = {
@@ -574,6 +576,12 @@ const getAssociativty = token => {
 const maybeIdentifier = ctx => {
   const node = ctx.startNode();
   ctx.eat(null, Syntax.Identifier);
+
+  if (node.value === "false" || node.value === "true") {
+    node.type = "bool";
+    node.value = node.value === "true" ? "1" : "0";
+    return ctx.endNode(node, Syntax.Constant);
+  }
 
   if (ctx.eat(["("])) {
     const params = [expression(ctx)];
@@ -1702,7 +1710,7 @@ const parser = char => {
 var comments = token(parser, Syntax.Comment);
 
 //      
-const supported$2 = ["i32", "i64", "f32", "f64", "i32[]", "i64[]", "f32[]", "f64[]", "u8[]", "Function", "Memory", "Table", "void"];
+const supported$2 = ["i32", "i64", "f32", "f64", "i32[]", "i64[]", "f32[]", "f64[]", "u8[]", "bool", "Function", "Memory", "Table", "void"];
 const trie$3 = new trie$1(supported$2);
 var type = token(trie$3.fsearch, Syntax.Type, supported$2);
 
@@ -2148,7 +2156,10 @@ const mapImport = curry_1((options, node, _) => {
   })(node);
 });
 
-//      
+const extendNode = curry_1((options, node) => {
+  return _extends({}, node, options);
+});
+
 const getTypeSize = typeString => {
   switch (typeString) {
     case "i64":
@@ -2156,74 +2167,69 @@ const getTypeSize = typeString => {
       return 8;
     case "i32":
     case "f32":
+    case "bool":
     default:
       return 4;
   }
 };
 
-const isClosureType = (types, type) => {
-  return types[type] != null && !!types[type].meta[CLOSURE_TYPE];
-};
-const parse$2 = (isConst, { types, scope }, declaration) => {
-  const index = Object.keys(scope).length;
-  const typeString = declaration.type;
-  const modifier = declaration.type.slice(-2);
-  const isArray = modifier === "[]";
-  const isClosure = isClosureType(types, typeString);
-  const type = (() => {
-    if (isArray) {
-      return "i32";
-    } else if (isClosure) {
-      return "i64";
-    }
-    return declaration.type;
-  })();
-  const meta = {
-    [TYPE_ARRAY]: isArray ? typeString.slice(0, -2) : null,
-    [CLOSURE_TYPE]: isClosure || null,
-    [TYPE_CONST]: isConst || null,
-    [TYPE_INDEX]: isClosure ? Object.keys(types).indexOf(typeString) : null
+//      
+const parseArray = type => {
+  const subscriptType = type.slice(-2) === "[]" ? "i32" : null;
+  return {
+    arrayType: subscriptType ? type.slice(0, -2) : null,
+    subscriptType
   };
-
-  return [type, meta, index];
 };
 
-const parseDeclaration = curry_1((isConst, options, declaration) => {
-  const { locals: scope, closures } = options;
-  const [type, meta, index] = parse$2(isConst, _extends({}, options, { scope }), declaration);
+// Parse and return a fully typed declaration options
+// [ type, meta, index ]
+const parse$2 = ({ isConst, types, scope, node }) => {
+  const { subscriptType, arrayType } = parseArray(node.type);
+  const closureType = types[node.type] && types[node.type].meta[CLOSURE_TYPE] ? "i64" : null;
 
-  const params = declaration.params.map(node => _extends({}, node, {
-    type: declaration.type
-  }));
+  return [subscriptType || closureType || node.type, {
+    [TYPE_ARRAY]: arrayType,
+    [TYPE_CONST]: isConst || null,
+    [CLOSURE_TYPE]: closureType,
+    [TYPE_INDEX]: Object.keys(types).indexOf(node.type)
+  }, Object.keys(scope).length];
+};
 
-  scope[declaration.value] = _extends({}, declaration, {
-    params,
+// Parse a local declaration
+const parseDeclaration = curry_1((isConst, options, node) => {
+  const { locals: scope, closures, types } = options;
+  const [type, meta, index] = parse$2({ isConst, types, scope, node });
+
+  scope[node.value] = extendNode({
+    params: node.params.map(extendNode({ type: node.type })),
     type,
     meta: _extends({}, meta, { [LOCAL_INDEX]: index }),
     Type: Syntax.Declaration
-  });
+  }, node);
 
-  const { variables } = closures;
-  if (variables[declaration.value] != null && declaration.params[0]) {
-    const { offsets } = closures;
-    offsets[declaration.value] = closures.envSize;
-    closures.envSize += getTypeSize(declaration.type);
+  if (closures.variables[node.value] != null && node.params[0]) {
+    closures.offsets[node.value] = closures.envSize;
+    closures.envSize += getTypeSize(node.type);
   }
 });
 
+// Map a global declaration
 const parseGlobalDeclaration = curry_1((isConst, options, node) => {
-  const { globals: scope } = options;
-  if (node.type !== "Table" && node.type !== "Memory") {
-    const [type, meta, index] = parse$2(isConst, _extends({}, options, { scope }), node);
-    scope[node.value] = _extends({}, node, {
-      meta: _extends({}, meta, { [GLOBAL_INDEX]: index }),
-      type,
-      Type: Syntax.Declaration
-    });
+  const { globals: scope, types } = options;
+  const [type, meta, index] = parse$2({ isConst, types, scope, node });
 
-    return scope[node.value];
+  if (["Table", "Memory"].includes(node.type)) {
+    return extendNode({ meta: { [GLOBAL_INDEX]: -1 } }, node);
   }
-  return _extends({}, node, { meta: { [GLOBAL_INDEX]: -1 } });
+
+  scope[node.value] = extendNode({
+    meta: _extends({}, meta, { [GLOBAL_INDEX]: index }),
+    type,
+    Type: Syntax.Declaration
+  }, node);
+
+  return scope[node.value];
 });
 
 //      
@@ -2331,22 +2337,6 @@ const mapIdentifier = curry_1(({ locals, globals, functions, table }, identifier
   // Not a function call or pointer, look-up variables
   const local = locals[identifier.value];
   const global = globals[identifier.value];
-
-  if (identifier.value === "false") {
-    return _extends({}, identifier, {
-      type: "i32",
-      value: "0",
-      Type: Syntax.Constant
-    });
-  }
-
-  if (identifier.value === "true") {
-    return _extends({}, identifier, {
-      type: "i32",
-      value: "1",
-      Type: Syntax.Constant
-    });
-  }
 
   if (identifier.value === "__DATA_LENGTH__") {
     return _extends({}, identifier, {
@@ -2825,6 +2815,24 @@ var makeFunctionCall = curry_1(function mapFunctonCall(options, call) {
 });
 
 //      
+
+const typeWeight = typeString => {
+  switch (typeString) {
+    case "i32":
+    case "bool":
+      return 0;
+    case "i64":
+      return 1;
+    case "f32":
+      return 2;
+    case "f64":
+      return 3;
+    default:
+      return -1;
+  }
+};
+
+//      
 var makePair = curry_1((options, typeCastMaybe, transform) => {
   const [targetNode, typeNode] = typeCastMaybe.params.map(transform);
 
@@ -2850,21 +2858,6 @@ var makePair = curry_1((options, typeCastMaybe, transform) => {
 });
 
 //      
-const typeWeight = typeString => {
-  switch (typeString) {
-    case "i32":
-      return 0;
-    case "i64":
-      return 1;
-    case "f32":
-      return 2;
-    case "f64":
-      return 3;
-    default:
-      return -1;
-  }
-};
-
 const balanceTypesInMathExpression = expression => {
   // find the heaviest type in the expression
   const type = expression.params.reduce((acc, { type: childType }) => {
@@ -2878,7 +2871,7 @@ const balanceTypesInMathExpression = expression => {
 
   // iterate again, this time, patching any lighter types
   const params = expression.params.map(paramNode => {
-    if (paramNode.type != null && paramNode.type !== type) {
+    if (paramNode.type != null && typeWeight(paramNode.type) !== typeWeight(type)) {
       return _extends({}, paramNode, {
         type,
         value: paramNode.value,
@@ -3086,7 +3079,7 @@ const mapFunctionNode = (options, node, topLevelTransform) => {
     },
     [Syntax.ReturnStatement]: returnNode => {
       const [expression] = returnNode.params;
-      if (expression != null && expression.Type === Syntax.Constant && expression.type !== fun.type) {
+      if (expression != null && expression.Type === Syntax.Constant && typeWeight(expression.type) !== typeWeight(fun.type)) {
         return _extends({}, returnNode, {
           params: [_extends({}, expression, {
             value: ":",
@@ -3681,10 +3674,10 @@ opcode(index_3, index_2, ___, 0, 0xbf, "f32Reinterpreti64", "f64.reinterpret/i64
 const getTypecastOpcode = (to, from) => {
   const toType = to[0];
 
-  if (to === "i32" && from === "i64") {
+  if (["i32", "bool"].includes(to) && from === "i64") {
     return def.i32Wrapi64;
   }
-  if (to === "i64" && from === "i32") {
+  if (to === "i64" && ["i32", "bool"].includes(from)) {
     return def.i64ExtendSi32;
   }
 
@@ -3876,6 +3869,7 @@ function validate(ast, {
     [Syntax.Declaration]: (decl, _validator) => {
       const [start, end] = decl.range;
       const [initializer] = decl.params;
+
       if (decl.meta[TYPE_CONST] != null) {
         const validTypes = [Syntax.Constant, Syntax.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
@@ -3887,7 +3881,7 @@ function validate(ast, {
         }
       }
       if (!isBuiltinType(decl.type) && !types[decl.type] && !userTypes[decl.type]) {
-        problems.push(generateErrorString("Unknown type used in a declartion, " + `"${String(decl.type)}"`, "Variables must be assigned with a known type.", { start, end }, filename, GLOBAL_LABEL));
+        problems.push(generateErrorString("Unknown type used in a declaration, " + `"${String(decl.type)}"`, "Variables must be assigned with a known type.", { start, end }, filename, GLOBAL_LABEL));
       }
     },
     [Syntax.FunctionDeclaration]: (func, __) => {
@@ -3945,10 +3939,10 @@ function validate(ast, {
             if (userTypes[expression.type] != null) {
               return "i32";
             }
-            return [">", "<", ">=", "<=", "==", "!="].includes(expression.value) ? "i32" : expression.type;
+            return expression.type;
           })();
 
-          if (type !== func.type) {
+          if (typeWeight(type) !== typeWeight(func.type)) {
             problems.push(generateErrorString("Missing return value", "Inconsistent return value. Expected " + func.type + " received " + String(type), { start, end }, filename, functionName));
           }
         },
@@ -4591,7 +4585,13 @@ const mapSyntax = curry_1((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
   invariant_1(mapping, `Unexpected Syntax Token ${operand.Type} : ${operand.value}`);
 
-  const validate = (block, i) => invariant_1(block.kind, "Unknown opcode generated in block index %s %s. \nOperand: \n%s", i, JSON.stringify(block), printNode(operand));
+  const validate = (block, i) => {
+    // Only invariant a block if it's falsy, otherwise we will print _every_
+    // opcode generated.
+    if (!block.kind) {
+      invariant_1(block.kind, "Unknown opcode generated in block index %s %s. \nOperand: \n%s", i, JSON.stringify(block), printNode(operand));
+    }
+  };
   const blocks = mapping(operand, parent);
   if (Array.isArray(blocks)) {
     blocks.forEach(validate);

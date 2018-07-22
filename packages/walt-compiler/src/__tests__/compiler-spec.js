@@ -42,3 +42,23 @@ import {
   t.snapshot(print(node));
   t.snapshot(error.message);
 });
+
+test("bool types", t => {
+  const source = `
+    const b : bool = false;
+    function foo() : bool {
+      return true;
+    }
+
+    function bar(): bool {
+      return false;
+    }
+
+    export function test() : bool {
+      return bar() || foo();
+    }
+  `;
+  return compileAndRun(source).then(({ instance }) => {
+    t.is(instance.exports.test(), 1);
+  });
+});

@@ -10,6 +10,7 @@ import {
   ALIAS,
   AST_METADATA,
 } from "../semantics/metadata";
+import { typeWeight } from "../types";
 import type { NodeType } from "../flow/types";
 
 const GLOBAL_LABEL = "global";
@@ -111,6 +112,7 @@ export default function validate(
     [Syntax.Declaration]: (decl, _validator) => {
       const [start, end] = decl.range;
       const [initializer] = decl.params;
+
       if (decl.meta[TYPE_CONST] != null) {
         const validTypes = [Syntax.Constant, Syntax.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
@@ -144,7 +146,7 @@ export default function validate(
       ) {
         problems.push(
           error(
-            "Unknown type used in a declartion, " + `"${String(decl.type)}"`,
+            "Unknown type used in a declaration, " + `"${String(decl.type)}"`,
             "Variables must be assigned with a known type.",
             { start, end },
             filename,
@@ -268,12 +270,10 @@ export default function validate(
             if (userTypes[expression.type] != null) {
               return "i32";
             }
-            return [">", "<", ">=", "<=", "==", "!="].includes(expression.value)
-              ? "i32"
-              : expression.type;
+            return expression.type;
           })();
 
-          if (type !== func.type) {
+          if (typeWeight(type) !== typeWeight(func.type)) {
             problems.push(
               error(
                 "Missing return value",
