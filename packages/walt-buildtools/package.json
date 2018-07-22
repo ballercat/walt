@@ -1,6 +1,6 @@
 {
   "name": "walt-buildtools",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Walt build utils",
   "main": "src/index.js",
   "scripts": {
