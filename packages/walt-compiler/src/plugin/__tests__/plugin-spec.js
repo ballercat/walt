@@ -16,52 +16,40 @@ test("plugin compose logic", t => {
     next => n => console.log("3") || next(n),
     next => n => {
       console.log("2");
+      if (n.value === "b") {
+        return n;
+      }
       return next(n);
     },
     next => n => console.log("1") || next(n),
   ];
 
   const wrapper = ts => {
-    // let stack = identity => identity;
-    const count = transforms.length;
+    let transform;
 
-    for (let i = 0; i < count; i++) {
-      // for each transform:
-      // - provide the next() middleware chain
-      // - provide node
-      // - provide transform function, if requested
-      // - update next() each time
-      // - wrap each transform
-      // stack = transforms[i](
-      //   (next => n => {
-      //     if (next.length === 2) {
-      //       return next(n, t);
-      //     }
-      //     return next(n);
-      //   })(stack)
-      // );
-    }
-
-    // return final implementation
-    return ts.reduce((stack, fn) => {
-      return stack;
+    const chain = ts.reduce((stack, go) => {
+      return go(node => {
+        return stack(node, transform);
+      });
     }, identity => identity);
+
+    return (node, tt) => {
+      transform = tt;
+      return chain(node, transform);
+    };
   };
 
   const testNode = {
+    Type: "Identifier",
     value: "a",
-    params: [{ value: "b", params: [] }],
+    params: [{ Type: "Identifier", value: "b", params: [] }],
   };
 
-  const final = wrapper(transforms);
-  console.log(
-    "result ---> ",
-    final(testNode, id => ({
-      ...id,
-      value: id.value.toUpperCase(),
-    })),
-    "\n"
-  );
+  const final = mapNode({
+    Identifier: wrapper(transforms),
+  });
+
+  console.log("result ---> ", final(testNode), "\n");
 });
 
 test.skip("plugin system", t => {
