@@ -5,42 +5,63 @@ import { compose } from "..";
 import realCompose from "../../utils/compose";
 
 test("plugin compose logic", t => {
-  const identity = id => id;
-
   const transforms = [
+    next => (n, t) => {
+      console.log("4");
+      return {
+        ...n,
+        params: n.params.map(t),
+      };
+    },
     next => n => console.log("3") || next(n),
     next => n => {
       console.log("2");
       return next(n);
     },
-    next => n => {
-      console.log("1");
-      return next(n);
-    },
+    next => n => console.log("1") || next(n),
   ];
 
-  const final = (ts => {
-    let i = ts.length - 1;
-    const next = n => {
-      if (i > 0) {
-        i -= 1;
-        return chain[i](n);
-      }
-      return n;
-    };
-    const chain = ts.map(m => m(next));
+  const wrapper = ts => {
+    // let stack = identity => identity;
+    const count = transforms.length;
 
-    return chain.pop();
-  })(transforms);
+    for (let i = 0; i < count; i++) {
+      // for each transform:
+      // - provide the next() middleware chain
+      // - provide node
+      // - provide transform function, if requested
+      // - update next() each time
+      // - wrap each transform
+      // stack = transforms[i](
+      //   (next => n => {
+      //     if (next.length === 2) {
+      //       return next(n, t);
+      //     }
+      //     return next(n);
+      //   })(stack)
+      // );
+    }
+
+    // return final implementation
+    return ts.reduce((stack, fn) => {
+      return stack;
+    }, identity => identity);
+  };
 
   const testNode = {
     value: "a",
     params: [{ value: "b", params: [] }],
   };
 
-  debugger;
-
-  console.log("result ---> ", final(testNode), "\n");
+  const final = wrapper(transforms);
+  console.log(
+    "result ---> ",
+    final(testNode, id => ({
+      ...id,
+      value: id.value.toUpperCase(),
+    })),
+    "\n"
+  );
 });
 
 test.skip("plugin system", t => {
