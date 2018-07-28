@@ -62,3 +62,14 @@ test("bool types", t => {
     t.is(instance.exports.test(), 1);
   });
 });
+
+test("memory & table exports", t => {
+  const source = `
+    export const memory: Memory = { initial: 1 };
+    export const table: Table = { initial: 1, element: 'anyfunc' };
+  `;
+  return compileAndRun(source).then(({ instance }) => {
+    t.is(instance.exports.memory instanceof WebAssembly.Memory, true);
+    t.is(instance.exports.table instanceof WebAssembly.Table, true);
+  });
+});
