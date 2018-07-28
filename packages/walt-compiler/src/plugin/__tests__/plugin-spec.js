@@ -1,58 +1,10 @@
 import { expressionFragment } from "../../parser/fragment";
 import test from "ava";
 import mapNode from "../../utils/map-node";
-import { compose } from "..";
-import realCompose from "../../utils/compose";
+import { combineParsers } from "..";
 
-test("plugin compose logic", t => {
-  const transforms = [
-    next => (n, t) => {
-      console.log("4");
-      return {
-        ...n,
-        params: n.params.map(t),
-      };
-    },
-    next => n => console.log("3") || next(n),
-    next => n => {
-      console.log("2");
-      if (n.value === "b") {
-        return n;
-      }
-      return next(n);
-    },
-    next => n => console.log("1") || next(n),
-  ];
-
-  const wrapper = ts => {
-    let transform;
-
-    const chain = ts.reduce((stack, go) => {
-      return go(node => {
-        return stack(node, transform);
-      });
-    }, identity => identity);
-
-    return (node, tt) => {
-      transform = tt;
-      return chain(node, transform);
-    };
-  };
-
-  const testNode = {
-    Type: "Identifier",
-    value: "a",
-    params: [{ Type: "Identifier", value: "b", params: [] }],
-  };
-
-  const final = mapNode({
-    Identifier: wrapper(transforms),
-  });
-
-  console.log("result ---> ", final(testNode), "\n");
-});
-
-test.skip("plugin system", t => {
+test("plugin system", t => {
+  const calls = [];
   // Should be able to call a method to get all plugins
   const plugin1 = () => {
     // Should return middleware
@@ -65,9 +17,9 @@ test.skip("plugin system", t => {
       // do something with options
       semantics() {
         return {
-          Identifier: next => (node, transform) => {
-            console.log("plugin 1, semantics Identifier");
-            return next(transform(node));
+          Identifier: next => node => {
+            calls.push("plugin1.semantics.Identifier");
+            return next(node);
           },
         };
       },
@@ -79,19 +31,58 @@ test.skip("plugin system", t => {
       semantics() {
         return {
           Identifier: next => node => {
-            console.log("plugin 2, semantics Identifier");
+            calls.push("plugin2.semantics.Identifier");
             return next(node);
+          },
+          BinaryExpression: next => node => {
+            calls.push("plugin2.semantics.BinaryExpression");
+            return next({
+              ...node,
+              type: "foobar",
+            });
           },
         };
       },
     };
   };
 
-  const plugins = [plugin1, plugin2];
+  const base = () => {
+    return {
+      semantics() {
+        return {
+          // The final stop for parsing, will parse the children/params of all nodes
+          // which have at least one parser attached to them. This is necessary
+          // because the map-node utility bails out (on parsing children) if the parsing function wants
+          // to use the transform argument, which we always do.
+          "*": _ => (node, transform) => {
+            calls.push(`base.semantics.${node.Type}`);
+            return {
+              ...node,
+              params: node.params.map(transform),
+            };
+          },
+        };
+      },
+    };
+  };
 
-  const parsers = compose(plugins.map(v => v().semantics()));
+  const plugins = [base, plugin1, plugin2];
+  const parsers = combineParsers(plugins.map(p => p().semantics()));
 
-  const node = mapNode(parsers)(expressionFragment("x + 2;"));
+  const ast = expressionFragment("x + 2;");
+  const node = mapNode(parsers)(ast);
 
-  console.log(node);
+  t.deepEqual(
+    calls,
+    [
+      "plugin2.semantics.BinaryExpression",
+      "base.semantics.BinaryExpression",
+      "plugin2.semantics.Identifier",
+      "plugin1.semantics.Identifier",
+      "base.semantics.Identifier",
+    ],
+    "Plugin precedence is preserved"
+  );
+
+  t.is(node.type, "foobar", "Nodes are actually parsed");
 });

@@ -1,21 +1,54 @@
 import compose_ from "../utils/compose";
 
-export const compose = plugins => {
-  const parsers = plugins.reduce((acc, plugin) => {
-    Object.entries(plugin).forEach(([key, parser]) => {
-      if (acc[key] == null) {
-        acc[key] = [];
+const combineMiddleware = transforms => {
+  let transform;
+
+  const chain = transforms.reduce((stack, go) => {
+    return go(node => {
+      return stack(node, transform);
+    });
+  }, identity => identity);
+
+  return (node, topLevelTranfrom) => {
+    transform = topLevelTranfrom;
+    return chain(node, transform);
+  };
+};
+
+const addWildcard = (parsers, wildcard) => {
+  Object.entries(parsers).forEach(([key, current]) => {
+    parsers[key] = [...current, wildcard];
+  });
+};
+
+export const combineParsers = (sortedParsers = []) => {
+  const wildcards = [];
+
+  // Normalize parsers by type
+  const parsersByType = sortedParsers.reduce((acc, parser) => {
+    Object.entries(parser).forEach(([type, cb]) => {
+      // Wildcards may only handle types which have other callbacks attached to
+      // them.
+      if (type === "*") {
+        wildcards.push(cb);
+        // We need to add a wildcard to any already existing parser
+        addWildcard(acc, cb);
+        return;
       }
 
-      acc[key].push(parser);
+      if (acc[type] == null) {
+        // Prepend any previously defined wildcard to maintain precedence
+        acc[type] = [...wildcards];
+      }
+
+      acc[type].push(cb);
     });
 
     return acc;
   }, {});
-  debugger;
-  return Object.entries(parsers).reduce((acc, [key, transforms]) => {
-    const chain = compose_(...transforms)(id => id);
-    acc[key] = chain;
+
+  return Object.entries(parsersByType).reduce((acc, [key, transforms]) => {
+    acc[key] = combineMiddleware(transforms);
 
     return acc;
   }, {});
