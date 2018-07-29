@@ -60,4 +60,10 @@ export function run() {
   assert("8bit load-store, signed", test8bitSigned(), -2);
   assert("16bit load-store, unsigned", test16BitUnsigned(), 0x10000);
   assert("16bit load-store, signed", test16BitSigned(), -2);
+
+  // TODO: test _all_ native opcodes. Use WebAssembly Spec tests as reference
+  assert("shr_s", i32.shr_s(1, 1), 0);
+  assert("rotl", i32.rotl(1, 1), 2);
+  assert("rotr", i32.rotr(1, 1), 0x80000000);
+  assert("popcnt", i32.popcnt(-1), 32);
 }
