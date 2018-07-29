@@ -1,5 +1,3 @@
-import compose_ from "../utils/compose";
-
 const combineMiddleware = transforms => {
   let transform;
 
