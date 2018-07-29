@@ -6,7 +6,8 @@
   "scripts": {
     "start": "webpack-dev-server -d --hot --inline",
     "build": "webpack && cp index.html explorer.js explorer.js.map walt.png ../../docs/",
-    "prettier": "prettier"
+    "prettier": "prettier",
+    "preversion": "npm run build"
   },
   "private": true,
   "babel": {

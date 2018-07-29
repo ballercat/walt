@@ -16,6 +16,7 @@
     "lint": "eslint src",
     "prettier": "prettier --list-different src/**/*.js",
     "precommit": "lint-staged",
+    "preversion": "npm run build && npm run build-prod",
     "nyc": "nyc"
   },
   "repository": {
