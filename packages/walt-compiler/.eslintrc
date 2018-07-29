@@ -157,7 +157,7 @@
 
     "array-bracket-spacing": 2,     // Disallow or enforce spaces inside of brackets
     "brace-style": 2,               // enforce one true brace style (off by default)
-    "camelcase": 2,                 // require camel case names
+    "camelcase": [2, { "properties": "never" }],                 // require camel case names
     "comma-spacing": 2,             // enforce spacing before and after comma
     "comma-style": 2,               // enforce one true comma style (off by default)
     "consistent-this": 1,           // enforces consistent naming when capturing the current execution context (off by default)
