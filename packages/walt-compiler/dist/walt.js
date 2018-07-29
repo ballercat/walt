@@ -4612,14 +4612,21 @@ const EXTERN_MEMORY = 2;
 const EXTERN_GLOBAL = 3;
 
 //      
+const externaKindMap = {
+  Memory: EXTERN_MEMORY,
+  Table: EXTERN_TABLE
+};
+
 function generateExport(node) {
   const functionIndexMeta = node.meta[FUNCTION_INDEX];
   const globalIndexMeta = node.meta[GLOBAL_INDEX];
 
   if (globalIndexMeta != null) {
+    const kind = externaKindMap[String(node.type)] || EXTERN_GLOBAL;
+    const index = [EXTERN_MEMORY, EXTERN_TABLE].includes(kind) ? 0 : globalIndexMeta;
     return {
-      index: globalIndexMeta,
-      kind: EXTERN_GLOBAL,
+      index,
+      kind,
       field: node.value
     };
   }

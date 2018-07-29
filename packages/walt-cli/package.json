@@ -1,6 +1,6 @@
 {
   "name": "walt-cli",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "CLI for Walt",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "meow": "^4.0.0",
     "walt-buildtools": "^0.0.4",
     "walt-compiler": "^0.4.3",
-    "walt-link": "^0.2.4"
+    "walt-link": "^0.2.5"
   },
   "devDependencies": {
     "ava": "^0.25.0",
