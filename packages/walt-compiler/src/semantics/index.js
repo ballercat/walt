@@ -15,42 +15,18 @@
 import Syntax from "../Syntax";
 import mapNode from "../utils/map-node";
 import walkNode from "../utils/walk-node";
-import { mapImport } from "./map-import";
-import mapFunctionNode from "./map-function";
 import closureImports from "../closure-plugin/imports";
-import { parseGlobalDeclaration } from "./map-function/declaration";
-import mapStructNode from "./map-struct";
-import mapCharacterLiteral from "./map-char";
 import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
 import { combineParsers } from "../plugin";
 import { AST_METADATA } from "./metadata";
 import type { NodeType } from "../flow/types";
-
-// Make core semantic parsers
-const make = options => {
-  return {
-    Typedef: (_, __) => _,
-    // Read Import node, attach indexes if non-scalar
-    Import: _ => mapImport(options),
-    Declaration: next => node =>
-      next(parseGlobalDeclaration(false, options, node)),
-    ImmutableDeclaration: next => node =>
-      next(parseGlobalDeclaration(true, options, node)),
-    CharacterLiteral: next => node => next(mapCharacterLiteral(node)),
-    Struct: _ => mapStructNode(options),
-    FunctionDeclaration: _ => mapFunctionNode(options),
-  };
-};
+import core from "../core";
+import base from "../base";
 
 function semantics(
   ast: NodeType,
-  parsers: Array<(any) => any> = [
-    () => ({
-      "*": _ => (node, t) => ({ ...node, params: node.params.map(t) }),
-    }),
-    make,
-  ]
+  parsers: Array<(any) => any> = [base().semantics, core().semantics]
 ): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
