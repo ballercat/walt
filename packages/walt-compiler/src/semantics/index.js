@@ -20,7 +20,7 @@ import { mapGeneric } from "./map-generic";
 import hasNode from "../utils/has-node";
 import { combineParsers } from "../plugin";
 import { AST_METADATA } from "./metadata";
-import type { NodeType } from "../flow/types";
+import type { NodeType, SemanticOptionsType } from "../flow/types";
 import core from "../core";
 import base from "../base";
 
@@ -36,7 +36,8 @@ function semantics(
   const hoist: NodeType[] = [];
   const hoistImports: NodeType[] = [];
   const statics: { [string]: null } = {};
-  const options = {
+
+  const options: SemanticOptionsType = {
     functions,
     globals,
     types,
