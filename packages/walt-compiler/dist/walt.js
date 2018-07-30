@@ -1587,7 +1587,7 @@ const endsInDoubleQuote = char => {
   if (/\\/.test(char)) {
     return quoteOK(endsInDoubleQuote);
   }
-  if (char === '"') {
+  if (char === '"' || char === "`") {
     return nextFails;
   }
 
@@ -1598,7 +1598,7 @@ const maybeQuote = char => {
   if (char === "'") {
     return endsInSingleQuote;
   }
-  if (char === '"') {
+  if (char === '"' || char === "`") {
     return endsInDoubleQuote;
   }
 
