@@ -1,15 +1,20 @@
+// Return a single method which will chain all of the middleware provided
 const combineMiddleware = transforms => {
   let transform;
 
   const chain = transforms.reduce((stack, go) => {
-    return go(node => {
-      return stack(node, transform);
+    return go((node, context = {}) => {
+      // Each middleware get's a node and context object. The context allows for
+      // nested node to have knowledge of the outer/parent context
+      return stack({ node, context }, transform);
     });
+    // Identity function is the final chain in the middleware
   }, identity => identity);
 
   return (node, topLevelTranfrom) => {
     transform = topLevelTranfrom;
-    return chain(node, transform);
+    // kick off the chain of middleware, starting from right to left
+    return chain({ node, context: {} }, transform);
   };
 };
 

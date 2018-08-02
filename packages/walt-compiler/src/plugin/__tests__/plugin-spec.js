@@ -10,14 +10,15 @@ test("plugin system", t => {
     // Should return middleware
     return {
       // do something with options
-      parser() {
+      parser(_options) {
         // must return an object
         return {};
       },
-      // do something with options
-      semantics() {
+      /* options here should be things like version number or plugin options */
+      semantics(_options) {
+        // must return an object
         return {
-          Identifier: next => node => {
+          Identifier: next => ({ node }) => {
             calls.push("plugin1.semantics.Identifier");
             return next(node);
           },
@@ -30,16 +31,20 @@ test("plugin system", t => {
     return {
       semantics() {
         return {
-          Identifier: next => node => {
+          Identifier: next => ({ node }) => {
             calls.push("plugin2.semantics.Identifier");
             return next(node);
           },
-          BinaryExpression: next => node => {
+          BinaryExpression: next => ({ node }) => {
             calls.push("plugin2.semantics.BinaryExpression");
-            return next({
-              ...node,
-              type: "foobar",
-            });
+            const context = {};
+            return next(
+              {
+                ...node,
+                type: "foobar",
+              },
+              context
+            );
           },
         };
       },
@@ -54,7 +59,7 @@ test("plugin system", t => {
           // which have at least one parser attached to them. This is necessary
           // because the map-node utility bails out (on parsing children) if the parsing function wants
           // to use the transform argument, which we always do.
-          "*": _ => (node, transform) => {
+          "*": _ => ({ node }, transform) => {
             calls.push(`base.semantics.${node.Type}`);
             return {
               ...node,
