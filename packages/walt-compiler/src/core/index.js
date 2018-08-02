@@ -9,14 +9,14 @@ export default function core() {
   return {
     semantics(options) {
       return {
-        Typedef: (_, __) => _,
+        Typedef: _ => ({ node }) => node,
         // Read Import node, attach indexes if non-scalar
         Import: _ => mapImport(options),
-        Declaration: next => node =>
+        Declaration: next => ({ node }) =>
           next(parseGlobalDeclaration(false, options, node)),
-        ImmutableDeclaration: next => node =>
+        ImmutableDeclaration: next => ({ node }) =>
           next(parseGlobalDeclaration(true, options, node)),
-        CharacterLiteral: next => node => next(mapCharacterLiteral(node)),
+        CharacterLiteral: next => ({ node }) => next(mapCharacterLiteral(node)),
         Struct: _ => mapStructNode(options),
         FunctionDeclaration: _ => mapFunctionNode(options),
       };

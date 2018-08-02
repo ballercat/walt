@@ -9,7 +9,7 @@ import {
   GLOBAL_INDEX,
 } from "./metadata";
 
-export const mapImport = curry((options, node, _) => {
+export const mapImport = curry((options, { node }, _) => {
   return mapNode({
     [Syntax.BinaryExpression]: (as, transform) => {
       const [maybePair, asIdentifier] = as.params;

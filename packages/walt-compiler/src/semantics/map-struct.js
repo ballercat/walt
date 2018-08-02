@@ -39,7 +39,7 @@ export const getByteOffsetsAndSize = (
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const mapStruct = curry(({ userTypes }, node, _ignore) => {
+const mapStruct = curry(({ userTypes }, { node }, _ignore) => {
   const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
     node.params[0]
   );

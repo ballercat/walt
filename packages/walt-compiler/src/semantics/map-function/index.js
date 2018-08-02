@@ -132,7 +132,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
   return [fun, locals, closures];
 };
 
-const mapFunctionNode = (options, node, topLevelTransform) => {
+const mapFunctionNode = (options, { node }, topLevelTransform) => {
   // Initialize our function node
   const [fun, locals, closures] = initialize(options, node);
 
