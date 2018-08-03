@@ -1,6 +1,6 @@
 import { expressionFragment } from "../../parser/fragment";
 import test from "ava";
-import mapNode from "../../utils/map-node";
+import { map } from "../../utils/map-node";
 import { combineParsers } from "..";
 
 test("plugin system", t => {
@@ -18,9 +18,10 @@ test("plugin system", t => {
       semantics(_options) {
         // must return an object
         return {
-          Identifier: next => ({ node }) => {
+          Identifier: next => ([node]) => {
             calls.push("plugin1.semantics.Identifier");
-            return next(node);
+
+            return next([node]);
           },
         };
       },
@@ -31,20 +32,22 @@ test("plugin system", t => {
     return {
       semantics() {
         return {
-          Identifier: next => ({ node }) => {
+          Identifier: next => ([node, context]) => {
             calls.push("plugin2.semantics.Identifier");
-            return next(node);
+
+            return next([node, { ...context, extra: "o" }]);
           },
-          BinaryExpression: next => ({ node }) => {
+          BinaryExpression: next => ([node, context = { foo: [] }]) => {
             calls.push("plugin2.semantics.BinaryExpression");
-            const context = {};
-            return next(
+            context = { ...context, foo: [...context.foo, "bar"] };
+
+            return next([
               {
                 ...node,
                 type: "foobar",
               },
-              context
-            );
+              context,
+            ]);
           },
         };
       },
@@ -59,12 +62,18 @@ test("plugin system", t => {
           // which have at least one parser attached to them. This is necessary
           // because the map-node utility bails out (on parsing children) if the parsing function wants
           // to use the transform argument, which we always do.
-          "*": _ => ({ node }, transform) => {
+          "*": _ => ([node, context], transform) => {
             calls.push(`base.semantics.${node.Type}`);
-            return {
-              ...node,
-              params: node.params.map(transform),
-            };
+
+            return [
+              {
+                ...node,
+                params: node.params.map(n => {
+                  return transform([n, context]);
+                }),
+              },
+              context,
+            ];
           },
         };
       },
@@ -75,7 +84,7 @@ test("plugin system", t => {
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
   const ast = expressionFragment("x + 2;");
-  const node = mapNode(parsers)(ast);
+  const [node] = map(parsers)([ast]);
 
   t.deepEqual(
     calls,
