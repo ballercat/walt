@@ -44,7 +44,7 @@ test("plugin system", t => {
             return next([
               {
                 ...node,
-                type: "foobar",
+                type: "f64",
               },
               context,
             ]);
@@ -65,15 +65,12 @@ test("plugin system", t => {
           "*": _ => ([node, context], transform) => {
             calls.push(`base.semantics.${node.Type}`);
 
-            return [
-              {
-                ...node,
-                params: node.params.map(n => {
-                  return transform([n, context]);
-                }),
-              },
-              context,
-            ];
+            return {
+              ...node,
+              params: node.params.map(n => {
+                return transform([n, context]);
+              }),
+            };
           },
         };
       },
@@ -84,7 +81,8 @@ test("plugin system", t => {
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
   const ast = expressionFragment("x + 2;");
-  const [node] = map(parsers)([ast]);
+
+  const node = map(parsers)([ast]);
 
   t.deepEqual(
     calls,
@@ -98,5 +96,5 @@ test("plugin system", t => {
     "Plugin precedence is preserved"
   );
 
-  t.is(node.type, "foobar", "Nodes are actually parsed");
+  t.is(node.type, "f64", "Nodes are actually parsed");
 });
