@@ -1,10 +1,10 @@
 // @flow
-import curry from "curry";
-import invariant from "invariant";
-import Syntax from "../Syntax";
-import walkNode from "../utils/walk-node";
-import type { NodeType } from "../flow/types";
-import { OBJECT_SIZE, OBJECT_KEY_TYPES, TYPE_OBJECT } from "./metadata";
+import curry from 'curry';
+import invariant from 'invariant';
+import Syntax from '../Syntax';
+import walkNode from '../utils/walk-node';
+import type { NodeType } from '../flow/types';
+import { OBJECT_SIZE, OBJECT_KEY_TYPES, TYPE_OBJECT } from './metadata';
 
 export const getByteOffsetsAndSize = (
   objectLiteralNode: NodeType
@@ -24,12 +24,12 @@ export const getByteOffsetsAndSize = (
       keyTypeMap[key] = typeString;
       offsetsByKey[key] = size;
       switch (typeString) {
-        case "i64":
-        case "f64":
+        case 'i64':
+        case 'f64':
           size += 8;
           break;
-        case "i32":
-        case "f32":
+        case 'i32':
+        case 'f32':
         default:
           size += 4;
       }
@@ -39,7 +39,7 @@ export const getByteOffsetsAndSize = (
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const mapStruct = curry(({ userTypes }, { node }, _ignore) => {
+const mapStruct = curry(({ userTypes }, [node], _ignore) => {
   const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
     node.params[0]
   );

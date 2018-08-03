@@ -1,32 +1,33 @@
-import test from "ava";
-import parse from "../parser";
-import validate from "../validation";
-import semantics from "../semantics";
-import compile from "..";
-import print from "walt-buildtools/print";
-import path from "path";
-import { harness } from "../utils/test-utils";
+import test from 'ava';
+import parse from '../parser';
+import validate from '../validation';
+import semantics from '../semantics';
+import compile from '..';
+import print from 'walt-buildtools/print';
+import printNode from '../utils/print-node';
+import path from 'path';
+import { harness } from '../utils/test-utils';
 
 const compileAndRun = (src, imports) =>
   WebAssembly.instantiate(compile(src, { encodeNames: true }), imports);
 
-test("empty module compilation", t =>
-  compileAndRun("").then(({ module, instance }) => {
+test('empty module compilation', t =>
+  compileAndRun('').then(({ module, instance }) => {
     t.is(instance instanceof WebAssembly.Instance, true);
     t.is(module instanceof WebAssembly.Module, true);
   }));
 
-test("invalid imports throw", t =>
+test('invalid imports throw', t =>
   t.throws(() => compile("import foo from 'bar'")));
 
-test(
-  "compiler",
-  harness(path.resolve(__dirname, "./compiler-spec.walt"), {
+test.only(
+  'compiler',
+  harness(path.resolve(__dirname, './compiler-spec.walt'), {
     externalConst: 42,
   })
 );
 
-test("import as", t => {
+test('import as', t => {
   const node = semantics(
     parse(`
 import {
@@ -43,7 +44,7 @@ import {
   t.snapshot(error.message);
 });
 
-test("bool types", t => {
+test('bool types', t => {
   const source = `
     const b : bool = false;
     function foo() : bool {
@@ -63,7 +64,19 @@ test("bool types", t => {
   });
 });
 
-test("memory & table exports", t => {
+test('debug', t => {
+  const source = `
+function two(a: f32): i64 {
+  const b: i32 = 0;
+  return 2;
+}
+`;
+  const node = semantics(parse(source));
+  // console.log(print(node));
+  return compileAndRun(source).then(({ instance }) => {});
+});
+
+test('memory & table exports', t => {
   const source = `
     export const memory: Memory = { initial: 1 };
     export const table: Table = { initial: 1, element: 'anyfunc' };

@@ -1,27 +1,27 @@
 // @flow
-import Syntax from "../Syntax";
-import walkNode from "../utils/walk-node";
-import { stringToType } from "../emitter/value_type";
-import { parseBounds } from "../utils/resizable-limits";
+import Syntax from '../Syntax';
+import walkNode from '../utils/walk-node';
+import { stringToType } from '../emitter/value_type';
+import { parseBounds } from '../utils/resizable-limits';
 import {
   EXTERN_FUNCTION,
   EXTERN_MEMORY,
   EXTERN_GLOBAL,
   EXTERN_TABLE,
-} from "../emitter/external_kind";
-import { TYPE_INDEX } from "../semantics/metadata";
-import type { IntermediateImportType, NodeType } from "./flow/types";
+} from '../emitter/external_kind';
+import { TYPE_INDEX } from '../semantics/metadata';
+import type { IntermediateImportType, NodeType } from './flow/types';
 
 export const getKindConstant = (value: string) => {
   switch (value) {
-    case "Memory":
+    case 'Memory':
       return EXTERN_MEMORY;
-    case "Table":
+    case 'Table':
       return EXTERN_TABLE;
-    case "i32":
-    case "f32":
-    case "i64":
-    case "f64":
+    case 'i32':
+    case 'f32':
+    case 'i64':
+    case 'f64':
       return EXTERN_GLOBAL;
     default:
       return EXTERN_FUNCTION;
@@ -62,7 +62,7 @@ export default function generateImportFromNode(
         return null;
       })();
       const bounds =
-        importTypeValue === "Memory" ? parseBounds(typeOrIdentifierNode) : {};
+        importTypeValue === 'Memory' ? parseBounds(typeOrIdentifierNode) : {};
 
       imports.push({
         module,

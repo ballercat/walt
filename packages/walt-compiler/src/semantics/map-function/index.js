@@ -6,29 +6,30 @@
  * WebAssembly is performed in some function. Most of the heavy logic is offloaded
  * to smaller parsers in here.
  */
-import Syntax from "../../Syntax";
-import curry from "curry";
-import mapNode from "../../utils/map-node";
-import { parseDeclaration } from "./declaration";
-import mapCharacterLiteral from "../map-char";
-import mapUnary from "../map-unary";
-import makeArraySubscript from "./map-subscript";
-import makeMapIdentifier from "./map-identifier";
-import makeSizeof from "./map-sizeof";
-import makeAssignment from "./map-assignment";
-import makeFunctionCall from "./map-function-call";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import mapNode from '../../utils/map-node';
+import { parseDeclaration } from './declaration';
+import mapCharacterLiteral from '../map-char';
+import mapUnary from '../map-unary';
+import makeArraySubscript from './map-subscript';
+import makeMapIdentifier from './map-identifier';
+import makeSizeof from './map-sizeof';
+import makeAssignment from './map-assignment';
+import makeFunctionCall from './map-function-call';
 import makeClosure, {
   injectEnvironmentMaybe,
   transformClosedDeclaration,
   getEnclosedVariables,
-} from "../closure";
-import { typeWeight } from "../../types";
-import makePair from "./map-pair";
-import walkNode from "../../utils/walk-node";
-import { balanceTypesInMathExpression } from "./patch-typecasts";
-import { collapseClosureIdentifier, CLOSURE_BASE } from "../closure";
-import { FUNCTION_INDEX, CLOSURE_TYPE, FUNCTION_METADATA } from "../metadata";
-import type { NodeType } from "../../flow/types";
+} from '../closure';
+import { typeWeight } from '../../types';
+import makePair from './map-pair';
+import walkNode from '../../utils/walk-node';
+import { balanceTypesInMathExpression } from './patch-typecasts';
+
+import { collapseClosureIdentifier, CLOSURE_BASE } from '../closure';
+import { FUNCTION_INDEX, CLOSURE_TYPE, FUNCTION_METADATA } from '../metadata';
+import type { NodeType } from '../../flow/types';
 
 /**
  * Initialize function node and patch it's type and meta
@@ -94,7 +95,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
         types[typeDef.value].meta[CLOSURE_TYPE]
       ) {
         // Lmbdas are 64-bit Integers when used in source
-        return "i64";
+        return 'i64';
       }
 
       // Everything non-lambda just return the type
@@ -132,7 +133,7 @@ const initialize = (options, node: NodeType): [NodeType, any, any] => {
   return [fun, locals, closures];
 };
 
-const mapFunctionNode = (options, { node }, topLevelTransform) => {
+const mapFunctionNode = (options, [node], topLevelTransform) => {
   // Initialize our function node
   const [fun, locals, closures] = initialize(options, node);
 
@@ -246,7 +247,7 @@ const mapFunctionNode = (options, { node }, topLevelTransform) => {
           params: [
             {
               ...expression,
-              value: ":",
+              value: ':',
               Type: Syntax.Pair,
               params: [
                 expression,
@@ -277,7 +278,7 @@ const mapFunctionNode = (options, { node }, topLevelTransform) => {
           mapIdentifier({
             ...decl,
             params: [],
-            type: "i32",
+            type: 'i32',
             Type: Syntax.Identifier,
             meta: [],
           })

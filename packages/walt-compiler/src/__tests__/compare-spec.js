@@ -1,18 +1,18 @@
-import test from "ava";
-import compile from "..";
+import test from 'ava';
+import compile from '..';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
-test("equal", t =>
+test('equal', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 0;
     return x == 0;
   }`).then(outputIs(t, 1)));
 
-test("not equal", t =>
+test('not equal', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 2;
@@ -20,7 +20,7 @@ test("not equal", t =>
     return y;
   }`).then(outputIs(t, 1)));
 
-test("greater than", t =>
+test('greater than', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 2;
@@ -28,7 +28,7 @@ test("greater than", t =>
     return y > x;
   }`).then(outputIs(t, 1)));
 
-test("less than", t =>
+test('less than', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 3;

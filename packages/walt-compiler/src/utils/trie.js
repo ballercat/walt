@@ -28,7 +28,7 @@ class Trie {
 
   constructor(words: Array<string>) {
     this.root = {
-      char: "",
+      char: '',
       children: {},
       leaf: false,
     };
@@ -43,7 +43,7 @@ class Trie {
 
     word = word.slice(1);
 
-    while (typeof current.children[char] !== "undefined" && char.length > 0) {
+    while (typeof current.children[char] !== 'undefined' && char.length > 0) {
       current = current.children[char];
       char = word.slice(0, 1);
       word = word.slice(1);

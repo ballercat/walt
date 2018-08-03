@@ -1,21 +1,21 @@
 // @flow
-import Syntax from "../Syntax";
-import expression from "./expression";
-import type Context from "./context";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import expression from './expression';
+import type Context from './context';
+import type { NodeType } from '../flow/types';
 
 const declaration = (ctx: Context): NodeType => {
   const node = ctx.startNode();
   let Type = Syntax.Declaration;
 
-  if (ctx.token.value === "const") {
+  if (ctx.token.value === 'const') {
     Type = Syntax.ImmutableDeclaration;
   }
 
-  ctx.eat(["const", "let", "function"]);
+  ctx.eat(['const', 'let', 'function']);
 
   node.value = ctx.expect(null, Syntax.Identifier).value;
-  ctx.expect([":"]);
+  ctx.expect([':']);
 
   let type = ctx.token.value;
 
@@ -25,12 +25,12 @@ const declaration = (ctx: Context): NodeType => {
 
   const params = [];
   // Parse generic
-  if (ctx.eat(["<"])) {
-    ctx.eat(["{"]);
+  if (ctx.eat(['<'])) {
+    ctx.eat(['{']);
     params.push(expression(ctx));
-    ctx.eat(["}"]);
-    ctx.eat([">"]);
-  } else if (ctx.eat(["="])) {
+    ctx.eat(['}']);
+    ctx.eat(['>']);
+  } else if (ctx.eat(['='])) {
     params.push(expression(ctx));
   }
 

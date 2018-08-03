@@ -1,6 +1,6 @@
-import Syntax from "../Syntax";
-import { expressionFragment as fragment } from "../parser/fragment";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import { expressionFragment as fragment } from '../parser/fragment';
+import type { NodeType } from '../flow/types';
 
 // Unary expressions need to be patched so that the LHS type matches the RHS
 export default function(unaryNode, transform): NodeType {
@@ -9,8 +9,8 @@ export default function(unaryNode, transform): NodeType {
   const [lhs, rhs] = unaryNode.params.map(transform);
   switch (unaryNode.value) {
     // Transform bang
-    case "!":
-      const shift = ["i64", "f64"].includes(lhs.type) ? "63" : "31";
+    case '!':
+      const shift = ['i64', 'f64'].includes(lhs.type) ? '63' : '31';
       return transform(
         fragment(
           `(((${String(lhs)} >> ${shift}) | ((~${String(
@@ -18,10 +18,10 @@ export default function(unaryNode, transform): NodeType {
           )} + 1) >> ${shift})) + 1)`
         )
       );
-    case "~":
-      const mask = ["i64", "f64"].includes(transform(lhs).type)
-        ? "0xffffffffffff"
-        : "0xffffff";
+    case '~':
+      const mask = ['i64', 'f64'].includes(transform(lhs).type)
+        ? '0xffffffffffff'
+        : '0xffffff';
       return transform(fragment(`(${String(lhs)} ^ ${mask})`));
     default:
       return {

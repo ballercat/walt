@@ -1,7 +1,7 @@
 // @flow
-import { stringEncoder } from "../utils/string";
-import { u32 } from "wasm-types";
-import OutputStream from "../utils/output-stream";
+import { stringEncoder } from '../utils/string';
+import { u32 } from 'wasm-types';
+import OutputStream from '../utils/output-stream';
 
 export default function generateData(
   statics: any,

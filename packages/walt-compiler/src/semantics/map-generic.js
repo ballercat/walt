@@ -1,7 +1,7 @@
 // @flow
-import curry from "curry";
-import Syntax from "../Syntax";
-import { CLOSURE_TYPE } from "./metadata";
+import curry from 'curry';
+import Syntax from '../Syntax';
+import { CLOSURE_TYPE } from './metadata';
 
 export const mapGeneric = curry((options, node, _) => {
   const { types } = options;
@@ -13,7 +13,7 @@ export const mapGeneric = curry((options, node, _) => {
     ...realType,
     range: generic.range,
     value: node.value,
-    meta: { ...realType.meta, [CLOSURE_TYPE]: generic.value === "Lambda" },
+    meta: { ...realType.meta, [CLOSURE_TYPE]: generic.value === 'Lambda' },
     params: [
       {
         ...args,
@@ -21,8 +21,8 @@ export const mapGeneric = curry((options, node, _) => {
           {
             ...args,
             params: [],
-            type: "i32",
-            value: "i32",
+            type: 'i32',
+            value: 'i32',
             Type: Syntax.Type,
           },
           ...args.params,

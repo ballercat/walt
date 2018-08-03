@@ -6,7 +6,7 @@ const wrap = (
 ) => {
   const wrapper = (value: string) => {
     const result = predicate(value);
-    return typeof result === "function"
+    return typeof result === 'function'
       ? wrap(result, type, supported)
       : result;
   };

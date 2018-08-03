@@ -12,21 +12,38 @@
  */
 
 // @flow
-import Syntax from "../Syntax";
-import mapNode from "../utils/map-node";
-import walkNode from "../utils/walk-node";
-import closureImports from "../closure-plugin/imports";
-import { mapGeneric } from "./map-generic";
-import hasNode from "../utils/has-node";
-import { combineParsers } from "../plugin";
-import { AST_METADATA } from "./metadata";
-import type { NodeType, SemanticOptionsType } from "../flow/types";
-import core from "../core";
-import base from "../base";
+import Syntax from '../Syntax';
+import mapNode, { map } from '../utils/map-node';
+import walkNode from '../utils/walk-node';
+import closureImports from '../closure-plugin/imports';
+import { mapGeneric } from './map-generic';
+import hasNode from '../utils/has-node';
+import { combineParsers } from '../plugin';
+import { AST_METADATA } from './metadata';
+import type { NodeType, SemanticOptionsType } from '../flow/types';
+import core from '../core';
+import base from '../base';
+import _function from '../core/function';
+import booleans from '../core/bool';
+import array from '../core/array';
+import memory from '../core/memory';
+import string from '../core/string';
+
+const getBuiltInParsers = () => {
+  return [
+    base().semantics,
+    core().semantics,
+    _function().semantics,
+    booleans().semantics,
+    array().semantics,
+    memory().semantics,
+    string().semantics,
+  ];
+};
 
 function semantics(
   ast: NodeType,
-  parsers: Array<(any) => any> = [base().semantics, core().semantics]
+  parsers: Array<(any) => any> = getBuiltInParsers()
 ): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
@@ -98,7 +115,7 @@ function semantics(
   })(ast);
 
   const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = mapNode(combined)(astWithTypes);
+  const patched = map(combined)([astWithTypes, options]);
 
   return {
     ...patched,

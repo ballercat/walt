@@ -1,9 +1,9 @@
 // @flow
-import Syntax from "../Syntax";
-import type Context from "./context";
-import closure from "./closure";
-import { subscriptFromNode } from "./array-subscript";
-import type { TokenType, NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import type Context from './context';
+import closure from './closure';
+import { subscriptFromNode } from './array-subscript';
+import type { TokenType, NodeType } from '../flow/types';
 
 function binary(ctx: Context, op: TokenType, params: NodeType[]) {
   const node: NodeType = { ...params[0] };
@@ -11,21 +11,21 @@ function binary(ctx: Context, op: TokenType, params: NodeType[]) {
   node.params = params;
 
   let Type = Syntax.BinaryExpression;
-  if (node.value === "=") {
+  if (node.value === '=') {
     Type = Syntax.Assignment;
-  } else if (node.value === "-=" || node.value === "+=") {
+  } else if (node.value === '-=' || node.value === '+=') {
     Type = Syntax.Assignment;
     const value = node.value[0];
-    node.value = "=";
+    node.value = '=';
     node.params = [
       node.params[0],
       binary(ctx, { ...op, value }, [node.params[0], node.params[1]]),
     ];
-  } else if (node.value === "[" || node.value === ".") {
+  } else if (node.value === '[' || node.value === '.') {
     return subscriptFromNode(ctx, node);
-  } else if (node.value === ":") {
+  } else if (node.value === ':') {
     Type = Syntax.Pair;
-  } else if (node.value === "||" || node.value === "&&") {
+  } else if (node.value === '||' || node.value === '&&') {
     Type = Syntax.Select;
   }
 
@@ -35,16 +35,16 @@ function binary(ctx: Context, op: TokenType, params: NodeType[]) {
 function unary(ctx: Context, op: TokenType, params: NodeType[]): NodeType {
   const [target] = params;
   switch (op.value) {
-    case "--":
+    case '--':
       return {
         ...target,
         Type: Syntax.UnaryExpression,
-        value: "-",
+        value: '-',
         meta: {},
         params: [
           {
             ...target,
-            value: "0",
+            value: '0',
             Type: Syntax.Constant,
             params: [],
             meta: {},
@@ -52,8 +52,8 @@ function unary(ctx: Context, op: TokenType, params: NodeType[]): NodeType {
           target,
         ],
       };
-    case "!":
-    case "~":
+    case '!':
+    case '~':
       return {
         ...target,
         value: op.value,
@@ -119,19 +119,19 @@ const operator = (
 ) => {
   const op = operators.pop();
   switch (op.value) {
-    case "=>":
+    case '=>':
       return closure(ctx, op, operands);
-    case "?":
+    case '?':
       return ternary(ctx, op, operands.splice(-2));
-    case ",":
+    case ',':
       return sequence(ctx, op, operands.splice(-2));
-    case "{":
+    case '{':
       return objectLiteral(ctx, op, operands.splice(-1));
-    case "--":
-    case "...":
-    case "sizeof":
-    case "~":
-    case "!":
+    case '--':
+    case '...':
+    case 'sizeof':
+    case '~':
+    case '!':
       return unary(ctx, op, operands.splice(-1));
     default:
       return binary(ctx, op, operands.splice(-2));

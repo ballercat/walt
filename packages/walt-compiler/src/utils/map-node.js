@@ -4,11 +4,11 @@ function map(visitors) {
   function mapper(input) {
     const visitor = (() => {
       const [node] = input;
-      if ("*" in visitors && typeof visitors["*"] === "function") {
-        return visitors["*"];
+      if ('*' in visitors && typeof visitors['*'] === 'function') {
+        return visitors['*'];
       }
 
-      if (node.Type in visitors && typeof visitors[node.Type] === "function") {
+      if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
         return visitors[node.Type];
       }
       return identity;
@@ -19,9 +19,11 @@ function map(visitors) {
     }
 
     const [node, ...rest] = visitor(input);
-    const params = node.params.map(child => mapper([child, ...rest]));
+    const params = node.params
+      .filter(Boolean)
+      .map(child => mapper([child, ...rest]));
 
-    return [{ ...node, params }, ...rest];
+    return { ...node, params };
   }
 
   return mapper;
@@ -36,11 +38,11 @@ export default function mapNode(visitor) {
     }
 
     const mappingFunction = (() => {
-      if ("*" in visitor && typeof visitor["*"] === "function") {
-        return visitor["*"];
+      if ('*' in visitor && typeof visitor['*'] === 'function') {
+        return visitor['*'];
       }
 
-      if (node.Type in visitor && typeof visitor[node.Type] === "function") {
+      if (node.Type in visitor && typeof visitor[node.Type] === 'function') {
         return visitor[node.Type];
       }
       return identity;

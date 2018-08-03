@@ -1,12 +1,12 @@
 // @flow
-import { parser } from "..";
+import { parser } from '..';
 import {
   CLOSURE_SET,
   CLOSURE_GET,
   CLOSURE_FREE,
   CLOSURE_MALLOC,
-} from "../semantics/closure";
-import type { NodeType } from "../flow/types";
+} from '../semantics/closure';
+import type { NodeType } from '../flow/types';
 
 export default function imports(): NodeType[] {
   return parser(`

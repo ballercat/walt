@@ -1,20 +1,20 @@
 // @flow
-import Syntax from "../Syntax";
-import walkNode from "../utils/walk-node";
-import type { NodeType, IntermediateTableType } from "./flow/types";
+import Syntax from '../Syntax';
+import walkNode from '../utils/walk-node';
+import type { NodeType, IntermediateTableType } from './flow/types';
 
 export default function generateMemory(node: NodeType): IntermediateTableType {
-  const table = { max: 0, initial: 0, type: "" };
+  const table = { max: 0, initial: 0, type: '' };
 
   walkNode({
     [Syntax.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
-      if (key === "initial") {
+      if (key === 'initial') {
         table.initial = parseInt(value);
-      } else if (key === "element") {
+      } else if (key === 'element') {
         table.type = value;
-      } else if (key === "max") {
+      } else if (key === 'max') {
         table.max = parseInt(value);
       }
     },

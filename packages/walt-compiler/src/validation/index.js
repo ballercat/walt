@@ -1,19 +1,19 @@
 // @flow
 // AST Validator
-import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from "../Syntax";
-import walkNode from "../utils/walk-node";
-import error from "../utils/generate-error";
-import { isBuiltinType } from "../generator/utils";
+import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from '../Syntax';
+import walkNode from '../utils/walk-node';
+import error from '../utils/generate-error';
+import { isBuiltinType } from '../generator/utils';
 import {
   GLOBAL_INDEX,
   TYPE_CONST,
   ALIAS,
   AST_METADATA,
-} from "../semantics/metadata";
-import { typeWeight } from "../types";
-import type { NodeType } from "../flow/types";
+} from '../semantics/metadata';
+import { typeWeight } from '../types';
+import type { NodeType } from '../flow/types';
 
-const GLOBAL_LABEL = "global";
+const GLOBAL_LABEL = 'global';
 
 // We walk the the entire tree and perform syntax validation before we continue
 // onto the generator. This may throw sometimes
@@ -27,7 +27,7 @@ export default function validate(
 ) {
   const metadata = ast.meta[AST_METADATA];
   if (metadata == null) {
-    throw new Error("Missing AST metadata!");
+    throw new Error('Missing AST metadata!');
   }
   const { types, functions, userTypes } = metadata;
   const problems = [];
@@ -38,7 +38,7 @@ export default function validate(
       problems.push(
         error(
           `Unexpected expression ${pair.Type}`,
-          "",
+          '',
           { start, end },
           filename,
           GLOBAL_LABEL
@@ -52,8 +52,8 @@ export default function validate(
       if (globalIndex != null && !target.params.length) {
         problems.push(
           error(
-            "Global exports must have a value",
-            "",
+            'Global exports must have a value',
+            '',
             { start, end },
             filename,
             GLOBAL_LABEL
@@ -68,9 +68,9 @@ export default function validate(
           problems.push(
             error(
               "Using an 'as' import without a type.",
-              "A type for original import " +
+              'A type for original import ' +
                 binary.params[0].value +
-                " is not defined nor could it be inferred.",
+                ' is not defined nor could it be inferred.',
               { start, end },
               filename,
               GLOBAL_LABEL
@@ -81,7 +81,7 @@ export default function validate(
           const [start, end] = identifier.range;
           problems.push(
             error(
-              "Infered type not supplied.",
+              'Infered type not supplied.',
               "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.",
               { start, end },
               filename,
@@ -113,13 +113,13 @@ export default function validate(
       const [start, end] = decl.range;
       const [initializer] = decl.params;
 
-      if (decl.meta[TYPE_CONST] != null) {
+      if (decl.meta[TYPE_CONST]) {
         const validTypes = [Syntax.Constant, Syntax.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(
             error(
-              "Global Constants must be initialized with a Number literal.",
-              "WebAssembly does not allow for non number literal constant initializers.",
+              'Global Constants must be initialized with a Number literal.',
+              'WebAssembly does not allow for non number literal constant initializers.',
               { start, end },
               filename,
               GLOBAL_LABEL
@@ -130,8 +130,8 @@ export default function validate(
         if (initializer == null) {
           problems.push(
             error(
-              "Constant declaration without an initializer.",
-              "Global constants must be initialized with a Number literal.",
+              'Constant declaration without an initializer.',
+              'Global constants must be initialized with a Number literal.',
               { start, end },
               filename,
               GLOBAL_LABEL
@@ -146,8 +146,8 @@ export default function validate(
       ) {
         problems.push(
           error(
-            "Unknown type used in a declaration, " + `"${String(decl.type)}"`,
-            "Variables must be assigned with a known type.",
+            'Unknown type used in a declaration, ' + `"${String(decl.type)}"`,
+            'Variables must be assigned with a known type.',
             { start, end },
             filename,
             GLOBAL_LABEL
@@ -168,19 +168,19 @@ export default function validate(
             problems.push(
               error(
                 `Unexpected statement ${initializer.Type}`,
-                "Attempting to assign a statement to a variable. Did you miss a semicolon(;)?",
+                'Attempting to assign a statement to a variable. Did you miss a semicolon(;)?',
                 { start, end },
                 filename,
                 functionName
               )
             );
           }
-          if (node.meta[TYPE_CONST] != null) {
+          if (node.meta[TYPE_CONST]) {
             if (initializer == null) {
               problems.push(
                 error(
-                  "Constant declaration without an initializer.",
-                  "Local Constants must be initialized with an expression.",
+                  'Constant declaration without an initializer.',
+                  'Local Constants must be initialized with an expression.',
                   { start, end },
                   filename,
                   functionName
@@ -196,9 +196,9 @@ export default function validate(
           ) {
             problems.push(
               error(
-                "Unknown type used in a declartion, " +
+                'Unknown type used in a declartion, ' +
                   `"${String(node.type)}"`,
-                "Variables must be assigned with a known type.",
+                'Variables must be assigned with a known type.',
                 { start, end },
                 filename,
                 functionName
@@ -215,8 +215,8 @@ export default function validate(
           if (statement != null) {
             problems.push(
               error(
-                "Unexpected statement in assignment",
-                "Statments cannot be used in assignment expressions. Did you miss a semicolon?",
+                'Unexpected statement in assignment',
+                'Statments cannot be used in assignment expressions. Did you miss a semicolon?',
                 { start: statement.range[0], end: statement.range[1] },
                 filename,
                 functionName
@@ -225,11 +225,11 @@ export default function validate(
           }
 
           const isConst = identifier.meta[TYPE_CONST];
-          if (isConst != null) {
+          if (isConst) {
             problems.push(
               error(
                 `Cannot reassign a const variable ${identifier.value}`,
-                "const variables cannot be reassigned, use let instead.",
+                'const variables cannot be reassigned, use let instead.',
                 { start, end },
                 filename,
                 functionName
@@ -244,7 +244,7 @@ export default function validate(
             const alias = offset.meta[ALIAS];
             problems.push(
               error(
-                "Cannot generate memory offset",
+                'Cannot generate memory offset',
                 `Undefined key ${
                   alias != null ? alias : offset.value
                 } for type ${String(identifier.type)}`,
@@ -261,25 +261,18 @@ export default function validate(
             return;
           }
           const [expression] = node.params;
+
           const [start] = node.range;
           const end = expression != null ? expression.range[1] : node.range[1];
-          const type = (() => {
-            if (expression == null) {
-              return null;
-            }
-            if (userTypes[expression.type] != null) {
-              return "i32";
-            }
-            return expression.type;
-          })();
+          const type = node.type;
 
           if (typeWeight(type) !== typeWeight(func.type)) {
             problems.push(
               error(
-                "Missing return value",
-                "Inconsistent return value. Expected " +
+                'Missing return value',
+                'Inconsistent return value. Expected ' +
                   func.type +
-                  " received " +
+                  ' received ' +
                   String(type),
                 { start, end },
                 filename,
@@ -294,7 +287,7 @@ export default function validate(
 
             problems.push(
               error(
-                "Undefined function reference",
+                'Undefined function reference',
                 `${node.value} is not defined.`,
                 { start, end },
                 filename,
@@ -311,7 +304,7 @@ export default function validate(
             const [start, end] = node.range;
             problems.push(
               error(
-                "Cannot make an indirect call without a valid function type",
+                'Cannot make an indirect call without a valid function type',
                 `${identifier.value} has type ${String(
                   identifier.type
                 )} which is not defined. Inidrect calls must have pre-defined types.`,
@@ -329,7 +322,7 @@ export default function validate(
   const problemCount = problems.length;
   if (problemCount > 0) {
     const errorString = problems.reduce((acc, value) => {
-      return acc + "\n" + `${value}\n`;
+      return acc + '\n' + `${value}\n`;
     }, `Cannot generate WebAssembly for ${filename}. ${problemCount} problems.\n`);
 
     throw new Error(errorString);

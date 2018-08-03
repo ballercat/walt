@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../../Syntax";
-import curry from "curry";
-import type { NodeType } from "../../flow/types";
-import { TYPE_OBJECT, OBJECT_KEY_TYPES, ALIAS } from "../metadata";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import type { NodeType } from '../../flow/types';
+import { TYPE_OBJECT, OBJECT_KEY_TYPES, ALIAS } from '../metadata';
 
 const patchStringSubscript = (
   byteOffsetsByKey: any,
@@ -16,7 +16,7 @@ const patchStringSubscript = (
       ...field,
       meta: { [ALIAS]: field.value },
       value: absoluteByteOffset,
-      type: "i32",
+      type: 'i32',
       Type: Syntax.Constant,
     },
   ];
@@ -31,7 +31,7 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
     const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
     return {
       ...node,
-      type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : "i32",
+      type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : 'i32',
       params: patchStringSubscript(metaObject, params),
     };
   }
@@ -42,7 +42,7 @@ const mapArraySubscript = curry(({ userTypes }, node, mapChildren) => {
       ...node,
       Type: Syntax.NativeMethod,
       type: identifier.value,
-      value: identifier.value + "." + field.value,
+      value: identifier.value + '.' + field.value,
       params: field.params,
     };
   }

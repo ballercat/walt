@@ -1,7 +1,7 @@
 // @flow
-import mapSyntax from "./map-syntax";
-import mergeBlock from "./merge-block";
-import type { GeneratorType } from "./flow/types";
+import mapSyntax from './map-syntax';
+import mergeBlock from './merge-block';
+import type { GeneratorType } from './flow/types';
 
 const generateBlock: GeneratorType = (node, parent) => {
   // TODO: blocks should encode a return type and an end opcode,

@@ -25,21 +25,21 @@ export default function generateErrorString(
   }
   const Line = (() => {
     if (marker.start.sourceLine !== marker.end.sourceLine) {
-      return marker.start.sourceLine + "\n" + marker.end.sourceLine;
+      return marker.start.sourceLine + '\n' + marker.end.sourceLine;
     }
     return marker.end.sourceLine;
   })();
 
-  const highlight = new Array(end - col + 1).join("^").padStart(end, " ");
+  const highlight = new Array(end - col + 1).join('^').padStart(end, ' ');
   return (
-    "\n" +
+    '\n' +
     Line +
-    "\n" +
+    '\n' +
     highlight +
     ` ${error}` +
-    "\n" +
+    '\n' +
     msg +
-    "\n" +
+    '\n' +
     `  at ${func} (${filename}:${line}:${col})`
   );
 }

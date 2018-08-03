@@ -1,6 +1,6 @@
 // @flow
-import { sizeof } from "wasm-types";
-import OutputStream from "./output-stream";
+import { sizeof } from 'wasm-types';
+import OutputStream from './output-stream';
 
 const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
   let pc = 0;
@@ -10,7 +10,7 @@ const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
       .map(({ type, value, debug }) => {
         const pcString = pc
           .toString(16)
-          .padStart(8, "0")
+          .padStart(8, '0')
           .padEnd(stream.data.length.toString().length + 1);
         let valueString;
         if (Array.isArray(value)) {
@@ -25,7 +25,7 @@ const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
         pc += sizeof[type] || value.length;
         return out;
       })
-      .join("\n") + "\n ============ fin ============="
+      .join('\n') + '\n ============ fin ============='
   );
 };
 

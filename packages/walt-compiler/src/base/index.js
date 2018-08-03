@@ -3,9 +3,12 @@ export default function base() {
   return {
     semantics() {
       return {
-        "*": _ =>
-          function baseSemanticsParser({ node }, t) {
-            return { ...node, params: node.params.map(t) };
+        '*': _ =>
+          function baseSemanticsParser([node, ...rest], t) {
+            return {
+              ...node,
+              params: node.params.map(child => t([child, ...rest])),
+            };
           },
       };
     },

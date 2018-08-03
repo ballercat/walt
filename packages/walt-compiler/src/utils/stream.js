@@ -1,5 +1,5 @@
 // @flow
-export const eol = (char: string) => char === "\n";
+export const eol = (char: string) => char === '\n';
 
 // Base Character stream class
 class Stream {
@@ -12,7 +12,7 @@ class Stream {
   constructor(input: string) {
     this.pos = this.line = this.col = 0;
     this.input = input;
-    this.lines = input.split("\n");
+    this.lines = input.split('\n');
     this.newLine();
   }
 
@@ -42,23 +42,23 @@ class Stream {
 
   // Is the character an end of line
   eol(char: string): boolean {
-    return char === "\n";
+    return char === '\n';
   }
 
   // Is the character an end of file
   eof(char: string): boolean {
-    return char === "";
+    return char === '';
   }
 
   // Is the charater a whitespace
   static whitespace(char: string): boolean {
     return (
-      char === "\n" ||
-      char === " " ||
-      char === "\t" ||
-      char === "\v" ||
-      char === "\r" ||
-      char === "\f"
+      char === '\n' ||
+      char === ' ' ||
+      char === '\t' ||
+      char === '\v' ||
+      char === '\r' ||
+      char === '\f'
     );
   }
 }

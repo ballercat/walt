@@ -1,5 +1,5 @@
 // @flow
-import type { TokenType } from "../flow/types";
+import type { TokenType } from '../flow/types';
 
 export type TokenStream = {
   next: () => TokenType,

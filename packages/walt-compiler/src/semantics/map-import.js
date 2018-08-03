@@ -1,15 +1,15 @@
 // @flow
-import curry from "curry";
-import Syntax from "../Syntax";
-import mapNode from "../utils/map-node";
+import curry from 'curry';
+import Syntax from '../Syntax';
+import mapNode from '../utils/map-node';
 import {
   FUNCTION_INDEX,
   TYPE_INDEX,
   TYPE_CONST,
   GLOBAL_INDEX,
-} from "./metadata";
+} from './metadata';
 
-export const mapImport = curry((options, { node }, _) => {
+export const mapImport = curry((options, [node], _) => {
   return mapNode({
     [Syntax.BinaryExpression]: (as, transform) => {
       const [maybePair, asIdentifier] = as.params;
@@ -65,7 +65,7 @@ export const mapImport = curry((options, { node }, _) => {
         };
       }
 
-      if (!["Table", "Memory"].includes(typeNode.type)) {
+      if (!['Table', 'Memory'].includes(typeNode.type)) {
         const index = Object.keys(globals).length;
 
         globals[identifierNode.value] = {

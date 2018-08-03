@@ -1,32 +1,32 @@
 // @flow
-import generateFunctionCall from "./function-call";
-import generateIndirectFunctionCall from "./indirect-function-call";
-import generateBinaryExpression from "./binary-expression";
-import generateTernary from "./ternary-expression";
-import generateIf from "./if-then-else";
-import generateFunctionPointer from "./function-pointer";
-import generateReturn from "./return-statement";
-import generateDeclaration from "./declaration";
-import generateArraySubscript from "./array-subscript";
-import generateAssignment from "./assignment";
-import generateMemoryAssignment from "./memory-assignment";
-import generateLoop from "./loop";
-import generateSequence from "./sequence";
-import generateTypecast from "./typecast";
-import generateBreak from "./break";
-import generateNoop from "./noop";
-import generateBlock from "./block";
-import generateElse from "./else";
-import generateSelect from "./select";
-import generateNative from "./native";
+import generateFunctionCall from './function-call';
+import generateIndirectFunctionCall from './indirect-function-call';
+import generateBinaryExpression from './binary-expression';
+import generateTernary from './ternary-expression';
+import generateIf from './if-then-else';
+import generateFunctionPointer from './function-pointer';
+import generateReturn from './return-statement';
+import generateDeclaration from './declaration';
+import generateArraySubscript from './array-subscript';
+import generateAssignment from './assignment';
+import generateMemoryAssignment from './memory-assignment';
+import generateLoop from './loop';
+import generateSequence from './sequence';
+import generateTypecast from './typecast';
+import generateBreak from './break';
+import generateNoop from './noop';
+import generateBlock from './block';
+import generateElse from './else';
+import generateSelect from './select';
+import generateNative from './native';
 
-import Syntax from "../Syntax";
-import { getInScope, getConstOpcode } from "./utils";
-import curry from "curry";
-import invariant from "invariant";
-import type { MapSyntaxType, GeneratorType } from "./flow/types";
+import Syntax from '../Syntax';
+import { getInScope, getConstOpcode } from './utils';
+import curry from 'curry';
+import invariant from 'invariant';
+import type { MapSyntaxType, GeneratorType } from './flow/types';
 
-import printNode from "../utils/print-node";
+import printNode from '../utils/print-node';
 
 export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.FunctionCall]: generateFunctionCall,
@@ -64,7 +64,7 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
   invariant(
     mapping,
-    `Unexpected Syntax Token ${operand.Type} : ${operand.value}`
+    `Unexpected Syntax Token. ${operand.Type} "${operand.value}"`
   );
 
   const validate = (block, i) => {
@@ -73,7 +73,7 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
     if (!block.kind) {
       invariant(
         block.kind,
-        "Unknown opcode generated in block index %s %s. \nOperand: \n%s",
+        'Unknown opcode generated in block index %s %s. \nOperand: \n%s',
         i,
         JSON.stringify(block),
         printNode(operand)

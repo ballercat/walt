@@ -1,12 +1,12 @@
 // @flow
-import compile from "..";
+import compile from '..';
 import {
   CLOSURE_SET,
   CLOSURE_GET,
   CLOSURE_FREE,
   CLOSURE_MALLOC,
-} from "../semantics/closure";
-import type { WebAssemblyModuleType } from "../flow/types";
+} from '../semantics/closure';
+import type { WebAssemblyModuleType } from '../flow/types';
 
 // Make this a .walt file or pre-parse into an ast.
 const source = `
@@ -96,7 +96,7 @@ export default function closurePlugin() {
   return compile(source, {
     version: 0x1,
     encodeNames: false,
-    filename: "walt-closure-plugin",
-    lines: source.split("\n"),
+    filename: 'walt-closure-plugin',
+    lines: source.split('\n'),
   });
 }

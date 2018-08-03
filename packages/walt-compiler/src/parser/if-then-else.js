@@ -1,14 +1,14 @@
 // @flow
-import Syntax from "../Syntax";
-import statement from "./statement";
-import expression from "./expression";
-import type Context from "./context";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import statement from './statement';
+import expression from './expression';
+import type Context from './context';
+import type { NodeType } from '../flow/types';
 
 const condition = (ctx: Context): NodeType => {
-  ctx.expect(["("]);
+  ctx.expect(['(']);
   const expr = expression(ctx);
-  ctx.expect([")"]);
+  ctx.expect([')']);
   return expr;
 };
 
@@ -17,7 +17,7 @@ export default function parseIfStatement(ctx: Context): NodeType {
     ...ctx.startNode(ctx.token),
   };
 
-  ctx.eat(["if"]);
+  ctx.eat(['if']);
   // First operand is the expression
   const params: NodeType[] = [condition(ctx)];
   const statementNode = statement(ctx);
@@ -25,8 +25,8 @@ export default function parseIfStatement(ctx: Context): NodeType {
     params.push(statementNode);
   }
 
-  ctx.eat([";"]);
-  while (ctx.eat(["else"])) {
+  ctx.eat([';']);
+  while (ctx.eat(['else'])) {
     // maybe another if statement
     const elseNode = ctx.makeNode(null, Syntax.Else);
     const elseParams = [];

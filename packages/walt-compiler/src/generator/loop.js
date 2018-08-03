@@ -1,8 +1,8 @@
 // @flow
-import mapSyntax from "./map-syntax";
-import mergeBlock from "./merge-block";
-import opcode from "../emitter/opcode";
-import type { GeneratorType } from "./flow/types";
+import mapSyntax from './map-syntax';
+import mergeBlock from './merge-block';
+import opcode from '../emitter/opcode';
+import type { GeneratorType } from './flow/types';
 
 const generateLoop: GeneratorType = (node, parent) => {
   const block = [];

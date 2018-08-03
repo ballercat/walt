@@ -1,12 +1,12 @@
 // @flow
-import Stream from "../utils/stream";
-import punctuator from "./punctuator";
-import constant from "./constant";
-import identifier from "./identifier";
-import keyword from "./keyword";
-import string from "./string";
-import comments from "./comments";
-import type from "./type";
+import Stream from '../utils/stream';
+import punctuator from './punctuator';
+import constant from './constant';
+import identifier from './identifier';
+import keyword from './keyword';
+import string from './string';
+import comments from './comments';
+import type from './type';
 
 type Parsers = ((string) => any)[];
 
@@ -38,9 +38,9 @@ class Tokenizer {
    * Get next token
    */
   next() {
-    let value = "";
+    let value = '';
     this.seekNonWhitespace();
-    let char = "";
+    let char = '';
     let matchers = this.parsers;
     let next;
     let nextMatchers = this.match(char, matchers);
@@ -90,7 +90,7 @@ class Tokenizer {
     value: string,
     parsers: Parsers,
     token: { type: string, value: string, start: {}, end: {} } = {
-      type: "unknown",
+      type: 'unknown',
       value,
       start: {},
       end: {},

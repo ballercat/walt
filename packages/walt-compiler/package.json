@@ -75,7 +75,8 @@
     "walt-buildtools": "^0.0.4"
   },
   "prettier": {
-    "trailingComma": "es5"
+    "trailingComma": "es5",
+    "singleQuote": true
   },
   "ava": {
     "files": [

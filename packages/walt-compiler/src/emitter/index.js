@@ -1,9 +1,9 @@
 // @flow
-import preamble from "./preamble";
-import section from "./section";
-import OutputStream from "../utils/output-stream";
-import type { ProgramType } from "../generator/flow/types";
-import type { ConfigType } from "../flow/types";
+import preamble from './preamble';
+import section from './section';
+import OutputStream from '../utils/output-stream';
+import type { ProgramType } from '../generator/flow/types';
+import type { ConfigType } from '../flow/types';
 
 function emit(program: ProgramType, config: ConfigType) {
   const stream = new OutputStream();
@@ -23,7 +23,8 @@ function emit(program: ProgramType, config: ConfigType) {
     .write(section.code(program))
     .write(section.data(program));
 
-  if (config.encodeNames) {
+  if (true) {
+    // config.encodeNames) {
     return result.write(section.name(program));
   }
 

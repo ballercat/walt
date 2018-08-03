@@ -1,9 +1,9 @@
 // @flow
-import opcode from "../emitter/opcode";
-import mergeBlock from "./merge-block";
-import type { GeneratorType } from "./flow/types";
-import { TYPE_ARRAY } from "../semantics/metadata";
-import mapSyntax from "./map-syntax";
+import opcode from '../emitter/opcode';
+import mergeBlock from './merge-block';
+import type { GeneratorType } from './flow/types';
+import { TYPE_ARRAY } from '../semantics/metadata';
+import mapSyntax from './map-syntax';
 
 const generateArraySubscript: GeneratorType = (node, parent) => {
   const identifier = node.params[0];
@@ -25,7 +25,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
   block.push({ kind: opcode.i32Add, params: [] });
 
   block.push({
-    kind: opcode[String(type) + "Load"],
+    kind: opcode[String(type) + 'Load'],
     params: [
       // Alignment
       2,

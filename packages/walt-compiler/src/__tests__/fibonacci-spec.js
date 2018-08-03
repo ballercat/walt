@@ -1,11 +1,11 @@
-import test from "ava";
-import compile from "..";
+import test from 'ava';
+import compile from '..';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const checks = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
 
 // Spec showing if/then branches and recursive functions
-test("fibonacci", t =>
+test('fibonacci', t =>
   compileAndRun(`
     export function fibonacci(n: i32): i32 {
       if (n == 0) return 0;

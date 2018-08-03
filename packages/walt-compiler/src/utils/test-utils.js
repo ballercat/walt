@@ -1,17 +1,17 @@
-import buildTools from "walt-buildtools";
-import path from "path";
-import fs from "fs";
-import { getText } from "../utils/string";
-import semantics from "../semantics";
-import validate from "../validation";
-import parser from "../parser";
-import emitter from "../emitter";
-import generator from "../generator";
-import { mapNode, walkNode, prettyPrintNode } from "..";
+import buildTools from 'walt-buildtools';
+import path from 'path';
+import fs from 'fs';
+import { getText } from '../utils/string';
+import semantics from '../semantics';
+import validate from '../validation';
+import parser from '../parser';
+import emitter from '../emitter';
+import generator from '../generator';
+import { mapNode, walkNode, prettyPrintNode } from '..';
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;
-  return path.resolve(root, file.slice(-5) === ".walt" ? file : file + ".walt");
+  return path.resolve(root, file.slice(-5) === '.walt' ? file : file + '.walt');
 }
 
 function getFileContents(file, parent, mode) {
@@ -46,7 +46,6 @@ export const harness = (filepath, env) => t => {
     generator,
     prettyPrintNode,
   });
-
   return build({
     env: {
       memory,

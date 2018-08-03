@@ -33,7 +33,7 @@ export const combineParsers = (sortedParsers = []) => {
     Object.entries(parser).forEach(([type, cb]) => {
       // Wildcards may only handle types which have other callbacks attached to
       // them.
-      if (type === "*") {
+      if (type === '*') {
         wildcards.push(cb);
         // We need to add a wildcard to any already existing parser
         addWildcard(acc, cb);

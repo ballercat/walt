@@ -5,16 +5,16 @@
  *
  * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
  */
-import Syntax from "../Syntax";
-import operator from "./operator";
-import constant from "./constant";
-import stringLiteral from "./string-literal";
-import builtInType from "./builtin-type";
-import block from "./block";
-import { getAssociativty, getPrecedence } from "./introspection";
-import maybeIdentifier from "./maybe-identifier";
-import type Context from "./context";
-import type { NodeType, TokenType } from "../flow/types";
+import Syntax from '../Syntax';
+import operator from './operator';
+import constant from './constant';
+import stringLiteral from './string-literal';
+import builtInType from './builtin-type';
+import block from './block';
+import { getAssociativty, getPrecedence } from './introspection';
+import maybeIdentifier from './maybe-identifier';
+import type Context from './context';
+import type { NodeType, TokenType } from '../flow/types';
 
 export type Predicate = (TokenType, number) => boolean;
 export type OperatorCheck = TokenType => boolean;
@@ -34,17 +34,17 @@ export type OperatorCheck = TokenType => boolean;
 const last = (list: any[]): any => list[list.length - 1];
 
 export const isPunctuatorAndNotBracket = (t: ?TokenType) =>
-  t && t.type === Syntax.Punctuator && t.value !== "]" && t.value !== ")";
+  t && t.type === Syntax.Punctuator && t.value !== ']' && t.value !== ')';
 
 // Because expressions can be anywhere and likely nested inside another expression
 // this nesting is represented with a depth. If we reach an "exit" like a ) or a }
 // and drop our depth below zero we know we have escaped our intended expression
 // and we bail out.
 export const predicate = (token: TokenType, depth: number): boolean =>
-  token.value !== ";" && depth > 0;
+  token.value !== ';' && depth > 0;
 
 // Exceptions to no-keywords-in-expressions
-export const validKeywordsInExpressions = ["as"];
+export const validKeywordsInExpressions = ['as'];
 
 // Shunting yard
 const expression = (ctx: Context, check: Predicate = predicate) => {
@@ -79,7 +79,7 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
       previous.Type !== Syntax.Sequence &&
       // The rest of this is Shunting Yard rules
       getPrecedence(previous) >= precedence &&
-      getAssociativty(previous) === "left"
+      getAssociativty(previous) === 'left'
     ) {
       consume();
       previous = last(operators);
@@ -91,61 +91,61 @@ const expression = (ctx: Context, check: Predicate = predicate) => {
   // approach.
   const processPunctuator = () => {
     switch (ctx.token.value) {
-      case "=>":
+      case '=>':
         flushOperators(getPrecedence(ctx.token));
         operators.push(ctx.token);
         ctx.next();
-        if (ctx.token.value === "{") {
+        if (ctx.token.value === '{') {
           operands.push(block(ctx));
         }
         return false;
-      case "(":
+      case '(':
         depth++;
         operators.push(ctx.token);
         break;
-      case "[":
+      case '[':
         depth++;
         operators.push(ctx.token);
         break;
-      case "]":
+      case ']':
         depth--;
-        eatUntil("[");
+        eatUntil('[');
         consume();
         break;
-      case ")": {
+      case ')': {
         depth--;
         if (depth < 1) {
           return false;
         }
         // If we are not in a group already find the last LBracket,
         // consume everything until that point
-        eatUntil("(");
+        eatUntil('(');
         // Pop left bracket
         operators.pop();
 
         break;
       }
-      case "{":
+      case '{':
         depth++;
         operators.push(ctx.token);
         break;
-      case "}":
+      case '}':
         depth--;
         if (depth < 1) {
           return false;
         }
-        eatUntil("{");
+        eatUntil('{');
         consume();
         break;
       default: {
         const token = (t => {
           if (
-            (t.value === "-" && previousToken == null) ||
-            (t.value === "-" && isPunctuatorAndNotBracket(previousToken))
+            (t.value === '-' && previousToken == null) ||
+            (t.value === '-' && isPunctuatorAndNotBracket(previousToken))
           ) {
             return {
               ...t,
-              value: "--",
+              value: '--',
             };
           }
 
