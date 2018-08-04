@@ -30,7 +30,7 @@ export const scopeOperation = curry((op, node) => {
   return {
     kind: opcode[kind],
     params,
-    debug: `${node.value}<${node.type ? node.type : '?'}>`,
+    debug: `${node.value}<${node.meta.ALIAS || node.type || '?'}>`,
   };
 });
 

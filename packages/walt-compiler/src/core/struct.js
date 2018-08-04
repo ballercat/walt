@@ -21,12 +21,32 @@ export default function struct() {
   return {
     semantics() {
       return {
+        Identifier: next => args => {
+          const [node, context] = args;
+          const { userTypes, locals, globals } = context;
+          const local = locals[node.value] || globals[node.value];
+          // Ignore anything not typed as a struct
+          if (!(local && userTypes[local.type])) {
+            return next(args);
+          }
+
+          // Convert all struct uses to i32 types
+          return {
+            ...node,
+            meta: { ...node.meta, ...local.meta, ALIAS: local.type },
+            type: 'i32',
+          };
+        },
         ArraySubscript: next => (args, transform) => {
           const [node, context] = args;
-          const { userTypes } = context;
+          const { userTypes, locals } = context;
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
-          const userType = userTypes[identifier.type];
+          const local = locals[identifier.value];
+          if (!local) {
+            return next(args);
+          }
+          const userType = userTypes[local.type];
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
@@ -126,6 +146,7 @@ export default function struct() {
           })(rhs);
 
           const params = Object.values({ ...spreadKeys, ...individualKeys });
+
           return {
             ...lhs,
             Type: Syntax.Block,

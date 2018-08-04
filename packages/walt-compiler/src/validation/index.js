@@ -247,7 +247,7 @@ export default function validate(
                 'Cannot generate memory offset',
                 `Undefined key ${
                   alias != null ? alias : offset.value
-                } for type ${String(identifier.type)}`,
+                } for type ${String(identifier.meta.ALIAS)}`,
                 { start, end },
                 filename,
                 functionName
@@ -307,7 +307,7 @@ export default function validate(
                 'Cannot make an indirect call without a valid function type',
                 `${identifier.value} has type ${String(
                   identifier.type
-                )} which is not defined. Inidrect calls must have pre-defined types.`,
+                )} which is not defined. Indirect calls must have pre-defined types.`,
                 { start, end },
                 filename,
                 functionName

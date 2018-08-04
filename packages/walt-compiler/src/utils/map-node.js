@@ -2,6 +2,11 @@ const identity = id => id;
 
 function map(visitors) {
   function mapper(input) {
+    if (!Array.isArray(input)) {
+      throw new Error(
+        'Transform must be used on an Array. Received ' + JSON.stringify(input)
+      );
+    }
     const visitor = (() => {
       const [node] = input;
       if ('*' in visitors && typeof visitors['*'] === 'function') {

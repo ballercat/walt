@@ -24,7 +24,9 @@ export default function() {
                 context,
               ]);
             case '~':
-              const mask = ['i64', 'f64'].includes(transform(lhs).type)
+              const mask = ['i64', 'f64'].includes(
+                transform([lhs, context]).type
+              )
                 ? '0xffffffffffff'
                 : '0xffffff';
               return transform([
@@ -32,18 +34,21 @@ export default function() {
                 context,
               ]);
             default:
-              return {
-                ...unaryNode,
-                type: rhs.type,
-                params: [
-                  {
-                    ...lhs,
-                    type: rhs.type,
-                  },
-                  rhs,
-                ],
-                Type: Syntax.BinaryExpression,
-              };
+              return transform([
+                {
+                  ...unaryNode,
+                  type: rhs.type,
+                  params: [
+                    {
+                      ...lhs,
+                      type: rhs.type,
+                    },
+                    rhs,
+                  ],
+                  Type: Syntax.BinaryExpression,
+                },
+                context,
+              ]);
           }
         },
       };
