@@ -11,32 +11,40 @@ export default function coreFunctionPlugin() {
   return {
     semantics(_options) {
       return {
-        FunctionDeclaration: next => ([fun, context]) => {
+        FunctionDeclaration: _ignore => ([fun, context], transform) => {
           context = {
             ...context,
             result: fun.result,
             locals: {},
             arguments: [],
           };
-          // TODO: setup correct order of parsing statements: declarations first,
-          // statements last
-          const result = next([fun, context]);
 
-          const parsed = {
-            ...result,
+          // first two parameters to a function node are the arguments and result
+          const [argsNode, resultNode, ...rest] = fun.params;
+          const [args, result] = [argsNode, resultNode].map(p =>
+            transform([p, context])
+          );
+
+          const ref = {
+            ...fun,
+            // This is set by the parsers below if necessary
+            type: context.result,
             meta: {
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
-                locals: context.locals,
                 argumentsCount: context.arguments.length,
               },
             },
-            type: context.result,
           };
+          context.functions[fun.value] = ref;
 
-          context.functions[fun.value] = parsed;
+          // Parse the statements last, so that they can self-reference the function
+          const statements = rest.map(p => transform([p, context]));
 
-          return parsed;
+          ref.meta[FUNCTION_METADATA].locals = context.locals;
+          ref.params = [args, result, ...statements];
+
+          return ref;
         },
         FunctionResult: _ignore => ([result, context]) => {
           // Function statements are sybligs of FuncionResult so we need to mutate
