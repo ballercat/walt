@@ -23,6 +23,7 @@ import { AST_METADATA } from './metadata';
 import type { NodeType, SemanticOptionsType } from '../flow/types';
 import core from '../core';
 import base from '../base';
+import unary from '../core/unary';
 import _function from '../core/function';
 import booleans from '../core/bool';
 import array from '../core/array';
@@ -37,6 +38,7 @@ const getBuiltInParsers = () => {
   return [
     base().semantics,
     core().semantics,
+    unary().semantics,
     _function().semantics,
     booleans().semantics,
     array().semantics,
