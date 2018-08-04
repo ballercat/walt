@@ -1,6 +1,6 @@
 // @flow
-import token from "../token";
-import Syntax from "../../Syntax";
+import token from '../token';
+import Syntax from '../../Syntax';
 
 const quoteOK = quoteCheck => () => quoteCheck;
 const nextFails = () => null;
@@ -20,7 +20,7 @@ const endsInDoubleQuote = char => {
   if (/\\/.test(char)) {
     return quoteOK(endsInDoubleQuote);
   }
-  if (char === '"') {
+  if (char === '"' || char === '`') {
     return nextFails;
   }
 
@@ -31,7 +31,7 @@ const maybeQuote = char => {
   if (char === "'") {
     return endsInSingleQuote;
   }
-  if (char === '"') {
+  if (char === '"' || char === '`') {
     return endsInDoubleQuote;
   }
 

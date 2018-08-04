@@ -1,12 +1,13 @@
 {
   "name": "walt-docs",
-  "version": "1.0.22",
+  "version": "1.0.24",
   "description": "WAlt documentation",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server -d --hot --inline",
     "build": "webpack && cp index.html explorer.js explorer.js.map walt.png ../../docs/",
-    "prettier": "prettier"
+    "prettier": "prettier",
+    "preversion": "npm run build"
   },
   "private": true,
   "babel": {
@@ -67,6 +68,6 @@
     "react-dom": "15.6.1",
     "semantic-ui-css": "2.2.12",
     "semantic-ui-react": "0.73.1",
-    "walt-compiler": "^0.8.2"
+    "walt-compiler": "^0.9.0"
   }
 }
