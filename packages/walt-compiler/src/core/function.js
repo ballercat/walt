@@ -9,7 +9,7 @@ import { typeWeight } from '../types';
 
 export default function coreFunctionPlugin() {
   return {
-    semantics(_options) {
+    semantics() {
       return {
         FunctionDeclaration: _ignore => ([fun, context], transform) => {
           context = {
@@ -30,6 +30,7 @@ export default function coreFunctionPlugin() {
             // This is set by the parsers below if necessary
             type: context.result,
             meta: {
+              ...fun.meta,
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
                 argumentsCount: context.arguments.length,

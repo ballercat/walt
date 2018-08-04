@@ -31,8 +31,9 @@ import memory from '../core/memory';
 import string from '../core/string';
 import functionPointer from '../core/function-pointer';
 import struct from '../core/struct';
-import sizeof from '../syntax-sugar/sizeof';
 import native from '../core/native';
+import defaultArguments from '../syntax-sugar/default-arguments';
+import sizeof from '../syntax-sugar/sizeof';
 
 const getBuiltInParsers = () => {
   return [
@@ -48,6 +49,7 @@ const getBuiltInParsers = () => {
     struct().semantics,
     native().semantics,
     sizeof().semantics,
+    defaultArguments().semantics,
   ];
 };
 

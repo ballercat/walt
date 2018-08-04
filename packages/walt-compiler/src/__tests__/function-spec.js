@@ -82,7 +82,7 @@ test('functions', t => {
   });
 });
 
-test('closures', t => {
+test.skip('closures', t => {
   const source = `
 const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
