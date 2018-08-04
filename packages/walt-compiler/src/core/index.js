@@ -121,6 +121,12 @@ export default function core() {
 
           return next(args);
         },
+        MemoryAssignment: next => (args, transform) => {
+          const [inputNode, context] = args;
+          const params = inputNode.params.map(p => transform([p, context]));
+          const { type } = params[0];
+          return { ...inputNode, params, type };
+        },
       };
     },
   };

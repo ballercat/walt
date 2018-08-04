@@ -89,7 +89,6 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
       locals: [],
     },
   };
-  config.encodeNames = true;
 
   let { statics } = ast.meta[AST_METADATA];
   if (config.linker != null) {

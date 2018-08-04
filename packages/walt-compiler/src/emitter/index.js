@@ -23,8 +23,7 @@ function emit(program: ProgramType, config: ConfigType) {
     .write(section.code(program))
     .write(section.data(program));
 
-  if (true) {
-    // config.encodeNames) {
+  if (config.encodeNames) {
     return result.write(section.name(program));
   }
 
