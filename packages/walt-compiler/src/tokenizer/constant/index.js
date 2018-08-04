@@ -1,10 +1,10 @@
 // @flow
-import token from "../token";
-import Syntax from "../../Syntax";
+import token from '../token';
+import Syntax from '../../Syntax';
 
 const { isNaN, parseInt } = Number;
 export const isNumber = (char: string) => !isNaN(parseInt(char));
-const isDot = char => char === ".";
+const isDot = char => char === '.';
 const number = char => (isNumber(char) ? number : null);
 
 const numberOrDot = char => {
@@ -28,8 +28,8 @@ const hex = char => {
 
 const maybeExponent = char => {
   switch (char) {
-    case "e":
-    case "E":
+    case 'e':
+    case 'E':
       return number;
     default:
       return numberOrDot(char);
@@ -37,13 +37,13 @@ const maybeExponent = char => {
 };
 const maybeModifier = char => {
   switch (char) {
-    case "b":
-    case "B":
+    case 'b':
+    case 'B':
       return number;
-    case "o":
+    case 'o':
       return number;
-    case "x":
-    case "X":
+    case 'x':
+    case 'X':
       return hex;
     default:
       return numberOrDot(char);
@@ -51,11 +51,11 @@ const maybeModifier = char => {
 };
 
 const root = char => {
-  if (char === "-") {
+  if (char === '-') {
     return root;
   } else if (isDot(char)) {
     return number;
-  } else if (char === "0") {
+  } else if (char === '0') {
     return maybeModifier;
   } else if (isNumber(char)) {
     return maybeExponent;

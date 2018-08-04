@@ -1,8 +1,8 @@
 // @flow
-import { varuint32, varuint7 } from "../numbers";
-import { emitString } from "../string";
-import OutputStream from "../../utils/output-stream";
-import type { NameSectionType } from "../../generator/flow/types";
+import { varuint32, varuint7 } from '../numbers';
+import { emitString } from '../string';
+import OutputStream from '../../utils/output-stream';
+import type { NameSectionType } from '../../generator/flow/types';
 
 // Emit Module name subsection
 const emitModuleName = (name: string): OutputStream => {
@@ -64,23 +64,23 @@ const emitLocals = (
 const emit = (nameSection: NameSectionType): OutputStream => {
   const stream = new OutputStream();
   // Name identifier/header as this is a custom section which requires a string id
-  emitString(stream, "name", "name_len: name");
+  emitString(stream, 'name', 'name_len: name');
 
   // NOTE: Every subsection header is encoded here, not in the individual subsection
   // logic.
   const moduleSubsection = emitModuleName(nameSection.module);
-  stream.push(varuint7, 0, "name_type: Module");
-  stream.push(varuint32, moduleSubsection.size, "name_payload_len");
+  stream.push(varuint7, 0, 'name_type: Module');
+  stream.push(varuint32, moduleSubsection.size, 'name_payload_len');
   stream.write(moduleSubsection);
 
   const functionSubsection = emitFunctionNames(nameSection.functions);
-  stream.push(varuint7, 1, "name_type: Function");
-  stream.push(varuint32, functionSubsection.size, "name_payload_len");
+  stream.push(varuint7, 1, 'name_type: Function');
+  stream.push(varuint32, functionSubsection.size, 'name_payload_len');
   stream.write(functionSubsection);
 
   const localsSubsection = emitLocals(nameSection.locals);
-  stream.push(varuint7, 2, "name_type: Locals");
-  stream.push(varuint32, localsSubsection.size, "name_payload_len");
+  stream.push(varuint7, 2, 'name_type: Locals');
+  stream.push(varuint32, localsSubsection.size, 'name_payload_len');
   stream.write(localsSubsection);
 
   return stream;

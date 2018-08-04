@@ -1,18 +1,18 @@
 // @flow
-import invariant from "invariant";
-import curry from "curry";
-import Syntax from "../../Syntax";
-import { OBJECT_SIZE } from "../../semantics/metadata";
+import invariant from 'invariant';
+import curry from 'curry';
+import Syntax from '../../Syntax';
+import { OBJECT_SIZE } from '../../semantics/metadata';
 
 const variableSize = (type: string): string => {
   switch (type) {
-    case "i64":
-    case "f64":
-      return "8";
-    case "i32":
-    case "f32":
+    case 'i64':
+    case 'f64':
+      return '8';
+    case 'i32':
+    case 'f32':
     default:
-      return "4";
+      return '4';
   }
 };
 
@@ -26,12 +26,12 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
 
   if (userType != null) {
     const metaSize = userType.meta[OBJECT_SIZE];
-    invariant(metaSize, "Object size information is missing");
+    invariant(metaSize, 'Object size information is missing');
     return {
       ...sizeof,
       value: metaSize,
       params: [],
-      type: "i32",
+      type: 'i32',
       Type: Syntax.Constant,
     };
   }
@@ -41,7 +41,7 @@ const mapSizeof = curry(({ locals, globals, functions, userTypes }, sizeof) => {
   return {
     ...sizeof,
     value: variableSize(node ? node.type : target.value),
-    type: "i32",
+    type: 'i32',
     params: [],
     Type: Syntax.Constant,
   };

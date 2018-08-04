@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../../Syntax";
-import curry from "curry";
-import { expandClosureIdentifier } from "../closure";
-import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from "../metadata";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import { expandClosureIdentifier } from '../closure';
+import { FUNCTION_INDEX, TYPE_INDEX, CLOSURE_TYPE } from '../metadata';
 
 const withDefaultArguments = (call, target) => {
   // Most likely a built-in funciton
@@ -33,7 +33,7 @@ export default curry(function mapFunctonCall(options, call) {
   const { functions, types, locals, mapIdentifier, mapSizeof } = options;
 
   // sizeof(<target>) calls
-  if (call.value === "sizeof") {
+  if (call.value === 'sizeof') {
     return mapSizeof(call);
   }
 

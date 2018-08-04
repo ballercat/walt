@@ -1,9 +1,9 @@
-import { expressionFragment } from "../../parser/fragment";
-import test from "ava";
-import { map } from "../../utils/map-node";
-import { combineParsers } from "..";
+import { expressionFragment } from '../../parser/fragment';
+import test from 'ava';
+import { map } from '../../utils/map-node';
+import { combineParsers } from '..';
 
-test("plugin system", t => {
+test('plugin system', t => {
   const calls = [];
   // Should be able to call a method to get all plugins
   const plugin1 = () => {
@@ -19,7 +19,7 @@ test("plugin system", t => {
         // must return an object
         return {
           Identifier: next => ([node]) => {
-            calls.push("plugin1.semantics.Identifier");
+            calls.push('plugin1.semantics.Identifier');
 
             return next([node]);
           },
@@ -33,18 +33,18 @@ test("plugin system", t => {
       semantics() {
         return {
           Identifier: next => ([node, context]) => {
-            calls.push("plugin2.semantics.Identifier");
+            calls.push('plugin2.semantics.Identifier');
 
-            return next([node, { ...context, extra: "o" }]);
+            return next([node, { ...context, extra: 'o' }]);
           },
           BinaryExpression: next => ([node, context = { foo: [] }]) => {
-            calls.push("plugin2.semantics.BinaryExpression");
-            context = { ...context, foo: [...context.foo, "bar"] };
+            calls.push('plugin2.semantics.BinaryExpression');
+            context = { ...context, foo: [...context.foo, 'bar'] };
 
             return next([
               {
                 ...node,
-                type: "f64",
+                type: 'f64',
               },
               context,
             ]);
@@ -62,7 +62,7 @@ test("plugin system", t => {
           // which have at least one parser attached to them. This is necessary
           // because the map-node utility bails out (on parsing children) if the parsing function wants
           // to use the transform argument, which we always do.
-          "*": _ => ([node, context], transform) => {
+          '*': _ => ([node, context], transform) => {
             calls.push(`base.semantics.${node.Type}`);
 
             return {
@@ -80,21 +80,21 @@ test("plugin system", t => {
   const plugins = [base, plugin1, plugin2];
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
-  const ast = expressionFragment("x + 2;");
+  const ast = expressionFragment('x + 2;');
 
   const node = map(parsers)([ast]);
 
   t.deepEqual(
     calls,
     [
-      "plugin2.semantics.BinaryExpression",
-      "base.semantics.BinaryExpression",
-      "plugin2.semantics.Identifier",
-      "plugin1.semantics.Identifier",
-      "base.semantics.Identifier",
+      'plugin2.semantics.BinaryExpression',
+      'base.semantics.BinaryExpression',
+      'plugin2.semantics.Identifier',
+      'plugin1.semantics.Identifier',
+      'base.semantics.Identifier',
     ],
-    "Plugin precedence is preserved"
+    'Plugin precedence is preserved'
   );
 
-  t.is(node.type, "f64", "Nodes are actually parsed");
+  t.is(node.type, 'f64', 'Nodes are actually parsed');
 });

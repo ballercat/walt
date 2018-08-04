@@ -1,6 +1,6 @@
 // @flow
-export const SLASH = "/";
-export const ASTERIX = "*";
+export const SLASH = '/';
+export const ASTERIX = '*';
 
 export const SINGLE_LINE = `${SLASH}${SLASH}`;
 export const MULTI_LINE_START = `${SLASH}${ASTERIX}`;

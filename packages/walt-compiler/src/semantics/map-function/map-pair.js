@@ -1,8 +1,8 @@
 // @flow
-import curry from "curry";
-import Syntax from "../../Syntax";
-import { TYPE_CAST } from "../metadata";
-import type { NodeType } from "../../flow/types";
+import curry from 'curry';
+import Syntax from '../../Syntax';
+import { TYPE_CAST } from '../metadata';
+import type { NodeType } from '../../flow/types';
 
 export default curry(
   (options, typeCastMaybe: NodeType, transform): NodeType => {

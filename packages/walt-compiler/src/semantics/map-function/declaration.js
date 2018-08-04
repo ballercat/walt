@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../../Syntax";
-import curry from "curry";
-import { extendNode } from "../../utils/extend-node";
-import { getTypeSize } from "../../utils/types";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import { extendNode } from '../../utils/extend-node';
+import { getTypeSize } from '../../utils/types';
 import {
   CLOSURE_TYPE,
   TYPE_ARRAY,
@@ -10,10 +10,10 @@ import {
   TYPE_INDEX,
   LOCAL_INDEX,
   GLOBAL_INDEX,
-} from "../metadata";
+} from '../metadata';
 
 const parseArray = type => {
-  const subscriptType = type.slice(-2) === "[]" ? "i32" : null;
+  const subscriptType = type.slice(-2) === '[]' ? 'i32' : null;
   return {
     arrayType: subscriptType ? type.slice(0, -2) : null,
     subscriptType,
@@ -25,7 +25,7 @@ const parseArray = type => {
 const parse = ({ isConst, types, scope, node }) => {
   const { subscriptType, arrayType } = parseArray(node.type);
   const closureType =
-    types[node.type] && types[node.type].meta[CLOSURE_TYPE] ? "i64" : null;
+    types[node.type] && types[node.type].meta[CLOSURE_TYPE] ? 'i64' : null;
 
   return [
     subscriptType || closureType || node.type,
@@ -65,7 +65,7 @@ export const parseGlobalDeclaration = curry((isConst, options, node) => {
   const { globals: scope, types } = options;
   const [type, meta, index] = parse({ isConst, types, scope, node });
 
-  if (["Table", "Memory"].includes(node.type)) {
+  if (['Table', 'Memory'].includes(node.type)) {
     return extendNode({ meta: { [GLOBAL_INDEX]: -1 } }, node);
   }
 

@@ -1,6 +1,6 @@
 // @flow
-import type OutputStream from "../../utils/output-stream";
-import type { NodeType } from "../../flow/types";
+import type OutputStream from '../../utils/output-stream';
+import type { NodeType } from '../../flow/types';
 export type { NodeType };
 export type RawOpcodeType = {
   result: ?number,

@@ -1,8 +1,8 @@
 // @flow
-import Syntax from "../../Syntax";
-import { TYPE_CAST } from "../metadata";
-import { typeWeight } from "../../types";
-import type { NodeType } from "../../flow/types";
+import Syntax from '../../Syntax';
+import { TYPE_CAST } from '../metadata';
+import { typeWeight } from '../../types';
+import type { NodeType } from '../../flow/types';
 
 export const balanceTypesInMathExpression = (
   expression: NodeType

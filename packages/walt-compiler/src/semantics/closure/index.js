@@ -1,17 +1,17 @@
 // @flow
-import Syntax from "../../Syntax";
-import curry from "curry";
-import mapNode from "../../utils/map-node";
-import walkNode from "../../utils/walk-node";
-import { expressionFragment } from "../../parser/fragment";
-import type { NodeType } from "../../flow/types";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import mapNode from '../../utils/map-node';
+import walkNode from '../../utils/walk-node';
+import { expressionFragment } from '../../parser/fragment';
+import type { NodeType } from '../../flow/types';
 
-export const CLOSURE_FREE = "closure-free";
-export const CLOSURE_MALLOC = "closure-malloc";
-export const CLOSURE_BASE = "closure_base";
-export const CLOSURE_INNER = "closure_inner";
-export const CLOSURE_GET = "closure--get";
-export const CLOSURE_SET = "closure--set";
+export const CLOSURE_FREE = 'closure-free';
+export const CLOSURE_MALLOC = 'closure-malloc';
+export const CLOSURE_BASE = 'closure_base';
+export const CLOSURE_INNER = 'closure_inner';
+export const CLOSURE_GET = 'closure--get';
+export const CLOSURE_SET = 'closure--set';
 
 /**
  * "expand" an identifier Node into two nodes, the least significant word which
@@ -25,15 +25,15 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
   return [
     {
       ...identifier,
-      value: ":",
+      value: ':',
       meta: {},
       Type: Syntax.Pair,
       params: [
         bareIdentifier(),
         {
           ...identifier,
-          value: "i32",
-          type: "i32",
+          value: 'i32',
+          type: 'i32',
           meta: {},
           params: [],
           Type: Syntax.Type,
@@ -43,21 +43,21 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
     ...identifier.params,
     {
       ...identifier,
-      value: ":",
+      value: ':',
       Type: Syntax.Pair,
       meta: {},
       params: [
         {
           ...identifier,
-          value: ">>",
+          value: '>>',
           meta: {},
           Type: Syntax.BinaryExpression,
           params: [
             bareIdentifier(),
             {
               ...identifier,
-              value: "32",
-              type: "i32",
+              value: '32',
+              type: 'i32',
               meta: {},
               params: [],
               Type: Syntax.Constant,
@@ -67,8 +67,8 @@ export const expandClosureIdentifier = (identifier: NodeType): NodeType[] => {
         {
           ...identifier,
           meta: {},
-          value: "i32",
-          type: "i32",
+          value: 'i32',
+          type: 'i32',
           params: [],
           Type: Syntax.Type,
         },
@@ -83,20 +83,20 @@ export const collapseClosureIdentifier = (
 ): NodeType => {
   return {
     ...closure,
-    value: "+",
+    value: '+',
     Type: Syntax.BinaryExpression,
     params: [
       {
         ...closure,
-        value: ":",
+        value: ':',
         meta: {},
         Type: Syntax.Pair,
         params: [
           { ...closure, Type: Syntax.Identifier, params: [] },
           {
             ...closure,
-            value: "i64",
-            type: "i64",
+            value: 'i64',
+            type: 'i64',
             Type: Syntax.Type,
             params: [],
           },
@@ -104,14 +104,14 @@ export const collapseClosureIdentifier = (
       },
       {
         ...pointer,
-        value: "<<",
+        value: '<<',
         Type: Syntax.BinaryExpression,
         params: [
           pointer,
           {
             ...pointer,
-            value: "32",
-            type: "i64",
+            value: '32',
+            type: 'i64',
             meta: {},
             params: [],
             Type: Syntax.Constant,
@@ -190,12 +190,12 @@ export const injectEnvironmentMaybe = (
       {
         ...start,
         value: CLOSURE_BASE,
-        type: "i32",
+        type: 'i32',
         Type: Syntax.Declaration,
         params: [
           mapFunctionCall({
             ...start,
-            type: "i32",
+            type: 'i32',
             meta: {},
             value: CLOSURE_MALLOC,
             Type: Syntax.FunctionCall,
@@ -203,8 +203,8 @@ export const injectEnvironmentMaybe = (
               {
                 ...start,
                 params: [],
-                type: "i32",
-                value: "0",
+                type: 'i32',
+                value: '0',
                 Type: Syntax.Constant,
               },
             ],
@@ -286,7 +286,7 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
         params: [
           {
             ...args,
-            value: ":",
+            value: ':',
             params: [
               {
                 ...args,
@@ -296,8 +296,8 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
               },
               {
                 ...args,
-                value: "i32",
-                type: "i32",
+                value: 'i32',
+                type: 'i32',
                 params: [],
                 Type: Syntax.Type,
               },

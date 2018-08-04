@@ -1,7 +1,7 @@
 // @flow
-import Syntax from "../../Syntax";
-import curry from "curry";
-import { FUNCTION_INDEX, TYPE_ARRAY } from "../metadata";
+import Syntax from '../../Syntax';
+import curry from 'curry';
+import { FUNCTION_INDEX, TYPE_ARRAY } from '../metadata';
 
 const mapIdentifier = curry(
   ({ locals, globals, functions, table }, identifier) => {
@@ -9,14 +9,14 @@ const mapIdentifier = curry(
     const local = locals[identifier.value];
     const global = globals[identifier.value];
 
-    if (identifier.value === "__DATA_LENGTH__") {
+    if (identifier.value === '__DATA_LENGTH__') {
       return {
         ...identifier,
-        type: "i32",
+        type: 'i32',
         Type: Syntax.ArraySubscript,
         params: [
-          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
-          { ...identifier, type: "i32", value: "0", Type: Syntax.Constant },
+          { ...identifier, type: 'i32', value: '0', Type: Syntax.Constant },
+          { ...identifier, type: 'i32', value: '0', Type: Syntax.Constant },
         ],
       };
     }
@@ -43,7 +43,7 @@ const mapIdentifier = curry(
       }
       return {
         ...identifier,
-        type: "i32",
+        type: 'i32',
         meta: {
           [FUNCTION_INDEX]: Object.keys(functions).indexOf(identifier.value),
         },

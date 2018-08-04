@@ -52,7 +52,7 @@ export default function() {
           const [call, context] = args;
           const { functions } = context;
           const target = functions[call.value];
-          debugger;
+
           // Most likely a built-in funciton
           if (!target) {
             return next(args);

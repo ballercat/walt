@@ -1,9 +1,9 @@
-import test from "ava";
-import opcode, { opcodeMap, textMap } from "../opcode";
+import test from 'ava';
+import opcode, { opcodeMap, textMap } from '../opcode';
 
-test("opcode is a list of opcodes", t => t.is(typeof opcode, "object"));
+test('opcode is a list of opcodes', t => t.is(typeof opcode, 'object'));
 
-test("sanity check resulting ojects", t => {
+test('sanity check resulting ojects', t => {
   const keys = Object.keys(opcode);
   keys.forEach(key => {
     const code = opcode[key];
