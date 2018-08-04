@@ -29,7 +29,7 @@ export default function arrayPlugin() {
           const [node, context] = args;
           const ref = context.locals[node.value] || context.globals[node.value];
           // Before moving on to the core parser all identifiers need to have
-          // concrete basic types so do that here if it's an array
+          // concrete basic types
           if (ref && ref.meta[TYPE_ARRAY]) {
             return next([
               {

@@ -4,7 +4,6 @@ import validate from '../validation';
 import semantics from '../semantics';
 import compile from '..';
 import print from 'walt-buildtools/print';
-import printNode from '../utils/print-node';
 import path from 'path';
 import { harness } from '../utils/test-utils';
 
@@ -20,7 +19,7 @@ test('empty module compilation', t =>
 test('invalid imports throw', t =>
   t.throws(() => compile("import foo from 'bar'")));
 
-test.only(
+test(
   'compiler',
   harness(path.resolve(__dirname, './compiler-spec.walt'), {
     externalConst: 42,
@@ -62,18 +61,6 @@ test('bool types', t => {
   return compileAndRun(source).then(({ instance }) => {
     t.is(instance.exports.test(), 1);
   });
-});
-
-test('debug', t => {
-  const source = `
-function two(a: f32): i64 {
-  const b: i32 = 0;
-  return 2;
-}
-`;
-  const node = semantics(parse(source));
-  // console.log(print(node));
-  return compileAndRun(source).then(({ instance }) => {});
 });
 
 test('memory & table exports', t => {

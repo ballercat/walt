@@ -103,7 +103,7 @@ export default function core() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-          debugger;
+
           let ref;
           if (context.locals) {
             ref = context.locals[node.value];

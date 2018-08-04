@@ -28,6 +28,7 @@ import booleans from '../core/bool';
 import array from '../core/array';
 import memory from '../core/memory';
 import string from '../core/string';
+import functionPointer from '../core/function-pointer';
 
 const getBuiltInParsers = () => {
   return [
@@ -38,6 +39,7 @@ const getBuiltInParsers = () => {
     array().semantics,
     memory().semantics,
     string().semantics,
+    functionPointer().semantics,
   ];
 };
 
