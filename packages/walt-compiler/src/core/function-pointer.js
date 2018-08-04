@@ -1,9 +1,11 @@
-import { GLOBAL_INDEX } from '../semantics/metadata';
+import Syntax from '../Syntax';
+import { GLOBAL_INDEX, FUNCTION_INDEX } from '../semantics/metadata';
 
 export default function functionPointer() {
   return {
     semantics() {
       return {
+        // Handle Table definitions
         ImmutableDeclaration: next => args => {
           const [decl, context] = args;
 
@@ -19,6 +21,28 @@ export default function functionPointer() {
           }
 
           return next(args);
+        },
+        Identifier: next => args => {
+          const [node, context] = args;
+          const { functions, table } = context;
+
+          if (!functions[node.value]) {
+            return next(args);
+          }
+
+          if (table[node.value] == null) {
+            table[node.value] = functions[node.value];
+          }
+
+          return {
+            ...node,
+            type: 'i32',
+            meta: {
+              [FUNCTION_INDEX]: functions[node.value].meta[FUNCTION_INDEX],
+            },
+            value: Object.keys(table).indexOf(node.value),
+            Type: Syntax.FunctionPointer,
+          };
         },
       };
     },
