@@ -31,6 +31,7 @@ import string from '../core/string';
 import functionPointer from '../core/function-pointer';
 import struct from '../core/struct';
 import sizeof from '../syntax-sugar/sizeof';
+import native from '../core/native';
 
 const getBuiltInParsers = () => {
   return [
@@ -43,6 +44,7 @@ const getBuiltInParsers = () => {
     string().semantics,
     functionPointer().semantics,
     struct().semantics,
+    native().semantics,
     sizeof().semantics,
   ];
 };
