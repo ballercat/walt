@@ -2,7 +2,6 @@ import curry from 'curry';
 import Syntax from '../Syntax';
 import mapNode from '../utils/map-node';
 import walkNode from '../utils/walk-node';
-import { CLOSURE_TYPE } from '../semantics/metadata';
 
 const mapGeneric = curry((options, node, _) => {
   const { types } = options;
@@ -14,7 +13,7 @@ const mapGeneric = curry((options, node, _) => {
     ...realType,
     range: generic.range,
     value: node.value,
-    meta: { ...realType.meta, [CLOSURE_TYPE]: generic.value === 'Lambda' },
+    meta: { ...realType.meta, CLOSURE_TYPE: generic.value === 'Lambda' },
     params: [
       {
         ...args,

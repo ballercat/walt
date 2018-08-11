@@ -12,42 +12,71 @@ import printNode from '../utils/print-node';
 import walkNode from '../utils/walk-node';
 // import mapNode from '../utils/map-node';
 import {
-  expressionFragment as fragment,
+  expressionFragment as expression,
   statementFragment as statement,
 } from '../parser/fragment';
 
+const sizes = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
+const sum = (a, b) => a + b;
+
 export default function() {
   const semantics = () => {
+    // Declaration parser, re-used for mutable/immutable declarations
     const declarationParser = next => (args, transform) => {
       const [node, context] = args;
-      const { locals, environment } = context;
+      const { environment, types } = context;
+
+      // Not a closure scan and not an environment variable
+      if (!context.isParsingClosure || !environment[node.value]) {
+        // Check if the declaration is a lambda, as we will need to unroll this
+        // into an i64
+        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
+          return next([
+            {
+              ...node,
+              type: 'i64',
+              meta: {
+                ...node.meta,
+                CLOSURE_INSTANCE: true,
+                ALIAS: node.type,
+              },
+            },
+            context,
+          ]);
+        }
+        return next(args);
+      }
 
       const parsed = next(args);
+      environment[parsed.value] = {
+        ...parsed,
+        meta: {
+          ...parsed.meta,
+          ENV_OFFSET: Object.values(context.envSize).reduce(sum, 0),
+        },
+      };
+      context.envSize[parsed.value] = sizes[parsed.type] || 4;
 
-      if (!context.isParsingClosure) {
-        return parsed;
-      }
-
-      if (environment[parsed.value]) {
-        context.envSize[parsed.value] = 4;
-        environment[parsed.value] = parsed;
-      } else {
-        return parsed;
-      }
-
+      // If the variable is declared but has no initializer we simply nullify the
+      // node as there is nothing else to do here.
       if (!parsed.params.length) {
         return null;
       }
 
-      const [expression] = parsed.params;
-
-      const call = fragment(
-        `__closure_set_${locals[node.value].type}(__env_ptr + 0)`
+      const [lhs] = parsed.params;
+      const ref = environment[parsed.value];
+      const call = expression(
+        `__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`
       );
       return transform([
         {
           ...call,
-          params: [...call.params, expression],
+          params: [...call.params, lhs],
         },
         context,
       ]);
@@ -101,23 +130,18 @@ export default function() {
           params: [...parsedProgram.params, ...closures],
         };
 
-        console.log(printNode(result));
+        // console.log(printNode(result));
 
         return result;
       },
       Closure: _next => (args, transform) => {
         const [closure, context] = args;
-        const { locals, globals } = context;
 
         if (!context.isParsingClosure) {
           return closure;
         }
 
-        // TODO: All variables should really be kept in a single "scope" object
-        const scope = {
-          ...locals,
-          ...globals,
-        };
+        // NOTE: All variables should really be kept in a single "scope" object
 
         const [declaration] = closure.params;
         const [fnArgs, result, ...rest] = declaration.params;
@@ -139,13 +163,13 @@ export default function() {
                 // Parens are necessary around a fragment as it has to be a complete
                 // expression, a ; would also likely work and be discarded but that would
                 // be even odder in the context of function arguments
-                params: [fragment('(__env_ptr : i32)'), ...fnArgs.params],
+                params: [expression('(__env_ptr : i32)'), ...fnArgs.params],
               },
               result,
               ...rest,
             ],
           },
-          { ...context, scope },
+          context,
         ]);
 
         // Before we complete our work here, we have to attach the 'real' function
@@ -154,7 +178,7 @@ export default function() {
         context.closures.push(real);
 
         return transform([
-          fragment(`(${real.value} | ((__env_ptr : i64) << 32)))`),
+          expression(`(${real.value} | ((__env_ptr : i64) << 32)))`),
           context,
         ]);
       },
@@ -201,12 +225,9 @@ export default function() {
 
         fun.params = fun.params.map(p => {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
+            const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              statement(
-                `const __env_ptr : i32 = ${Object.values(envSize).reduce(
-                  (a, b) => a + b
-                )};`
-              ),
+              statement(`const __env_ptr : i32 = ${size};`),
               { ...context, locals: {} },
             ]);
           }
@@ -220,7 +241,7 @@ export default function() {
       ImmutableDeclaration: declarationParser,
       Assignment: next => (args, transform) => {
         const [node, context] = args;
-        const { scope, locals, globals } = context;
+        const { locals, globals, environment } = context;
         const [rhs, lhs] = node.params;
 
         if (!context.isParsingClosure) {
@@ -232,9 +253,9 @@ export default function() {
           return next(args);
         }
 
-        const call = fragment(
-          `__closure_set_${scope[rhs.value].type}(__env_ptr + 0)`
-        );
+        const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
+
+        const call = expression(`__closure_set_${type}(__env_ptr + ${offset})`);
         return transform([
           {
             ...call,
@@ -247,20 +268,48 @@ export default function() {
         const [node, context] = args;
         const { environment } = context;
 
-        if (!context.isParsingClosure) {
+        if (!context.isParsingClosure || !environment[node.value]) {
           return next(args);
         }
 
-        if (environment[node.value] == null) {
-          return next(args);
-        }
+        const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
 
         return transform([
-          fragment(
-            `__closure_get_${environment[node.value].type}(__env_ptr + 0)`
-          ),
+          expression(`__closure_get_${type}(__env_ptr + ${offset})`),
           context,
         ]);
+      },
+      FunctionCall: next => (args, transform) => {
+        const [call, context] = args;
+        const { locals, types } = context;
+        const local = locals[call.value];
+        if (local && local.meta.CLOSURE_INSTANCE) {
+          // Unfortunately, we cannot create a statement for this within the
+          // possible syntax so we need to manually structure an indirect call node
+
+          const params = [
+            expression(`((${local.value} << 32) : i32)`),
+            ...call.params,
+            expression(`(${local.value} : i32)`),
+          ].map(p => transform([p, context]));
+
+          const typedef = types[local.meta.ALIAS];
+          const typeIndex = Object.keys(types).indexOf(typedef.value);
+
+          return {
+            ...call,
+            meta: {
+              ...local.meta,
+              ...call.meta,
+              TYPE_INDEX: typeIndex,
+            },
+            type: typedef != null ? typedef.type : call.type,
+            params,
+            Type: Syntax.IndirectFunctionCall,
+          };
+        }
+
+        return next(args);
       },
     };
   };

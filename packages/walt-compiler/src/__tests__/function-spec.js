@@ -82,7 +82,7 @@ test('functions', t => {
   });
 });
 
-test.only('closures', t => {
+test('closures', t => {
   const source = `
 const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
@@ -103,7 +103,7 @@ function getSimpleLambda(): i64 {
     let y: i32 = 0;
     y = z: i32;
     x += y;
-    return x;
+    return 7;
   }
 }
 
@@ -131,20 +131,20 @@ function getSimpleLambda(): i64 {
 //   }
 // }
 
-// export function test(): i32 {
-//   const closure: Closure = getLambda();
-//   // should be 5
-//   const x: i32 = closure(2, 3);
-//
-//   const closure2: SimpleClosure = getSimpleLambda();
-//   // should be 1
-//   closure2();
-//   // should be 2
-//   const y: i32 = closure2();
-//
-//   // should be 7
-//   return x + y;
-// }
+export function test(): i32 {
+  // const closure: Closure = getLambda();
+  // // should be 5
+  // const x: i32 = closure(2, 3);
+
+  const closure2: SimpleClosure = getSimpleLambda();
+  // should be 1
+  closure2();
+  // should be 2
+  const y: i32 = closure2();
+  return y;
+  // should be 7
+  // return x + y;
+}
 `;
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
@@ -157,6 +157,6 @@ function getSimpleLambda(): i64 {
     )
     .then(result => {
       const fn = result.instance.exports.test;
-      // t.is(fn(), 7);
+      t.is(fn(), 7);
     });
 });
