@@ -81,14 +81,14 @@ export const mapToImports = (plugin: WebAssemblyModuleType) => {
   return {
     [CLOSURE_MALLOC]: malloc,
     [CLOSURE_FREE]: free,
-    [`${CLOSURE_GET}-i32`]: geti32,
-    [`${CLOSURE_GET}-f32`]: getf32,
-    [`${CLOSURE_GET}-i64`]: geti64,
-    [`${CLOSURE_GET}-f64`]: getf64,
-    [`${CLOSURE_SET}-i32`]: seti32,
-    [`${CLOSURE_SET}-f32`]: setf32,
-    [`${CLOSURE_SET}-i64`]: seti64,
-    [`${CLOSURE_SET}-f64`]: setf64,
+    [`${CLOSURE_GET}_i32`]: geti32,
+    [`${CLOSURE_GET}_f32`]: getf32,
+    [`${CLOSURE_GET}_i64`]: geti64,
+    [`${CLOSURE_GET}_f64`]: getf64,
+    [`${CLOSURE_SET}_i32`]: seti32,
+    [`${CLOSURE_SET}_f32`]: setf32,
+    [`${CLOSURE_SET}_i64`]: seti64,
+    [`${CLOSURE_SET}_f64`]: setf64,
   };
 };
 

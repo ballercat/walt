@@ -55,7 +55,7 @@ export default function arrayPlugin() {
           return {
             ...node,
             params,
-            type: identifier.type,
+            type: identifier.meta[TYPE_ARRAY],
           };
         },
       };

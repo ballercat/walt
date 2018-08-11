@@ -6,12 +6,12 @@ import walkNode from '../../utils/walk-node';
 import { expressionFragment } from '../../parser/fragment';
 import type { NodeType } from '../../flow/types';
 
-export const CLOSURE_FREE = 'closure-free';
-export const CLOSURE_MALLOC = 'closure-malloc';
-export const CLOSURE_BASE = 'closure_base';
-export const CLOSURE_INNER = 'closure_inner';
-export const CLOSURE_GET = 'closure--get';
-export const CLOSURE_SET = 'closure--set';
+export const CLOSURE_FREE = '__closure_free';
+export const CLOSURE_MALLOC = '__closure_malloc';
+export const CLOSURE_BASE = '__closure_base';
+export const CLOSURE_INNER = '__closure_inner';
+export const CLOSURE_GET = '__closure_get';
+export const CLOSURE_SET = '__closure_set';
 
 /**
  * "expand" an identifier Node into two nodes, the least significant word which
@@ -268,6 +268,7 @@ export const transformClosedDeclaration = curry((options, decl, transform) => {
   };
 });
 
+let count = 0;
 export default curry(function mapClosure(options, node, topLevelTransform) {
   const { locals, closures, fun } = options;
   const { variables, offsets } = closures;
@@ -277,7 +278,7 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
       // add a name
       return {
         ...decl,
-        value: `internalClosure--${fun.value}`,
+        value: `internalClosure--${++count}`,
       };
     },
     [Syntax.FunctionArguments]: (args, _) => {
@@ -351,5 +352,5 @@ export default curry(function mapClosure(options, node, topLevelTransform) {
   })(node);
 
   // Magic
-  return topLevelTransform(patched);
+  return topLevelTransform([patched, options]);
 });

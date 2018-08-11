@@ -5,10 +5,12 @@ export default function base() {
       return {
         '*': _ =>
           function baseSemanticsParser([node, ...rest], t) {
-            return {
+            const result = {
               ...node,
               params: node.params.map(child => t([child, ...rest])),
             };
+
+            return result;
           },
       };
     },

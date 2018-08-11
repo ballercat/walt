@@ -34,6 +34,7 @@ import struct from '../core/struct';
 import native from '../core/native';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
+import closures from '../syntax-sugar/closures';
 
 const getBuiltInParsers = () => {
   return [
@@ -50,6 +51,7 @@ const getBuiltInParsers = () => {
     native().semantics,
     sizeof().semantics,
     defaultArguments().semantics,
+    closures().semantics,
   ];
 };
 
@@ -75,6 +77,7 @@ function semantics(
     hoist,
     hoistImports,
     statics,
+    path: [],
   };
 
   if (hasNode(Syntax.Closure, ast)) {

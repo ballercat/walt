@@ -112,6 +112,9 @@ const getPrinters = add => ({
   [Syntax.Constant]: node => {
     add(`(${String(node.type)}.const ${node.value})`);
   },
+  [Syntax.FunctionPointer]: node => {
+    add(`(${String(node.type)}.table_pointer ${node.value})`);
+  },
   [Syntax.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
     add(`(func ${node.value}${parseParams(params)}${parseResult(result)}`, 2);

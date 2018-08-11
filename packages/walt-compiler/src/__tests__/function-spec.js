@@ -82,7 +82,7 @@ test('functions', t => {
   });
 });
 
-test.skip('closures', t => {
+test.only('closures', t => {
   const source = `
 const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
@@ -95,7 +95,7 @@ type SimpleClosure = Lambda<Simple>;
 type VoidClosure = Lambda<Void>;
 type ArgsOnlyClosure = Lambda<ArgsOnly>;
 
-function getSimpleLambda(): SimpleClosure {
+function getSimpleLambda(): i64 {
   let x: i32 = 0;
   const z: i64 = (1 : i64);
   return (): i32 => {
@@ -107,46 +107,46 @@ function getSimpleLambda(): SimpleClosure {
   }
 }
 
-function getLambda(): Closure {
-  // close over two locals
-  let x: i32 = 0;
-  return (xx: i32, yy: i32): i32 => {
-    x += yy;
-    return x + xx;
-  }
-}
+// function getLambda(): Closure {
+//   // close over two locals
+//   let x: i32 = 0;
+//   return (xx: i32, yy: i32): i32 => {
+//     x += yy;
+//     return x + xx;
+//   }
+// }
+//
+// // Closures below are not useful, but necessary to cover all scenarios
+// function getVoidLamba(): VoidClosure {
+//   let x: i32 = 0;
+//   return () => {
+//     x += 1;
+//   }
+// }
+//
+// function getArgsOnlyLambda(): ArgsOnlyClosure {
+//   let x: i32 = 0;
+//   return (z: i32, y: i32) => {
+//     x+= z + y;
+//   }
+// }
 
-// Closures below are not useful, but necessary to cover all scenarios
-function getVoidLamba(): VoidClosure {
-  let x: i32 = 0;
-  return () => {
-    x += 1;
-  }
-}
-
-function getArgsOnlyLambda(): ArgsOnlyClosure {
-  let x: i32 = 0;
-  return (z: i32, y: i32) => {
-    x+= z + y;
-  }
-}
-
-export function test(): i32 {
-  const closure: Closure = getLambda();
-  // should be 5
-  const x: i32 = closure(2, 3);
-
-  const closure2: SimpleClosure = getSimpleLambda();
-  // should be 1
-  closure2();
-  // should be 2
-  const y: i32 = closure2();
-
-  // should be 7
-  return x + y;
-}
+// export function test(): i32 {
+//   const closure: Closure = getLambda();
+//   // should be 5
+//   const x: i32 = closure(2, 3);
+//
+//   const closure2: SimpleClosure = getSimpleLambda();
+//   // should be 1
+//   closure2();
+//   // should be 2
+//   const y: i32 = closure2();
+//
+//   // should be 7
+//   return x + y;
+// }
 `;
-
+  debugger;
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
       WebAssembly.instantiate(
@@ -158,6 +158,6 @@ export function test(): i32 {
     )
     .then(result => {
       const fn = result.instance.exports.test;
-      t.is(fn(), 7);
+      // t.is(fn(), 7);
     });
 });
