@@ -15,9 +15,7 @@
 import Syntax from '../Syntax';
 import mapNode, { map } from '../utils/map-node';
 import walkNode from '../utils/walk-node';
-import closureImports from '../closure-plugin/imports';
 import { mapGeneric } from './map-generic';
-import hasNode from '../utils/has-node';
 import { combineParsers } from '../plugin';
 import { AST_METADATA } from './metadata';
 import type { NodeType, SemanticOptionsType } from '../flow/types';
@@ -80,9 +78,6 @@ function semantics(
     path: [],
   };
 
-  if (hasNode(Syntax.Closure, ast)) {
-    ast = { ...ast, params: [...closureImports(), ...ast.params] };
-  }
   // Types have to be pre-parsed before the rest of the program
   const astWithTypes = mapNode({
     [Syntax.Export]: (node, transform) => {

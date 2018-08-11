@@ -146,7 +146,6 @@ function getSimpleLambda(): i64 {
 //   return x + y;
 // }
 `;
-  debugger;
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
       WebAssembly.instantiate(

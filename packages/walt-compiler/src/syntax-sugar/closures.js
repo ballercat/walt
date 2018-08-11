@@ -5,7 +5,7 @@
  *
  */
 import Syntax from '../Syntax';
-import closureImports from '../closure-plugin/imports';
+import parser from '../parser';
 import hasNode from '../utils/has-node';
 // import print from 'walt-buildtools/print';
 import printNode from '../utils/print-node';
@@ -15,13 +15,6 @@ import {
   expressionFragment as fragment,
   statementFragment as statement,
 } from '../parser/fragment';
-
-export const CLOSURE_FREE = 'closure-free';
-export const CLOSURE_MALLOC = 'closure-malloc';
-export const CLOSURE_BASE = 'closure_base';
-export const CLOSURE_ENV_PTR = '__env_ptr';
-export const CLOSURE_GET = 'closure--get';
-export const CLOSURE_SET = 'closure--set';
 
 export default function() {
   const semantics = () => {
@@ -37,6 +30,7 @@ export default function() {
 
       if (environment[parsed.value]) {
         context.envSize[parsed.value] = 4;
+        environment[parsed.value] = parsed;
       } else {
         return parsed;
       }
@@ -48,7 +42,7 @@ export default function() {
       const [expression] = parsed.params;
 
       const call = fragment(
-        `__closure_set_${locals[node.value].type}(${CLOSURE_ENV_PTR} + 0)`
+        `__closure_set_${locals[node.value].type}(__env_ptr + 0)`
       );
       return transform([
         {
@@ -58,6 +52,32 @@ export default function() {
         context,
       ]);
     };
+
+    const closureImportsHeader = parser(`
+      // Start Closure Imports Header
+      import {
+        __closure_malloc: ClosureGeti32,
+        __closure_free: ClosureFree,
+        __closure_get_i32: ClosureGeti32,
+        __closure_get_f32: ClosureGetf32,
+        __closure_get_i64: ClosureGeti64,
+        __closure_get_f64: ClosureGetf64,
+        __closure_set_i32: ClosureSeti32,
+        __closure_set_f32: ClosureSetf32,
+        __closure_set_i64: ClosureSeti64,
+        __closure_set_f64: ClosureSetf64
+      } from 'walt-plugin-closure';
+      type ClosureFree = (i32) => void;
+      type ClosureGeti32 = (i32) => i32;
+      type ClosureGetf32 = (i32) => f32;
+      type ClosureGeti64 = (i32) => i64;
+      type ClosureGetf64 = (i32) => f64;
+      type ClosureSeti32 = (i32, i32) => void;
+      type ClosureSetf32 = (i32, f32) => void;
+      type ClosureSeti64 = (i32, i64) => void;
+      type ClosureSetf64 = (i32, f64) => void;
+      // End Closure Imports Header
+    `).params;
 
     return {
       Program: next => args => {
@@ -69,8 +89,10 @@ export default function() {
 
         const closures = [];
         const parsedProgram = next([
-          program,
-          // { ...program, params: [...closureImports(), ...program.params] },
+          {
+            ...program,
+            params: [...closureImportsHeader, ...program.params],
+          },
           { ...context, closures },
         ]);
 
@@ -117,10 +139,7 @@ export default function() {
                 // Parens are necessary around a fragment as it has to be a complete
                 // expression, a ; would also likely work and be discarded but that would
                 // be even odder in the context of function arguments
-                params: [
-                  fragment(`(${CLOSURE_ENV_PTR} : i32)`),
-                  ...fnArgs.params,
-                ],
+                params: [fragment('(__env_ptr : i32)'), ...fnArgs.params],
               },
               result,
               ...rest,
@@ -133,8 +152,6 @@ export default function() {
         // created above to the output of the program so that it can become part
         // of the final WASM output.
         context.closures.push(real);
-
-        console.log(printNode(real));
 
         return transform([
           fragment(`(${real.value} | ((__env_ptr : i64) << 32)))`),
@@ -197,8 +214,6 @@ export default function() {
           return p;
         });
 
-        // console.log(printNode(fun));
-
         return fun;
       },
       Declaration: declarationParser,
@@ -218,7 +233,7 @@ export default function() {
         }
 
         const call = fragment(
-          `__closure_set_${scope[rhs.value].type}(${CLOSURE_ENV_PTR} + 0)`
+          `__closure_set_${scope[rhs.value].type}(__env_ptr + 0)`
         );
         return transform([
           {
@@ -230,7 +245,7 @@ export default function() {
       },
       Identifier: next => (args, transform) => {
         const [node, context] = args;
-        const { environment, locals } = context;
+        const { environment } = context;
 
         if (!context.isParsingClosure) {
           return next(args);
@@ -242,7 +257,7 @@ export default function() {
 
         return transform([
           fragment(
-            `__closure_get_${locals[node.value].type}(${CLOSURE_ENV_PTR} + 0)`
+            `__closure_get_${environment[node.value].type}(__env_ptr + 0)`
           ),
           context,
         ]);
