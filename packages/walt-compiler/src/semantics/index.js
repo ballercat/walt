@@ -12,15 +12,12 @@
  */
 
 // @flow
-import Syntax from '../Syntax';
-import mapNode, { map } from '../utils/map-node';
-import walkNode from '../utils/walk-node';
-import { mapGeneric } from './map-generic';
 import { combineParsers } from '../plugin';
+import { map } from '../utils/map-node';
 import { AST_METADATA } from './metadata';
-import type { NodeType, SemanticOptionsType } from '../flow/types';
 import core from '../core';
 import base from '../base';
+import _types from '../core/types';
 import unary from '../core/unary';
 import _function from '../core/function';
 import booleans from '../core/bool';
@@ -34,10 +31,13 @@ import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
 import closures from '../syntax-sugar/closures';
 
+import type { NodeType, SemanticOptionsType } from '../flow/types';
+
 const getBuiltInParsers = () => {
   return [
     base().semantics,
     core().semantics,
+    _types().semantics,
     unary().semantics,
     _function().semantics,
     booleans().semantics,
@@ -79,53 +79,53 @@ function semantics(
   };
 
   // Types have to be pre-parsed before the rest of the program
-  const astWithTypes = mapNode({
-    [Syntax.Export]: (node, transform) => {
-      const [maybeType] = node.params;
-      if (
-        maybeType != null &&
-        [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
-      ) {
-        return transform({
-          ...maybeType,
-          meta: {
-            ...maybeType.meta,
-            EXPORTED: true,
-          },
-        });
-      }
-      return node;
-    },
-    [Syntax.Typedef]: (node, _) => {
-      let argumentsCount = 0;
-      const defaultArgs = [];
-      walkNode({
-        Assignment(assignment) {
-          const defaultValue = assignment.params[1];
-          defaultArgs.push(defaultValue);
-        },
-        Type() {
-          argumentsCount += 1;
-        },
-      })(node);
-      const parsed = {
-        ...node,
-        meta: {
-          ...node.meta,
-          FUNCTION_METADATA: {
-            argumentsCount,
-          },
-          DEFAULT_ARGUMENTS: defaultArgs,
-        },
-      };
-      types[node.value] = parsed;
-      return parsed;
-    },
-    [Syntax.GenericType]: mapGeneric({ types }),
-  })(ast);
+  // const astWithTypes = mapNode({
+  //   [Syntax.Export]: (node, transform) => {
+  //     const [maybeType] = node.params;
+  //     if (
+  //       maybeType != null &&
+  //       [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
+  //     ) {
+  //       return transform({
+  //         ...maybeType,
+  //         meta: {
+  //           ...maybeType.meta,
+  //           EXPORTED: true,
+  //         },
+  //       });
+  //     }
+  //     return node;
+  //   },
+  //   [Syntax.Typedef]: (node, _) => {
+  //     let argumentsCount = 0;
+  //     const defaultArgs = [];
+  //     walkNode({
+  //       Assignment(assignment) {
+  //         const defaultValue = assignment.params[1];
+  //         defaultArgs.push(defaultValue);
+  //       },
+  //       Type() {
+  //         argumentsCount += 1;
+  //       },
+  //     })(node);
+  //     const parsed = {
+  //       ...node,
+  //       meta: {
+  //         ...node.meta,
+  //         FUNCTION_METADATA: {
+  //           argumentsCount,
+  //         },
+  //         DEFAULT_ARGUMENTS: defaultArgs,
+  //       },
+  //     };
+  //     types[node.value] = parsed;
+  //     return parsed;
+  //   },
+  //   [Syntax.GenericType]: mapGeneric({ types }),
+  // })(ast);
 
   const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = map(combined)([astWithTypes, options]);
+  const patched = map(combined)([ast, options]);
 
   return {
     ...patched,
