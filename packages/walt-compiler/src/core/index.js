@@ -5,7 +5,6 @@
  * and are used as the core language for every feature built on top.
  */
 import Syntax from '../Syntax';
-import mapStructNode from '../semantics/map-struct';
 import mapCharacterLiteral from '../semantics/map-char';
 import { balanceTypesInMathExpression } from '../semantics/map-function/patch-typecasts';
 import { extendNode } from '../utils/extend-node';
@@ -17,9 +16,9 @@ import {
 } from '../semantics/metadata';
 
 // Core plugin
-export default function core() {
+export default function Core() {
   return {
-    semantics(options) {
+    semantics() {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
         const scope = context.locals || context.globals;
@@ -52,12 +51,9 @@ export default function core() {
       };
 
       return {
-        Typedef: _ => ([node]) => node,
-        // Read Import node, attach indexes if non-scalar
         Declaration: declaration,
         ImmutableDeclaration: declaration,
         CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),
-        Struct: _ => mapStructNode(options),
         Select: _ => ([node, context], transform) =>
           balanceTypesInMathExpression({
             ...node,

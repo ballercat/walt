@@ -39,6 +39,7 @@ export default function typePlugin() {
   return {
     semantics() {
       return {
+        Typedef: _ => ([node]) => node,
         Program: next => args => {
           const [ast, context] = args;
           const { types } = context;

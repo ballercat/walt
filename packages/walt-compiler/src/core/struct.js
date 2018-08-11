@@ -1,6 +1,38 @@
 import Syntax from '../Syntax';
+import invariant from 'invariant';
 import walkNode from '../utils/walk-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
+
+export const getByteOffsetsAndSize = objectLiteralNode => {
+  const offsetsByKey = {};
+  const keyTypeMap = {};
+  let size = 0;
+  walkNode({
+    [Syntax.Pair]: keyTypePair => {
+      const { value: key } = keyTypePair.params[0];
+      const { value: typeString } = keyTypePair.params[1];
+      invariant(
+        offsetsByKey[key] == null,
+        `Duplicate key ${key} not allowed in object type`
+      );
+
+      keyTypeMap[key] = typeString;
+      offsetsByKey[key] = size;
+      switch (typeString) {
+        case 'i64':
+        case 'f64':
+          size += 8;
+          break;
+        case 'i32':
+        case 'f32':
+        default:
+          size += 4;
+      }
+    },
+  })(objectLiteralNode);
+
+  return [offsetsByKey, size, keyTypeMap];
+};
 
 const patchStringSubscript = (byteOffsetsByKey, params) => {
   const field = params[1];
@@ -17,10 +49,28 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
   ];
 };
 
-export default function struct() {
+export default function Struct() {
   return {
     semantics() {
       return {
+        Struct: _ => ([node, { userTypes }]) => {
+          const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
+            node.params[0]
+          );
+
+          const struct = {
+            ...node,
+            meta: {
+              ...node.meta,
+              [TYPE_OBJECT]: offsetsByKey,
+              OBJECT_SIZE: totalSize,
+              [OBJECT_KEY_TYPES]: keyTypeMap,
+            },
+          };
+
+          userTypes[struct.value] = struct;
+          return struct;
+        },
         Identifier: next => args => {
           const [node, context] = args;
           const { userTypes, locals, globals } = context;
