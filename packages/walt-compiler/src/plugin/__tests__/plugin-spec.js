@@ -98,3 +98,19 @@ test('plugin system', t => {
 
   t.is(node.type, 'f64', 'Nodes are actually parsed');
 });
+
+test('plugin invariants', t => {
+  const plugin = () => ({
+    semantics: () => ({
+      Identifier: _ => ([node], transform) => {
+        // Transform MUST be called with an array [node, context]
+        return transform(node);
+      },
+    }),
+  });
+
+  const ast = expressionFragment('x + 2;');
+  const parsers = combineParsers([plugin].map(p => p().semantics()));
+
+  t.throws(() => map(parsers)([ast]));
+});

@@ -5,7 +5,6 @@
  * and are used as the core language for every feature built on top.
  */
 import Syntax from '../Syntax';
-import { mapImport } from '../semantics/map-import';
 import mapStructNode from '../semantics/map-struct';
 import mapCharacterLiteral from '../semantics/map-char';
 import { balanceTypesInMathExpression } from '../semantics/map-function/patch-typecasts';
@@ -55,7 +54,6 @@ export default function core() {
       return {
         Typedef: _ => ([node]) => node,
         // Read Import node, attach indexes if non-scalar
-        Import: _ => mapImport(options),
         Declaration: declaration,
         ImmutableDeclaration: declaration,
         CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),

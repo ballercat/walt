@@ -20,6 +20,7 @@ import base from '../base';
 import _types from '../core/types';
 import unary from '../core/unary';
 import _function from '../core/function';
+import _imports from '../core/imports';
 import booleans from '../core/bool';
 import array from '../core/array';
 import memory from '../core/memory';
@@ -37,6 +38,7 @@ const getBuiltInParsers = () => {
   return [
     base().semantics,
     core().semantics,
+    _imports().semantics,
     _types().semantics,
     unary().semantics,
     _function().semantics,
@@ -63,7 +65,6 @@ function semantics(
   const userTypes: { [string]: NodeType } = {};
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
-  const hoistImports: NodeType[] = [];
   const statics: { [string]: null } = {};
 
   const options: SemanticOptionsType = {
@@ -73,56 +74,9 @@ function semantics(
     userTypes,
     table,
     hoist,
-    hoistImports,
     statics,
     path: [],
   };
-
-  // Types have to be pre-parsed before the rest of the program
-  // const astWithTypes = mapNode({
-  //   [Syntax.Export]: (node, transform) => {
-  //     const [maybeType] = node.params;
-  //     if (
-  //       maybeType != null &&
-  //       [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
-  //     ) {
-  //       return transform({
-  //         ...maybeType,
-  //         meta: {
-  //           ...maybeType.meta,
-  //           EXPORTED: true,
-  //         },
-  //       });
-  //     }
-  //     return node;
-  //   },
-  //   [Syntax.Typedef]: (node, _) => {
-  //     let argumentsCount = 0;
-  //     const defaultArgs = [];
-  //     walkNode({
-  //       Assignment(assignment) {
-  //         const defaultValue = assignment.params[1];
-  //         defaultArgs.push(defaultValue);
-  //       },
-  //       Type() {
-  //         argumentsCount += 1;
-  //       },
-  //     })(node);
-  //     const parsed = {
-  //       ...node,
-  //       meta: {
-  //         ...node.meta,
-  //         FUNCTION_METADATA: {
-  //           argumentsCount,
-  //         },
-  //         DEFAULT_ARGUMENTS: defaultArgs,
-  //       },
-  //     };
-  //     types[node.value] = parsed;
-  //     return parsed;
-  //   },
-  //   [Syntax.GenericType]: mapGeneric({ types }),
-  // })(ast);
 
   const combined = combineParsers(parsers.map(p => p(options)));
   const patched = map(combined)([ast, options]);
@@ -134,7 +88,7 @@ function semantics(
       // Attach information collected to the AST
       [AST_METADATA]: { functions, globals, types, userTypes, statics },
     },
-    params: [...hoistImports, ...patched.params, ...hoist],
+    params: [...patched.params, ...hoist],
   };
 }
 

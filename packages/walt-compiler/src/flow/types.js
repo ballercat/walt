@@ -55,6 +55,5 @@ export type SemanticOptionsType = {
   userTypes: { [string]: NodeType },
   table: { [string]: NodeType },
   hoist: NodeType[],
-  hoistImports: NodeType[],
   statics: { [string]: null },
 };
