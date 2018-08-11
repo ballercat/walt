@@ -5,8 +5,6 @@
  * and are used as the core language for every feature built on top.
  */
 import Syntax from '../Syntax';
-import mapCharacterLiteral from '../semantics/map-char';
-import { balanceTypesInMathExpression } from '../semantics/map-function/patch-typecasts';
 import { extendNode } from '../utils/extend-node';
 import {
   TYPE_CAST,
@@ -14,6 +12,47 @@ import {
   GLOBAL_INDEX,
   LOCAL_INDEX,
 } from '../semantics/metadata';
+import { typeWeight } from '../types';
+
+const balanceTypesInMathExpression = expression => {
+  // find the heaviest type in the expression
+  const type = expression.params.reduce((acc, { type: childType }) => {
+    // The way we do that is by scanning the top-level nodes in our expression
+    if (typeWeight(acc) < typeWeight(childType)) {
+      return childType;
+    }
+
+    return acc;
+  }, expression.type);
+
+  // iterate again, this time, patching any lighter types
+  const params = expression.params.map(paramNode => {
+    if (
+      paramNode.type != null &&
+      typeWeight(paramNode.type) !== typeWeight(type)
+    ) {
+      return {
+        ...paramNode,
+        type,
+        value: paramNode.value,
+        Type: Syntax.TypeCast,
+        meta: {
+          ...paramNode.meta,
+          [TYPE_CAST]: { to: type, from: paramNode.type },
+        },
+        params: [paramNode],
+      };
+    }
+
+    return paramNode;
+  });
+
+  return {
+    ...expression,
+    params,
+    type,
+  };
+};
 
 // Core plugin
 export default function Core() {
@@ -53,7 +92,7 @@ export default function Core() {
       return {
         Declaration: declaration,
         ImmutableDeclaration: declaration,
-        CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),
+        // CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),
         Select: _ => ([node, context], transform) =>
           balanceTypesInMathExpression({
             ...node,

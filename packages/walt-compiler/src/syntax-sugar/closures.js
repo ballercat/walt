@@ -12,13 +12,8 @@ import {
   expressionFragment as expression,
   statementFragment as statement,
 } from '../parser/fragment';
+import { sizes } from '../types';
 
-const sizes = {
-  i64: 8,
-  f64: 8,
-  i32: 4,
-  f32: 4,
-};
 const sum = (a, b) => a + b;
 
 export default function() {

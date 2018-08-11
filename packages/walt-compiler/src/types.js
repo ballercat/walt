@@ -1,4 +1,10 @@
 // @flow
+export const sizes = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
 
 export const typeWeight = (typeString: ?string): number => {
   switch (typeString) {
