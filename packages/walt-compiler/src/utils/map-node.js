@@ -7,8 +7,6 @@ function map(visitors) {
         'Transform must be used on an Array. Received ' + JSON.stringify(input)
       );
     }
-    const { path } = input[1];
-    path.push(input[0].Type);
     const visitor = (() => {
       const [node] = input;
       if ('*' in visitors && typeof visitors['*'] === 'function') {
@@ -22,9 +20,7 @@ function map(visitors) {
     })();
 
     if (visitor.length === 2) {
-      const result = visitor(input, mapper);
-      path.pop();
-      return result;
+      return visitor(input, mapper);
     }
 
     const [node, ...rest] = visitor(input);
@@ -32,7 +28,6 @@ function map(visitors) {
       .filter(Boolean)
       .map(child => mapper([child, ...rest]));
 
-    path.pop();
     return { ...node, params };
   }
 

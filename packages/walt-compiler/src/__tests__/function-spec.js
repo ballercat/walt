@@ -95,7 +95,7 @@ type SimpleClosure = Lambda<Simple>;
 type VoidClosure = Lambda<Void>;
 type ArgsOnlyClosure = Lambda<ArgsOnly>;
 
-function getSimpleLambda(): i64 {
+function getSimpleLambda(): SimpleClosure {
   let x: i32 = 0;
   const z: i64 = (1 : i64);
   return (): i32 => {
@@ -103,47 +103,46 @@ function getSimpleLambda(): i64 {
     let y: i32 = 0;
     y = z: i32;
     x += y;
-    return 7;
+    return x;
   }
 }
 
-// function getLambda(): Closure {
-//   // close over two locals
-//   let x: i32 = 0;
-//   return (xx: i32, yy: i32): i32 => {
-//     x += yy;
-//     return x + xx;
-//   }
-// }
-//
-// // Closures below are not useful, but necessary to cover all scenarios
-// function getVoidLamba(): VoidClosure {
-//   let x: i32 = 0;
-//   return () => {
-//     x += 1;
-//   }
-// }
-//
-// function getArgsOnlyLambda(): ArgsOnlyClosure {
-//   let x: i32 = 0;
-//   return (z: i32, y: i32) => {
-//     x+= z + y;
-//   }
-// }
+function getLambda(): Closure {
+  // close over two locals
+  let x: i32 = 0;
+  return (xx: i32, yy: i32): i32 => {
+    x += yy;
+    return x + xx;
+  }
+}
+
+// Closures below are not useful, but necessary to cover all scenarios
+function getVoidLamba(): VoidClosure {
+  let x: i32 = 0;
+  return () => {
+    x += 1;
+  }
+}
+
+function getArgsOnlyLambda(): ArgsOnlyClosure {
+  let x: i32 = 0;
+  return (z: i32, y: i32) => {
+    x+= z + y;
+  }
+}
 
 export function test(): i32 {
-  // const closure: Closure = getLambda();
+  const closure: Closure = getLambda();
   // // should be 5
-  // const x: i32 = closure(2, 3);
+  const x: i32 = closure(2, 3);
 
   const closure2: SimpleClosure = getSimpleLambda();
   // should be 1
   closure2();
   // should be 2
   const y: i32 = closure2();
-  return y;
   // should be 7
-  // return x + y;
+  return x + y;
 }
 `;
   return WebAssembly.instantiate(closurePlugin())

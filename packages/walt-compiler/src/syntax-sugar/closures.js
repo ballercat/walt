@@ -7,10 +7,7 @@
 import Syntax from '../Syntax';
 import parser from '../parser';
 import hasNode from '../utils/has-node';
-// import print from 'walt-buildtools/print';
-import printNode from '../utils/print-node';
 import walkNode from '../utils/walk-node';
-// import mapNode from '../utils/map-node';
 import {
   expressionFragment as expression,
   statementFragment as statement,
@@ -130,8 +127,6 @@ export default function() {
           params: [...parsedProgram.params, ...closures],
         };
 
-        // console.log(printNode(result));
-
         return result;
       },
       Closure: _next => (args, transform) => {
@@ -193,8 +188,19 @@ export default function() {
         const envSize = {};
         walkNode({
           Closure(closure, _) {
-            const declarations = {};
+            // All closures have their own __env_ptr passed in at call site
+            const declarations = { __env_ptr: true };
             walkNode({
+              // We need to make sure we ignore the arguments to the closure.
+              // Otherwise they will be treaded as "closed over" variables
+              FunctionArguments(closureArgs, _ignore) {
+                walkNode({
+                  Pair(pair) {
+                    const [identifier] = pair.params;
+                    declarations[identifier.value] = identifier;
+                  },
+                })(closureArgs);
+              },
               Declaration(decl, __) {
                 declarations[decl.value] = decl;
               },
@@ -227,7 +233,7 @@ export default function() {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              statement(`const __env_ptr : i32 = ${size};`),
+              statement(`const __env_ptr : i32 = __closure_malloc(${size});`),
               { ...context, locals: {} },
             ]);
           }
@@ -239,6 +245,25 @@ export default function() {
       },
       Declaration: declarationParser,
       ImmutableDeclaration: declarationParser,
+      FunctionResult: next => args => {
+        const [node, context] = args;
+        const { types } = context;
+        if (types[node.value] && types[node.value].meta.CLOSURE_TYPE) {
+          return next([
+            {
+              ...node,
+              type: 'i64',
+              value: 'i64',
+              meta: {
+                ...node.meta,
+                ALIAS: node.type,
+              },
+            },
+            context,
+          ]);
+        }
+        return next(args);
+      },
       Assignment: next => (args, transform) => {
         const [node, context] = args;
         const { locals, globals, environment } = context;
@@ -288,7 +313,7 @@ export default function() {
           // possible syntax so we need to manually structure an indirect call node
 
           const params = [
-            expression(`((${local.value} << 32) : i32)`),
+            expression(`((${local.value} >> 32) : i32)`),
             ...call.params,
             expression(`(${local.value} : i32)`),
           ].map(p => transform([p, context]));
