@@ -33,18 +33,6 @@ export default function validate(
   const problems = [];
 
   walkNode({
-    [Syntax.Pair]: pair => {
-      const [start, end] = pair.range;
-      problems.push(
-        error(
-          `Unexpected expression ${pair.Type}`,
-          '',
-          { start, end },
-          filename,
-          GLOBAL_LABEL
-        )
-      );
-    },
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;

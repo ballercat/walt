@@ -9,10 +9,6 @@ function map(visitors) {
     }
     const visitor = (() => {
       const [node] = input;
-      if ('*' in visitors && typeof visitors['*'] === 'function') {
-        return visitors['*'];
-      }
-
       if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
         return visitors[node.Type];
       }
@@ -34,6 +30,7 @@ function map(visitors) {
   return mapper;
 }
 
+// This should maybe be it's own module.
 export { map };
 
 export default function mapNode(visitor) {
