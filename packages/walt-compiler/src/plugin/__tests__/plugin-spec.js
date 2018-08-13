@@ -62,15 +62,18 @@ test('plugin system', t => {
           // which have at least one parser attached to them. This is necessary
           // because the map-node utility bails out (on parsing children) if the parsing function wants
           // to use the transform argument, which we always do.
-          '*': _ => ([node, context], transform) => {
+          '*': next => ([node, context], transform) => {
             calls.push(`base.semantics.${node.Type}`);
 
-            return {
-              ...node,
-              params: node.params.map(n => {
-                return transform([n, context]);
-              }),
-            };
+            return next([
+              {
+                ...node,
+                params: node.params.map(n => {
+                  return transform([n, context]);
+                }),
+              },
+              context,
+            ]);
           },
         };
       },

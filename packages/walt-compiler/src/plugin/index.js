@@ -9,20 +9,14 @@ const combineMiddleware = transforms => {
       // part of args array
       return stack(args, transform);
     });
-    // Identity function is the final chain in the middleware
-  }, identity => identity);
+    // unroll last result
+  }, ([id]) => id);
 
   return (args, topLevelTranfrom) => {
     transform = topLevelTranfrom;
     // kick off the chain of middleware, starting from right to left
     return chain(args, transform);
   };
-};
-
-const addWildcard = (parsers, wildcard) => {
-  Object.entries(parsers).forEach(([key, current]) => {
-    parsers[key] = [...current, wildcard];
-  });
 };
 
 export const combineParsers = (sortedParsers = []) => {
@@ -35,8 +29,6 @@ export const combineParsers = (sortedParsers = []) => {
       // them.
       if (type === '*') {
         wildcards.push(cb);
-        // We need to add a wildcard to any already existing parser
-        addWildcard(acc, cb);
         return;
       }
 
