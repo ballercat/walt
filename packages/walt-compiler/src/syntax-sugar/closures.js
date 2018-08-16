@@ -127,10 +127,6 @@ export default function() {
       Closure: _next => (args, transform) => {
         const [closure, context] = args;
 
-        if (!context.isParsingClosure) {
-          return closure;
-        }
-
         // NOTE: All variables should really be kept in a single "scope" object
 
         const [declaration] = closure.params;

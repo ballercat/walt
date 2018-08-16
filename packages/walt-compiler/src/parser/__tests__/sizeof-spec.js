@@ -22,6 +22,10 @@ export function userDefinedObject(): i32 {
 export function userDefinedTypeName(): i32 {
   return sizeof(Type);
 }
+
+export function userDefinedFunctions() : i32 {
+  return sizeof(userDefinedObject);
+}
 `;
 
 test('type sizes', t => {

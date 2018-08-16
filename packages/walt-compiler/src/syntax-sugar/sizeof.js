@@ -23,9 +23,9 @@ export default function sizeofPlugin() {
           const { locals, globals, userTypes, functions } = context;
           const [target] = sizeof.params;
           const local = locals[target.value];
+          const { type = '' } = local || {};
           const global = globals[target.value];
-          const userType =
-            userTypes[target.value] || (local ? userTypes[local.type] : null);
+          const userType = userTypes[target.value] || userTypes[type];
           const func = functions[target.value];
 
           if (userType != null) {
@@ -40,7 +40,7 @@ export default function sizeofPlugin() {
             };
           }
 
-          const node = local || global || userType || func;
+          const node = local || global || func;
 
           return {
             ...sizeof,
