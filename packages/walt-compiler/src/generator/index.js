@@ -58,12 +58,7 @@ export const generateCode = (
     debug: `Function ${func.value}`,
   };
 
-  // NOTE: Declarations have a side-effect of changing the local count
-  //       This is why mapSyntax takes a parent argument
-  const mappedSyntax = body.map(mapSyntax(block));
-  if (mappedSyntax) {
-    block.code = mappedSyntax.reduce(mergeBlock, []);
-  }
+  block.code = body.map(mapSyntax(block)).reduce(mergeBlock, []);
 
   return block;
 };

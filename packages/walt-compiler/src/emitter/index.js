@@ -30,8 +30,4 @@ function emit(program: ProgramType, config: ConfigType) {
   return result;
 }
 
-export const async = (): Promise<any> => {
-  return Promise.resolve(emit);
-};
-
 export default emit;
