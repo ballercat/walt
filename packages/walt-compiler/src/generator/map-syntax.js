@@ -26,8 +26,6 @@ import curry from 'curry';
 import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
 
-import printNode from '../utils/print-node';
-
 export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
