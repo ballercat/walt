@@ -1,9 +1,9 @@
 // @flow
-import mapSyntax from "./map-syntax";
-import mergeBlock from "./merge-block";
-import opcode from "../emitter/opcode";
-import { TYPE_ARRAY } from "../semantics/metadata";
-import type { GeneratorType } from "./flow/types";
+import mapSyntax from './map-syntax';
+import mergeBlock from './merge-block';
+import opcode from '../emitter/opcode';
+import { TYPE_ARRAY } from '../semantics/metadata';
+import type { GeneratorType } from './flow/types';
 
 const generateMemoryAssignment: GeneratorType = (node, parent) => {
   const targetNode = node.params[0];
@@ -38,7 +38,7 @@ const generateMemoryAssignment: GeneratorType = (node, parent) => {
 
   // The last piece is the WASM opcode. Either load or store
   block.push({
-    kind: opcode[String(type) + "Store"],
+    kind: opcode[String(type) + 'Store'],
     params: [
       // Alignment
       // TODO: make this extendible

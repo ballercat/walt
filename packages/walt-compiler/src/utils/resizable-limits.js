@@ -1,5 +1,5 @@
-import Syntax from "../Syntax";
-import walkNode from "./walk-node";
+import Syntax from '../Syntax';
+import walkNode from './walk-node';
 
 export const parseBounds = node => {
   const memory = {};

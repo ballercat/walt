@@ -1,11 +1,11 @@
-import test from "ava";
-import compile from "..";
+import test from 'ava';
+import compile from '..';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
-test("inline if statement", t =>
+test('inline if statement', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 0;
@@ -13,7 +13,7 @@ test("inline if statement", t =>
     return x;
   }`).then(outputIs(t, 2)));
 
-test("inline if else", t =>
+test('inline if else', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 0;
@@ -24,7 +24,7 @@ test("inline if else", t =>
    return x;
  }`).then(outputIs(t, 42)));
 
-test("block if statement", t =>
+test('block if statement', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 0;
@@ -36,7 +36,7 @@ test("block if statement", t =>
     return x;
   }`).then(outputIs(t, 4)));
 
-test("block if else statement", t =>
+test('block if else statement', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 0;
@@ -50,13 +50,13 @@ test("block if else statement", t =>
     return x;
   }`).then(outputIs(t, 4)));
 
-test("ternary", t =>
+test('ternary', t =>
   compileAndRun(`
   export function test(): i32 {
     return 1 ? 42 : 24;
   }`).then(outputIs(t, 42)));
 
-test("else if statement", () =>
+test('else if statement', () =>
   compileAndRun(`
   export function test(x: i32): i32 {
     if (x == 0) {
@@ -73,7 +73,7 @@ test("else if statement", () =>
     outputIs(exports.test(-1), 1);
   }));
 
-test("else if statement no curly braces", () =>
+test('else if statement no curly braces', () =>
   compileAndRun(`
     export function test(x: i32): i32 {
       if (x == 0)

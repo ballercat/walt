@@ -1,5 +1,5 @@
 // @flow
-import type { NodeType } from "../flow/types";
+import type { NodeType } from '../flow/types';
 
 export default function hasNode(Type: string, ast: NodeType) {
   const test = node => node && node.Type === Type;

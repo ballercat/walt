@@ -1,34 +1,34 @@
 // @flow
-import invariant from "invariant";
-import Syntax from "../Syntax";
-import mapSyntax from "./map-syntax";
-import mergeBlock from "./merge-block";
-import walkNode from "../utils/walk-node";
-import mapNode from "../utils/map-node";
-import generateElement from "./element";
-import generateExport from "./export";
-import generateMemory from "./memory";
-import generateTable from "./table";
-import generateInitializer from "../generator/initializer";
-import generateImport from "./import";
-import generateType from "./type";
-import generateData from "./generate-data";
-import { generateValueType } from "./utils";
-import { generateImplicitFunctionType } from "./type";
+import invariant from 'invariant';
+import Syntax from '../Syntax';
+import mapSyntax from './map-syntax';
+import mergeBlock from './merge-block';
+import walkNode from '../utils/walk-node';
+import mapNode from '../utils/map-node';
+import generateElement from './element';
+import generateExport from './export';
+import generateMemory from './memory';
+import generateTable from './table';
+import generateInitializer from '../generator/initializer';
+import generateImport from './import';
+import generateType from './type';
+import generateData from './generate-data';
+import { generateValueType } from './utils';
+import { generateImplicitFunctionType } from './type';
 import {
   GLOBAL_INDEX,
   FUNCTION_INDEX,
   FUNCTION_METADATA,
   TYPE_INDEX,
   AST_METADATA,
-} from "../semantics/metadata";
+} from '../semantics/metadata';
 
-import type { NodeType, ConfigType } from "../flow/types";
+import type { NodeType, ConfigType } from '../flow/types';
 import type {
   ProgramType,
   IntermediateOpcodeType,
   IntermediateVariableType,
-} from "./flow/types";
+} from './flow/types';
 
 const DATA_SECTION_HEADER_SIZE = 4;
 
@@ -39,8 +39,8 @@ export const generateCode = (
   const [argsNode, resultNode, ...body] = func.params;
 
   const metadata = func.meta[FUNCTION_METADATA];
-  invariant(body, "Cannot generate code for function without body");
-  invariant(metadata, "Cannot generate code for function without metadata");
+  invariant(body, 'Cannot generate code for function without body');
+  invariant(metadata, 'Cannot generate code for function without metadata');
 
   const { locals, argumentsCount } = metadata;
 
@@ -58,12 +58,7 @@ export const generateCode = (
     debug: `Function ${func.value}`,
   };
 
-  // NOTE: Declarations have a side-effect of changing the local count
-  //       This is why mapSyntax takes a parent argument
-  const mappedSyntax = body.map(mapSyntax(block));
-  if (mappedSyntax) {
-    block.code = mappedSyntax.reduce(mergeBlock, []);
-  }
+  block.code = body.map(mapSyntax(block)).reduce(mergeBlock, []);
 
   return block;
 };
@@ -168,10 +163,10 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
       const globalMeta = node.meta[GLOBAL_INDEX];
       if (globalMeta != null) {
         switch (node.type) {
-          case "Memory":
+          case 'Memory':
             program.Memory.push(generateMemory(node));
             break;
-          case "Table":
+          case 'Table':
             program.Table.push(generateTable(node));
             break;
         }
@@ -214,13 +209,13 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
       // Quick fix for shifting around function indices. These don't necessarily
       // get written in the order they appear in the source code.
       const index = node.meta[FUNCTION_INDEX];
-      invariant(index != null, "Function index must be set");
+      invariant(index != null, 'Function index must be set');
 
       program.Functions[index] = typeIndex;
       // We will need to filter out the empty slots later
       program.Code[index] = generateCode(patched);
 
-      if (patched.value === "start") {
+      if (patched.value === 'start') {
         program.Start.push(index);
       }
 
@@ -240,7 +235,7 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
               ([name, local]: [string, any]) => {
                 return {
                   name,
-                  index: Number(local.meta["local/index"]),
+                  index: Number(local.meta['local/index']),
                 };
               }
             ),

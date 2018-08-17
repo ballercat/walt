@@ -1,15 +1,12 @@
 // @flow
-import { i32 } from "../Syntax";
-import generateExpression from "./expression";
-import { isBuiltinType } from "./utils";
-import opcode from "../emitter/opcode";
-import { LOCAL_INDEX } from "../semantics/metadata";
-import type { GeneratorType } from "./flow/types";
+import { i32 } from '../Syntax';
+import generateExpression from './expression';
+import { isBuiltinType } from './utils';
+import opcode from '../emitter/opcode';
+import { LOCAL_INDEX } from '../semantics/metadata';
+import type { GeneratorType } from './flow/types';
 
-const generateDeclaration: GeneratorType = (
-  node,
-  parent = { code: [], locals: [] }
-) => {
+const generateDeclaration: GeneratorType = (node, parent) => {
   const initNode = node.params[0];
 
   if (initNode) {

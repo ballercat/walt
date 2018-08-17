@@ -1,5 +1,5 @@
 // @flow
-import type { IntermediateOpcodeType } from "./flow/types";
+import type { IntermediateOpcodeType } from './flow/types';
 
 const mergeBlock = (
   block: IntermediateOpcodeType[],

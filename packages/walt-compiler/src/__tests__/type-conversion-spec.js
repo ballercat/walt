@@ -1,6 +1,6 @@
-import test from "ava";
-import compile, { debug, getIR } from "..";
-import compose from "../utils/compose";
+import test from 'ava';
+import compile, { debug, getIR } from '..';
+import compose from '../utils/compose';
 
 const walt = `export function constant(): f32 {
   return 0.5;
@@ -33,7 +33,7 @@ export function promoteF32toF64(): f64 {
 }
 `;
 
-test("typecasts work", t => {
+test('typecasts work', t => {
   const getWasm = compose(debug, getIR);
   const wasm = getWasm(walt);
   t.snapshot(wasm);

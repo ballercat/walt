@@ -1,11 +1,11 @@
 // @flow
-import Syntax from "../Syntax";
-import block from "./block";
-import keyword from "./keyword";
-import expression from "./expression";
-import maybeAssignment from "./maybe-assignment";
-import type Context from "./context";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import block from './block';
+import keyword from './keyword';
+import expression from './expression';
+import maybeAssignment from './maybe-assignment';
+import type Context from './context';
+import type { NodeType } from '../flow/types';
 
 const statement = (ctx: Context): NodeType | null => {
   switch (ctx.token.type) {
@@ -15,10 +15,10 @@ const statement = (ctx: Context): NodeType | null => {
       return maybeAssignment(ctx);
     case Syntax.Punctuator:
     default:
-      if (ctx.eat([";"])) {
+      if (ctx.eat([';'])) {
         return null;
       }
-      if (ctx.token.value === "{") {
+      if (ctx.token.value === '{') {
         return block(ctx);
       }
       return expression(ctx);

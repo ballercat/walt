@@ -3,35 +3,35 @@
  *
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators
  */
-import test from "ava";
-import compile from "..";
+import test from 'ava';
+import compile from '..';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
-test("addition", t =>
-  compileAndRun("export function test() : i32 { return 2 + 2; }").then(
+test('addition', t =>
+  compileAndRun('export function test() : i32 { return 2 + 2; }').then(
     outputIs(t, 4)
   ));
 
-test("subtraction", t =>
-  compileAndRun("export function test(): i32 { return 4 - 2; }").then(
+test('subtraction', t =>
+  compileAndRun('export function test(): i32 { return 4 - 2; }').then(
     outputIs(t, 2)
   ));
 
-test("multiplication", t =>
-  compileAndRun("export function test(): i32 { return 2 * 2; }").then(
+test('multiplication', t =>
+  compileAndRun('export function test(): i32 { return 2 * 2; }').then(
     outputIs(t, 4)
   ));
 
-test("division", t =>
-  compileAndRun("export function test(): i32 { return 4 / 2; }").then(
+test('division', t =>
+  compileAndRun('export function test(): i32 { return 4 / 2; }').then(
     outputIs(t, 2)
   ));
 
-test("remainder", t =>
-  compileAndRun("export function test(): i32 { return 5 % 2; }").then(
+test('remainder', t =>
+  compileAndRun('export function test(): i32 { return 5 % 2; }').then(
     outputIs(t, 1)
   ));
 
@@ -40,7 +40,7 @@ test("remainder", t =>
 //   compileAndRun('export function test(): i32 { return 2 ** 2; }').then(outputIs(t, 1))
 // );
 
-test("decrement", t =>
+test('decrement', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 2;
@@ -48,7 +48,7 @@ test("decrement", t =>
     return x;
   }`).then(outputIs(t, 1)));
 
-test("increment", t =>
+test('increment', t =>
   compileAndRun(`
   export function test(): i32 {
     let y: i32 = 2;
@@ -57,32 +57,32 @@ test("increment", t =>
  }`).then(outputIs(t, 3)));
 
 // Unary negation is not supported. Workaround: "return 0 - x;"
-test("unary negation", t =>
+test('unary negation', t =>
   compileAndRun(`
   export function test(): i32 {
     let x: i32 = 2;
     return -x;
   }`).then(outputIs(t, -2)));
 
-test("uses precedence correctly", t =>
+test('uses precedence correctly', t =>
   compileAndRun(`
   export function test(): i32 {
     return 2 + 2 * 5 - 10;
   }`).then(outputIs(t, 2)));
 
-test("brackets", t =>
+test('brackets', t =>
   compileAndRun(`
   export function test(): i32 {
     return 2 + (2 - 1);
   }`).then(outputIs(t, 3)));
 
-test("complex brackets", t =>
+test('complex brackets', t =>
   compileAndRun(`
      export function test(): i32 {
        return (2 * (3 - 1) - 1) / 3;
      }`).then(outputIs(t, 1)));
 
-test("array index & math", t =>
+test('array index & math', t =>
   compileAndRun(`
     const memory: Memory = { 'initial': 1 };
     export function test(): i32 {

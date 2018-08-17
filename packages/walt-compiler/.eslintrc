@@ -204,7 +204,7 @@
       "consistent-as-needed",
       { "keywords": false }
     ],
-    "quotes": [ "error", "double",                    // specify whether double or single quotes should be used
+    "quotes": [ "error", "single",                    // specify whether double or single quotes should be used
       { "avoidEscape": true }
     ],
     "semi": 2,                      // require or disallow use of semicolons instead of ASI

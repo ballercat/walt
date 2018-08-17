@@ -1,6 +1,6 @@
 // @flow
-import opcode from "../emitter/opcode";
-import type { GeneratorType } from "./flow/types";
+import opcode from '../emitter/opcode';
+import type { GeneratorType } from './flow/types';
 
 const generateFunctionPointer: GeneratorType = node => {
   return [

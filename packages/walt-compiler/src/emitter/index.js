@@ -1,9 +1,9 @@
 // @flow
-import preamble from "./preamble";
-import section from "./section";
-import OutputStream from "../utils/output-stream";
-import type { ProgramType } from "../generator/flow/types";
-import type { ConfigType } from "../flow/types";
+import preamble from './preamble';
+import section from './section';
+import OutputStream from '../utils/output-stream';
+import type { ProgramType } from '../generator/flow/types';
+import type { ConfigType } from '../flow/types';
 
 function emit(program: ProgramType, config: ConfigType) {
   const stream = new OutputStream();
@@ -29,9 +29,5 @@ function emit(program: ProgramType, config: ConfigType) {
 
   return result;
 }
-
-export const async = (): Promise<any> => {
-  return Promise.resolve(emit);
-};
 
 export default emit;

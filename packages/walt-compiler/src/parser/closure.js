@@ -1,7 +1,7 @@
 // @flow
-import Syntax from "../Syntax";
-import type Context from "./context";
-import type { NodeType, TokenType } from "../flow/types";
+import Syntax from '../Syntax';
+import type Context from './context';
+import type { NodeType, TokenType } from '../flow/types';
 
 export const makeResult = (node: NodeType | null) => ({
   range: [],
@@ -9,7 +9,7 @@ export const makeResult = (node: NodeType | null) => ({
   meta: {},
   params: [],
   Type: Syntax.FunctionResult,
-  value: "FUNCTION_RESULT",
+  value: 'FUNCTION_RESULT',
 });
 
 export const makeArgs = (node: NodeType | null) => ({
@@ -23,7 +23,7 @@ export const makeArgs = (node: NodeType | null) => ({
   })(),
   type: null,
   meta: {},
-  value: "FUNCTION_ARGUMENTS",
+  value: 'FUNCTION_ARGUMENTS',
   Type: Syntax.FunctionArguments,
 });
 
@@ -40,7 +40,7 @@ export default function parselambda(
   let baseParams = [];
   const lambda = {
     ...op,
-    type: "i32",
+    type: 'i32',
     range: [ctx.token.start, ctx.token.end],
     meta: {},
     Type: Syntax.Closure,

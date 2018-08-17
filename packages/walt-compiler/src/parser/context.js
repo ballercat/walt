@@ -7,9 +7,9 @@
  */
 
 // @flow
-import generateErrorString from "../utils/generate-error";
-import type { TokenStream } from "../utils/token-stream";
-import type { TokenType, NodeType } from "../flow/types";
+import generateErrorString from '../utils/generate-error';
+import type { TokenStream } from '../utils/token-stream';
+import type { TokenType, NodeType } from '../flow/types';
 
 export default class Context {
   token: TokenType;
@@ -32,20 +32,20 @@ export default class Context {
   }
 
   syntaxError(msg: string, error: any) {
-    const functionId = "unknown";
+    const functionId = 'unknown';
     return new SyntaxError(
       generateErrorString(
         msg,
-        error || "",
+        error || '',
         this.token,
-        this.filename || "unknown",
+        this.filename || 'unknown',
         functionId
       )
     );
   }
 
   unexpectedValue(value: string[] | string) {
-    return this.syntaxError(`Expected: ${String(value)}`, "Unexpected value");
+    return this.syntaxError(`Expected: ${String(value)}`, 'Unexpected value');
   }
 
   unexpected(token?: string) {
@@ -56,11 +56,11 @@ export default class Context {
   }
 
   unknown({ value }: { value: string }) {
-    return this.syntaxError("Unknown token", value);
+    return this.syntaxError('Unknown token', value);
   }
 
   unsupported() {
-    return this.syntaxError("Language feature not supported", this.token.value);
+    return this.syntaxError('Language feature not supported', this.token.value);
   }
 
   expect(value: string[] | null, type?: string): TokenType {
@@ -77,10 +77,6 @@ export default class Context {
   }
 
   eat(value: string[] | null, type?: string): boolean {
-    if (this.token == null) {
-      return false;
-    }
-
     if (value) {
       if (value.includes(this.token.value)) {
         this.next();
@@ -99,7 +95,7 @@ export default class Context {
 
   startNode(token: any = this.token || {}): NodeType {
     return {
-      Type: "",
+      Type: '',
       value: token.value,
       range: [token.start],
       meta: {},

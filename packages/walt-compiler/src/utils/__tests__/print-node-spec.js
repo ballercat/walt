@@ -1,13 +1,13 @@
 // @flow
-import test from "ava";
-import printNode from "../print-node";
+import test from 'ava';
+import printNode from '../print-node';
 // import { expressionFragment, statementFragment } from "../../parser/fragment";
-import { parser, semantics } from "../..";
-import compose from "../compose";
+import { parser, semantics } from '../..';
+import compose from '../compose';
 
 const getAST = compose(semantics, parser);
 
-test("full ast printer", t => {
+test('full ast printer', t => {
   const node = getAST(`
     function simple(): i32 {
       const x: i32 = 1 + 1;
@@ -27,7 +27,7 @@ test("full ast printer", t => {
   t.snapshot(printNode(node));
 });
 
-test("plain ast parser", t => {
+test('plain ast parser', t => {
   const node = parser(`
     type Type = (i32, f32) => i32;
     type Inc = Closure<Type>;
@@ -41,7 +41,7 @@ test("plain ast parser", t => {
   t.snapshot(printNode(node));
 });
 
-test("imports/exports", t => {
+test('imports/exports', t => {
   const node = getAST(`
     import { foo: FooType, bar: FooType } from 'env';
     type FooType = () => i32;
@@ -57,7 +57,7 @@ test("imports/exports", t => {
   t.snapshot(printNode(node));
 });
 
-test("assignment, ternary, if", t => {
+test('assignment, ternary, if', t => {
   const node = getAST(`
     let x: i32 = 0;
     export function test(z: i32): i32 {

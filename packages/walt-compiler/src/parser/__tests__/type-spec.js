@@ -1,12 +1,12 @@
-import test from "ava";
-import compile, { debug, getIR } from "../..";
+import test from 'ava';
+import compile, { debug, getIR } from '../..';
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
 //
 // For this spec to fail the imported and exported function definition need to
 // mismatch. This ensures that correct encoding is done on both sides!
-test("type parsing", t => {
+test('type parsing', t => {
   const imports = `
   export function nothing() {}
   export function noparamsi32(): i32 { return 2; }
@@ -50,11 +50,11 @@ test("type parsing", t => {
   });
 });
 
-test("invalid type definition", t => {
-  const error = t.throws(() => compile("type Type = i32 => void;"));
+test('invalid type definition', t => {
+  const error = t.throws(() => compile('type Type = i32 => void;'));
   t.snapshot(error);
 });
 
-test("export type statements compile", t => {
-  t.notThrows(() => compile("export type Foo = (i32, i32) => i32;"));
+test('export type statements compile', t => {
+  t.notThrows(() => compile('export type Foo = (i32, i32) => i32;'));
 });

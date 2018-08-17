@@ -47,3 +47,13 @@ export type TypeCastType = {
   type: string,
   params: [{ ...NodeType, type: string }],
 };
+
+export type SemanticOptionsType = {
+  functions: { [string]: NodeType },
+  globals: { [string]: NodeType },
+  types: { [string]: NodeType },
+  userTypes: { [string]: NodeType },
+  table: { [string]: NodeType },
+  hoist: NodeType[],
+  statics: { [string]: null },
+};

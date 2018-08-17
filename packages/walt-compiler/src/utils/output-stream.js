@@ -1,7 +1,7 @@
 // @flow
-import invariant from "invariant";
-import { encodeSigned, encodeUnsigned } from "./leb128";
-import { sizeof, set, u8 } from "wasm-types";
+import invariant from 'invariant';
+import { encodeSigned, encodeUnsigned } from './leb128';
+import { sizeof, set, u8 } from 'wasm-types';
 
 // Used to output raw binary, holds values and types in a large array 'stream'
 export default class OutputStream {
@@ -19,23 +19,23 @@ export default class OutputStream {
   push(type: string, value: any, debug: string) {
     let size = 0;
     switch (type) {
-      case "varuint7":
-      case "varuint32":
-      case "varint7":
-      case "varint1": {
+      case 'varuint7':
+      case 'varuint32':
+      case 'varint7':
+      case 'varint1': {
         // Encode all of the LEB128 aka 'var*' types
         value = encodeUnsigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
       }
-      case "varint32": {
+      case 'varint32': {
         value = encodeSigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);
         break;
       }
-      case "varint64": {
+      case 'varint64': {
         value = encodeSigned(value);
         size = value.length;
         invariant(size, `Cannot write a value of size ${size}`);

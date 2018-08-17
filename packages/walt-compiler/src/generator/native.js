@@ -1,8 +1,8 @@
 // @flow
-import mergeBlock from "./merge-block";
-import mapSyntax from "./map-syntax";
-import { textMap } from "../emitter/opcode";
-import type { GeneratorType } from "./flow/types";
+import mergeBlock from './merge-block';
+import mapSyntax from './map-syntax';
+import { textMap } from '../emitter/opcode';
+import type { GeneratorType } from './flow/types';
 
 const alignCodes = {
   load8_s: 0,
@@ -21,7 +21,7 @@ const alignCodes = {
 const generateNative: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
-  const operation = node.value.split(".").pop();
+  const operation = node.value.split('.').pop();
 
   if (alignCodes[operation] == null) {
     block.push({ kind: textMap[node.value], params: [] });

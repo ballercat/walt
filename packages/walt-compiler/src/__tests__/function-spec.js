@@ -1,8 +1,8 @@
-import test from "ava";
-import compile, { getIR, debug, withPlugins } from "..";
-import closurePlugin from "../closure-plugin";
+import test from 'ava';
+import compile, { getIR, debug, withPlugins } from '..';
+import closurePlugin from '../closure-plugin';
 
-test("default arguments", t => {
+test('default arguments', t => {
   const walt = `
   import { extern: Add } from 'env';
   type Add = (i32, i32 = 0) => i32;
@@ -23,7 +23,7 @@ test("default arguments", t => {
   });
 });
 
-test("functions", t => {
+test('functions', t => {
   const walt = `
   // For pointers
   const table: Table<{ element: anyfunc, initial: 10, max: 10 }>;
@@ -67,22 +67,22 @@ test("functions", t => {
     return addArray(arr, 0, 4);
   };
 `;
-  t.throws(() => getIR("function test() { return y; }"));
+  t.throws(() => getIR('function test() { return y; }'));
   const wasm = getIR(walt);
   t.snapshot(debug(wasm));
   return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
-    t.is(exports.testParams(2, 2), 4, "function params");
-    t.is(exports.testGlobalScope(), 42, "local scope > global scope");
+    t.is(exports.testParams(2, 2), 4, 'function params');
+    t.is(exports.testGlobalScope(), 42, 'local scope > global scope');
     t.is(exports.testVoidIsOptional() == null, true);
-    t.is(exports.test0FunctionNames1(), 2, "numbers in function names");
-    t.is(exports.testPointerArguments(), 5, "object pointer arguments");
-    t.is(exports.testFunctionPointers(), 4, "plain function pointers");
-    t.is(exports.testArrayArguments(), 5, "array arguments");
+    t.is(exports.test0FunctionNames1(), 2, 'numbers in function names');
+    t.is(exports.testPointerArguments(), 5, 'object pointer arguments');
+    t.is(exports.testFunctionPointers(), 4, 'plain function pointers');
+    t.is(exports.testArrayArguments(), 5, 'array arguments');
   });
 });
 
-test("closures", t => {
+test('closures', t => {
   const source = `
 const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
@@ -133,7 +133,7 @@ function getArgsOnlyLambda(): ArgsOnlyClosure {
 
 export function test(): i32 {
   const closure: Closure = getLambda();
-  // should be 5
+  // // should be 5
   const x: i32 = closure(2, 3);
 
   const closure2: SimpleClosure = getSimpleLambda();
@@ -141,12 +141,10 @@ export function test(): i32 {
   closure2();
   // should be 2
   const y: i32 = closure2();
-
   // should be 7
   return x + y;
 }
 `;
-
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
       WebAssembly.instantiate(

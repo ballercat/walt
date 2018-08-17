@@ -12,101 +12,74 @@
  */
 
 // @flow
-import Syntax from "../Syntax";
-import mapNode from "../utils/map-node";
-import walkNode from "../utils/walk-node";
-import { mapImport } from "./map-import";
-import mapFunctionNode from "./map-function";
-import closureImports from "../closure-plugin/imports";
-import { parseGlobalDeclaration } from "./map-function/declaration";
-import mapStructNode from "./map-struct";
-import mapCharacterLiteral from "./map-char";
-import { mapGeneric } from "./map-generic";
-import hasNode from "../utils/has-node";
-import { AST_METADATA } from "./metadata";
-import type { NodeType } from "../flow/types";
+import { combineParsers } from '../plugin';
+import { map } from '../utils/map-node';
+import { AST_METADATA } from './metadata';
+import core from '../core';
+import base from '../base';
+import _types from '../core/types';
+import unary from '../core/unary';
+import _function from '../core/function';
+import _imports from '../core/imports';
+import booleans from '../core/bool';
+import array from '../core/array';
+import memory from '../core/memory';
+import string from '../core/string';
+import functionPointer from '../core/function-pointer';
+import struct from '../core/struct';
+import native from '../core/native';
+import defaultArguments from '../syntax-sugar/default-arguments';
+import sizeof from '../syntax-sugar/sizeof';
+import closures from '../syntax-sugar/closures';
 
-function semantics(ast: NodeType): NodeType {
+import type { NodeType, SemanticOptionsType } from '../flow/types';
+
+const getBuiltInParsers = () => {
+  return [
+    base().semantics,
+    core().semantics,
+    _imports().semantics,
+    _types().semantics,
+    unary().semantics,
+    _function().semantics,
+    booleans().semantics,
+    array().semantics,
+    memory().semantics,
+    string().semantics,
+    functionPointer().semantics,
+    struct().semantics,
+    native().semantics,
+    sizeof().semantics,
+    defaultArguments().semantics,
+    closures().semantics,
+  ];
+};
+
+function semantics(
+  ast: NodeType,
+  parsers: Array<(any) => any> = getBuiltInParsers()
+): NodeType {
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};
   const userTypes: { [string]: NodeType } = {};
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
-  const hoistImports: NodeType[] = [];
   const statics: { [string]: null } = {};
 
-  if (hasNode(Syntax.Closure, ast)) {
-    ast = { ...ast, params: [...closureImports(), ...ast.params] };
-  }
-  // Types have to be pre-parsed before the rest of the program
-  const astWithTypes = mapNode({
-    [Syntax.Export]: (node, transform) => {
-      const [maybeType] = node.params;
-      if (
-        maybeType != null &&
-        [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
-      ) {
-        return transform({
-          ...maybeType,
-          meta: {
-            ...maybeType.meta,
-            EXPORTED: true,
-          },
-        });
-      }
-      return node;
-    },
-    [Syntax.Typedef]: (node, _) => {
-      let argumentsCount = 0;
-      const defaultArgs = [];
-      walkNode({
-        Assignment(assignment) {
-          const defaultValue = assignment.params[1];
-          defaultArgs.push(defaultValue);
-        },
-        Type() {
-          argumentsCount += 1;
-        },
-      })(node);
-      const parsed = {
-        ...node,
-        meta: {
-          ...node.meta,
-          FUNCTION_METADATA: {
-            argumentsCount,
-          },
-          DEFAULT_ARGUMENTS: defaultArgs,
-        },
-      };
-      types[node.value] = parsed;
-      return parsed;
-    },
-    [Syntax.GenericType]: mapGeneric({ types }),
-  })(ast);
+  const options: SemanticOptionsType = {
+    functions,
+    globals,
+    types,
+    userTypes,
+    table,
+    hoist,
+    statics,
+    path: [],
+  };
 
-  const patched = mapNode({
-    [Syntax.Typedef]: (_, __) => _,
-    // Read Import node, attach indexes if non-scalar
-    [Syntax.Import]: mapImport({ functions, types, globals }),
-    [Syntax.Declaration]: parseGlobalDeclaration(false, { globals, types }),
-    [Syntax.ImmutableDeclaration]: parseGlobalDeclaration(true, {
-      globals,
-      types,
-    }),
-    [Syntax.CharacterLiteral]: mapCharacterLiteral,
-    [Syntax.Struct]: mapStructNode({ userTypes }),
-    [Syntax.FunctionDeclaration]: mapFunctionNode({
-      hoist,
-      hoistImports,
-      types,
-      globals,
-      functions,
-      userTypes,
-      table,
-      statics,
-    }),
-  })(astWithTypes);
+  const combined = combineParsers(parsers.map(p => p(options)));
+  const patched = map(combined)([ast, options]);
 
   return {
     ...patched,
@@ -115,7 +88,7 @@ function semantics(ast: NodeType): NodeType {
       // Attach information collected to the AST
       [AST_METADATA]: { functions, globals, types, userTypes, statics },
     },
-    params: [...hoistImports, ...patched.params, ...hoist],
+    params: [...patched.params, ...hoist],
   };
 }
 

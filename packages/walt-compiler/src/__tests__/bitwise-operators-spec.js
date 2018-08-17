@@ -1,10 +1,10 @@
-import test from "ava";
-import compile from "..";
+import test from 'ava';
+import compile from '..';
 
 const compileAndRun = (src, importsObj = {}) =>
   WebAssembly.instantiate(compile(src), importsObj);
 
-test("bitwise operators", t => {
+test('bitwise operators', t => {
   return compileAndRun(`
     export function testAnd(): i32 {
       return 1 & 1;

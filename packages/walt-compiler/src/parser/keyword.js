@@ -1,38 +1,38 @@
 // @flow
-import declaration from "./declaration";
-import maybeFunctionDeclaration from "./maybe-function-declaration";
-import _export from "./export";
-import _import from "./import";
-import _break from "./break";
-import type from "./type";
-import forLoop from "./for-loop";
-import whileLoop from "./while-loop";
-import returnStatement from "./return-statement";
-import ifThenElse from "./if-then-else";
-import Context from "./context";
+import declaration from './declaration';
+import maybeFunctionDeclaration from './maybe-function-declaration';
+import _export from './export';
+import _import from './import';
+import _break from './break';
+import type from './type';
+import forLoop from './for-loop';
+import whileLoop from './while-loop';
+import returnStatement from './return-statement';
+import ifThenElse from './if-then-else';
+import Context from './context';
 
 const keyword = (ctx: Context) => {
   switch (ctx.token.value) {
-    case "let":
-    case "const":
+    case 'let':
+    case 'const':
       return declaration(ctx);
-    case "function":
+    case 'function':
       return maybeFunctionDeclaration(ctx);
-    case "export":
+    case 'export':
       return _export(ctx);
-    case "import":
+    case 'import':
       return _import(ctx);
-    case "type":
+    case 'type':
       return type(ctx);
-    case "if":
+    case 'if':
       return ifThenElse(ctx);
-    case "for":
+    case 'for':
       return forLoop(ctx);
-    case "while":
+    case 'while':
       return whileLoop(ctx);
-    case "return":
+    case 'return':
       return returnStatement(ctx);
-    case "break":
+    case 'break':
       return _break(ctx);
     default:
       throw ctx.unsupported();

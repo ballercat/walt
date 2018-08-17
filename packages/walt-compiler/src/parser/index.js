@@ -5,13 +5,13 @@
  */
 
 // @flow
-import Syntax from "../Syntax";
-import statement from "./statement";
-import Context from "./context";
-import Tokenizer from "../tokenizer";
-import tokenStream from "../utils/token-stream";
-import Stream from "../utils/stream";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import statement from './statement';
+import Context from './context';
+import Tokenizer from '../tokenizer';
+import tokenStream from '../utils/token-stream';
+import Stream from '../utils/stream';
+import type { NodeType } from '../flow/types';
 
 export default function parse(source: string): NodeType {
   const stream = new Stream(source);
@@ -22,12 +22,12 @@ export default function parse(source: string): NodeType {
     stream: tokens,
     token: tokens.tokens[0],
     lines: stream.lines,
-    filename: "unknown.walt",
+    filename: 'unknown.walt',
   });
 
   const node: NodeType = ctx.makeNode(
     {
-      value: "ROOT_NODE",
+      value: 'ROOT_NODE',
     },
     Syntax.Program
   );

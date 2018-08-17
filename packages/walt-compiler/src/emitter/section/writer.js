@@ -1,7 +1,7 @@
 // @flow
-import { u8 } from "wasm-types";
-import { varuint32 } from "../numbers";
-import OutputStream from "../../utils/output-stream";
+import { u8 } from 'wasm-types';
+import { varuint32 } from '../numbers';
+import OutputStream from '../../utils/output-stream';
 
 const writer = ({
   type,
@@ -17,10 +17,10 @@ const writer = ({
     return null;
   }
 
-  const stream = new OutputStream().push(u8, type, label + " section");
+  const stream = new OutputStream().push(u8, type, label + ' section');
   const entries = emitter(field);
 
-  stream.push(varuint32, entries.size, "size");
+  stream.push(varuint32, entries.size, 'size');
   stream.write(entries);
 
   return stream;

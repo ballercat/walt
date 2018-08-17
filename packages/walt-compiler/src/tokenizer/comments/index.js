@@ -1,7 +1,7 @@
 // @flow
-import token from "../token";
-import Syntax from "../../Syntax";
-import { eol } from "../../utils/stream";
+import token from '../token';
+import Syntax from '../../Syntax';
+import { eol } from '../../utils/stream';
 
 import {
   SLASH,
@@ -9,7 +9,7 @@ import {
   MULTI_LINE_START,
   MULTI_LINE_END,
   COMMENT_IDENTIFIERS,
-} from "./constants";
+} from './constants';
 
 const parser = char => {
   let isMultiline: boolean = false;

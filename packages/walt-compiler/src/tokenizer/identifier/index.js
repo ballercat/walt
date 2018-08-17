@@ -1,14 +1,14 @@
 // @flow
-import token from "../token";
-import punctuator from "../punctuator";
-import constant from "../constant";
-import string from "../string";
-import Syntax from "../../Syntax";
-import { eol } from "../../utils/stream";
+import token from '../token';
+import punctuator from '../punctuator';
+import constant from '../constant';
+import string from '../string';
+import Syntax from '../../Syntax';
+import { eol } from '../../utils/stream';
 
 const isValidIdentifier = char => {
   // Don't allow these
-  return !string(char) && !punctuator(char) && !eol(char) && char !== " ";
+  return !string(char) && !punctuator(char) && !eol(char) && char !== ' ';
 };
 
 const supportAny = char => {

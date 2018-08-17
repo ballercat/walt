@@ -17,17 +17,17 @@ export const stringToType = {
 export const getTypeString = (type: number) => {
   switch (type) {
     case I64:
-      return "i64";
+      return 'i64';
     case F32:
-      return "f32";
+      return 'f32';
     case F64:
-      return "f64";
+      return 'f64';
     case FUNC:
-      return "func";
+      return 'func';
     case ANYFUNC:
-      return "anyfunc";
+      return 'anyfunc';
     case I32:
     default:
-      return "i32";
+      return 'i32';
   }
 };

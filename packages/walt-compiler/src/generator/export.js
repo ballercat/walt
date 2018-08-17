@@ -1,12 +1,12 @@
 // @flow
-import { GLOBAL_INDEX, FUNCTION_INDEX } from "../semantics/metadata";
+import { GLOBAL_INDEX, FUNCTION_INDEX } from '../semantics/metadata';
 import {
   EXTERN_GLOBAL,
   EXTERN_MEMORY,
   EXTERN_TABLE,
   EXTERN_FUNCTION,
-} from "../emitter/external_kind";
-import type { NodeType, IntermediateExportType } from "./flow/types";
+} from '../emitter/external_kind';
+import type { NodeType, IntermediateExportType } from './flow/types';
 
 const externaKindMap = {
   Memory: EXTERN_MEMORY,

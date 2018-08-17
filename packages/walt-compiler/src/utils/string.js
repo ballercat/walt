@@ -1,4 +1,4 @@
-import OutputStream from "./output-stream";
+import OutputStream from './output-stream';
 
 export function* stringDecoder(view, start) {
   let length = 0;
@@ -37,10 +37,10 @@ export function stringEncoder(value) {
   const resultStream = new OutputStream();
   const characterStream = new OutputStream();
 
-  characterStream.push("varuint32", value.length, value);
+  characterStream.push('varuint32', value.length, value);
   let i = 0;
   for (i = 0; i < value.length; i++) {
-    characterStream.push("varuint32", value.codePointAt(i), value[i]);
+    characterStream.push('varuint32', value.codePointAt(i), value[i]);
   }
   resultStream.write(characterStream);
 
@@ -48,7 +48,7 @@ export function stringEncoder(value) {
 }
 
 export const getText = view => ptr => {
-  let text = "";
+  let text = '';
   const decoder = stringDecoder(view, ptr);
   let iterator = decoder.next();
   while (!iterator.done) {

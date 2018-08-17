@@ -5,14 +5,14 @@
  */
 
 // @flow
-import statement from "./statement";
-import expression from "./expression";
-import Context from "./context";
-import Tokenizer from "../tokenizer";
-import Stream from "../utils/stream";
-import tokenStream from "../utils/token-stream";
+import statement from './statement';
+import expression from './expression';
+import Context from './context';
+import Tokenizer from '../tokenizer';
+import Stream from '../utils/stream';
+import tokenStream from '../utils/token-stream';
 
-import type { NodeType } from "../flow/types";
+import type { NodeType } from '../flow/types';
 
 export const fragment = (
   source: string,
@@ -26,7 +26,7 @@ export const fragment = (
     stream: tokens,
     token: tokens.tokens[0],
     lines: stream.lines,
-    filename: "unknown.walt",
+    filename: 'unknown.walt',
   });
 
   return parser(ctx);

@@ -1,7 +1,7 @@
 // @flow
-import Syntax from "../Syntax";
-import type Context from "./context";
-import type { NodeType } from "../flow/types";
+import Syntax from '../Syntax';
+import type Context from './context';
+import type { NodeType } from '../flow/types';
 
 // Note: string literal does not increment the token.
 function stringLiteral(ctx: Context): NodeType {
@@ -10,26 +10,26 @@ function stringLiteral(ctx: Context): NodeType {
 
   // Replace escape sequences
   switch (node.value) {
-    case "\\b":
-      node.value = "\b";
+    case '\\b':
+      node.value = '\b';
       break;
-    case "\\f":
-      node.value = "\f";
+    case '\\f':
+      node.value = '\f';
       break;
-    case "\\n":
-      node.value = "\n";
+    case '\\n':
+      node.value = '\n';
       break;
-    case "\\r":
-      node.value = "\r";
+    case '\\r':
+      node.value = '\r';
       break;
-    case "\\t":
-      node.value = "\t";
+    case '\\t':
+      node.value = '\t';
       break;
-    case "\\v":
-      node.value = "\v";
+    case '\\v':
+      node.value = '\v';
       break;
-    case "\\0":
-      node.value = "\0";
+    case '\\0':
+      node.value = '\0';
       break;
     case "\\'":
       node.value = "'";

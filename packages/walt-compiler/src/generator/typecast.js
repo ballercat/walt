@@ -1,11 +1,11 @@
 // @flow
 //
-import mapSyntax from "./map-syntax";
-import mergeBlock from "./merge-block";
-import { getTypecastOpcode } from "../emitter/opcode";
-import { TYPE_CAST } from "../semantics/metadata";
-import invariant from "invariant";
-import type { GeneratorType } from "./flow/types";
+import mapSyntax from './map-syntax';
+import mergeBlock from './merge-block';
+import { getTypecastOpcode } from '../emitter/opcode';
+import { TYPE_CAST } from '../semantics/metadata';
+import invariant from 'invariant';
+import type { GeneratorType } from './flow/types';
 
 const generateTypecast: GeneratorType = (node, parent) => {
   const metaTypecast = node.meta[TYPE_CAST];

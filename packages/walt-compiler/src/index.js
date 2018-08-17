@@ -1,19 +1,19 @@
 // @flow
-import parser from "./parser";
-import semantics from "./semantics";
-import validate from "./validation";
-import generator from "./generator";
-import emitter from "./emitter";
+import parser from './parser';
+import semantics from './semantics';
+import validate from './validation';
+import generator from './generator';
+import emitter from './emitter';
 
-import debug from "./utils/debug";
-import prettyPrintNode from "./utils/print-node";
+import debug from './utils/debug';
+import prettyPrintNode from './utils/print-node';
 
-import closurePlugin, { mapToImports } from "./closure-plugin";
-import { VERSION_1 } from "./emitter/preamble";
-import type { WebAssemblyModuleType, ConfigType } from "./flow/types";
-import { stringEncoder, stringDecoder } from "./utils/string";
-import walkNode from "./utils/walk-node";
-import mapNode from "./utils/map-node";
+import closurePlugin, { mapToImports } from './closure-plugin';
+import { VERSION_1 } from './emitter/preamble';
+import type { WebAssemblyModuleType, ConfigType } from './flow/types';
+import { stringEncoder, stringDecoder } from './utils/string';
+import walkNode from './utils/walk-node';
+import mapNode from './utils/map-node';
 
 export {
   parser,
@@ -29,7 +29,7 @@ export {
   walkNode,
   mapNode,
 };
-export const VERSION = "0.5.3";
+export const VERSION = '0.9.1';
 
 // Used for deugging purposes
 export const getIR = (
@@ -37,8 +37,8 @@ export const getIR = (
   {
     version = VERSION_1,
     encodeNames = false,
-    lines = source ? source.split("\n") : [],
-    filename = "unknown",
+    lines = source ? source.split('\n') : [],
+    filename = 'unknown',
   }: ConfigType = {}
 ) => {
   const ast = parser(source);
@@ -69,7 +69,7 @@ export const withPlugins = (
 ) => {
   const pluginMappers = {
     closure: (closure, imports) => {
-      imports["walt-plugin-closure"] = mapToImports(closure);
+      imports['walt-plugin-closure'] = mapToImports(closure);
     },
   };
   const resultImports = Object.entries(plugins).reduce((acc, [key, value]) => {

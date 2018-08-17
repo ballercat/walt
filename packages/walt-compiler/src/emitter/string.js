@@ -1,7 +1,7 @@
 // @flow
-import { u8 } from "wasm-types";
-import { varuint32 } from "./numbers";
-import OutputStream from "../utils/output-stream";
+import { u8 } from 'wasm-types';
+import { varuint32 } from './numbers';
+import OutputStream from '../utils/output-stream';
 
 export function emitString(
   stream: OutputStream,
