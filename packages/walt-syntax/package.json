@@ -1,0 +1,57 @@
+{
+  "name": "walt-syntax",
+  "version": "0.1.0",
+  "description": "Walt Syntax",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ballercat/walt.git"
+  },
+  "keywords": [
+    "wasm",
+    "wast",
+    "javascript",
+    "webassembly",
+    "compiler"
+  ],
+  "author": "Arthur Buldauskas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ballercat/walt/issues"
+  },
+  "homepage": "https://github.com/ballercat/walt/tree/master/packages/walt-syntax/",
+  "dependencies": {},
+  "devDependencies": {
+    "ava": "0.24.0",
+    "eslint": "^5.0.0",
+    "husky": "0.14.3",
+    "lint-staged": "6.0.0",
+    "prettier": "1.9.2"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "singleQuote": true
+  },
+  "ava": {
+    "files": [
+      "src/**/*[sS]pec.js"
+    ],
+    "source": [
+      "src/**/*.js",
+      "src/**/*.walt"
+    ],
+    "failFast": true,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "powerAssert": false
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
