@@ -57,10 +57,7 @@ function mapNode(visitor) {
     const mappedNode = mappingFunction(node);
     const params = mappedNode.params.map(nodeMapper);
 
-    return {
-      ...mappedNode,
-      params,
-    };
+    return extend(mappedNode, { params });
   };
 
   return nodeMapper;
