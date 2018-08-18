@@ -1,6 +1,6 @@
 import { expressionFragment } from '../../parser/fragment';
 import test from 'ava';
-import { map } from '../../utils/map-node';
+import { map } from 'walt-parser-tools/map-node';
 import { combineParsers } from '..';
 
 test('plugin system', t => {

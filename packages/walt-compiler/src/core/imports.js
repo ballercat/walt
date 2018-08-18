@@ -1,5 +1,5 @@
 import Syntax from '../Syntax';
-import mapNode from '../utils/map-node';
+import { mapNode } from 'walt-parser-tools/map-node';
 import {
   FUNCTION_INDEX,
   TYPE_INDEX,

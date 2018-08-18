@@ -13,7 +13,7 @@
 
 // @flow
 import { combineParsers } from '../plugin';
-import { map } from '../utils/map-node';
+import { map } from 'walt-parser-tools/map-node';
 import { AST_METADATA } from './metadata';
 import core from '../core';
 import base from '../base';

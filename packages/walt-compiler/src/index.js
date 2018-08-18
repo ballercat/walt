@@ -1,4 +1,6 @@
 // @flow
+import { mapNode } from 'walt-parser-tools/map-node';
+
 import parser from './parser';
 import semantics from './semantics';
 import validate from './validation';
@@ -13,7 +15,6 @@ import { VERSION_1 } from './emitter/preamble';
 import type { WebAssemblyModuleType, ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
 import walkNode from './utils/walk-node';
-import mapNode from './utils/map-node';
 
 export {
   parser,

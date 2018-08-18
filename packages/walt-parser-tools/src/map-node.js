@@ -33,9 +33,7 @@ function map(visitors) {
 }
 
 // This should maybe be it's own module.
-export { map };
-
-export default function mapNode(visitor) {
+function mapNode(visitor) {
   const nodeMapper = node => {
     if (node == null) {
       return node;
@@ -67,3 +65,8 @@ export default function mapNode(visitor) {
 
   return nodeMapper;
 }
+
+module.exports = {
+  map,
+  mapNode,
+};
