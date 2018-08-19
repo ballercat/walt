@@ -1,5 +1,6 @@
 import Syntax from '../Syntax';
 import invariant from 'invariant';
+import { find } from 'walt-parser-tools/scope';
 import walkNode from '../utils/walk-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
 
@@ -73,26 +74,26 @@ export default function Struct() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-          const { userTypes, locals, globals } = context;
-          const local = locals[node.value] || globals[node.value];
+          const { userTypes, scopes } = context;
+          const ref = find(scopes, node.value);
           // Ignore anything not typed as a struct
-          if (!(local && userTypes[local.type])) {
+          if (!(ref && userTypes[ref.type])) {
             return next(args);
           }
 
           // Convert all struct uses to i32 types
           return {
             ...node,
-            meta: { ...node.meta, ...local.meta, ALIAS: local.type },
+            meta: { ...node.meta, ...ref.meta, ALIAS: ref.type },
             type: 'i32',
           };
         },
         ArraySubscript: next => (args, transform) => {
           const [node, context] = args;
-          const { userTypes, locals } = context;
+          const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
-          const local = locals[identifier.value];
+          const local = find(scopes, identifier.value);
           if (!local) {
             return next(args);
           }
@@ -155,9 +156,9 @@ export default function Struct() {
             },
             [Syntax.Spread]: (spread, _) => {
               // find userType
-              const { locals, userTypes } = context;
+              const { scopes, userTypes } = context;
               const [target] = spread.params;
-              const userType = userTypes[locals[target.value].type];
+              const userType = userTypes[find(scopes, target.value).type];
               const keyOffsetMap = userType.meta[TYPE_OBJECT];
               if (keyOffsetMap != null) {
                 // map over the keys

@@ -4,7 +4,12 @@
  * arguments and return statements
  */
 import Syntax from '../Syntax';
-import { FUNCTION_INDEX, FUNCTION_METADATA } from '../semantics/metadata';
+import { current, enter, exit } from 'walt-parser-tools/scope';
+import {
+  FUNCTION_INDEX,
+  FUNCTION_METADATA,
+  LOCAL_INDEX,
+} from '../semantics/metadata';
 import { typeWeight } from '../types';
 
 export default function coreFunctionPlugin() {
@@ -17,6 +22,7 @@ export default function coreFunctionPlugin() {
             result: fun.result,
             locals: {},
             arguments: [],
+            scopes: enter(context.scopes, LOCAL_INDEX),
           };
 
           // first two parameters to a function node are the arguments and result
@@ -34,6 +40,7 @@ export default function coreFunctionPlugin() {
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
                 argumentsCount: context.arguments.length,
+                locals: current(context.scopes),
               },
             },
           };
@@ -42,8 +49,9 @@ export default function coreFunctionPlugin() {
           // Parse the statements last, so that they can self-reference the function
           const statements = rest.map(p => transform([p, context]));
 
-          ref.meta[FUNCTION_METADATA].locals = context.locals;
           ref.params = [args, result, ...statements];
+
+          context.scopes = exit(context.scopes);
 
           return ref;
         },

@@ -5,13 +5,14 @@
  * and are used as the core language for every feature built on top.
  */
 import Syntax from '../Syntax';
-import { extendNode } from '../utils/extend-node';
 import {
-  TYPE_CAST,
-  TYPE_CONST,
-  GLOBAL_INDEX,
-  LOCAL_INDEX,
-} from '../semantics/metadata';
+  current as currentScope,
+  namespace,
+  index as scopeIndex,
+  find,
+} from 'walt-parser-tools/scope';
+import { extendNode } from '../utils/extend-node';
+import { TYPE_CAST, TYPE_CONST } from '../semantics/metadata';
 import { typeWeight } from '../types';
 
 const balanceTypesInMathExpression = expression => {
@@ -60,25 +61,15 @@ export default function Core() {
     semantics() {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
-        const scope = context.locals || context.globals;
-        const indexMeta = (() => {
-          let index = Object.keys(scope).indexOf(node.value);
-          if (index === -1) {
-            index = Object.keys(scope).length;
-          }
-          if (scope === context.locals) {
-            return { [LOCAL_INDEX]: index };
-          }
-
-          return { [GLOBAL_INDEX]: index };
-        })();
+        const scope = currentScope(context.scopes);
+        const index = scopeIndex(scope, node.value);
 
         scope[node.value] = extendNode(
           {
             params: node.params.map(extendNode({ type: node.type })),
             meta: {
               ...node.meta,
-              ...indexMeta,
+              [scope[namespace]]: index,
               [TYPE_CONST]: node.Type === Syntax.ImmutableDeclaration,
             },
             Type: Syntax.Declaration,
@@ -136,14 +127,7 @@ export default function Core() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-
-          let ref;
-          if (context.locals) {
-            ref = context.locals[node.value];
-          }
-          if (!ref) {
-            ref = context.globals[node.value];
-          }
+          let ref = find(context.scopes, node.value);
           if (ref) {
             return {
               ...node,

@@ -14,6 +14,7 @@
 // @flow
 import { combineParsers } from '../plugin';
 import { map } from 'walt-parser-tools/map-node';
+import { enter as enterScope } from 'walt-parser-tools/scope';
 import { AST_METADATA } from './metadata';
 import core from '../core';
 import base from '../base';
@@ -31,6 +32,7 @@ import native from '../core/native';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
 import closures from '../syntax-sugar/closures';
+import { GLOBAL_INDEX } from './metadata.js';
 
 import type { NodeType, SemanticOptionsType } from '../flow/types';
 
@@ -76,6 +78,7 @@ function semantics(
     hoist,
     statics,
     path: [],
+    scopes: enterScope([], GLOBAL_INDEX),
   };
 
   const combined = combineParsers(parsers.map(p => p(options)));

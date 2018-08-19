@@ -1,4 +1,5 @@
 import invariant from 'invariant';
+import { find } from 'walt-parser-tools/scope';
 import Syntax from '../Syntax';
 import { OBJECT_SIZE } from '../semantics/metadata';
 
@@ -20,11 +21,10 @@ export default function sizeofPlugin() {
             return next(args);
           }
 
-          const { locals, globals, userTypes, functions } = context;
+          const { scopes, userTypes, functions } = context;
           const [target] = sizeof.params;
-          const local = locals[target.value];
-          const { type = '' } = local || {};
-          const global = globals[target.value];
+          const ref = find(scopes, target.value);
+          const { type = '' } = ref || {};
           const userType = userTypes[target.value] || userTypes[type];
           const func = functions[target.value];
 
@@ -40,7 +40,7 @@ export default function sizeofPlugin() {
             };
           }
 
-          const node = local || global || func;
+          const node = ref || func;
 
           return {
             ...sizeof,

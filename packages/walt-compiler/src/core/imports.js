@@ -1,11 +1,12 @@
 import Syntax from '../Syntax';
-import { mapNode } from 'walt-parser-tools/map-node';
 import {
-  FUNCTION_INDEX,
-  TYPE_INDEX,
-  TYPE_CONST,
-  GLOBAL_INDEX,
-} from '../semantics/metadata';
+  current,
+  add,
+  index as scopeIndex,
+  namespace,
+} from 'walt-parser-tools/scope';
+import { mapNode } from 'walt-parser-tools/map-node';
+import { FUNCTION_INDEX, TYPE_INDEX, TYPE_CONST } from '../semantics/metadata';
 
 export default function Imports() {
   return {
@@ -40,7 +41,7 @@ export default function Imports() {
             });
           },
           [Syntax.Pair]: (pairNode, __) => {
-            const { types, functions, globals } = context;
+            const { types, functions } = context;
             const [identifierNode, typeNode] = pairNode.params;
 
             if (types[typeNode.value] != null) {
@@ -70,13 +71,13 @@ export default function Imports() {
             }
 
             if (!['Table', 'Memory'].includes(typeNode.type)) {
-              const index = Object.keys(globals).length;
-
-              globals[identifierNode.value] = {
+              const scope = current(context.scopes);
+              const index = scopeIndex(scope, identifierNode.value);
+              add(context.scopes, identifierNode.value, {
                 ...identifierNode,
-                meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+                meta: { [scope[namespace]]: index, [TYPE_CONST]: true },
                 type: typeNode.type,
-              };
+              });
             }
 
             return pairNode;

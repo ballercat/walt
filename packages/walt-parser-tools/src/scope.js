@@ -19,7 +19,7 @@ function current(scopes) {
 
 function add(scopes, key, node) {
   const cur = current(scopes);
-  if (cur && !cur[key]) {
+  if (cur) {
     cur[key] = node;
   }
 
@@ -39,11 +39,17 @@ function find(scopes, key) {
   return null;
 }
 
+function index(scope, key) {
+  const pos = Object.keys(scope).indexOf(key);
+  return pos > -1 ? pos : Object.keys(scope).length;
+}
+
 module.exports = {
   enter,
   exit,
   add,
   find,
   current,
+  index,
   namespace,
 };
