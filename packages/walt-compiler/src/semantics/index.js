@@ -68,6 +68,7 @@ function semantics(
   const table: { [string]: NodeType } = {};
   const hoist: NodeType[] = [];
   const statics: { [string]: null } = {};
+  const scopes = enterScope([], GLOBAL_INDEX);
 
   const options: SemanticOptionsType = {
     functions,
@@ -78,7 +79,7 @@ function semantics(
     hoist,
     statics,
     path: [],
-    scopes: enterScope([], GLOBAL_INDEX),
+    scopes,
   };
 
   const combined = combineParsers(parsers.map(p => p(options)));
@@ -89,7 +90,13 @@ function semantics(
     meta: {
       ...patched.meta,
       // Attach information collected to the AST
-      [AST_METADATA]: { functions, globals, types, userTypes, statics },
+      [AST_METADATA]: {
+        functions,
+        globals: scopes[0],
+        types,
+        userTypes,
+        statics,
+      },
     },
     params: [...patched.params, ...hoist],
   };

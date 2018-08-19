@@ -75,7 +75,7 @@ export default {
           'namespace',
         ],
         'node_modules/walt-parser-tools/map-node.js': ['map', 'mapNode'],
-        'node_modules/walt-syntax/src/index.js': [
+        'node_modules/walt-syntax/dist/walt-syntax.js': [
           'semantics',
           'builtinTypes',
           'statements',
