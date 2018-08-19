@@ -93,17 +93,15 @@ export default function Struct() {
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
-          const local = find(scopes, identifier.value);
-          if (!local) {
-            return next(args);
-          }
-          const userType = userTypes[local.type];
+          const ref = find(scopes, identifier.value);
+          const userType = userTypes[ref.type];
+
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
             return {
               ...node,
-              type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : 'i32',
+              type: objectKeyTypeMap[field.value],
               params: patchStringSubscript(metaObject, params),
             };
           }
@@ -160,39 +158,37 @@ export default function Struct() {
               const [target] = spread.params;
               const userType = userTypes[find(scopes, target.value).type];
               const keyOffsetMap = userType.meta[TYPE_OBJECT];
-              if (keyOffsetMap != null) {
-                // map over the keys
-                Object.keys(keyOffsetMap).forEach(key => {
-                  const offsetNode = {
-                    ...target,
-                    Type: Syntax.Identifier,
-                    value: key,
-                    params: [],
-                  };
-                  // profit
-                  spreadKeys[key] = {
-                    ...lhs,
-                    Type: Syntax.MemoryAssignment,
-                    params: [
-                      {
-                        ...lhs,
-                        Type: Syntax.ArraySubscript,
-                        params: [lhs, { ...offsetNode }],
-                      },
-                      {
-                        ...target,
-                        Type: Syntax.ArraySubscript,
-                        params: [
-                          target,
-                          {
-                            ...offsetNode,
-                          },
-                        ],
-                      },
-                    ],
-                  };
-                });
-              }
+              // map over the keys
+              Object.keys(keyOffsetMap).forEach(key => {
+                const offsetNode = {
+                  ...target,
+                  Type: Syntax.Identifier,
+                  value: key,
+                  params: [],
+                };
+                // profit
+                spreadKeys[key] = {
+                  ...lhs,
+                  Type: Syntax.MemoryAssignment,
+                  params: [
+                    {
+                      ...lhs,
+                      Type: Syntax.ArraySubscript,
+                      params: [lhs, { ...offsetNode }],
+                    },
+                    {
+                      ...target,
+                      Type: Syntax.ArraySubscript,
+                      params: [
+                        target,
+                        {
+                          ...offsetNode,
+                        },
+                      ],
+                    },
+                  ],
+                };
+              });
             },
           })(rhs);
 

@@ -1,6 +1,12 @@
 import Syntax from '../Syntax';
 import { expressionFragment as fragment } from '../parser/fragment';
 
+const shifts = {
+  i64: 63,
+  f64: 63,
+  i32: 31,
+  f32: 32,
+};
 // Unary expressions need to be patched so that the LHS type matches the RHS
 export default function() {
   return {
@@ -14,7 +20,7 @@ export default function() {
           switch (unaryNode.value) {
             // Transform bang
             case '!':
-              const shift = ['i64', 'f64'].includes(lhs.type) ? '63' : '31';
+              const shift = shifts[lhs.type];
               return transform([
                 fragment(
                   `(((${String(lhs)} >> ${shift}) | ((~${String(

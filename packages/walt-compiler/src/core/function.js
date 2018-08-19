@@ -3,7 +3,7 @@
  * This plugin only handles the basics of functions like vanilla funciton calls,
  * arguments and return statements
  */
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { current, enter, exit } from 'walt-parser-tools/scope';
 import {
   FUNCTION_INDEX,

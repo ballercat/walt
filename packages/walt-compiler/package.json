@@ -41,7 +41,8 @@
     "curry": "1.2.0",
     "invariant": "2.2.2",
     "wasm-types": "1.0.3",
-    "walt-parser-tools": "^0.1.0"
+    "walt-parser-tools": "^0.1.0",
+    "walt-syntax": "^0.1.0"
   },
   "devDependencies": {
     "ava": "0.24.0",

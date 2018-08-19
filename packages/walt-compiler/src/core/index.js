@@ -94,12 +94,8 @@ export default function Core() {
             ...node,
             params: node.params.map(child => transform([child, context])),
           }),
-        Pair: next => (args, transform) => {
+        Pair: _next => (args, transform) => {
           const [typeCastMaybe, context] = args;
-          // Ignore everything in global scope (promotions only possible in functions
-          if (!context.locals) {
-            return next(args);
-          }
 
           const params = typeCastMaybe.params.map(p => transform([p, context]));
           const [targetNode, typeNode] = params;
