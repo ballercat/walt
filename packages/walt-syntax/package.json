@@ -27,6 +27,8 @@
   "dependencies": {},
   "devDependencies": {
     "ava": "0.24.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
     "cross-env": "^5.2.0",
     "eslint": "^5.0.0",
     "husky": "0.14.3",
@@ -49,7 +51,11 @@
     "failFast": true,
     "failWithoutAssertions": false,
     "tap": false,
-    "powerAssert": false
+    "powerAssert": false,
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
   },
   "lint-staged": {
     "src/**/*.js": [
