@@ -5975,7 +5975,7 @@ function closurePlugin$$1() {
 }
 
 //      
-const VERSION = '0.9.1';
+const VERSION = '0.9.2';
 
 // Used for deugging purposes
 const getIR = (source, {
