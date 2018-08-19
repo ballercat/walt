@@ -22,6 +22,17 @@ test('default arguments', t => {
     t.is(mod.instance.exports.test(), 4);
   });
 });
+test.only('function pointer', t => {
+  const walt = `
+    const memory: Memory = Memory<{ initial: 1 }>;
+    export function test(): i32 {
+      const hello: i32 = "hello";
+      return hello;
+    }
+  `;
+
+  return WebAssembly.instantiate(compile(walt)).then(module => {});
+});
 
 test('functions', t => {
   const walt = `
