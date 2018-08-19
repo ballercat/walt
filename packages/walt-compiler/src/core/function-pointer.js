@@ -1,4 +1,4 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { find } from 'walt-parser-tools/scope';
 import {
   TYPE_INDEX,

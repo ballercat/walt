@@ -1,4 +1,4 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import {
   current,
   add,

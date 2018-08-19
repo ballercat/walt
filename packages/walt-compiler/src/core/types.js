@@ -1,5 +1,5 @@
 import curry from 'curry';
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { mapNode } from 'walt-parser-tools/map-node';
 import walkNode from '../utils/walk-node';
 

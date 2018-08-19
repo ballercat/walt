@@ -4,7 +4,7 @@
  * The parsers in here very closly mirror the underlying WebAssembly structure
  * and are used as the core language for every feature built on top.
  */
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import {
   current as currentScope,
   namespace,

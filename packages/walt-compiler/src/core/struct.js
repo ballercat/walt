@@ -1,4 +1,4 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from '../utils/walk-node';

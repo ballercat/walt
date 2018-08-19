@@ -1,7 +1,7 @@
 import Tokenizer from '..';
 import compile from '../../';
 import Stream from '../../utils/stream';
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 import test from 'ava';
 
 const compileAndRun = src => WebAssembly.instantiate(compile(src));

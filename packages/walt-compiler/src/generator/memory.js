@@ -1,5 +1,5 @@
 // @flow
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import walkNode from '../utils/walk-node';
 import type { NodeType, IntermediateMemoryType } from './flow/types';
 

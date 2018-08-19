@@ -5,7 +5,7 @@
  *
  * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
  */
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import operator from './operator';
 import constant from './constant';
 import stringLiteral from './string-literal';

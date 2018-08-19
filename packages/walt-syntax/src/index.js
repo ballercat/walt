@@ -1,70 +1,69 @@
-
 // Main Program
-const Program = 'Program';
-const Keyword = 'Keyword';
-const Export = 'Export';
-const Import = 'Import';
-const Statement = 'Statement';
-const IfThenElse = 'IfThenElse';
-const Select = 'Select';
-const Else = 'Else';
-const UnaryExpression = 'UnaryExpression';
-const BinaryExpression = 'BinaryExpression';
-const TernaryExpression = 'TernaryExpression';
-const NumberLiteral = 'NumberLiteral';
-const StringLiteral = 'StringLiteral';
-const CharacterLiteral = 'CharacterLiteral';
-const Punctuator = 'Punctuator';
-const Identifier = 'Identifier';
-const ArraySubscript = 'ArraySubscript';
-const Constant = 'Constant';
-const Type = 'Type';
-const GenericType = 'GenericType';
-const UserType = 'UserType';
-const FunctionType = 'FunctionType';
-const Declaration = 'Declaration';
-const ImmutableDeclaration = 'ImmutableDeclaration';
-const FunctionDeclaration = 'FunctionDeclaration';
-const ArrayDeclaration = 'ArrayDeclaration';
-const IndirectFunctionCall = 'IndirectFunctionCall';
-const FunctionCall = 'FunctionCall';
-const Loop = 'Loop';
-const MemoryAssignment = 'MemoryAssignment';
-const Assignment = 'Assignment';
-const Param = 'Param';
-const Typedef = 'Typedef';
-const Struct = 'Struct';
-const ReturnStatement = 'ReturnStatement';
-const Sequence = 'Sequence';
-const ObjectLiteral = 'ObjectLiteral';
-const Pair = 'Pair';
-const TypeCast = 'TypeCast';
-const Break = 'Break';
-const Comment = 'Comment';
-const Sizeof = 'Sizeof';
-const Spread = 'Spread';
-const Closure = 'Closure';
-const Noop = 'Noop';
-const ClosureType = 'ClosureType';
-const Block = 'Block';
-const ObjectField = 'ObjectField';
-const FunctionIndex = 'FunctionIndex';
-const FunctionIdentifier = 'FunctionIdentifier';
-const FunctionPointer = 'FunctionPointer';
-const FunctionArguments = 'FunctionArguments';
-const FunctionResult = 'FunctionResult';
-const FunctionLocals = 'FunctionLocals';
-const NativeMethod = 'NativeMethod';
+export const Program = 'Program';
+export const Keyword = 'Keyword';
+export const Export = 'Export';
+export const Import = 'Import';
+export const Statement = 'Statement';
+export const IfThenElse = 'IfThenElse';
+export const Select = 'Select';
+export const Else = 'Else';
+export const UnaryExpression = 'UnaryExpression';
+export const BinaryExpression = 'BinaryExpression';
+export const TernaryExpression = 'TernaryExpression';
+export const NumberLiteral = 'NumberLiteral';
+export const StringLiteral = 'StringLiteral';
+export const CharacterLiteral = 'CharacterLiteral';
+export const Punctuator = 'Punctuator';
+export const Identifier = 'Identifier';
+export const ArraySubscript = 'ArraySubscript';
+export const Constant = 'Constant';
+export const Type = 'Type';
+export const GenericType = 'GenericType';
+export const UserType = 'UserType';
+export const FunctionType = 'FunctionType';
+export const Declaration = 'Declaration';
+export const ImmutableDeclaration = 'ImmutableDeclaration';
+export const FunctionDeclaration = 'FunctionDeclaration';
+export const ArrayDeclaration = 'ArrayDeclaration';
+export const IndirectFunctionCall = 'IndirectFunctionCall';
+export const FunctionCall = 'FunctionCall';
+export const Loop = 'Loop';
+export const MemoryAssignment = 'MemoryAssignment';
+export const Assignment = 'Assignment';
+export const Param = 'Param';
+export const Typedef = 'Typedef';
+export const Struct = 'Struct';
+export const ReturnStatement = 'ReturnStatement';
+export const Sequence = 'Sequence';
+export const ObjectLiteral = 'ObjectLiteral';
+export const Pair = 'Pair';
+export const TypeCast = 'TypeCast';
+export const Break = 'Break';
+export const Comment = 'Comment';
+export const Sizeof = 'Sizeof';
+export const Spread = 'Spread';
+export const Closure = 'Closure';
+export const Noop = 'Noop';
+export const ClosureType = 'ClosureType';
+export const Block = 'Block';
+export const ObjectField = 'ObjectField';
+export const FunctionIndex = 'FunctionIndex';
+export const FunctionIdentifier = 'FunctionIdentifier';
+export const FunctionPointer = 'FunctionPointer';
+export const FunctionArguments = 'FunctionArguments';
+export const FunctionResult = 'FunctionResult';
+export const FunctionLocals = 'FunctionLocals';
+export const NativeMethod = 'NativeMethod';
 
-const i32 = 'i32';
-const f32 = 'f32';
-const i64 = 'i64';
-const f64 = 'f64';
-const Memory = 'Memory';
-const Table = 'Table';
-const bool = 'bool';
+export const i32 = 'i32';
+export const f32 = 'f32';
+export const i64 = 'i64';
+export const f64 = 'f64';
+export const Memory = 'Memory';
+export const Table = 'Table';
+export const bool = 'bool';
 
-const builtinTypes = {
+export const builtinTypes = {
   i32,
   f32,
   i64,
@@ -74,7 +73,7 @@ const builtinTypes = {
   bool,
 };
 
-const statements = {
+export const statements = {
   // Main Program
   Program,
 
@@ -104,10 +103,7 @@ const statements = {
   Block,
 };
 
-module.exports = {
-  builtinTypes,
-  statements,
-
+export default {
   // Main Program
   Program,
 

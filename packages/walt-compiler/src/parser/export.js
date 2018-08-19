@@ -1,5 +1,5 @@
 // @flow
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import maybeFunctionDeclaration from './maybe-function-declaration';
 import parseTypeDef from './type';
 import type { NodeType } from '../flow/types';

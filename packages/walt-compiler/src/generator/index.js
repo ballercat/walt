@@ -1,6 +1,6 @@
 // @flow
 import invariant from 'invariant';
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import mapSyntax from './map-syntax';
 import mergeBlock from './merge-block';
 import walkNode from '../utils/walk-node';

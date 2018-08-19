@@ -1,4 +1,4 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { expressionFragment as fragment } from '../parser/fragment';
 
 const shifts = {

@@ -4,7 +4,7 @@
  * Here be dragons
  *
  */
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import parser from '../parser';
 import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from '../utils/has-node';

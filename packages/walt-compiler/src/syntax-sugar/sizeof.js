@@ -1,6 +1,6 @@
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { OBJECT_SIZE } from '../semantics/metadata';
 
 const sizes = {

@@ -2,9 +2,10 @@
   "name": "walt-syntax",
   "version": "0.1.0",
   "description": "Walt Syntax",
-  "main": "src/index.js",
+  "main": "dist/walt-syntax.js",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js"
   },
   "repository": {
     "type": "git",
@@ -26,10 +27,12 @@
   "dependencies": {},
   "devDependencies": {
     "ava": "0.24.0",
+    "cross-env": "^5.2.0",
     "eslint": "^5.0.0",
     "husky": "0.14.3",
     "lint-staged": "6.0.0",
-    "prettier": "1.9.2"
+    "prettier": "1.9.2",
+    "rollup": "^0.64.1"
   },
   "prettier": {
     "trailingComma": "es5",

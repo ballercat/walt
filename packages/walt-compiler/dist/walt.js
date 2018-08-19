@@ -1,10 +1,97 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('walt-parser-tools/map-node')) :
-	typeof define === 'function' && define.amd ? define(['exports', 'walt-parser-tools/map-node'], factory) :
-	(factory((global.Walt = {}),global.mapNode));
-}(this, (function (exports,mapNode) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.Walt = {})));
+}(this, (function (exports) { 'use strict';
 
-//      
+var immutable = extend;
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+function extend() {
+    var target = {};
+
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+            if (hasOwnProperty.call(source, key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    return target;
+}
+
+const identity = id => id;
+
+function map(visitors) {
+  function mapper(input) {
+    if (!Array.isArray(input)) {
+      throw new Error('Transform must be used on an Array. Received ' + JSON.stringify(input));
+    }
+    const visitor = (() => {
+      const [node] = input;
+      if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
+        return visitors[node.Type];
+      }
+      return identity;
+    })();
+
+    if (visitor.length === 2) {
+      return visitor(input, mapper);
+    }
+
+    const [node, ...rest] = visitor(input);
+    const params = node.params.filter(Boolean).map(child => mapper([child, ...rest]));
+
+    return immutable(node, { params });
+  }
+
+  return mapper;
+}
+
+// This should maybe be it's own module.
+function mapNode$2(visitor) {
+  const nodeMapper = node => {
+    if (node == null) {
+      return node;
+    }
+
+    const mappingFunction = (() => {
+      if ('*' in visitor && typeof visitor['*'] === 'function') {
+        return visitor['*'];
+      }
+
+      if (node.Type in visitor && typeof visitor[node.Type] === 'function') {
+        return visitor[node.Type];
+      }
+      return identity;
+    })();
+
+    if (mappingFunction.length === 2) {
+      return mappingFunction(node, nodeMapper);
+    }
+
+    const mappedNode = mappingFunction(node);
+    const params = mappedNode.params.map(nodeMapper);
+
+    return immutable(mappedNode, { params });
+  };
+
+  return nodeMapper;
+}
+
+var mapNode_1$1 = {
+  map,
+  mapNode: mapNode$2
+};
+
+var mapNode = mapNode_1$1;
+
+var mapNode_1 = mapNode.map;
+var mapNode_2 = mapNode.mapNode;
 
 // Main Program
 const Program = 'Program';
@@ -111,7 +198,15 @@ const statements = {
   Block
 };
 
-var Syntax = {
+var index = {
+  builtinTypes,
+  statements,
+
+  i32,
+  f32,
+  i64,
+  f64,
+
   // Main Program
   Program,
 
@@ -177,6 +272,10 @@ var Syntax = {
   NativeMethod
 };
 
+var index_2 = index.builtinTypes;
+var index_3 = index.statements;
+var index_4 = index.i32;
+
 var _extends = Object.assign || function (target) {
   for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i];
@@ -232,7 +331,7 @@ function blockParser(ctx) {
 
   return ctx.endNode(_extends({}, node, {
     params
-  }), Syntax.Block);
+  }), index.Block);
 }
 
 //      
@@ -241,7 +340,7 @@ const makeResult = node => _extends({
 }, node, {
   meta: {},
   params: [],
-  Type: Syntax.FunctionResult,
+  Type: index.FunctionResult,
   value: 'FUNCTION_RESULT'
 });
 
@@ -252,12 +351,12 @@ const makeArgs = node => _extends({
     if (node == null) {
       return [];
     }
-    return node.Type === Syntax.Sequence ? node.params : [node];
+    return node.Type === index.Sequence ? node.params : [node];
   })(),
   type: null,
   meta: {},
   value: 'FUNCTION_ARGUMENTS',
-  Type: Syntax.FunctionArguments
+  Type: index.FunctionArguments
 });
 
 function parselambda(ctx, op, operands) {
@@ -271,28 +370,28 @@ function parselambda(ctx, op, operands) {
     type: 'i32',
     range: [ctx.token.start, ctx.token.end],
     meta: {},
-    Type: Syntax.Closure,
+    Type: index.Closure,
     params: []
   });
 
   const [lhs, rhs] = args.params;
   // The reason why this is so tricky to parse is because there are too many
   // optional parts of a coluse definition, like arguments and return type
-  if (args.Type === Syntax.Pair) {
+  if (args.Type === index.Pair) {
     if (lhs != null && rhs != null) {
-      baseParams = lhs.Type === Syntax.Pair ? [makeArgs(lhs), makeResult(rhs)] : [makeArgs(lhs.Type === Syntax.Sequence ? lhs : args), makeResult(rhs.Type === Syntax.Type ? rhs : null)];
+      baseParams = lhs.Type === index.Pair ? [makeArgs(lhs), makeResult(rhs)] : [makeArgs(lhs.Type === index.Sequence ? lhs : args), makeResult(rhs.Type === index.Type ? rhs : null)];
     } else {
       baseParams = [makeArgs(null), makeResult(lhs)];
     }
-  } else if (args.Type === Syntax.Sequence) {
-    baseParams = [makeArgs(args), makeResult(result.Type === Syntax.Type ? result : null)];
+  } else if (args.Type === index.Sequence) {
+    baseParams = [makeArgs(args), makeResult(result.Type === index.Type ? result : null)];
   } else {
     baseParams = [makeArgs(null), makeResult(null)];
   }
 
   return _extends({}, lambda, {
     params: [_extends({}, lambda, {
-      Type: Syntax.FunctionDeclaration,
+      Type: index.FunctionDeclaration,
       params: [...baseParams, block]
     })]
   });
@@ -302,7 +401,7 @@ function parselambda(ctx, op, operands) {
 const subscriptFromNode = (ctx, node) => {
   const [identifier] = node.params;
 
-  return ctx.endNode(_extends({}, node, { value: identifier.value }), Syntax.ArraySubscript);
+  return ctx.endNode(_extends({}, node, { value: identifier.value }), index.ArraySubscript);
 };
 
 //      
@@ -311,23 +410,23 @@ function binary(ctx, op, params) {
   node.value = op.value;
   node.params = params;
 
-  let Type$$1 = Syntax.BinaryExpression;
+  let Type = index.BinaryExpression;
   if (node.value === '=') {
-    Type$$1 = Syntax.Assignment;
+    Type = index.Assignment;
   } else if (node.value === '-=' || node.value === '+=') {
-    Type$$1 = Syntax.Assignment;
+    Type = index.Assignment;
     const value = node.value[0];
     node.value = '=';
     node.params = [node.params[0], binary(ctx, _extends({}, op, { value }), [node.params[0], node.params[1]])];
   } else if (node.value === '[' || node.value === '.') {
     return subscriptFromNode(ctx, node);
   } else if (node.value === ':') {
-    Type$$1 = Syntax.Pair;
+    Type = index.Pair;
   } else if (node.value === '||' || node.value === '&&') {
-    Type$$1 = Syntax.Select;
+    Type = index.Select;
   }
 
-  return ctx.endNode(node, Type$$1);
+  return ctx.endNode(node, Type);
 }
 
 function unary(ctx, op, params) {
@@ -335,12 +434,12 @@ function unary(ctx, op, params) {
   switch (op.value) {
     case '--':
       return _extends({}, target, {
-        Type: Syntax.UnaryExpression,
+        Type: index.UnaryExpression,
         value: '-',
         meta: {},
         params: [_extends({}, target, {
           value: '0',
-          Type: Syntax.Constant,
+          Type: index.Constant,
           params: [],
           meta: {}
         }), target]
@@ -350,13 +449,13 @@ function unary(ctx, op, params) {
       return _extends({}, target, {
         value: op.value,
         params,
-        Type: Syntax.UnaryExpression
+        Type: index.UnaryExpression
       });
     default:
       return _extends({}, op, {
         range: [op.start, target.range[1]],
         meta: {},
-        Type: Syntax.Spread,
+        Type: index.Spread,
         params: [target]
       });
   }
@@ -365,7 +464,7 @@ function unary(ctx, op, params) {
 function objectLiteral(ctx, op, params) {
   const node = ctx.startNode(op);
   node.params = params;
-  return ctx.endNode(node, Syntax.ObjectLiteral);
+  return ctx.endNode(node, index.ObjectLiteral);
 }
 
 const ternary = (ctx, op, params) => {
@@ -374,12 +473,12 @@ const ternary = (ctx, op, params) => {
   node.value = op.value;
   node.type = params[params.length - 1].type;
 
-  return ctx.endNode(node, Syntax.TernaryExpression);
+  return ctx.endNode(node, index.TernaryExpression);
 };
 
 const flattenSequence = sequence => {
   return sequence.reduce((memo, node) => {
-    if (node.Type === Syntax.Sequence) {
+    if (node.Type === index.Sequence) {
       memo.push.apply(memo, flattenSequence(node.params));
     } else {
       memo.push(node);
@@ -395,7 +494,7 @@ const sequence = (ctx, op, params) => {
   const node = ctx.startNode(params[0]);
   node.value = op.value;
   node.params = flattenSequence(params);
-  return ctx.endNode(node, Syntax.Sequence);
+  return ctx.endNode(node, index.Sequence);
 };
 
 // Abstraction for handling operations
@@ -427,7 +526,7 @@ function parseConstant(ctx) {
   const node = ctx.startNode();
   const value = ctx.token.value;
   const type = value.toString().indexOf('.') !== -1 ? 'f32' : 'i32';
-  return ctx.endNode(_extends({}, node, { type, value }), Syntax.Constant);
+  return ctx.endNode(_extends({}, node, { type, value }), index.Constant);
 }
 
 //      
@@ -466,8 +565,8 @@ function stringLiteral(ctx) {
       node.value = '"';
   }
 
-  const Type$$1 = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? Syntax.CharacterLiteral : Syntax.StringLiteral;
-  return ctx.endNode(node, Type$$1);
+  const Type = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? index.CharacterLiteral : index.StringLiteral;
+  return ctx.endNode(node, Type);
 }
 
 //      
@@ -482,12 +581,12 @@ function builtInType(ctx) {
       value: valueType,
       type: valueType,
       params: [expression(ctx)]
-    }, Syntax.Type);
+    }, index.Type);
     ctx.eat(['}']);
     return node;
   }
 
-  return ctx.makeNode({ value: ctx.token.value, type: ctx.token.value }, Syntax.Type);
+  return ctx.makeNode({ value: ctx.token.value, type: ctx.token.value }, index.Type);
 }
 
 //      
@@ -575,24 +674,24 @@ const getAssociativty = token => {
 // Maybe identifier, maybe function call
 const maybeIdentifier = ctx => {
   const node = ctx.startNode();
-  ctx.eat(null, Syntax.Identifier);
+  ctx.eat(null, index.Identifier);
 
   if (node.value === 'false' || node.value === 'true') {
     node.type = 'bool';
     node.value = node.value === 'true' ? '1' : '0';
-    return ctx.endNode(node, Syntax.Constant);
+    return ctx.endNode(node, index.Constant);
   }
 
   if (ctx.eat(['('])) {
     const params = [expression(ctx)];
     const functionCall = ctx.endNode(_extends({}, node, {
       params: params.filter(Boolean)
-    }), Syntax.FunctionCall);
+    }), index.FunctionCall);
     ctx.expect([')']);
     return functionCall;
   }
 
-  return ctx.endNode(node, Syntax.Identifier);
+  return ctx.endNode(node, index.Identifier);
 };
 
 //      
@@ -616,7 +715,7 @@ const maybeIdentifier = ctx => {
 
 const last = list => list[list.length - 1];
 
-const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== ']' && t.value !== ')';
+const isPunctuatorAndNotBracket = t => t && t.type === index.Punctuator && t.value !== ']' && t.value !== ')';
 
 // Because expressions can be anywhere and likely nested inside another expression
 // this nesting is represented with a depth. If we reach an "exit" like a ) or a }
@@ -656,7 +755,7 @@ const expression = (ctx, check = predicate) => {
     // This is so that math operators don't "eat" already parsed sequences of nodes.
     // To put it plainly a comma separated list should never be added to a number.
     // Examples include code like: 1, 2, 3, 2 + 2.
-    previous.Type !== Syntax.Sequence &&
+    previous.Type !== index.Sequence &&
     // The rest of this is Shunting Yard rules
     getPrecedence(previous) >= precedence && getAssociativty(previous) === 'left') {
       consume();
@@ -738,28 +837,28 @@ const expression = (ctx, check = predicate) => {
   // process an operator.
   const process = () => {
     switch (ctx.token.type) {
-      case Syntax.Constant:
+      case index.Constant:
         operands.push(parseConstant(ctx));
         break;
-      case Syntax.Identifier:
+      case index.Identifier:
         previousToken = ctx.token;
         // Maybe an Identifier or a function call
         operands.push(maybeIdentifier(ctx));
         return false;
-      case Syntax.StringLiteral:
+      case index.StringLiteral:
         operands.push(stringLiteral(ctx));
         break;
-      case Syntax.Type:
+      case index.Type:
         operands.push(builtInType(ctx));
         break;
-      case Syntax.Keyword:
-      case Syntax.Punctuator:
+      case index.Keyword:
+      case index.Punctuator:
         // Some special keywords may show up in expressions, but only a small
         // subset. These keywords are treated as punctuators and processed by
         // the overall punctuator rules
         // EXAMPLE: the 'as' keyword - import statements consist of a sequence of
         // expressions but the as keyword can be used to rename an import within.
-        if (ctx.token.type === Syntax.Keyword && !validKeywordsInExpressions.includes(ctx.token.value)) {
+        if (ctx.token.type === index.Keyword && !validKeywordsInExpressions.includes(ctx.token.value)) {
           break;
         }
         const punctuatorResult = processPunctuator();
@@ -792,21 +891,21 @@ const expression = (ctx, check = predicate) => {
 //      
 const declaration = ctx => {
   const node = ctx.startNode();
-  let Type$$1 = Syntax.Declaration;
+  let Type = index.Declaration;
 
   if (ctx.token.value === 'const') {
-    Type$$1 = Syntax.ImmutableDeclaration;
+    Type = index.ImmutableDeclaration;
   }
 
   ctx.eat(['const', 'let', 'function']);
 
-  node.value = ctx.expect(null, Syntax.Identifier).value;
+  node.value = ctx.expect(null, index.Identifier).value;
   ctx.expect([':']);
 
   let type = ctx.token.value;
 
-  if (!ctx.eat(null, Syntax.Type)) {
-    ctx.expect(null, Syntax.Identifier);
+  if (!ctx.eat(null, index.Type)) {
+    ctx.expect(null, index.Identifier);
   }
 
   const params = [];
@@ -820,7 +919,7 @@ const declaration = ctx => {
     params.push(expression(ctx));
   }
 
-  return ctx.endNode(_extends({}, node, { params, type }), Type$$1);
+  return ctx.endNode(_extends({}, node, { params, type }), Type);
 };
 
 //      
@@ -829,7 +928,7 @@ const parseArguments = ctx => {
   const argumentsNode = ctx.makeNode({
     params: [expression(ctx)],
     value: 'FUNCTION_ARGUMENTS'
-  }, Syntax.FunctionArguments);
+  }, index.FunctionArguments);
   ctx.expect([')']);
   return argumentsNode;
 };
@@ -841,21 +940,21 @@ const parseFunctionResult = ctx => {
       value: ctx.token.value,
       type: (() => {
         const value = ctx.token.value;
-        if (ctx.eat(null, Syntax.Type)) {
+        if (ctx.eat(null, index.Type)) {
           return value === 'void' ? null : value;
         }
 
         // If we did not find a user-type we default to an i32
-        ctx.expect(null, Syntax.Identifier);
+        ctx.expect(null, index.Identifier);
 
         return 'i32';
       })()
-    }), Syntax.FunctionResult);
+    }), index.FunctionResult);
   }
 
   return ctx.endNode(_extends({}, baseNode, {
     value: 'FUNCTION_RESULT'
-  }), Syntax.FunctionResult);
+  }), index.FunctionResult);
 };
 
 function maybeFunctionDeclaration(ctx) {
@@ -864,23 +963,23 @@ function maybeFunctionDeclaration(ctx) {
   }
 
   const node = ctx.startNode();
-  const value = ctx.expect(null, Syntax.Identifier).value;
+  const value = ctx.expect(null, index.Identifier).value;
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
   ctx.expect(['{']);
-  const statements$$1 = [];
+  const statements = [];
   while (ctx.token && ctx.token.value !== '}') {
     const stmt = statement(ctx);
     if (stmt) {
-      statements$$1.push(stmt);
+      statements.push(stmt);
     }
   }
   ctx.expect(['}']);
 
   return ctx.endNode(_extends({}, node, {
     value,
-    params: [argumentsNode, resultNode, ...statements$$1]
-  }), Syntax.FunctionDeclaration);
+    params: [argumentsNode, resultNode, ...statements]
+  }), index.FunctionDeclaration);
 }
 
 //      
@@ -915,18 +1014,18 @@ function typeParser(ctx) {
   const node = ctx.startNode();
   ctx.eat(['type']);
 
-  const value = ctx.expect(null, Syntax.Identifier).value;
+  const value = ctx.expect(null, index.Identifier).value;
   ctx.expect(['=']);
 
   const maybeGeneric = ctx.token.value;
   // Generic Type
-  if (ctx.eat(null, Syntax.Identifier)) {
+  if (ctx.eat(null, index.Identifier)) {
     ctx.expect(['<']);
-    const idNode = ctx.makeNode(_extends({}, ctx.token, { type: null }), Syntax.Identifier);
-    ctx.expect(null, Syntax.Identifier);
+    const idNode = ctx.makeNode(_extends({}, ctx.token, { type: null }), index.Identifier);
+    ctx.expect(null, index.Identifier);
     ctx.expect(['>']);
 
-    const genericTypeNode = ctx.endNode(_extends({}, node, { value, params: [_extends({}, idNode, { value: maybeGeneric }), idNode] }), Syntax.GenericType);
+    const genericTypeNode = ctx.endNode(_extends({}, node, { value, params: [_extends({}, idNode, { value: maybeGeneric }), idNode] }), index.GenericType);
     return genericTypeNode;
   }
 
@@ -936,11 +1035,11 @@ function typeParser(ctx) {
     const argsExpression = expression(ctx);
     const args = argsExpression != null ? _extends({}, argsExpression, {
       value: 'FUNCTION_ARGUMENTS',
-      Type: Syntax.FunctionArguments,
+      Type: index.FunctionArguments,
       params: [argsExpression]
     }) : _extends({}, node, {
       value: 'FUNCTION_ARGUMENTS',
-      Type: Syntax.FunctionArguments,
+      Type: index.FunctionArguments,
       params: []
     });
 
@@ -949,13 +1048,13 @@ function typeParser(ctx) {
     // Result is not optional
     const result = _extends({}, expression(ctx), {
       value: 'FUNCTION_RESULT',
-      Type: Syntax.FunctionResult
+      Type: index.FunctionResult
     });
     return ctx.endNode(_extends({}, node, {
       value,
       type: result.type,
       params: [args, result]
-    }), Syntax.Typedef);
+    }), index.Typedef);
   }
 
   // Sanity check definition
@@ -970,7 +1069,7 @@ function typeParser(ctx) {
     value,
     params: [expression(ctx)],
     type: 'i32'
-  }), Syntax.Struct);
+  }), index.Struct);
 }
 
 //      
@@ -982,11 +1081,11 @@ function parseExport(ctx) {
     const typedef = typeParser(ctx);
     return ctx.endNode(_extends({}, node, {
       params: [typedef]
-    }), Syntax.Export);
+    }), index.Export);
   }
   const params = [maybeFunctionDeclaration(ctx)];
 
-  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
+  return ctx.endNode(_extends({}, node, { params }), index.Export);
 }
 
 //      
@@ -1005,14 +1104,14 @@ function parseImport(ctx) {
 
   const module = expression(ctx);
 
-  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
+  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), index.Import);
 }
 
 //      
 function breakParser(ctx) {
   const node = ctx.startNode();
   ctx.expect(['break']);
-  return ctx.endNode(node, Syntax.Break);
+  return ctx.endNode(node, index.Break);
 }
 
 //      
@@ -1056,7 +1155,7 @@ const forLoop = ctx => {
 
   return ctx.endNode(_extends({}, node, {
     params: [initializer, condition, ...body, afterthought]
-  }), Syntax.Loop);
+  }), index.Loop);
 };
 
 //      
@@ -1065,7 +1164,7 @@ const whileLoop = ctx => {
   ctx.eat(['while']);
   ctx.expect(['(']);
 
-  const initializer = ctx.makeNode({}, Syntax.Noop);
+  const initializer = ctx.makeNode({}, index.Noop);
   const condition = expression(ctx);
   const body = [];
 
@@ -1084,7 +1183,7 @@ const whileLoop = ctx => {
 
   return ctx.endNode(_extends({}, node, {
     params: [initializer, condition, ...body]
-  }), Syntax.Loop);
+  }), index.Loop);
 };
 
 /**
@@ -1203,7 +1302,7 @@ const returnStatement = ctx => {
 
   node.params.push(expr);
 
-  return ctx.endNode(node, Syntax.ReturnStatement);
+  return ctx.endNode(node, index.ReturnStatement);
 };
 
 //      
@@ -1228,7 +1327,7 @@ function parseIfStatement(ctx) {
   ctx.eat([';']);
   while (ctx.eat(['else'])) {
     // maybe another if statement
-    const elseNode = ctx.makeNode(null, Syntax.Else);
+    const elseNode = ctx.makeNode(null, index.Else);
     const elseParams = [];
     const stmt = statement(ctx);
     if (stmt) {
@@ -1239,7 +1338,7 @@ function parseIfStatement(ctx) {
 
   return ctx.endNode(_extends({}, node, {
     params
-  }), Syntax.IfThenElse);
+  }), index.IfThenElse);
 }
 
 //      
@@ -1330,7 +1429,7 @@ const memoryStore = ctx => {
 
   const type = node.params[0].type;
 
-  return ctx.endNode(_extends({}, node, { type }), Syntax.MemoryAssignment);
+  return ctx.endNode(_extends({}, node, { type }), index.MemoryAssignment);
 };
 
 //      
@@ -1347,11 +1446,11 @@ function maybeAssignment(ctx) {
 //      
 const statement = ctx => {
   switch (ctx.token.type) {
-    case Syntax.Keyword:
+    case index.Keyword:
       return keyword(ctx);
-    case Syntax.Identifier:
+    case index.Identifier:
       return maybeAssignment(ctx);
-    case Syntax.Punctuator:
+    case index.Punctuator:
     default:
       if (ctx.eat([';'])) {
         return null;
@@ -1497,7 +1596,7 @@ var token = wrap;
 const supported = ['+', '++', '-', '--', '>>', '>>>', '<<', '=', '==', '+=', '-=', '=>', '<=', '>=', '!=', '%', '/', '^', '&', '~', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', '[', ']', ';', '>', '<', '?', '||', '&&', '{', '}', '...'];
 
 const trie = new trie$1(supported);
-var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
+var punctuator = token(trie.fsearch, index.Punctuator, supported);
 
 //      
 const { isNaN, parseInt: parseInt$1 } = Number;
@@ -1562,7 +1661,7 @@ const root = char => {
   return null;
 };
 
-var constant = token(root, Syntax.Constant);
+var constant = token(root, index.Constant);
 
 //      
 const quoteOK = quoteCheck => () => quoteCheck;
@@ -1601,7 +1700,7 @@ const maybeQuote = char => {
   return null;
 };
 
-const stringParser = token(maybeQuote, Syntax.StringLiteral);
+const stringParser = token(maybeQuote, index.StringLiteral);
 
 //      
 const isValidIdentifier = char => {
@@ -1616,7 +1715,7 @@ const supportAny = char => {
 const parse$1 = char => {
   return isValidIdentifier(char) && !constant(char) ? supportAny : null;
 };
-const tokenParser = token(parse$1, Syntax.Identifier);
+const tokenParser = token(parse$1, index.Identifier);
 
 //      
 const supported$1 = [
@@ -1640,7 +1739,7 @@ const supported$1 = [
 const trie$2 = new trie$1(supported$1);
 const root$1 = trie$2.fsearch;
 
-var keyword$2 = token(root$1, Syntax.Keyword, supported$1);
+var keyword$2 = token(root$1, index.Keyword, supported$1);
 
 //      
 const SLASH = '/';
@@ -1703,12 +1802,12 @@ const parser = char => {
   return maybeComment(char);
 };
 
-var comments = token(parser, Syntax.Comment);
+var comments = token(parser, index.Comment);
 
 //      
 const supported$2 = ['i32', 'i64', 'f32', 'f64', 'i32[]', 'i64[]', 'f32[]', 'f64[]', 'u8[]', 'bool', 'Function', 'Memory', 'Table', 'void'];
 const trie$3 = new trie$1(supported$2);
-var type = token(trie$3.fsearch, Syntax.Type, supported$2);
+var type = token(trie$3.fsearch, index.Type, supported$2);
 
 //      
 class Tokenizer {
@@ -1843,7 +1942,7 @@ function parse(source) {
 
   const node = ctx.makeNode({
     value: 'ROOT_NODE'
-  }, Syntax.Program);
+  }, index.Program);
 
   // No code, no problem, empty ast equals
   // (module) ; the most basic wasm module
@@ -1912,6 +2011,90 @@ const combineParsers = (sortedParsers = []) => {
     return acc;
   }, {});
 };
+
+/**
+ * Scope helpers.
+ *
+ * Normalizes how scope look ups are made
+ */
+const namespace$1 = Symbol('scope namespace');
+
+function enter$1(scopes, scopeName) {
+  return [...scopes, { [namespace$1]: scopeName }];
+}
+
+function exit$1(scopes) {
+  return scopes.slice(0, -1);
+}
+
+function current$1(scopes) {
+  return scopes[scopes.length - 1];
+}
+
+function add$1(scopes, key, node) {
+  const cur = current$1(scopes);
+  if (cur) {
+    cur[key] = node;
+  }
+
+  return cur;
+}
+
+function find$1(scopes, key) {
+  const len = scopes.length;
+  let i = len - 1;
+  for (i; i >= 0; i--) {
+    const ref = scopes[i][key];
+    if (ref) {
+      return ref;
+    }
+  }
+
+  return null;
+}
+
+function index$2(scope, key) {
+  const pos = Object.keys(scope).indexOf(key);
+  return pos > -1 ? pos : Object.keys(scope).length;
+}
+
+var scope$2 = {
+  enter: enter$1,
+  exit: exit$1,
+  add: add$1,
+  find: find$1,
+  current: current$1,
+  index: index$2,
+  namespace: namespace$1
+};
+
+const {
+  enter,
+  exit,
+  add,
+  find,
+  current,
+  namespace,
+  index: index$1
+} = scope$2;
+
+var scope = {
+  enter,
+  exit,
+  add,
+  find,
+  current,
+  namespace,
+  index: index$1
+};
+
+var scope_1 = scope.enter;
+var scope_2 = scope.exit;
+var scope_3 = scope.current;
+var scope_4 = scope.find;
+var scope_5 = scope.add;
+var scope_6 = scope.index;
+var scope_7 = scope.namespace;
 
 //      
 const FUNCTION_INDEX = 'function/index';
@@ -2120,7 +2303,7 @@ const balanceTypesInMathExpression = expression => {
       return _extends({}, paramNode, {
         type,
         value: paramNode.value,
-        Type: Syntax.TypeCast,
+        Type: index.TypeCast,
         meta: _extends({}, paramNode.meta, {
           [TYPE_CAST]: { to: type, from: paramNode.type }
         }),
@@ -2143,28 +2326,19 @@ function Core() {
     semantics() {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
-        const scope = context.locals || context.globals;
-        const indexMeta = (() => {
-          let index = Object.keys(scope).indexOf(node.value);
-          if (index === -1) {
-            index = Object.keys(scope).length;
-          }
-          if (scope === context.locals) {
-            return { [LOCAL_INDEX]: index };
-          }
+        const scope$$1 = scope_3(context.scopes);
+        const index$$1 = scope_6(scope$$1, node.value);
 
-          return { [GLOBAL_INDEX]: index };
-        })();
-
-        scope[node.value] = extendNode({
+        scope$$1[node.value] = extendNode({
           params: node.params.map(extendNode({ type: node.type })),
-          meta: _extends({}, node.meta, indexMeta, {
-            [TYPE_CONST]: node.Type === Syntax.ImmutableDeclaration
+          meta: _extends({}, node.meta, {
+            [scope$$1[scope_7]]: index$$1,
+            [TYPE_CONST]: node.Type === index.ImmutableDeclaration
           }),
-          Type: Syntax.Declaration
+          Type: index.Declaration
         }, node);
 
-        return next([scope[node.value], context]);
+        return next([scope$$1[node.value], context]);
       };
 
       return {
@@ -2177,23 +2351,19 @@ function Core() {
         BinaryExpression: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
           params: node.params.map(child => transform([child, context]))
         })),
-        Pair: next => (args, transform) => {
+        Pair: _next => (args, transform) => {
           const [typeCastMaybe, context] = args;
-          // Ignore everything in global scope (promotions only possible in functions
-          if (!context.locals) {
-            return next(args);
-          }
 
           const params = typeCastMaybe.params.map(p => transform([p, context]));
           const [targetNode, typeNode] = params;
           const { type: from } = targetNode;
           const { value: to } = typeNode;
 
-          if (typeNode.Type === Syntax.Type && !!from && !!to) {
+          if (typeNode.Type === index.Type && !!from && !!to) {
             return _extends({}, typeCastMaybe, {
               type: to,
               value: targetNode.value,
-              Type: Syntax.TypeCast,
+              Type: index.TypeCast,
               meta: _extends({}, typeCastMaybe.meta, { [TYPE_CAST]: { to, from } }),
               // We need to drop the typeNode here, because it's not something we can generate
               params: [targetNode]
@@ -2208,14 +2378,7 @@ function Core() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-
-          let ref;
-          if (context.locals) {
-            ref = context.locals[node.value];
-          }
-          if (!ref) {
-            ref = context.globals[node.value];
-          }
+          let ref = scope_4(context.scopes, node.value);
           if (ref) {
             return _extends({}, node, {
               meta: _extends({}, node.meta, ref.meta),
@@ -2306,7 +2469,7 @@ const mapGeneric = curry_1((options, node, _) => {
         params: [],
         type: 'i32',
         value: 'i32',
-        Type: Syntax.Type
+        Type: index.Type
       }), ...args.params]
     }), result]
   });
@@ -2323,10 +2486,10 @@ function typePlugin() {
           const [ast, context] = args;
           const { types } = context;
           // Types have to be pre-parsed before the rest of the program
-          const astWithTypes = mapNode.mapNode({
-            [Syntax.Export]: (node, transform) => {
+          const astWithTypes = mapNode_2({
+            [index.Export]: (node, transform) => {
               const [maybeType] = node.params;
-              if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
+              if (maybeType != null && [index.Typedef, index.Struct].includes(maybeType.Type)) {
                 return transform(_extends({}, maybeType, {
                   meta: _extends({}, maybeType.meta, {
                     EXPORTED: true
@@ -2335,7 +2498,7 @@ function typePlugin() {
               }
               return node;
             },
-            [Syntax.Typedef]: (node, _) => {
+            [index.Typedef]: (node, _) => {
               let argumentsCount = 0;
               const defaultArgs = [];
               walker({
@@ -2358,7 +2521,7 @@ function typePlugin() {
               types[node.value] = parsed;
               return parsed;
             },
-            [Syntax.GenericType]: mapGeneric({ types })
+            [index.GenericType]: mapGeneric({ types })
           })(ast);
 
           return next([astWithTypes, context]);
@@ -2393,6 +2556,12 @@ const fragment = (source, parser) => {
 const expressionFragment = source => fragment(source, expression);
 const statementFragment = source => fragment(source, statement);
 
+const shifts = {
+  i64: 63,
+  f64: 63,
+  i32: 31,
+  f32: 32
+};
 // Unary expressions need to be patched so that the LHS type matches the RHS
 function unary$1 () {
   return {
@@ -2406,7 +2575,7 @@ function unary$1 () {
           switch (unaryNode.value) {
             // Transform bang
             case '!':
-              const shift = ['i64', 'f64'].includes(lhs.type) ? '63' : '31';
+              const shift = shifts[lhs.type];
               return transform([expressionFragment(`(((${String(lhs)} >> ${shift}) | ((~${String(lhs)} + 1) >> ${shift})) + 1)`), context]);
             case '~':
               const mask = ['i64', 'f64'].includes(transform([lhs, context]).type) ? '0xffffffffffff' : '0xffffff';
@@ -2417,7 +2586,7 @@ function unary$1 () {
                 params: [_extends({}, lhs, {
                   type: rhs.type
                 }), rhs],
-                Type: Syntax.BinaryExpression
+                Type: index.BinaryExpression
               }), context]);
           }
         }
@@ -2439,7 +2608,8 @@ function coreFunctionPlugin() {
           context = _extends({}, context, {
             result: fun.result,
             locals: {},
-            arguments: []
+            arguments: [],
+            scopes: scope_1(context.scopes, LOCAL_INDEX)
           });
 
           // first two parameters to a function node are the arguments and result
@@ -2452,17 +2622,19 @@ function coreFunctionPlugin() {
             meta: _extends({}, fun.meta, {
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
-                argumentsCount: context.arguments.length
+                argumentsCount: context.arguments.length,
+                locals: scope_3(context.scopes)
               }
             })
           });
           context.functions[fun.value] = ref;
 
           // Parse the statements last, so that they can self-reference the function
-          const statements$$1 = rest.map(p => transform([p, context]));
+          const statements = rest.map(p => transform([p, context]));
 
-          ref.meta[FUNCTION_METADATA].locals = context.locals;
-          ref.params = [args, result, ...statements$$1];
+          ref.params = [args, result, ...statements];
+
+          context.scopes = scope_2(context.scopes);
 
           return ref;
         },
@@ -2486,7 +2658,7 @@ function coreFunctionPlugin() {
               value: identifier.value,
               type: typeNode.value,
               params: [],
-              Type: Syntax.Declaration
+              Type: index.Declaration
             }), context]);
 
             return node;
@@ -2497,11 +2669,11 @@ function coreFunctionPlugin() {
         // Regular function calls
         FunctionCall: next => ([call, context]) => {
           const { functions } = context;
-          const index = Object.keys(functions).indexOf(call.value);
+          const index$$1 = Object.keys(functions).indexOf(call.value);
 
           return next([_extends({}, call, {
             type: functions[call.value] != null ? functions[call.value].type : null,
-            meta: { [FUNCTION_INDEX]: index }
+            meta: { [FUNCTION_INDEX]: index$$1 }
           }), context]);
         },
         ReturnStatement: _ignore => ([returnNode, context], transform) => {
@@ -2509,7 +2681,7 @@ function coreFunctionPlugin() {
           const { result } = context;
           // Consants as return values need to be assigned a correct type
           // (matching the result expected)
-          if (expression != null && expression.Type === Syntax.Constant && typeWeight(expression.type) !== typeWeight(result)) {
+          if (expression != null && expression.Type === index.Constant && typeWeight(expression.type) !== typeWeight(result)) {
             return _extends({}, returnNode, {
               type: result,
               params: [_extends({}, expression, { type: result })]
@@ -2532,11 +2704,11 @@ function Imports() {
     semantics: () => ({
       Import: _next => args => {
         const [node, context] = args;
-        return mapNode.mapNode({
-          [Syntax.BinaryExpression]: (as, transform) => {
+        return mapNode_2({
+          [index.BinaryExpression]: (as, transform) => {
             const [maybePair, asIdentifier] = as.params;
             // if the original import is not typed this isn't a valid import and is ignored
-            if (maybePair.Type !== Syntax.Pair) {
+            if (maybePair.Type !== index.Pair) {
               // No transform happens here (the transform is what creates the global fn to reference)
               return as;
             }
@@ -2553,8 +2725,8 @@ function Imports() {
               }), typeNode]
             }));
           },
-          [Syntax.Pair]: (pairNode, __) => {
-            const { types, functions, globals } = context;
+          [index.Pair]: (pairNode, __) => {
+            const { types, functions } = context;
             const [identifierNode, typeNode] = pairNode.params;
 
             if (types[typeNode.value] != null) {
@@ -2579,12 +2751,12 @@ function Imports() {
             }
 
             if (!['Table', 'Memory'].includes(typeNode.type)) {
-              const index = Object.keys(globals).length;
-
-              globals[identifierNode.value] = _extends({}, identifierNode, {
-                meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+              const scope$$1 = scope_3(context.scopes);
+              const index$$1 = scope_6(scope$$1, identifierNode.value);
+              scope_5(context.scopes, identifierNode.value, _extends({}, identifierNode, {
+                meta: { [scope$$1[scope_7]]: index$$1, [TYPE_CONST]: true },
                 type: typeNode.type
-              });
+              }));
             }
 
             return pairNode;
@@ -2650,7 +2822,7 @@ function arrayPlugin() {
         ImmutableDeclaration: declaration,
         Identifier: next => args => {
           const [node, context] = args;
-          const ref = context.locals[node.value] || context.globals[node.value];
+          const ref = scope_4(context.scopes, node.value);
           // Before moving on to the core parser all identifiers need to have
           // concrete basic types
           if (ref && ref.meta[TYPE_ARRAY]) {
@@ -2690,15 +2862,15 @@ function memoryPlugin() {
           if (identifier.value === '__DATA_LENGTH__') {
             return _extends({}, identifier, {
               type: 'i32',
-              Type: Syntax.ArraySubscript,
+              Type: index.ArraySubscript,
               params: [_extends({}, identifier, {
                 type: 'i32',
                 value: '0',
-                Type: Syntax.Constant
+                Type: index.Constant
               }), _extends({}, identifier, {
                 type: 'i32',
                 value: '0',
-                Type: Syntax.Constant
+                Type: index.Constant
               })]
             });
           }
@@ -2755,10 +2927,6 @@ function Strings() {
   };
 }
 
-function inScope(scopes, value) {
-  return scopes.some(scope => !!scope && scope[value]);
-}
-
 function functionPointer() {
   return {
     semantics() {
@@ -2780,9 +2948,9 @@ function functionPointer() {
         },
         Identifier: next => function pointer(args) {
           const [node, context] = args;
-          const { functions, table, locals, globals } = context;
+          const { functions, table, scopes } = context;
 
-          if (inScope([locals, globals], node.value) || !functions[node.value]) {
+          if (scope_4(scopes, node.value) || !functions[node.value]) {
             return next(args);
           }
 
@@ -2796,33 +2964,33 @@ function functionPointer() {
               [FUNCTION_INDEX]: functions[node.value].meta[FUNCTION_INDEX]
             },
             value: Object.keys(table).indexOf(node.value),
-            Type: Syntax.FunctionPointer
+            Type: index.FunctionPointer
           });
         },
         FunctionCall: next => function indirectCall(args, transform) {
           const [call, context] = args;
-          const { locals, types } = context;
-          const local = locals[call.value];
+          const { scopes, types } = context;
+          const ref = scope_4(scopes, call.value);
           // Nothing we need transform
-          if (!local) {
+          if (!ref) {
             return next(args);
           }
 
-          const typedef = types[local.type];
-          const typeIndex = Object.keys(types).indexOf(local.type);
+          const typedef = types[ref.type];
+          const typeIndex = Object.keys(types).indexOf(ref.type);
 
           // We will short all of the other middleware so transform the parameters
           // here and append an identifier which will be used to get the table
           // value
-          const params = [...call.params, _extends({}, local, { Type: Syntax.Identifier })].map(p => transform([p, context]));
+          const params = [...call.params, _extends({}, ref, { Type: index.Identifier })].map(p => transform([p, context]));
 
           return _extends({}, call, {
-            meta: _extends({}, call.meta, local.meta, {
+            meta: _extends({}, call.meta, ref.meta, {
               [TYPE_INDEX]: typeIndex
             }),
             type: typedef != null ? typedef.type : call.type,
             params,
-            Type: Syntax.IndirectFunctionCall
+            Type: index.IndirectFunctionCall
           });
         }
       };
@@ -2835,7 +3003,7 @@ const getByteOffsetsAndSize = objectLiteralNode => {
   const keyTypeMap = {};
   let size = 0;
   walker({
-    [Syntax.Pair]: keyTypePair => {
+    [index.Pair]: keyTypePair => {
       const { value: key } = keyTypePair.params[0];
       const { value: typeString } = keyTypePair.params[1];
       invariant_1(offsetsByKey[key] == null, `Duplicate key ${key} not allowed in object type`);
@@ -2865,7 +3033,7 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
     meta: { [ALIAS]: field.value },
     value: absoluteByteOffset,
     type: 'i32',
-    Type: Syntax.Constant
+    Type: index.Constant
   })];
 };
 
@@ -2889,34 +3057,32 @@ function Struct$1() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-          const { userTypes, locals, globals } = context;
-          const local = locals[node.value] || globals[node.value];
+          const { userTypes, scopes } = context;
+          const ref = scope_4(scopes, node.value);
           // Ignore anything not typed as a struct
-          if (!(local && userTypes[local.type])) {
+          if (!(ref && userTypes[ref.type])) {
             return next(args);
           }
 
           // Convert all struct uses to i32 types
           return _extends({}, node, {
-            meta: _extends({}, node.meta, local.meta, { ALIAS: local.type }),
+            meta: _extends({}, node.meta, ref.meta, { ALIAS: ref.type }),
             type: 'i32'
           });
         },
         ArraySubscript: next => (args, transform) => {
           const [node, context] = args;
-          const { userTypes, locals } = context;
+          const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
-          const local = locals[identifier.value];
-          if (!local) {
-            return next(args);
-          }
-          const userType = userTypes[local.type];
+          const ref = scope_4(scopes, identifier.value);
+          const userType = userTypes[ref.type];
+
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
             return _extends({}, node, {
-              type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : 'i32',
+              type: objectKeyTypeMap[field.value],
               params: patchStringSubscript(metaObject, params)
             });
           }
@@ -2927,7 +3093,7 @@ function Struct$1() {
           const [node, context] = args;
           const [lhs, rhs] = node.params;
 
-          if (!(rhs && rhs.Type === Syntax.ObjectLiteral)) {
+          if (!(rhs && rhs.Type === index.ObjectLiteral)) {
             return next(args);
           }
           const individualKeys = {};
@@ -2938,59 +3104,57 @@ function Struct$1() {
             // Top level Identifiers _inside_ an object literal === shorthand
             // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
             // only way this is hit is if the identifier is TOP LEVEL
-            [Syntax.Identifier]: (identifier, _) => {
+            [index.Identifier]: (identifier, _) => {
               individualKeys[identifier.value] = _extends({}, lhs, {
-                Type: Syntax.MemoryAssignment,
+                Type: index.MemoryAssignment,
                 params: [_extends({}, lhs, {
-                  Type: Syntax.ArraySubscript,
+                  Type: index.ArraySubscript,
                   params: [lhs, identifier]
                 }), identifier]
               });
             },
-            [Syntax.Pair]: (pair, _) => {
+            [index.Pair]: (pair, _) => {
               const [property, value] = pair.params;
               individualKeys[property.value] = _extends({}, lhs, {
-                Type: Syntax.MemoryAssignment,
+                Type: index.MemoryAssignment,
                 params: [_extends({}, lhs, {
-                  Type: Syntax.ArraySubscript,
+                  Type: index.ArraySubscript,
                   params: [lhs, property]
                 }), value]
               });
             },
-            [Syntax.Spread]: (spread, _) => {
+            [index.Spread]: (spread, _) => {
               // find userType
-              const { locals, userTypes } = context;
+              const { scopes, userTypes } = context;
               const [target] = spread.params;
-              const userType = userTypes[locals[target.value].type];
+              const userType = userTypes[scope_4(scopes, target.value).type];
               const keyOffsetMap = userType.meta[TYPE_OBJECT];
-              if (keyOffsetMap != null) {
-                // map over the keys
-                Object.keys(keyOffsetMap).forEach(key => {
-                  const offsetNode = _extends({}, target, {
-                    Type: Syntax.Identifier,
-                    value: key,
-                    params: []
-                  });
-                  // profit
-                  spreadKeys[key] = _extends({}, lhs, {
-                    Type: Syntax.MemoryAssignment,
-                    params: [_extends({}, lhs, {
-                      Type: Syntax.ArraySubscript,
-                      params: [lhs, _extends({}, offsetNode)]
-                    }), _extends({}, target, {
-                      Type: Syntax.ArraySubscript,
-                      params: [target, _extends({}, offsetNode)]
-                    })]
-                  });
+              // map over the keys
+              Object.keys(keyOffsetMap).forEach(key => {
+                const offsetNode = _extends({}, target, {
+                  Type: index.Identifier,
+                  value: key,
+                  params: []
                 });
-              }
+                // profit
+                spreadKeys[key] = _extends({}, lhs, {
+                  Type: index.MemoryAssignment,
+                  params: [_extends({}, lhs, {
+                    Type: index.ArraySubscript,
+                    params: [lhs, _extends({}, offsetNode)]
+                  }), _extends({}, target, {
+                    Type: index.ArraySubscript,
+                    params: [target, _extends({}, offsetNode)]
+                  })]
+                });
+              });
             }
           })(rhs);
 
           const params = Object.values(_extends({}, spreadKeys, individualKeys));
 
           return _extends({}, lhs, {
-            Type: Syntax.Block,
+            Type: index.Block,
             // We just created a bunch of MemoryAssignment nodes, map over them so that
             // the correct metadata is applied to everything
             params: params.map(p => transform([p, context]))
@@ -3008,9 +3172,9 @@ function nativePlugin() {
         ArraySubscript: next => (args, transform) => {
           const [node, context] = args;
           const [identifier, field] = node.params;
-          if (identifier.Type === Syntax.Type && field.Type === Syntax.FunctionCall) {
+          if (identifier.Type === index.Type && field.Type === index.FunctionCall) {
             return _extends({}, node, {
-              Type: Syntax.NativeMethod,
+              Type: index.NativeMethod,
               type: identifier.value,
               value: identifier.value + '.' + field.value,
               params: field.params.map(p => transform([p, context]))
@@ -3078,7 +3242,7 @@ function defaultArguments () {
           }
 
           const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
-          const count = call.params.length > 0 && call.params[0].Type === Syntax.Sequence ? call.params[0].length : call.params.length;
+          const count = call.params.length > 0 && call.params[0].Type === index.Sequence ? call.params[0].length : call.params.length;
           const difference = expectedArguments - count;
           if (difference > 0) {
             return next([_extends({}, call, {
@@ -3111,11 +3275,10 @@ function sizeofPlugin() {
             return next(args);
           }
 
-          const { locals, globals, userTypes, functions } = context;
+          const { scopes, userTypes, functions } = context;
           const [target] = sizeof.params;
-          const local = locals[target.value];
-          const { type = '' } = local || {};
-          const global = globals[target.value];
+          const ref = scope_4(scopes, target.value);
+          const { type = '' } = ref || {};
           const userType = userTypes[target.value] || userTypes[type];
           const func = functions[target.value];
 
@@ -3126,17 +3289,17 @@ function sizeofPlugin() {
               value: metaSize,
               params: [],
               type: 'i32',
-              Type: Syntax.Constant
+              Type: index.Constant
             });
           }
 
-          const node = local || global || func;
+          const node = ref || func;
 
           return _extends({}, sizeof, {
             value: sizes$1[node ? node.type : target.value] || 4,
             type: 'i32',
             params: [],
-            Type: Syntax.Constant
+            Type: index.Constant
           });
         }
       };
@@ -3244,7 +3407,7 @@ function closures () {
       Program: next => args => {
         const [program, context] = args;
 
-        if (!hasNode(Syntax.Closure, program)) {
+        if (!hasNode(index.Closure, program)) {
           return next(args);
         }
 
@@ -3294,7 +3457,7 @@ function closures () {
       FunctionDeclaration: next => (args, transform) => {
         const [node, context] = args;
         const { globals } = context;
-        if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {
+        if (context.isParsingClosure || !hasNode(index.Closure, node)) {
           return next(args);
         }
 
@@ -3340,9 +3503,9 @@ function closures () {
         const fun = next([_extends({}, node, { params: [fnArgs, result, injectedEnv, ...rest] }), closureContext]);
 
         fun.params = fun.params.map(p => {
-          if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
+          if (p.Type === index.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
-            return transform([statementFragment(`const __env_ptr : i32 = __closure_malloc(${size});`), _extends({}, context, { locals: {} })]);
+            return transform([statementFragment(`const __env_ptr : i32 = __closure_malloc(${size});`), _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
           }
 
           return p;
@@ -3368,7 +3531,7 @@ function closures () {
       },
       Assignment: next => (args, transform) => {
         const [node, context] = args;
-        const { locals, globals, environment } = context;
+        const { scopes, environment } = context;
         const [rhs, lhs] = node.params;
 
         if (!context.isParsingClosure) {
@@ -3376,7 +3539,7 @@ function closures () {
         }
 
         // Closures are functions and have their own locals
-        if (locals[rhs.value] || globals[rhs.value]) {
+        if (scope_3(scopes)[rhs.value]) {
           return next(args);
         }
 
@@ -3401,8 +3564,8 @@ function closures () {
       },
       FunctionCall: next => (args, transform) => {
         const [call, context] = args;
-        const { locals, types } = context;
-        const local = locals[call.value];
+        const { scopes, types } = context;
+        const local = scope_4(scopes, call.value);
         if (local && local.meta.CLOSURE_INSTANCE) {
           // Unfortunately, we cannot create a statement for this within the
           // possible syntax so we need to manually structure an indirect call node
@@ -3418,7 +3581,7 @@ function closures () {
             }),
             type: typedef != null ? typedef.type : call.type,
             params,
-            Type: Syntax.IndirectFunctionCall
+            Type: index.IndirectFunctionCall
           });
         }
 
@@ -3467,11 +3630,12 @@ function semantics(ast, parsers = getBuiltInParsers()) {
     table,
     hoist,
     statics,
-    path: []
+    path: [],
+    scopes: scope_1([], GLOBAL_INDEX)
   };
 
   const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = mapNode.map(combined)([ast, options]);
+  const patched = mapNode_1(combined)([ast, options]);
 
   return _extends({}, patched, {
     meta: _extends({}, patched.meta, {
@@ -3593,7 +3757,7 @@ const set$1 = (type, index, dataView, value) => {
   }
 };
 
-var index = {
+var index$3 = {
   i32: i32$1,
   i64: i64$1,
   f32: f32$1,
@@ -3612,14 +3776,14 @@ var index = {
   sizeof
 };
 
-var index_1 = index.i32;
-var index_2 = index.i64;
-var index_3 = index.f32;
-var index_4 = index.f64;
-var index_9 = index.u8;
-var index_12 = index.u32;
-var index_14 = index.set;
-var index_16 = index.sizeof;
+var index_1$1 = index$3.i32;
+var index_2$1 = index$3.i64;
+var index_3$1 = index$3.f32;
+var index_4$1 = index$3.f64;
+var index_9 = index$3.u8;
+var index_12 = index$3.u32;
+var index_14 = index$3.set;
+var index_16 = index$3.sizeof;
 
 //      
 /**
@@ -3676,158 +3840,158 @@ opcode(___, ___, ___, 0, 0x21, 'SetLocal', 'set_local');
 opcode(___, ___, ___, 0, 0x22, 'TeeLocal', 'tee_local');
 opcode(___, ___, ___, 0, 0x23, 'GetGlobal', 'get_global');
 opcode(___, ___, ___, 0, 0x24, 'SetGlobal', 'set_global');
-opcode(index_1, index_1, ___, 4, 0x28, 'i32Load', 'i32.load');
-opcode(index_2, index_1, ___, 8, 0x29, 'i64Load', 'i64.load');
-opcode(index_3, index_1, ___, 4, 0x2a, 'f32Load', 'f32.load');
-opcode(index_4, index_1, ___, 8, 0x2b, 'f64Load', 'f64.load');
-opcode(index_1, index_1, ___, 1, 0x2c, 'i32Load8S', 'i32.load8_s');
-opcode(index_1, index_1, ___, 1, 0x2d, 'i32Load8U', 'i32.load8_u');
-opcode(index_1, index_1, ___, 2, 0x2e, 'i32Load16S', 'i32.load16_s');
-opcode(index_1, index_1, ___, 2, 0x2f, 'i32Load16U', 'i32.load16_u');
-opcode(index_2, index_1, ___, 1, 0x30, 'i64Load8S', 'i64.load8_s');
-opcode(index_2, index_1, ___, 1, 0x31, 'i64Load8U', 'i64.load8_u');
-opcode(index_2, index_1, ___, 2, 0x32, 'i64Load16S', 'i64.load16_s');
-opcode(index_2, index_1, ___, 2, 0x33, 'i64Load16U', 'i64.load16_u');
-opcode(index_2, index_1, ___, 4, 0x34, 'i64Load32S', 'i64.load32_s');
-opcode(index_2, index_1, ___, 4, 0x35, 'i64Load32U', 'i64.load32_u');
-opcode(___, index_1, index_1, 4, 0x36, 'i32Store', 'i32.store');
-opcode(___, index_1, index_2, 8, 0x37, 'i64Store', 'i64.store');
-opcode(___, index_1, index_3, 4, 0x38, 'f32Store', 'f32.store');
-opcode(___, index_1, index_3, 8, 0x39, 'f64Store', 'f64.store');
-opcode(___, index_1, index_1, 1, 0x3a, 'i32Store8', 'i32.store8');
-opcode(___, index_1, index_1, 2, 0x3b, 'i32Store16', 'i32.store16');
-opcode(___, index_1, index_2, 1, 0x3c, 'i64Store8', 'i64.store8');
-opcode(___, index_1, index_2, 2, 0x3d, 'i64Store16', 'i64.store16');
-opcode(___, index_1, index_2, 4, 0x3e, 'i64Store32', 'i64.store32');
-opcode(index_1, ___, ___, 0, 0x3f, 'CurrentMemory', 'current_memory');
-opcode(index_1, index_1, ___, 0, 0x40, 'GrowMemory', 'grow_memory');
-opcode(index_1, ___, ___, 0, 0x41, 'i32Const', 'i32.const');
-opcode(index_2, ___, ___, 0, 0x42, 'i64Const', 'i64.const');
-opcode(index_3, ___, ___, 0, 0x43, 'f32Const', 'f32.const');
-opcode(index_4, ___, ___, 0, 0x44, 'f64Const', 'f64.const');
-opcode(index_1, index_1, ___, 0, 0x45, 'i32Eqz', 'i32.eqz');
-opcode(index_1, index_1, index_1, 0, 0x46, 'i32Eq', 'i32.eq');
-opcode(index_1, index_1, index_1, 0, 0x47, 'i32Ne', 'i32.ne');
-opcode(index_1, index_1, index_1, 0, 0x48, 'i32LtS', 'i32.lt_s');
-opcode(index_1, index_1, index_1, 0, 0x49, 'i32LtU', 'i32.lt_u');
-opcode(index_1, index_1, index_1, 0, 0x4a, 'i32GtS', 'i32.gt_s');
-opcode(index_1, index_1, index_1, 0, 0x4b, 'i32GtU', 'i32.gt_u');
-opcode(index_1, index_1, index_1, 0, 0x4c, 'i32LeS', 'i32.le_s');
-opcode(index_1, index_1, index_1, 0, 0x4d, 'i32LeU', 'i32.le_u');
-opcode(index_1, index_1, index_1, 0, 0x4e, 'i32GeS', 'i32.ge_s');
-opcode(index_1, index_1, index_1, 0, 0x4f, 'i32GeU', 'i32.ge_u');
-opcode(index_1, index_2, ___, 0, 0x50, 'i64Eqz', 'i64.eqz');
-opcode(index_1, index_2, index_2, 0, 0x51, 'i64Eq', 'i64.eq');
-opcode(index_1, index_2, index_2, 0, 0x52, 'i64Ne', 'i64.ne');
-opcode(index_1, index_2, index_2, 0, 0x53, 'i64LtS', 'i64.lt_s');
-opcode(index_1, index_2, index_2, 0, 0x54, 'i64LtU', 'i64.lt_u');
-opcode(index_1, index_2, index_2, 0, 0x55, 'i64GtS', 'i64.gt_s');
-opcode(index_1, index_2, index_2, 0, 0x56, 'i64GtU', 'i64.gt_u');
-opcode(index_1, index_2, index_2, 0, 0x57, 'i64LeS', 'i64.le_s');
-opcode(index_1, index_2, index_2, 0, 0x58, 'i64LeU', 'i64.le_u');
-opcode(index_1, index_2, index_2, 0, 0x59, 'i64GeS', 'i64.ge_s');
-opcode(index_1, index_2, index_2, 0, 0x5a, 'i64GeU', 'i64.ge_u');
-opcode(index_1, index_3, index_3, 0, 0x5b, 'f32Eq', 'f32.eq');
-opcode(index_1, index_3, index_3, 0, 0x5c, 'f32Ne', 'f32.ne');
-opcode(index_1, index_3, index_3, 0, 0x5d, 'f32Lt', 'f32.lt');
-opcode(index_1, index_3, index_3, 0, 0x5e, 'f32Gt', 'f32.gt');
-opcode(index_1, index_3, index_3, 0, 0x5f, 'f32Le', 'f32.le');
-opcode(index_1, index_3, index_3, 0, 0x60, 'f32Ge', 'f32.ge');
-opcode(index_1, index_3, index_3, 0, 0x61, 'f64Eq', 'f64.eq');
-opcode(index_1, index_3, index_3, 0, 0x62, 'f64Ne', 'f64.ne');
-opcode(index_1, index_3, index_3, 0, 0x63, 'f64Lt', 'f64.lt');
-opcode(index_1, index_3, index_3, 0, 0x64, 'f64Gt', 'f64.gt');
-opcode(index_1, index_3, index_3, 0, 0x65, 'f64Le', 'f64.le');
-opcode(index_1, index_3, index_3, 0, 0x66, 'f64Ge', 'f64.ge');
-opcode(index_1, index_1, ___, 0, 0x67, 'i32Clz', 'i32.clz');
-opcode(index_1, index_1, ___, 0, 0x68, 'i32Ctz', 'i32.ctz');
-opcode(index_1, index_1, ___, 0, 0x69, 'i32Popcnt', 'i32.popcnt');
-opcode(index_1, index_1, index_1, 0, 0x6a, 'i32Add', 'i32.add');
-opcode(index_1, index_1, index_1, 0, 0x6b, 'i32Sub', 'i32.sub');
-opcode(index_1, index_1, index_1, 0, 0x6c, 'i32Mul', 'i32.mul');
-opcode(index_1, index_1, index_1, 0, 0x6d, 'i32DivS', 'i32.div_s');
-opcode(index_1, index_1, index_1, 0, 0x6e, 'i32DivU', 'i32.div_u');
-opcode(index_1, index_1, index_1, 0, 0x6f, 'i32RemS', 'i32.rem_s');
-opcode(index_1, index_1, index_1, 0, 0x70, 'i32RemU', 'i32.rem_u');
-opcode(index_1, index_1, index_1, 0, 0x71, 'i32And', 'i32.and');
-opcode(index_1, index_1, index_1, 0, 0x72, 'i32Or', 'i32.or');
-opcode(index_1, index_1, index_1, 0, 0x73, 'i32Xor', 'i32.xor');
-opcode(index_1, index_1, index_1, 0, 0x74, 'i32Shl', 'i32.shl');
-opcode(index_1, index_1, index_1, 0, 0x75, 'i32ShrS', 'i32.shr_s');
-opcode(index_1, index_1, index_1, 0, 0x76, 'i32ShrU', 'i32.shr_u');
-opcode(index_1, index_1, index_1, 0, 0x77, 'i32Rotl', 'i32.rotl');
-opcode(index_1, index_1, index_1, 0, 0x78, 'i32Rotr', 'i32.rotr');
-opcode(index_2, index_2, ___, 0, 0x79, 'i64Clz', 'i64.clz');
-opcode(index_2, index_2, ___, 0, 0x7a, 'i64Ctz', 'i64.ctz');
-opcode(index_2, index_2, ___, 0, 0x7b, 'i64Popcnt', 'i64.popcnt');
-opcode(index_2, index_2, index_2, 0, 0x7c, 'i64Add', 'i64.add');
-opcode(index_2, index_2, index_2, 0, 0x7d, 'i64Sub', 'i64.sub');
-opcode(index_2, index_2, index_2, 0, 0x7e, 'i64Mul', 'i64.mul');
-opcode(index_2, index_2, index_2, 0, 0x7f, 'i64DivS', 'i64.div_s');
-opcode(index_2, index_2, index_2, 0, 0x80, 'i64DivU', 'i64.div_u');
-opcode(index_2, index_2, index_2, 0, 0x81, 'i64RemS', 'i64.rem_s');
-opcode(index_2, index_2, index_2, 0, 0x82, 'i64RemU', 'i64.rem_u');
-opcode(index_2, index_2, index_2, 0, 0x83, 'i64And', 'i64.and');
-opcode(index_2, index_2, index_2, 0, 0x84, 'i64Or', 'i64.or');
-opcode(index_2, index_2, index_2, 0, 0x85, 'i64Xor', 'i64.xor');
-opcode(index_2, index_2, index_2, 0, 0x86, 'i64Shl', 'i64.shl');
-opcode(index_2, index_2, index_2, 0, 0x87, 'i64ShrS', 'i64.shr_s');
-opcode(index_2, index_2, index_2, 0, 0x88, 'i64ShrU', 'i64.shr_u');
-opcode(index_2, index_2, index_2, 0, 0x89, 'i64Rotl', 'i64.rotl');
-opcode(index_2, index_2, index_2, 0, 0x8a, 'i64Rotr', 'i64.rotr');
-opcode(index_3, index_3, index_3, 0, 0x8b, 'f32Abs', 'f32.abs');
-opcode(index_3, index_3, index_3, 0, 0x8c, 'f32Neg', 'f32.neg');
-opcode(index_3, index_3, index_3, 0, 0x8d, 'f32Ceil', 'f32.ceil');
-opcode(index_3, index_3, index_3, 0, 0x8e, 'f32Floor', 'f32.floor');
-opcode(index_3, index_3, index_3, 0, 0x8f, 'f32Trunc', 'f32.trunc');
-opcode(index_3, index_3, index_3, 0, 0x90, 'f32Nearest', 'f32.nearest');
-opcode(index_3, index_3, index_3, 0, 0x91, 'f32Sqrt', 'f32.sqrt');
-opcode(index_3, index_3, index_3, 0, 0x92, 'f32Add', 'f32.add');
-opcode(index_3, index_3, index_3, 0, 0x93, 'f32Sub', 'f32.sub');
-opcode(index_3, index_3, index_3, 0, 0x94, 'f32Mul', 'f32.mul');
-opcode(index_3, index_3, index_3, 0, 0x95, 'f32Div', 'f32.div');
-opcode(index_3, index_3, index_3, 0, 0x96, 'f32Min', 'f32.min');
-opcode(index_3, index_3, index_3, 0, 0x97, 'f32Max', 'f32.max');
-opcode(index_3, index_3, index_3, 0, 0x98, 'f32Copysign', 'f32.copysign');
-opcode(index_3, index_3, index_3, 0, 0x99, 'f32Abs', 'f64.abs');
-opcode(index_3, index_3, index_3, 0, 0x9a, 'f32Neg', 'f64.neg');
-opcode(index_3, index_3, index_3, 0, 0x9b, 'f32Ceil', 'f64.ceil');
-opcode(index_3, index_3, index_3, 0, 0x9c, 'f32Floor', 'f64.floor');
-opcode(index_3, index_3, index_3, 0, 0x9d, 'f32Trunc', 'f64.trunc');
-opcode(index_3, index_3, index_3, 0, 0x9e, 'f32Nearest', 'f64.nearest');
-opcode(index_3, index_3, index_3, 0, 0x9f, 'f32Sqrt', 'f64.sqrt');
-opcode(index_4, index_4, index_4, 0, 0xa0, 'f64Add', 'f64.add');
-opcode(index_4, index_4, index_4, 0, 0xa1, 'f64Sub', 'f64.sub');
-opcode(index_4, index_4, index_4, 0, 0xa2, 'f64Mul', 'f64.mul');
-opcode(index_4, index_4, index_4, 0, 0xa3, 'f64Div', 'f64.div');
-opcode(index_4, index_4, index_4, 0, 0xa4, 'f64Min', 'f64.min');
-opcode(index_4, index_4, index_4, 0, 0xa5, 'f64Max', 'f64.max');
-opcode(index_4, index_4, index_4, 0, 0xa6, 'f64Copysign', 'f64.copysign');
-opcode(index_1, index_2, ___, 0, 0xa7, 'i32Wrapi64', 'i32.wrap/i64');
-opcode(index_1, index_3, ___, 0, 0xa8, 'i32TruncSf32', 'i32.trunc_s/f32');
-opcode(index_1, index_3, ___, 0, 0xa9, 'i32TruncUf32', 'i32.trunc_u/f32');
-opcode(index_1, index_3, ___, 0, 0xaa, 'i32TruncSf64', 'i32.trunc_s/f64');
-opcode(index_1, index_3, ___, 0, 0xab, 'i32TruncUf64', 'i32.trunc_u/f64');
-opcode(index_2, index_1, ___, 0, 0xac, 'i64ExtendSi32', 'i64.extend_s/i32');
-opcode(index_2, index_1, ___, 0, 0xad, 'i64ExtendUi32', 'i64.extend_u/i32');
-opcode(index_2, index_3, ___, 0, 0xae, 'i64TruncSf32', 'i64.trunc_s/f32');
-opcode(index_2, index_3, ___, 0, 0xaf, 'i64TruncUf32', 'i64.trunc_u/f32');
-opcode(index_2, index_3, ___, 0, 0xb0, 'i64TruncSf64', 'i64.trunc_s/f64');
-opcode(index_2, index_3, ___, 0, 0xb1, 'i64TruncUf64', 'i64.trunc_u/f64');
-opcode(index_3, index_1, ___, 0, 0xb2, 'f32ConvertSi32', 'f32.convert_s/i32');
-opcode(index_3, index_1, ___, 0, 0xb3, 'f32ConvertUi32', 'f32.convert_u/i32');
-opcode(index_3, index_2, ___, 0, 0xb4, 'f32ConvertSi64', 'f32.convert_s/i64');
-opcode(index_3, index_2, ___, 0, 0xb5, 'f32ConvertUi64', 'f32.convert_u/i64');
-opcode(index_3, index_3, ___, 0, 0xb6, 'f32Demotef64', 'f32.demote/f64');
-opcode(index_3, index_1, ___, 0, 0xb7, 'f64ConvertSi32', 'f64.convert_s/i32');
-opcode(index_3, index_1, ___, 0, 0xb8, 'f64ConvertUi32', 'f64.convert_u/i32');
-opcode(index_3, index_2, ___, 0, 0xb9, 'f64ConvertSi64', 'f64.convert_s/i64');
-opcode(index_3, index_2, ___, 0, 0xba, 'f64ConvertUi64', 'f64.convert_u/i64');
-opcode(index_3, index_3, ___, 0, 0xbb, 'f64Promotef32', 'f64.promote/f32');
-opcode(index_1, index_3, ___, 0, 0xbc, 'i32Reinterpretf32', 'i32.reinterpret/f32');
-opcode(index_2, index_3, ___, 0, 0xbd, 'i64Reinterpretf64', 'i64.reinterpret/f64');
-opcode(index_3, index_1, ___, 0, 0xbe, 'f32Reinterpreti32', 'f32.reinterpret/i32');
-opcode(index_3, index_2, ___, 0, 0xbf, 'f32Reinterpreti64', 'f64.reinterpret/i64');
+opcode(index_1$1, index_1$1, ___, 4, 0x28, 'i32Load', 'i32.load');
+opcode(index_2$1, index_1$1, ___, 8, 0x29, 'i64Load', 'i64.load');
+opcode(index_3$1, index_1$1, ___, 4, 0x2a, 'f32Load', 'f32.load');
+opcode(index_4$1, index_1$1, ___, 8, 0x2b, 'f64Load', 'f64.load');
+opcode(index_1$1, index_1$1, ___, 1, 0x2c, 'i32Load8S', 'i32.load8_s');
+opcode(index_1$1, index_1$1, ___, 1, 0x2d, 'i32Load8U', 'i32.load8_u');
+opcode(index_1$1, index_1$1, ___, 2, 0x2e, 'i32Load16S', 'i32.load16_s');
+opcode(index_1$1, index_1$1, ___, 2, 0x2f, 'i32Load16U', 'i32.load16_u');
+opcode(index_2$1, index_1$1, ___, 1, 0x30, 'i64Load8S', 'i64.load8_s');
+opcode(index_2$1, index_1$1, ___, 1, 0x31, 'i64Load8U', 'i64.load8_u');
+opcode(index_2$1, index_1$1, ___, 2, 0x32, 'i64Load16S', 'i64.load16_s');
+opcode(index_2$1, index_1$1, ___, 2, 0x33, 'i64Load16U', 'i64.load16_u');
+opcode(index_2$1, index_1$1, ___, 4, 0x34, 'i64Load32S', 'i64.load32_s');
+opcode(index_2$1, index_1$1, ___, 4, 0x35, 'i64Load32U', 'i64.load32_u');
+opcode(___, index_1$1, index_1$1, 4, 0x36, 'i32Store', 'i32.store');
+opcode(___, index_1$1, index_2$1, 8, 0x37, 'i64Store', 'i64.store');
+opcode(___, index_1$1, index_3$1, 4, 0x38, 'f32Store', 'f32.store');
+opcode(___, index_1$1, index_3$1, 8, 0x39, 'f64Store', 'f64.store');
+opcode(___, index_1$1, index_1$1, 1, 0x3a, 'i32Store8', 'i32.store8');
+opcode(___, index_1$1, index_1$1, 2, 0x3b, 'i32Store16', 'i32.store16');
+opcode(___, index_1$1, index_2$1, 1, 0x3c, 'i64Store8', 'i64.store8');
+opcode(___, index_1$1, index_2$1, 2, 0x3d, 'i64Store16', 'i64.store16');
+opcode(___, index_1$1, index_2$1, 4, 0x3e, 'i64Store32', 'i64.store32');
+opcode(index_1$1, ___, ___, 0, 0x3f, 'CurrentMemory', 'current_memory');
+opcode(index_1$1, index_1$1, ___, 0, 0x40, 'GrowMemory', 'grow_memory');
+opcode(index_1$1, ___, ___, 0, 0x41, 'i32Const', 'i32.const');
+opcode(index_2$1, ___, ___, 0, 0x42, 'i64Const', 'i64.const');
+opcode(index_3$1, ___, ___, 0, 0x43, 'f32Const', 'f32.const');
+opcode(index_4$1, ___, ___, 0, 0x44, 'f64Const', 'f64.const');
+opcode(index_1$1, index_1$1, ___, 0, 0x45, 'i32Eqz', 'i32.eqz');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x46, 'i32Eq', 'i32.eq');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x47, 'i32Ne', 'i32.ne');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x48, 'i32LtS', 'i32.lt_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x49, 'i32LtU', 'i32.lt_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4a, 'i32GtS', 'i32.gt_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4b, 'i32GtU', 'i32.gt_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4c, 'i32LeS', 'i32.le_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4d, 'i32LeU', 'i32.le_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4e, 'i32GeS', 'i32.ge_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x4f, 'i32GeU', 'i32.ge_u');
+opcode(index_1$1, index_2$1, ___, 0, 0x50, 'i64Eqz', 'i64.eqz');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x51, 'i64Eq', 'i64.eq');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x52, 'i64Ne', 'i64.ne');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x53, 'i64LtS', 'i64.lt_s');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x54, 'i64LtU', 'i64.lt_u');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x55, 'i64GtS', 'i64.gt_s');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x56, 'i64GtU', 'i64.gt_u');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x57, 'i64LeS', 'i64.le_s');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x58, 'i64LeU', 'i64.le_u');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x59, 'i64GeS', 'i64.ge_s');
+opcode(index_1$1, index_2$1, index_2$1, 0, 0x5a, 'i64GeU', 'i64.ge_u');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x5b, 'f32Eq', 'f32.eq');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x5c, 'f32Ne', 'f32.ne');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x5d, 'f32Lt', 'f32.lt');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x5e, 'f32Gt', 'f32.gt');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x5f, 'f32Le', 'f32.le');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x60, 'f32Ge', 'f32.ge');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x61, 'f64Eq', 'f64.eq');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x62, 'f64Ne', 'f64.ne');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x63, 'f64Lt', 'f64.lt');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x64, 'f64Gt', 'f64.gt');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x65, 'f64Le', 'f64.le');
+opcode(index_1$1, index_3$1, index_3$1, 0, 0x66, 'f64Ge', 'f64.ge');
+opcode(index_1$1, index_1$1, ___, 0, 0x67, 'i32Clz', 'i32.clz');
+opcode(index_1$1, index_1$1, ___, 0, 0x68, 'i32Ctz', 'i32.ctz');
+opcode(index_1$1, index_1$1, ___, 0, 0x69, 'i32Popcnt', 'i32.popcnt');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6a, 'i32Add', 'i32.add');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6b, 'i32Sub', 'i32.sub');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6c, 'i32Mul', 'i32.mul');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6d, 'i32DivS', 'i32.div_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6e, 'i32DivU', 'i32.div_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x6f, 'i32RemS', 'i32.rem_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x70, 'i32RemU', 'i32.rem_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x71, 'i32And', 'i32.and');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x72, 'i32Or', 'i32.or');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x73, 'i32Xor', 'i32.xor');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x74, 'i32Shl', 'i32.shl');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x75, 'i32ShrS', 'i32.shr_s');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x76, 'i32ShrU', 'i32.shr_u');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x77, 'i32Rotl', 'i32.rotl');
+opcode(index_1$1, index_1$1, index_1$1, 0, 0x78, 'i32Rotr', 'i32.rotr');
+opcode(index_2$1, index_2$1, ___, 0, 0x79, 'i64Clz', 'i64.clz');
+opcode(index_2$1, index_2$1, ___, 0, 0x7a, 'i64Ctz', 'i64.ctz');
+opcode(index_2$1, index_2$1, ___, 0, 0x7b, 'i64Popcnt', 'i64.popcnt');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x7c, 'i64Add', 'i64.add');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x7d, 'i64Sub', 'i64.sub');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x7e, 'i64Mul', 'i64.mul');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x7f, 'i64DivS', 'i64.div_s');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x80, 'i64DivU', 'i64.div_u');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x81, 'i64RemS', 'i64.rem_s');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x82, 'i64RemU', 'i64.rem_u');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x83, 'i64And', 'i64.and');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x84, 'i64Or', 'i64.or');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x85, 'i64Xor', 'i64.xor');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x86, 'i64Shl', 'i64.shl');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x87, 'i64ShrS', 'i64.shr_s');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x88, 'i64ShrU', 'i64.shr_u');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x89, 'i64Rotl', 'i64.rotl');
+opcode(index_2$1, index_2$1, index_2$1, 0, 0x8a, 'i64Rotr', 'i64.rotr');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x8b, 'f32Abs', 'f32.abs');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x8c, 'f32Neg', 'f32.neg');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x8d, 'f32Ceil', 'f32.ceil');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x8e, 'f32Floor', 'f32.floor');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x8f, 'f32Trunc', 'f32.trunc');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x90, 'f32Nearest', 'f32.nearest');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x91, 'f32Sqrt', 'f32.sqrt');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x92, 'f32Add', 'f32.add');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x93, 'f32Sub', 'f32.sub');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x94, 'f32Mul', 'f32.mul');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x95, 'f32Div', 'f32.div');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x96, 'f32Min', 'f32.min');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x97, 'f32Max', 'f32.max');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x98, 'f32Copysign', 'f32.copysign');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x99, 'f32Abs', 'f64.abs');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9a, 'f32Neg', 'f64.neg');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9b, 'f32Ceil', 'f64.ceil');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9c, 'f32Floor', 'f64.floor');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9d, 'f32Trunc', 'f64.trunc');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9e, 'f32Nearest', 'f64.nearest');
+opcode(index_3$1, index_3$1, index_3$1, 0, 0x9f, 'f32Sqrt', 'f64.sqrt');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa0, 'f64Add', 'f64.add');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa1, 'f64Sub', 'f64.sub');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa2, 'f64Mul', 'f64.mul');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa3, 'f64Div', 'f64.div');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa4, 'f64Min', 'f64.min');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa5, 'f64Max', 'f64.max');
+opcode(index_4$1, index_4$1, index_4$1, 0, 0xa6, 'f64Copysign', 'f64.copysign');
+opcode(index_1$1, index_2$1, ___, 0, 0xa7, 'i32Wrapi64', 'i32.wrap/i64');
+opcode(index_1$1, index_3$1, ___, 0, 0xa8, 'i32TruncSf32', 'i32.trunc_s/f32');
+opcode(index_1$1, index_3$1, ___, 0, 0xa9, 'i32TruncUf32', 'i32.trunc_u/f32');
+opcode(index_1$1, index_3$1, ___, 0, 0xaa, 'i32TruncSf64', 'i32.trunc_s/f64');
+opcode(index_1$1, index_3$1, ___, 0, 0xab, 'i32TruncUf64', 'i32.trunc_u/f64');
+opcode(index_2$1, index_1$1, ___, 0, 0xac, 'i64ExtendSi32', 'i64.extend_s/i32');
+opcode(index_2$1, index_1$1, ___, 0, 0xad, 'i64ExtendUi32', 'i64.extend_u/i32');
+opcode(index_2$1, index_3$1, ___, 0, 0xae, 'i64TruncSf32', 'i64.trunc_s/f32');
+opcode(index_2$1, index_3$1, ___, 0, 0xaf, 'i64TruncUf32', 'i64.trunc_u/f32');
+opcode(index_2$1, index_3$1, ___, 0, 0xb0, 'i64TruncSf64', 'i64.trunc_s/f64');
+opcode(index_2$1, index_3$1, ___, 0, 0xb1, 'i64TruncUf64', 'i64.trunc_u/f64');
+opcode(index_3$1, index_1$1, ___, 0, 0xb2, 'f32ConvertSi32', 'f32.convert_s/i32');
+opcode(index_3$1, index_1$1, ___, 0, 0xb3, 'f32ConvertUi32', 'f32.convert_u/i32');
+opcode(index_3$1, index_2$1, ___, 0, 0xb4, 'f32ConvertSi64', 'f32.convert_s/i64');
+opcode(index_3$1, index_2$1, ___, 0, 0xb5, 'f32ConvertUi64', 'f32.convert_u/i64');
+opcode(index_3$1, index_3$1, ___, 0, 0xb6, 'f32Demotef64', 'f32.demote/f64');
+opcode(index_3$1, index_1$1, ___, 0, 0xb7, 'f64ConvertSi32', 'f64.convert_s/i32');
+opcode(index_3$1, index_1$1, ___, 0, 0xb8, 'f64ConvertUi32', 'f64.convert_u/i32');
+opcode(index_3$1, index_2$1, ___, 0, 0xb9, 'f64ConvertSi64', 'f64.convert_s/i64');
+opcode(index_3$1, index_2$1, ___, 0, 0xba, 'f64ConvertUi64', 'f64.convert_u/i64');
+opcode(index_3$1, index_3$1, ___, 0, 0xbb, 'f64Promotef32', 'f64.promote/f32');
+opcode(index_1$1, index_3$1, ___, 0, 0xbc, 'i32Reinterpretf32', 'i32.reinterpret/f32');
+opcode(index_2$1, index_3$1, ___, 0, 0xbd, 'i64Reinterpretf64', 'i64.reinterpret/f64');
+opcode(index_3$1, index_1$1, ___, 0, 0xbe, 'f32Reinterpreti32', 'f32.reinterpret/i32');
+opcode(index_3$1, index_2$1, ___, 0, 0xbf, 'f32Reinterpreti64', 'f64.reinterpret/i64');
 
 const getTypecastOpcode = (to, from) => {
   const toType = to[0];
@@ -3936,7 +4100,7 @@ const scopeOperation = curry_1((op, node) => {
 });
 
 const getConstOpcode = node => {
-  const nodeType = node.type || builtinTypes.i32;
+  const nodeType = node.type || index_2.i32;
 
   const kind = def[nodeType + 'Const'];
   const params = [Number(node.value)];
@@ -3950,20 +4114,20 @@ const getConstOpcode = node => {
 // clean this up
 const getType = str => {
   switch (str) {
-    case builtinTypes.f32:
+    case index_2.f32:
       return F32;
-    case builtinTypes.f64:
+    case index_2.f64:
       return F64;
-    case builtinTypes.i64:
+    case index_2.i64:
       return I64;
-    case builtinTypes.i32:
+    case index_2.i32:
     default:
       return I32;
   }
 };
 
 const isBuiltinType = type => {
-  return typeof type === 'string' && builtinTypes[type] != null;
+  return typeof type === 'string' && index_2[type] != null;
 };
 
 const generateValueType = node => ({
@@ -3990,7 +4154,7 @@ function validate(ast, {
   const problems = [];
 
   walker({
-    [Syntax.Export]: _export => {
+    [index.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
       const globalIndex = target.meta[GLOBAL_INDEX];
@@ -3998,17 +4162,17 @@ function validate(ast, {
         problems.push(generateErrorString('Global exports must have a value', '', { start, end }, filename, GLOBAL_LABEL));
       }
     },
-    [Syntax.Import]: (importNode, _) => {
+    [index.Import]: (importNode, _) => {
       walker({
-        [Syntax.BinaryExpression]: (binary, __) => {
+        [index.BinaryExpression]: (binary, __) => {
           const [start, end] = binary.range;
           problems.push(generateErrorString("Using an 'as' import without a type.", 'A type for original import ' + binary.params[0].value + ' is not defined nor could it be inferred.', { start, end }, filename, GLOBAL_LABEL));
         },
-        [Syntax.Identifier]: (identifier, __) => {
+        [index.Identifier]: (identifier, __) => {
           const [start, end] = identifier.range;
           problems.push(generateErrorString('Infered type not supplied.', "Looks like you'd like to infer a type, but it was never provided by a linker. Non-concrete types cannot be compiled.", { start, end }, filename, GLOBAL_LABEL));
         },
-        [Syntax.Pair]: (pair, __) => {
+        [index.Pair]: (pair, __) => {
           const type = pair.params[1];
           if (!isBuiltinType(type.value) && types[type.value] == null) {
             const [start, end] = type.range;
@@ -4018,14 +4182,14 @@ function validate(ast, {
       })(importNode);
     },
     // All of the validators below need to be implemented
-    [Syntax.Struct]: (_, __) => {},
-    [Syntax.ImmutableDeclaration]: (_, __) => {},
-    [Syntax.Declaration]: (decl, _validator) => {
+    [index.Struct]: (_, __) => {},
+    [index.ImmutableDeclaration]: (_, __) => {},
+    [index.Declaration]: (decl, _validator) => {
       const [start, end] = decl.range;
       const [initializer] = decl.params;
 
       if (decl.meta[TYPE_CONST]) {
-        const validTypes = [Syntax.Constant, Syntax.StringLiteral];
+        const validTypes = [index.Constant, index.StringLiteral];
         if (initializer != null && !validTypes.includes(initializer.Type)) {
           problems.push(generateErrorString('Global Constants must be initialized with a Number literal.', 'WebAssembly does not allow for non number literal constant initializers.', { start, end }, filename, GLOBAL_LABEL));
         }
@@ -4038,13 +4202,13 @@ function validate(ast, {
         problems.push(generateErrorString('Unknown type used in a declaration, ' + `"${String(decl.type)}"`, 'Variables must be assigned with a known type.', { start, end }, filename, GLOBAL_LABEL));
       }
     },
-    [Syntax.FunctionDeclaration]: (func, __) => {
+    [index.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
       walker({
-        [Syntax.Declaration]: (node, _validator) => {
+        [index.Declaration]: (node, _validator) => {
           const [start, end] = node.range;
           const [initializer] = node.params;
-          if (initializer != null && statements[initializer.Type] != null) {
+          if (initializer != null && index_3[initializer.Type] != null) {
             problems.push(generateErrorString(`Unexpected statement ${initializer.Type}`, 'Attempting to assign a statement to a variable. Did you miss a semicolon(;)?', { start, end }, filename, functionName));
           }
           if (node.meta[TYPE_CONST]) {
@@ -4057,10 +4221,10 @@ function validate(ast, {
             problems.push(generateErrorString('Unknown type used in a declartion, ' + `"${String(node.type)}"`, 'Variables must be assigned with a known type.', { start, end }, filename, functionName));
           }
         },
-        [Syntax.Assignment]: node => {
+        [index.Assignment]: node => {
           const [identifier] = node.params;
           const [start, end] = node.range;
-          const statement = node.params.find(param => statements[param.Type] != null);
+          const statement = node.params.find(param => index_3[param.Type] != null);
           if (statement != null) {
             problems.push(generateErrorString('Unexpected statement in assignment', 'Statments cannot be used in assignment expressions. Did you miss a semicolon?', { start: statement.range[0], end: statement.range[1] }, filename, functionName));
           }
@@ -4070,7 +4234,7 @@ function validate(ast, {
             problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, 'const variables cannot be reassigned, use let instead.', { start, end }, filename, functionName));
           }
         },
-        [Syntax.ArraySubscript]: (node, _validator) => {
+        [index.ArraySubscript]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {
@@ -4078,7 +4242,7 @@ function validate(ast, {
             problems.push(generateErrorString('Cannot generate memory offset', `Undefined key ${alias != null ? alias : offset.value} for type ${String(identifier.meta.ALIAS)}`, { start, end }, filename, functionName));
           }
         },
-        [Syntax.ReturnStatement]: (node, validator) => {
+        [index.ReturnStatement]: (node, validator) => {
           node.params.map(validator);
           if (func.type == null) {
             return;
@@ -4093,14 +4257,14 @@ function validate(ast, {
             problems.push(generateErrorString('Missing return value', 'Inconsistent return value. Expected ' + func.type + ' received ' + String(type), { start, end }, filename, functionName));
           }
         },
-        [Syntax.FunctionCall]: (node, _validator) => {
+        [index.FunctionCall]: (node, _validator) => {
           if (functions[node.value] == null) {
             const [start, end] = node.range;
 
             problems.push(generateErrorString('Undefined function reference', `${node.value} is not defined.`, { start, end }, filename, functionName));
           }
         },
-        [Syntax.IndirectFunctionCall]: (node, _validator) => {
+        [index.IndirectFunctionCall]: (node, _validator) => {
           const identifier = node.params[node.params.length - 1];
           const type = types[identifier.type];
 
@@ -4268,7 +4432,7 @@ const generateDeclaration = (node, parent) => {
   if (initNode) {
     const metaIndex = node.meta[LOCAL_INDEX];
 
-    const type = isBuiltinType(node.type) ? node.type : i32;
+    const type = isBuiltinType(node.type) ? node.type : index_4;
 
     return [...generateExpression(_extends({}, initNode, { type }), parent), {
       kind: def.SetLocal,
@@ -4476,35 +4640,35 @@ const generateNative = (node, parent) => {
 
 //      
 const syntaxMap = {
-  [Syntax.FunctionCall]: generateFunctionCall,
-  [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
+  [index.FunctionCall]: generateFunctionCall,
+  [index.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
-  [Syntax.Constant]: getConstOpcode,
-  [Syntax.BinaryExpression]: generateBinaryExpression,
-  [Syntax.TernaryExpression]: generateTernary,
-  [Syntax.IfThenElse]: generateIf,
-  [Syntax.Else]: generateElse,
-  [Syntax.Select]: generateSelect,
-  [Syntax.Block]: generateBlock,
-  [Syntax.Identifier]: getInScope,
-  [Syntax.FunctionIdentifier]: getInScope,
-  [Syntax.FunctionPointer]: generateFunctionPointer,
-  [Syntax.ReturnStatement]: generateReturn,
+  [index.Constant]: getConstOpcode,
+  [index.BinaryExpression]: generateBinaryExpression,
+  [index.TernaryExpression]: generateTernary,
+  [index.IfThenElse]: generateIf,
+  [index.Else]: generateElse,
+  [index.Select]: generateSelect,
+  [index.Block]: generateBlock,
+  [index.Identifier]: getInScope,
+  [index.FunctionIdentifier]: getInScope,
+  [index.FunctionPointer]: generateFunctionPointer,
+  [index.ReturnStatement]: generateReturn,
   // Binary
-  [Syntax.Declaration]: generateDeclaration,
-  [Syntax.ArraySubscript]: generateArraySubscript,
-  [Syntax.Assignment]: generateAssignment,
+  [index.Declaration]: generateDeclaration,
+  [index.ArraySubscript]: generateArraySubscript,
+  [index.Assignment]: generateAssignment,
   // Memory
-  [Syntax.MemoryAssignment]: generateMemoryAssignment,
+  [index.MemoryAssignment]: generateMemoryAssignment,
   // Loops
-  [Syntax.Loop]: generateLoop,
-  [Syntax.Break]: generateTypecast$2,
+  [index.Loop]: generateLoop,
+  [index.Break]: generateTypecast$2,
   // Comma separated lists
-  [Syntax.Sequence]: generateSequence,
+  [index.Sequence]: generateSequence,
   // Typecast
-  [Syntax.TypeCast]: generateTypecast,
-  [Syntax.Noop]: generateNoop,
-  [Syntax.NativeMethod]: generateNative
+  [index.TypeCast]: generateTypecast,
+  [index.Noop]: generateNoop,
+  [index.NativeMethod]: generateNative
 };
 
 const mapSyntax = curry_1((parent, operand) => {
@@ -4556,7 +4720,7 @@ function generateExport(node) {
 const generateMemory = node => {
   const memory = { max: 0, initial: 0 };
   walker({
-    [Syntax.Pair]: ({ params }) => {
+    [index.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
       memory[key] = parseInt(value);
@@ -4571,7 +4735,7 @@ function generateMemory$2(node) {
   const table = { max: 0, initial: 0, type: '' };
 
   walker({
-    [Syntax.Pair]: ({ params }) => {
+    [index.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
       if (key === 'initial') {
@@ -4611,7 +4775,7 @@ const generateInit = node => {
 const parseBounds = node => {
   const memory = {};
   walker({
-    [Syntax.Pair]: ({ params }) => {
+    [index.Pair]: ({ params }) => {
       const [{ value: key }, { value }] = params;
       memory[key] = parseInt(value);
     }
@@ -4652,7 +4816,7 @@ function generateImportFromNode(node) {
 
   // Look for Pair Types, encode them into imports array
   walker({
-    [Syntax.Pair]: (pairNode, _) => {
+    [index.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
 
       const field = getFieldName(fieldIdentifierNode);
@@ -4709,7 +4873,7 @@ const generateImplicitFunctionType = functionNode => {
 
   const params = [];
   walker({
-    [Syntax.Pair]: pairNode => {
+    [index.Pair]: pairNode => {
       const typeNode = pairNode.params[1];
       invariant_1(typeNode, 'Undefined type in a argument expression');
       params.push(getType$1(typeNode.value));
@@ -4733,11 +4897,11 @@ function generateType(node) {
   const params = [];
 
   walker({
-    [Syntax.Type]: (t, __) => {
+    [index.Type]: (t, __) => {
       params.push(getType$1(t.value));
     },
     // Generate Identifiers as UserType pointers, so i32s
-    [Syntax.Identifier]: (t, __) => {
+    [index.Identifier]: (t, __) => {
       params.push(getType$1(t.value));
     }
   })(args);
@@ -4915,11 +5079,11 @@ function generateData(statics, DATA_SECTION_HEADER_SIZE) {
   // Reserve N bytes for data size header
   let offsetAccumulator = DATA_SECTION_HEADER_SIZE;
 
-  const map$$1 = {};
+  const map = {};
   const data = Object.keys(statics).reduce((acc, key) => {
     const encoded = stringEncoder(key);
     acc.push({ offset: Number(offsetAccumulator), data: encoded });
-    map$$1[key] = offsetAccumulator;
+    map[key] = offsetAccumulator;
     offsetAccumulator += encoded.size;
     return acc;
   }, []);
@@ -4930,7 +5094,7 @@ function generateData(statics, DATA_SECTION_HEADER_SIZE) {
 
   return {
     data: [{ offset: 0, data: lengthStream }, ...data],
-    map: map$$1
+    map
   };
 }
 
@@ -5010,8 +5174,8 @@ function generator(ast, config) {
   const findTableIndex = functionIndex => program.Element.findIndex(n => n.functionIndex === functionIndex);
 
   const typeMap = {};
-  const astWithTypes = mapNode.mapNode({
-    [Syntax.Typedef]: (node, _ignore) => {
+  const astWithTypes = mapNode_2({
+    [index.Typedef]: (node, _ignore) => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
       let typeNode = program.Types[typeIndex];
 
@@ -5027,27 +5191,27 @@ function generator(ast, config) {
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     }
-  })(mapNode.mapNode({
-    [Syntax.Import]: (node, _) => node,
-    [Syntax.StringLiteral]: (node, _ignore) => {
+  })(mapNode_2({
+    [index.Import]: (node, _) => node,
+    [index.StringLiteral]: (node, _ignore) => {
       if (Object.keys(statics).length === 0) {
         return node;
       }
       const { value } = node;
       return _extends({}, node, {
         value: String(staticsMap[value]),
-        Type: Syntax.Constant
+        Type: index.Constant
       });
     }
   })(ast));
 
   const nodeMap = {
-    [Syntax.Typedef]: (_, __) => _,
-    [Syntax.Export]: node => {
+    [index.Typedef]: (_, __) => _,
+    [index.Export]: node => {
       const [nodeToExport] = node.params;
       program.Exports.push(generateExport(nodeToExport));
     },
-    [Syntax.ImmutableDeclaration]: node => {
+    [index.ImmutableDeclaration]: node => {
       const globalMeta = node.meta[GLOBAL_INDEX];
       if (globalMeta != null) {
         switch (node.type) {
@@ -5060,28 +5224,28 @@ function generator(ast, config) {
         }
       }
     },
-    [Syntax.Declaration]: node => {
+    [index.Declaration]: node => {
       const globalMeta = node.meta[GLOBAL_INDEX];
       if (globalMeta != null) {
         program.Globals.push(generateInit(node));
       }
     },
-    [Syntax.Import]: node => {
+    [index.Import]: node => {
       program.Imports.push(...generateImportFromNode(node));
     },
-    [Syntax.FunctionDeclaration]: node => {
+    [index.FunctionDeclaration]: node => {
       const typeIndex = (() => {
-        const index = findTypeIndex(node);
-        if (index === -1) {
+        const index$$1 = findTypeIndex(node);
+        if (index$$1 === -1) {
           // attach to a type index
           program.Types.push(generateImplicitFunctionType(node));
           return program.Types.length - 1;
         }
 
-        return index;
+        return index$$1;
       })();
 
-      const patched = mapNode.mapNode({
+      const patched = mapNode_2({
         FunctionPointer(pointer) {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           const functionIndex = metaFunctionIndex;
@@ -5096,26 +5260,26 @@ function generator(ast, config) {
 
       // Quick fix for shifting around function indices. These don't necessarily
       // get written in the order they appear in the source code.
-      const index = node.meta[FUNCTION_INDEX];
-      invariant_1(index != null, 'Function index must be set');
+      const index$$1 = node.meta[FUNCTION_INDEX];
+      invariant_1(index$$1 != null, 'Function index must be set');
 
-      program.Functions[index] = typeIndex;
+      program.Functions[index$$1] = typeIndex;
       // We will need to filter out the empty slots later
-      program.Code[index] = generateCode(patched);
+      program.Code[index$$1] = generateCode(patched);
 
       if (patched.value === 'start') {
-        program.Start.push(index);
+        program.Start.push(index$$1);
       }
 
       if (config.encodeNames) {
         program.Name.functions.push({
-          index,
+          index: index$$1,
           name: node.value
         });
         const functionMetadata = node.meta[FUNCTION_METADATA];
         if (functionMetadata != null && Object.keys(functionMetadata.locals).length) {
-          program.Name.locals[index] = {
-            index,
+          program.Name.locals[index$$1] = {
+            index: index$$1,
             locals: Object.entries(functionMetadata.locals).map(([name, local]) => {
               return {
                 name,
@@ -5215,11 +5379,11 @@ const emit$2 = exports => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, 'count');
 
-  exports.forEach(({ field, kind, index: index$$1 }) => {
+  exports.forEach(({ field, kind, index }) => {
     emitString(payload, field, 'field');
 
     payload.push(index_9, kind, 'Global');
-    payload.push(varuint32, index$$1, 'index');
+    payload.push(varuint32, index, 'index');
   });
 
   return payload;
@@ -5237,11 +5401,11 @@ const encode = (payload, { type, init, mutable }) => {
       break;
     case F32:
       payload.push(index_9, def.f32Const.code, def.f32Const.text);
-      payload.push(index_3, init, `value (${init})`);
+      payload.push(index_3$1, init, `value (${init})`);
       break;
     case F64:
       payload.push(index_9, def.f64Const.code, def.f64Const.text);
-      payload.push(index_4, init, `value (${init})`);
+      payload.push(index_4$1, init, `value (${init})`);
       break;
   }
 
@@ -5281,10 +5445,10 @@ function emitTables(start) {
 }
 
 //      
-const emitElement = stream => ({ functionIndex }, index$$1) => {
+const emitElement = stream => ({ functionIndex }, index) => {
   stream.push(varuint32, 0, 'table index');
   stream.push(index_9, def.i32Const.code, 'offset');
-  stream.push(varuint32, index$$1, index$$1.toString());
+  stream.push(varuint32, index, index.toString());
   stream.push(index_9, def.End.code, 'end');
   stream.push(varuint32, 1, 'number of elements');
   stream.push(varuint32, functionIndex, 'function index');
@@ -5355,19 +5519,19 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
       } else {
         // either encode unsigned 32 bit values or floats
         switch (kind.result) {
-          case index_4:
-            type = index_4;
+          case index_4$1:
+            type = index_4$1;
             stringType = 'f64.literal';
             break;
-          case index_3:
-            type = index_3;
+          case index_3$1:
+            type = index_3$1;
             stringType = 'f32.literal';
             break;
-          case index_1:
+          case index_1$1:
             type = varint32;
             stringType = 'i32.literal';
             break;
-          case index_2:
+          case index_2$1:
             type = varint64;
             stringType = 'i64.literal';
             break;
@@ -5650,10 +5814,10 @@ const getText$1 = node => {
 const parseParams = node => {
   const params = [];
   walker({
-    [Syntax.Pair]: (pair, _) => {
+    [index.Pair]: (pair, _) => {
       params.push(`${pair.params[0].value} ${pair.params[1].value}`);
     },
-    [Syntax.Type]: p => {
+    [index.Type]: p => {
       params.push(p.value);
     }
   })(node);
@@ -5673,10 +5837,10 @@ const typedefString = node => {
 };
 
 const getPrinters = add => ({
-  [Syntax.Import]: (node, _print) => {
+  [index.Import]: (node, _print) => {
     const [nodes, mod] = node.params;
     walker({
-      [Syntax.Pair]: ({ params }, _) => {
+      [index.Pair]: ({ params }, _) => {
         const { value: field } = params[0];
         const type = params[1];
 
@@ -5687,21 +5851,21 @@ const getPrinters = add => ({
           add(`(import "${mod.value}" "${field}" ${typedefString(type)})`);
         }
       },
-      [Syntax.Identifier]: (missing, _) => {
+      [index.Identifier]: (missing, _) => {
         const { value } = missing;
         add(`(import "${mod.value}" "${value}" (type ??))`);
       }
     })(nodes);
   },
-  [Syntax.Export]: (node, print) => {
+  [index.Export]: (node, print) => {
     add('(export', 2);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.GenericType]: (node, _print) => {
+  [index.GenericType]: (node, _print) => {
     add('(type-generic ' + node.value + ')', 0, 0, ' pseudo type');
   },
-  [Syntax.FunctionCall]: (node, print) => {
+  [index.FunctionCall]: (node, print) => {
     if (node.params.length > 0) {
       add(`(call ${node.value}`, 2);
       node.params.forEach(print);
@@ -5710,49 +5874,49 @@ const getPrinters = add => ({
       add(`(call ${node.value})`);
     }
   },
-  [Syntax.BinaryExpression]: (node, print) => {
+  [index.BinaryExpression]: (node, print) => {
     const text = getText$1(node);
     add('(' + text, 2);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ArraySubscript]: (node, print) => {
+  [index.ArraySubscript]: (node, print) => {
     add('(i32.add', 2);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.Typedef]: (node, _) => {
+  [index.Typedef]: (node, _) => {
     add(typedefString(node));
   },
-  [Syntax.Identifier]: node => {
+  [index.Identifier]: node => {
     const scope = node.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     add(`(get_${scope} ${node.value})`);
   },
-  [Syntax.Constant]: node => {
+  [index.Constant]: node => {
     add(`(${String(node.type)}.const ${node.value})`);
   },
-  [Syntax.FunctionPointer]: node => {
+  [index.FunctionPointer]: node => {
     add(`(${String(node.type)}.table_pointer ${node.value})`);
   },
-  [Syntax.FunctionDeclaration]: (node, print) => {
+  [index.FunctionDeclaration]: (node, print) => {
     const [params, result, ...rest] = node.params;
     add(`(func ${node.value}${parseParams(params)}${parseResult(result)}`, 2);
 
     rest.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ReturnStatement]: (node, print) => {
+  [index.ReturnStatement]: (node, print) => {
     add('(return', 2);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.Declaration]: (node, print) => {
+  [index.Declaration]: (node, print) => {
     const mutability = node.meta[TYPE_CONST] != null ? 'immutable' : 'mutable';
     add('(local ' + node.value + ' ' + String(node.type), 2, 0, ` ${mutability}`);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ImmutableDeclaration]: (node, print) => {
+  [index.ImmutableDeclaration]: (node, print) => {
     const scope = node.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     if (node.type === 'Memory') {
       const memory = parseBounds(node);
@@ -5763,44 +5927,44 @@ const getPrinters = add => ({
       add(')', 0, -2);
     }
   },
-  [Syntax.StringLiteral]: node => {
+  [index.StringLiteral]: node => {
     add('(i32.const ??)', 0, 0, ` string "${node.value}"`);
   },
-  [Syntax.Type]: node => {
+  [index.Type]: node => {
     add(node.value);
   },
-  [Syntax.TypeCast]: (node, print) => {
+  [index.TypeCast]: (node, print) => {
     const from = node.params[0];
     const op = getTypecastOpcode(String(node.type), from.type);
     add('(' + op.text, 2);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ArraySubscript]: (node, print) => {
+  [index.ArraySubscript]: (node, print) => {
     add('(' + String(node.type) + '.load', 2, 0);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.MemoryAssignment]: (node, print) => {
+  [index.MemoryAssignment]: (node, print) => {
     add('(' + String(node.type) + '.store', 2, 0);
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.Assignment]: (node, print) => {
+  [index.Assignment]: (node, print) => {
     const [target, ...params] = node.params;
     const scope = target.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     add(`(set_${scope} ${target.value}`, 2);
     params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.TernaryExpression]: (node, print) => {
+  [index.TernaryExpression]: (node, print) => {
     const [condition, options] = node.params;
     add('(select', 2);
     print(options);
     print(condition);
     add(')', 0, -2);
   },
-  [Syntax.IfThenElse]: (node, print) => {
+  [index.IfThenElse]: (node, print) => {
     const [condition, then, ...rest] = node.params;
     add('(if', 2);
     print(condition);
@@ -5814,7 +5978,7 @@ const getPrinters = add => ({
     }
     add(')', 0, -2);
   },
-  [Syntax.ObjectLiteral]: (_, __) => {}
+  [index.ObjectLiteral]: (_, __) => {}
 });
 
 const printNode = node => {
@@ -5977,7 +6141,7 @@ exports.closurePlugin = closurePlugin$$1;
 exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
-exports.mapNode = mapNode.mapNode;
+exports.mapNode = mapNode_2;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;

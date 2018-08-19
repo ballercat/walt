@@ -1,6 +1,6 @@
 // @flow
 import token from '../token';
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 
 const quoteOK = quoteCheck => () => quoteCheck;
 const nextFails = () => null;

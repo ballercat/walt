@@ -1,6 +1,6 @@
 // @flow
 import type Context from './context';
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 
 export default function parseConstant(ctx: Context) {
   const node = ctx.startNode();

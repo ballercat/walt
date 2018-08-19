@@ -5,7 +5,7 @@
  */
 
 // @flow
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import statement from './statement';
 import Context from './context';
 import Tokenizer from '../tokenizer';

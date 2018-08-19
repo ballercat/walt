@@ -3,7 +3,7 @@ import token from '../token';
 import punctuator from '../punctuator';
 import constant from '../constant';
 import string from '../string';
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 import { eol } from '../../utils/stream';
 
 const isValidIdentifier = char => {

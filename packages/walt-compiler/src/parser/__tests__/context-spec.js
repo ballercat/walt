@@ -1,4 +1,4 @@
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 import test from 'ava';
 import { statementFragment } from '../../parser/fragment';
 import Context from '../context';

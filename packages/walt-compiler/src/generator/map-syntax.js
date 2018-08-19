@@ -20,7 +20,7 @@ import generateElse from './else';
 import generateSelect from './select';
 import generateNative from './native';
 
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { getInScope, getConstOpcode } from './utils';
 import curry from 'curry';
 import invariant from 'invariant';
