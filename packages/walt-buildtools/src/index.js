@@ -118,7 +118,7 @@ function assemble(tree, options, api) {
       mod.ast,
       Object.assign({}, options, { linker: { statics } })
     );
-    const wasm = api.emitter(code, options);
+    const wasm = api.emitter(code, options).buffer();
 
     return Object.assign({}, opcodes, {
       [filepath]: wasm,
@@ -172,13 +172,12 @@ function build(importsObj, tree) {
         }, {});
 
         return WebAssembly.instantiate(
-          tree.opcodes[filepath].buffer(),
+          tree.opcodes[filepath],
           Object.assign({}, imports, importsObj)
         );
       })
       .catch(e => {
         // TODO: do some logging here
-        console.warn(`Failed to compile ${filepath}`);
         throw e;
       });
 

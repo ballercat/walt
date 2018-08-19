@@ -3,7 +3,6 @@ const link = require("..");
 const path = require("path");
 const fs = require("fs");
 const compiler = require("walt-compiler");
-const print = require("walt-buildtools/print");
 
 const decodeText = (view, ptr) => {
   const decoder = compiler.stringDecoder(view, ptr);
@@ -44,12 +43,6 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
     resolve,
   });
   t.is(typeof factory === "function", true, "linker returns a factory");
-  // console.log(compiler.prettyPrintNode(factory.tree.root.ast));
-  // console.log(Object.values(factory.tree.opcodes));
-  // console.log(print(factory.tree.root.ast));
-  Object.values(factory.tree.opcodes).slice(-2,-1).forEach(o => {
-    // console.log(compiler.debug(o));
-  });
   const wasm = await factory({
     env: { memory },
   });

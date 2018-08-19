@@ -2,8 +2,6 @@ import { memory: Memory<{ initial: 1 }> } from 'env';
 export type GetAType = () => i32;
 export type AType = { foobar: i32 };
 
-const table: Table = Table<{ element: anyfunc, initial: 1}>;
-
 export const a: i32 = 42;
 export function getA(): i32 {
   return a;

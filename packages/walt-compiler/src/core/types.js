@@ -51,7 +51,6 @@ export default function typePlugin() {
                 maybeType != null &&
                 [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)
               ) {
-                console.log('exporting ', maybeType.value);
                 return transform({
                   ...maybeType,
                   meta: {

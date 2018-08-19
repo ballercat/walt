@@ -2327,7 +2327,6 @@ function typePlugin() {
             [Syntax.Export]: (node, transform) => {
               const [maybeType] = node.params;
               if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
-                console.log('exporting ', maybeType.value);
                 return transform(_extends({}, maybeType, {
                   meta: _extends({}, maybeType.meta, {
                     EXPORTED: true
@@ -2769,7 +2768,6 @@ function functionPointer() {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration
-          console.log(decl.type);
           if (!context.locals && decl.type === 'Table') {
             return _extends({}, decl, {
               meta: _extends({}, decl.meta, {
@@ -2791,8 +2789,6 @@ function functionPointer() {
           if (table[node.value] == null) {
             table[node.value] = functions[node.value];
           }
-
-          console.log('FUNCTION POINTER', node.value);
 
           return _extends({}, node, {
             type: 'i32',
