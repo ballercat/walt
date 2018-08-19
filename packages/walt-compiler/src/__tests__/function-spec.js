@@ -22,16 +22,23 @@ test('default arguments', t => {
     t.is(mod.instance.exports.test(), 4);
   });
 });
-test.only('function pointer', t => {
+
+test('function pointer', t => {
   const walt = `
-    const memory: Memory = Memory<{ initial: 1 }>;
+    // shadowing variables should be OK
     export function test(): i32 {
-      const hello: i32 = "hello";
-      return hello;
+      // Definiong an identifier which is a function name
+      const test: i32 = 42;
+
+      // The function pointer parser should defer to available scopes first, and
+      // not re-map this identifier to a pointer.
+      return test;
     }
   `;
 
-  return WebAssembly.instantiate(compile(walt)).then(module => {});
+  return WebAssembly.instantiate(compile(walt)).then(mod => {
+    t.is(mod.instance.exports.test(), 42);
+  });
 });
 
 test('functions', t => {
