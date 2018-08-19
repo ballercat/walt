@@ -27,8 +27,8 @@ export default function arrayPlugin() {
         Declaration: declaration,
         ImmutableDeclaration: declaration,
         Identifier: next => args => {
-          const [scopes, node, context] = args;
-          const ref = find(scopes, node.value);
+          const [node, context] = args;
+          const ref = find(context.scopes, node.value);
           // Before moving on to the core parser all identifiers need to have
           // concrete basic types
           if (ref && ref.meta[TYPE_ARRAY]) {
