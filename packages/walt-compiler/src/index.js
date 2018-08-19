@@ -29,7 +29,7 @@ export {
   walkNode,
   mapNode,
 };
-export const VERSION = '0.9.1';
+export const VERSION = '0.9.2';
 
 // Used for deugging purposes
 export const getIR = (
