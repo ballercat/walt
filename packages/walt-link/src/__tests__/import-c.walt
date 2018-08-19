@@ -2,6 +2,7 @@ import { memory: Memory } from 'env';
 import { a } from './import-a';
 import { b } from './import-b';
 
+const table: Table = Table<{ element: anyfunc, initial: 1}>;
 export function hello_2(): i32 {
   const hello: i32 = 'hello';
   return hello;

@@ -1,8 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.Walt = {})));
-}(this, (function (exports) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('walt-parser-tools/map-node')) :
+	typeof define === 'function' && define.amd ? define(['exports', 'walt-parser-tools/map-node'], factory) :
+	(factory((global.Walt = {}),global.mapNode));
+}(this, (function (exports,mapNode) { 'use strict';
 
 //      
 
@@ -1913,66 +1913,6 @@ const combineParsers = (sortedParsers = []) => {
   }, {});
 };
 
-const identity = id => id;
-
-function map(visitors) {
-  function mapper(input) {
-    if (!Array.isArray(input)) {
-      throw new Error('Transform must be used on an Array. Received ' + JSON.stringify(input));
-    }
-    const visitor = (() => {
-      const [node] = input;
-      if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
-        return visitors[node.Type];
-      }
-      return identity;
-    })();
-
-    if (visitor.length === 2) {
-      return visitor(input, mapper);
-    }
-
-    const [node, ...rest] = visitor(input);
-    const params = node.params.filter(Boolean).map(child => mapper([child, ...rest]));
-
-    return _extends({}, node, { params });
-  }
-
-  return mapper;
-}
-
-function mapNode(visitor) {
-  const nodeMapper = node => {
-    if (node == null) {
-      return node;
-    }
-
-    const mappingFunction = (() => {
-      if ('*' in visitor && typeof visitor['*'] === 'function') {
-        return visitor['*'];
-      }
-
-      if (node.Type in visitor && typeof visitor[node.Type] === 'function') {
-        return visitor[node.Type];
-      }
-      return identity;
-    })();
-
-    if (mappingFunction.length === 2) {
-      return mappingFunction(node, nodeMapper);
-    }
-
-    const mappedNode = mappingFunction(node);
-    const params = mappedNode.params.map(nodeMapper);
-
-    return _extends({}, mappedNode, {
-      params
-    });
-  };
-
-  return nodeMapper;
-}
-
 //      
 const FUNCTION_INDEX = 'function/index';
 
@@ -2383,10 +2323,11 @@ function typePlugin() {
           const [ast, context] = args;
           const { types } = context;
           // Types have to be pre-parsed before the rest of the program
-          const astWithTypes = mapNode({
+          const astWithTypes = mapNode.mapNode({
             [Syntax.Export]: (node, transform) => {
               const [maybeType] = node.params;
               if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
+                console.log('exporting ', maybeType.value);
                 return transform(_extends({}, maybeType, {
                   meta: _extends({}, maybeType.meta, {
                     EXPORTED: true
@@ -2592,7 +2533,7 @@ function Imports() {
     semantics: () => ({
       Import: _next => args => {
         const [node, context] = args;
-        return mapNode({
+        return mapNode.mapNode({
           [Syntax.BinaryExpression]: (as, transform) => {
             const [maybePair, asIdentifier] = as.params;
             // if the original import is not typed this isn't a valid import and is ignored
@@ -2824,6 +2765,7 @@ function functionPointer() {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration
+          console.log(decl.type);
           if (!context.locals && decl.type === 'Table') {
             return _extends({}, decl, {
               meta: _extends({}, decl.meta, {
@@ -2845,6 +2787,8 @@ function functionPointer() {
           if (table[node.value] == null) {
             table[node.value] = functions[node.value];
           }
+
+          console.log('FUNCTION POINTER', node.value);
 
           return _extends({}, node, {
             type: 'i32',
@@ -3527,7 +3471,7 @@ function semantics(ast, parsers = getBuiltInParsers()) {
   };
 
   const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = map(combined)([ast, options]);
+  const patched = mapNode.map(combined)([ast, options]);
 
   return _extends({}, patched, {
     meta: _extends({}, patched.meta, {
@@ -4971,11 +4915,11 @@ function generateData(statics, DATA_SECTION_HEADER_SIZE) {
   // Reserve N bytes for data size header
   let offsetAccumulator = DATA_SECTION_HEADER_SIZE;
 
-  const map = {};
+  const map$$1 = {};
   const data = Object.keys(statics).reduce((acc, key) => {
     const encoded = stringEncoder(key);
     acc.push({ offset: Number(offsetAccumulator), data: encoded });
-    map[key] = offsetAccumulator;
+    map$$1[key] = offsetAccumulator;
     offsetAccumulator += encoded.size;
     return acc;
   }, []);
@@ -4986,7 +4930,7 @@ function generateData(statics, DATA_SECTION_HEADER_SIZE) {
 
   return {
     data: [{ offset: 0, data: lengthStream }, ...data],
-    map
+    map: map$$1
   };
 }
 
@@ -5066,7 +5010,7 @@ function generator(ast, config) {
   const findTableIndex = functionIndex => program.Element.findIndex(n => n.functionIndex === functionIndex);
 
   const typeMap = {};
-  const astWithTypes = mapNode({
+  const astWithTypes = mapNode.mapNode({
     [Syntax.Typedef]: (node, _ignore) => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
       let typeNode = program.Types[typeIndex];
@@ -5083,7 +5027,7 @@ function generator(ast, config) {
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     }
-  })(mapNode({
+  })(mapNode.mapNode({
     [Syntax.Import]: (node, _) => node,
     [Syntax.StringLiteral]: (node, _ignore) => {
       if (Object.keys(statics).length === 0) {
@@ -5137,7 +5081,7 @@ function generator(ast, config) {
         return index;
       })();
 
-      const patched = mapNode({
+      const patched = mapNode.mapNode({
         FunctionPointer(pointer) {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           const functionIndex = metaFunctionIndex;
@@ -6033,7 +5977,7 @@ exports.closurePlugin = closurePlugin$$1;
 exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
-exports.mapNode = mapNode;
+exports.mapNode = mapNode.mapNode;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;

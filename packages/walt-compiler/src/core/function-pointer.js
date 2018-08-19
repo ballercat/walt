@@ -15,6 +15,7 @@ export default function functionPointer() {
             const [decl, context] = args;
 
             // Short circuit since memory is a special type of declaration
+            console.log(decl.type);
             if (!context.locals && decl.type === 'Table') {
               return {
                 ...decl,
@@ -39,6 +40,8 @@ export default function functionPointer() {
             if (table[node.value] == null) {
               table[node.value] = functions[node.value];
             }
+
+            console.log('FUNCTION POINTER', node.value);
 
             return {
               ...node,
