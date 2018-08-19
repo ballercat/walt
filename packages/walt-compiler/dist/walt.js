@@ -2815,6 +2815,10 @@ function Strings() {
   };
 }
 
+function inScope(scopes, value) {
+  return scopes.some(scope => !!scope && scope[value]);
+}
+
 function functionPointer() {
   return {
     semantics() {
@@ -2836,9 +2840,9 @@ function functionPointer() {
         },
         Identifier: next => function pointer(args) {
           const [node, context] = args;
-          const { functions, table } = context;
+          const { functions, table, locals, globals } = context;
 
-          if (!functions[node.value]) {
+          if (inScope([locals, globals], node.value) || !functions[node.value]) {
             return next(args);
           }
 

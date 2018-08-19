@@ -5,6 +5,10 @@ import {
   FUNCTION_INDEX,
 } from '../semantics/metadata';
 
+function inScope(scopes, value) {
+  return scopes.some(scope => !!scope && scope[value]);
+}
+
 export default function functionPointer() {
   return {
     semantics() {
@@ -30,9 +34,12 @@ export default function functionPointer() {
         Identifier: next =>
           function pointer(args) {
             const [node, context] = args;
-            const { functions, table } = context;
+            const { functions, table, locals, globals } = context;
 
-            if (!functions[node.value]) {
+            if (
+              inScope([locals, globals], node.value) ||
+              !functions[node.value]
+            ) {
               return next(args);
             }
 
