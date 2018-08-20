@@ -1,4 +1,4 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import { GLOBAL_INDEX } from '../semantics/metadata';
 
 export default function memoryPlugin() {

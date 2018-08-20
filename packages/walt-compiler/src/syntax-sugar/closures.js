@@ -4,14 +4,16 @@
  * Here be dragons
  *
  */
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import parser from '../parser';
+import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from '../utils/has-node';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 import {
   expressionFragment as expression,
   statementFragment as statement,
 } from '../parser/fragment';
+import { LOCAL_INDEX } from '../semantics/metadata';
 import { sizes } from '../types';
 
 const sum = (a, b) => a + b;
@@ -225,7 +227,7 @@ export default function() {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
               statement(`const __env_ptr : i32 = __closure_malloc(${size});`),
-              { ...context, locals: {} },
+              { ...context, scopes: enter(context.scopes, LOCAL_INDEX) },
             ]);
           }
 
@@ -257,7 +259,7 @@ export default function() {
       },
       Assignment: next => (args, transform) => {
         const [node, context] = args;
-        const { locals, globals, environment } = context;
+        const { scopes, environment } = context;
         const [rhs, lhs] = node.params;
 
         if (!context.isParsingClosure) {
@@ -265,7 +267,7 @@ export default function() {
         }
 
         // Closures are functions and have their own locals
-        if (locals[rhs.value] || globals[rhs.value]) {
+        if (current(scopes)[rhs.value]) {
           return next(args);
         }
 
@@ -297,8 +299,8 @@ export default function() {
       },
       FunctionCall: next => (args, transform) => {
         const [call, context] = args;
-        const { locals, types } = context;
-        const local = locals[call.value];
+        const { scopes, types } = context;
+        const local = find(scopes, call.value);
         if (local && local.meta.CLOSURE_INSTANCE) {
           // Unfortunately, we cannot create a statement for this within the
           // possible syntax so we need to manually structure an indirect call node

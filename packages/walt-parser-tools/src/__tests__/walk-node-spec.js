@@ -1,5 +1,5 @@
 import test from 'ava';
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 import walkNode from '../walk-node';
 
 const mockNodeString =

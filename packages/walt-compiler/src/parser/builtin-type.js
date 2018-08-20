@@ -1,6 +1,6 @@
 // @flow
 import type Context from './context';
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import expression from '../parser/expression';
 import type { NodeType } from '../flow/types';
 

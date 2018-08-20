@@ -1,3 +1,5 @@
+const extend = require('xtend');
+
 const identity = id => id;
 
 function map(visitors) {
@@ -24,16 +26,14 @@ function map(visitors) {
       .filter(Boolean)
       .map(child => mapper([child, ...rest]));
 
-    return { ...node, params };
+    return extend(node, { params });
   }
 
   return mapper;
 }
 
 // This should maybe be it's own module.
-export { map };
-
-export default function mapNode(visitor) {
+function mapNode(visitor) {
   const nodeMapper = node => {
     if (node == null) {
       return node;
@@ -57,11 +57,13 @@ export default function mapNode(visitor) {
     const mappedNode = mappingFunction(node);
     const params = mappedNode.params.map(nodeMapper);
 
-    return {
-      ...mappedNode,
-      params,
-    };
+    return extend(mappedNode, { params });
   };
 
   return nodeMapper;
 }
+
+module.exports = {
+  map,
+  mapNode,
+};

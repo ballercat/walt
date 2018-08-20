@@ -1,5 +1,5 @@
 // @flow
-import { i32 } from '../Syntax';
+import { i32 } from 'walt-syntax';
 import generateExpression from './expression';
 import { isBuiltinType } from './utils';
 import opcode from '../emitter/opcode';

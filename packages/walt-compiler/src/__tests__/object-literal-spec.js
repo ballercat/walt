@@ -1,7 +1,7 @@
 import test from 'ava';
 import { getIR, debug } from '..';
 
-test('objects', t => {
+test.only('objects', t => {
   const walt = `
   const memory: Memory<{ initial: 1 }>;
   type TestType = { x: i32, y: i32, z: i32 };

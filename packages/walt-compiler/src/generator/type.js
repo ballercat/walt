@@ -3,8 +3,8 @@
  * Generate an Intermediate version for a WebAssembly function type
  **/
 import invariant from 'invariant';
-import Syntax from '../Syntax';
-import walkNode from '../utils/walk-node';
+import Syntax from 'walt-syntax';
+import walkNode from 'walt-parser-tools/walk-node';
 import { I32, F32, F64, I64 } from '../emitter/value_type';
 import type { IntermediateTypeDefinitionType, NodeType } from './flow/types';
 

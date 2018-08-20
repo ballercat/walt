@@ -1,5 +1,5 @@
 // @flow
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
 import type Context from './context';
 import closure from './closure';
 import { subscriptFromNode } from './array-subscript';

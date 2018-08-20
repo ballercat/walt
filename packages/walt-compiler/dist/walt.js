@@ -4,178 +4,359 @@
 	(factory((global.Walt = {})));
 }(this, (function (exports) { 'use strict';
 
-//      
+var immutable = extend;
 
-// Main Program
-const Program = 'Program';
-const Keyword = 'Keyword';
-const Export = 'Export';
-const Import = 'Import';
-const Statement = 'Statement';
-const IfThenElse = 'IfThenElse';
-const Select = 'Select';
-const Else = 'Else';
-const UnaryExpression = 'UnaryExpression';
-const BinaryExpression = 'BinaryExpression';
-const TernaryExpression = 'TernaryExpression';
-const NumberLiteral = 'NumberLiteral';
-const StringLiteral = 'StringLiteral';
-const CharacterLiteral = 'CharacterLiteral';
-const Punctuator = 'Punctuator';
-const Identifier = 'Identifier';
-const ArraySubscript = 'ArraySubscript';
-const Constant = 'Constant';
-const Type = 'Type';
-const GenericType = 'GenericType';
-const UserType = 'UserType';
-const FunctionType = 'FunctionType';
-const Declaration = 'Declaration';
-const ImmutableDeclaration = 'ImmutableDeclaration';
-const FunctionDeclaration = 'FunctionDeclaration';
-const ArrayDeclaration = 'ArrayDeclaration';
-const IndirectFunctionCall = 'IndirectFunctionCall';
-const FunctionCall = 'FunctionCall';
-const Loop = 'Loop';
-const MemoryAssignment = 'MemoryAssignment';
-const Assignment = 'Assignment';
-const Param = 'Param';
-const Typedef = 'Typedef';
-const Struct = 'Struct';
-const ReturnStatement = 'ReturnStatement';
-const Sequence = 'Sequence';
-const ObjectLiteral = 'ObjectLiteral';
-const Pair = 'Pair';
-const TypeCast = 'TypeCast';
-const Break = 'Break';
-const Comment = 'Comment';
-const Sizeof = 'Sizeof';
-const Spread = 'Spread';
-const Closure = 'Closure';
-const Noop = 'Noop';
-const ClosureType = 'ClosureType';
-const Block = 'Block';
-const ObjectField = 'ObjectField';
-const FunctionIndex = 'FunctionIndex';
-const FunctionIdentifier = 'FunctionIdentifier';
-const FunctionPointer = 'FunctionPointer';
-const FunctionArguments = 'FunctionArguments';
-const FunctionResult = 'FunctionResult';
-const FunctionLocals = 'FunctionLocals';
-const NativeMethod = 'NativeMethod';
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-const i32 = 'i32';
-const f32 = 'f32';
-const i64 = 'i64';
-const f64 = 'f64';
-const Memory = 'Memory';
-const Table = 'Table';
-const bool = 'bool';
+function extend() {
+    var target = {};
 
-const builtinTypes = {
-  i32,
-  f32,
-  i64,
-  f64,
-  Memory,
-  Table,
-  bool
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+            if (hasOwnProperty.call(source, key)) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    return target;
+}
+
+const identity = id => id;
+
+function map(visitors) {
+  function mapper(input) {
+    if (!Array.isArray(input)) {
+      throw new Error('Transform must be used on an Array. Received ' + JSON.stringify(input));
+    }
+    const visitor = (() => {
+      const [node] = input;
+      if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
+        return visitors[node.Type];
+      }
+      return identity;
+    })();
+
+    if (visitor.length === 2) {
+      return visitor(input, mapper);
+    }
+
+    const [node, ...rest] = visitor(input);
+    const params = node.params.filter(Boolean).map(child => mapper([child, ...rest]));
+
+    return immutable(node, { params });
+  }
+
+  return mapper;
+}
+
+// This should maybe be it's own module.
+function mapNode$2(visitor) {
+  const nodeMapper = node => {
+    if (node == null) {
+      return node;
+    }
+
+    const mappingFunction = (() => {
+      if ('*' in visitor && typeof visitor['*'] === 'function') {
+        return visitor['*'];
+      }
+
+      if (node.Type in visitor && typeof visitor[node.Type] === 'function') {
+        return visitor[node.Type];
+      }
+      return identity;
+    })();
+
+    if (mappingFunction.length === 2) {
+      return mappingFunction(node, nodeMapper);
+    }
+
+    const mappedNode = mappingFunction(node);
+    const params = mappedNode.params.map(nodeMapper);
+
+    return immutable(mappedNode, { params });
+  };
+
+  return nodeMapper;
+}
+
+var mapNode_1$1 = {
+  map,
+  mapNode: mapNode$2
 };
 
-const statements = {
-  // Main Program
-  Program,
+var mapNode = mapNode_1$1;
 
-  // Syntax Nodes
-  Export,
-  Import,
-  IfThenElse,
-  Else,
-  Declaration,
-  ImmutableDeclaration,
-  FunctionDeclaration,
-  ArrayDeclaration,
-  Loop,
-  MemoryAssignment,
-  Assignment,
-  Typedef,
-  Struct,
-  ReturnStatement,
-  Sequence,
-  ObjectLiteral,
-  Pair,
-  Break,
-  Comment,
-  Sizeof,
-  Spread,
-  Noop,
-  Block
-};
+var mapNode_1 = mapNode.map;
+var mapNode_2 = mapNode.mapNode;
 
-var Syntax = {
-  // Main Program
-  Program,
+var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-  // Syntax Nodes
-  Keyword,
-  Export,
-  Import,
-  Statement,
-  IfThenElse,
-  Select,
-  Else,
-  UnaryExpression,
-  BinaryExpression,
-  TernaryExpression,
-  NumberLiteral,
-  StringLiteral,
-  CharacterLiteral,
-  Punctuator,
-  Identifier,
-  ArraySubscript,
-  Constant,
-  Type,
-  GenericType,
-  UserType,
-  FunctionType,
-  Declaration,
-  ImmutableDeclaration,
-  FunctionDeclaration,
-  ArrayDeclaration,
-  IndirectFunctionCall,
-  FunctionCall,
-  Loop,
-  MemoryAssignment,
-  Assignment,
-  Param,
-  Typedef,
-  Struct,
-  ReturnStatement,
-  Sequence,
-  ObjectLiteral,
-  Pair,
-  TypeCast,
-  Break,
-  Comment,
-  Sizeof,
-  Spread,
-  Closure,
 
-  Noop,
 
-  // Semantic Nodes
-  ClosureType,
-  Block,
-  ObjectField,
-  FunctionIndex,
-  FunctionIdentifier,
-  FunctionPointer,
-  FunctionArguments,
-  FunctionResult,
-  FunctionLocals,
+function unwrapExports (x) {
+	return x && x.__esModule ? x['default'] : x;
+}
 
-  // Natives
-  NativeMethod
-};
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+var waltSyntax = createCommonjsModule(function (module, exports) {
+(function (global, factory) {
+  factory(exports);
+})(commonjsGlobal, function (exports) {
+  const Program = 'Program';
+  const Keyword = 'Keyword';
+  const Export = 'Export';
+  const Import = 'Import';
+  const Statement = 'Statement';
+  const IfThenElse = 'IfThenElse';
+  const Select = 'Select';
+  const Else = 'Else';
+  const UnaryExpression = 'UnaryExpression';
+  const BinaryExpression = 'BinaryExpression';
+  const TernaryExpression = 'TernaryExpression';
+  const NumberLiteral = 'NumberLiteral';
+  const StringLiteral = 'StringLiteral';
+  const CharacterLiteral = 'CharacterLiteral';
+  const Punctuator = 'Punctuator';
+  const Identifier = 'Identifier';
+  const ArraySubscript = 'ArraySubscript';
+  const Constant = 'Constant';
+  const Type = 'Type';
+  const GenericType = 'GenericType';
+  const UserType = 'UserType';
+  const FunctionType = 'FunctionType';
+  const Declaration = 'Declaration';
+  const ImmutableDeclaration = 'ImmutableDeclaration';
+  const FunctionDeclaration = 'FunctionDeclaration';
+  const ArrayDeclaration = 'ArrayDeclaration';
+  const IndirectFunctionCall = 'IndirectFunctionCall';
+  const FunctionCall = 'FunctionCall';
+  const Loop = 'Loop';
+  const MemoryAssignment = 'MemoryAssignment';
+  const Assignment = 'Assignment';
+  const Param = 'Param';
+  const Typedef = 'Typedef';
+  const Struct = 'Struct';
+  const ReturnStatement = 'ReturnStatement';
+  const Sequence = 'Sequence';
+  const ObjectLiteral = 'ObjectLiteral';
+  const Pair = 'Pair';
+  const TypeCast = 'TypeCast';
+  const Break = 'Break';
+  const Comment = 'Comment';
+  const Sizeof = 'Sizeof';
+  const Spread = 'Spread';
+  const Closure = 'Closure';
+  const Noop = 'Noop';
+  const ClosureType = 'ClosureType';
+  const Block = 'Block';
+  const ObjectField = 'ObjectField';
+  const FunctionIndex = 'FunctionIndex';
+  const FunctionIdentifier = 'FunctionIdentifier';
+  const FunctionPointer = 'FunctionPointer';
+  const FunctionArguments = 'FunctionArguments';
+  const FunctionResult = 'FunctionResult';
+  const FunctionLocals = 'FunctionLocals';
+  const NativeMethod = 'NativeMethod';
+
+  const i32 = 'i32';
+  const f32 = 'f32';
+  const i64 = 'i64';
+  const f64 = 'f64';
+  const Memory = 'Memory';
+  const Table = 'Table';
+  const bool = 'bool';
+
+  const builtinTypes = {
+    i32,
+    f32,
+    i64,
+    f64,
+    Memory,
+    Table,
+    bool
+  };
+
+  const statements = {
+    // Main Program
+    Program,
+
+    // Syntax Nodes
+    Export,
+    Import,
+    IfThenElse,
+    Else,
+    Declaration,
+    ImmutableDeclaration,
+    FunctionDeclaration,
+    ArrayDeclaration,
+    Loop,
+    MemoryAssignment,
+    Assignment,
+    Typedef,
+    Struct,
+    ReturnStatement,
+    Sequence,
+    ObjectLiteral,
+    Pair,
+    Break,
+    Comment,
+    Sizeof,
+    Spread,
+    Noop,
+    Block
+  };
+
+  var index = {
+    // Main Program
+    Program,
+
+    // Syntax Nodes
+    Keyword,
+    Export,
+    Import,
+    Statement,
+    IfThenElse,
+    Select,
+    Else,
+    UnaryExpression,
+    BinaryExpression,
+    TernaryExpression,
+    NumberLiteral,
+    StringLiteral,
+    CharacterLiteral,
+    Punctuator,
+    Identifier,
+    ArraySubscript,
+    Constant,
+    Type,
+    GenericType,
+    UserType,
+    FunctionType,
+    Declaration,
+    ImmutableDeclaration,
+    FunctionDeclaration,
+    ArrayDeclaration,
+    IndirectFunctionCall,
+    FunctionCall,
+    Loop,
+    MemoryAssignment,
+    Assignment,
+    Param,
+    Typedef,
+    Struct,
+    ReturnStatement,
+    Sequence,
+    ObjectLiteral,
+    Pair,
+    TypeCast,
+    Break,
+    Comment,
+    Sizeof,
+    Spread,
+    Closure,
+
+    Noop,
+
+    // Semantic Nodes
+    ClosureType,
+    Block,
+    ObjectField,
+    FunctionIndex,
+    FunctionIdentifier,
+    FunctionPointer,
+    FunctionArguments,
+    FunctionResult,
+    FunctionLocals,
+
+    // Natives
+    NativeMethod
+  };
+
+  exports.Program = Program;
+  exports.Keyword = Keyword;
+  exports.Export = Export;
+  exports.Import = Import;
+  exports.Statement = Statement;
+  exports.IfThenElse = IfThenElse;
+  exports.Select = Select;
+  exports.Else = Else;
+  exports.UnaryExpression = UnaryExpression;
+  exports.BinaryExpression = BinaryExpression;
+  exports.TernaryExpression = TernaryExpression;
+  exports.NumberLiteral = NumberLiteral;
+  exports.StringLiteral = StringLiteral;
+  exports.CharacterLiteral = CharacterLiteral;
+  exports.Punctuator = Punctuator;
+  exports.Identifier = Identifier;
+  exports.ArraySubscript = ArraySubscript;
+  exports.Constant = Constant;
+  exports.Type = Type;
+  exports.GenericType = GenericType;
+  exports.UserType = UserType;
+  exports.FunctionType = FunctionType;
+  exports.Declaration = Declaration;
+  exports.ImmutableDeclaration = ImmutableDeclaration;
+  exports.FunctionDeclaration = FunctionDeclaration;
+  exports.ArrayDeclaration = ArrayDeclaration;
+  exports.IndirectFunctionCall = IndirectFunctionCall;
+  exports.FunctionCall = FunctionCall;
+  exports.Loop = Loop;
+  exports.MemoryAssignment = MemoryAssignment;
+  exports.Assignment = Assignment;
+  exports.Param = Param;
+  exports.Typedef = Typedef;
+  exports.Struct = Struct;
+  exports.ReturnStatement = ReturnStatement;
+  exports.Sequence = Sequence;
+  exports.ObjectLiteral = ObjectLiteral;
+  exports.Pair = Pair;
+  exports.TypeCast = TypeCast;
+  exports.Break = Break;
+  exports.Comment = Comment;
+  exports.Sizeof = Sizeof;
+  exports.Spread = Spread;
+  exports.Closure = Closure;
+  exports.Noop = Noop;
+  exports.ClosureType = ClosureType;
+  exports.Block = Block;
+  exports.ObjectField = ObjectField;
+  exports.FunctionIndex = FunctionIndex;
+  exports.FunctionIdentifier = FunctionIdentifier;
+  exports.FunctionPointer = FunctionPointer;
+  exports.FunctionArguments = FunctionArguments;
+  exports.FunctionResult = FunctionResult;
+  exports.FunctionLocals = FunctionLocals;
+  exports.NativeMethod = NativeMethod;
+  exports.i32 = i32;
+  exports.f32 = f32;
+  exports.i64 = i64;
+  exports.f64 = f64;
+  exports.Memory = Memory;
+  exports.Table = Table;
+  exports.bool = bool;
+  exports.builtinTypes = builtinTypes;
+  exports.statements = statements;
+  exports.default = index;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+});
+});
+
+var Syntax = unwrapExports(waltSyntax);
+var waltSyntax_1 = waltSyntax.semantics;
+var waltSyntax_2 = waltSyntax.builtinTypes;
+var waltSyntax_3 = waltSyntax.statements;
+var waltSyntax_4 = waltSyntax.i32;
+var waltSyntax_5 = waltSyntax.f32;
+var waltSyntax_6 = waltSyntax.i64;
+var waltSyntax_7 = waltSyntax.f64;
 
 var _extends = Object.assign || function (target) {
   for (var i = 1; i < arguments.length; i++) {
@@ -311,23 +492,23 @@ function binary(ctx, op, params) {
   node.value = op.value;
   node.params = params;
 
-  let Type$$1 = Syntax.BinaryExpression;
+  let Type = Syntax.BinaryExpression;
   if (node.value === '=') {
-    Type$$1 = Syntax.Assignment;
+    Type = Syntax.Assignment;
   } else if (node.value === '-=' || node.value === '+=') {
-    Type$$1 = Syntax.Assignment;
+    Type = Syntax.Assignment;
     const value = node.value[0];
     node.value = '=';
     node.params = [node.params[0], binary(ctx, _extends({}, op, { value }), [node.params[0], node.params[1]])];
   } else if (node.value === '[' || node.value === '.') {
     return subscriptFromNode(ctx, node);
   } else if (node.value === ':') {
-    Type$$1 = Syntax.Pair;
+    Type = Syntax.Pair;
   } else if (node.value === '||' || node.value === '&&') {
-    Type$$1 = Syntax.Select;
+    Type = Syntax.Select;
   }
 
-  return ctx.endNode(node, Type$$1);
+  return ctx.endNode(node, Type);
 }
 
 function unary(ctx, op, params) {
@@ -466,8 +647,8 @@ function stringLiteral(ctx) {
       node.value = '"';
   }
 
-  const Type$$1 = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? Syntax.CharacterLiteral : Syntax.StringLiteral;
-  return ctx.endNode(node, Type$$1);
+  const Type = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? Syntax.CharacterLiteral : Syntax.StringLiteral;
+  return ctx.endNode(node, Type);
 }
 
 //      
@@ -792,10 +973,10 @@ const expression = (ctx, check = predicate) => {
 //      
 const declaration = ctx => {
   const node = ctx.startNode();
-  let Type$$1 = Syntax.Declaration;
+  let Type = Syntax.Declaration;
 
   if (ctx.token.value === 'const') {
-    Type$$1 = Syntax.ImmutableDeclaration;
+    Type = Syntax.ImmutableDeclaration;
   }
 
   ctx.eat(['const', 'let', 'function']);
@@ -820,7 +1001,7 @@ const declaration = ctx => {
     params.push(expression(ctx));
   }
 
-  return ctx.endNode(_extends({}, node, { params, type }), Type$$1);
+  return ctx.endNode(_extends({}, node, { params, type }), Type);
 };
 
 //      
@@ -868,18 +1049,18 @@ function maybeFunctionDeclaration(ctx) {
   const argumentsNode = parseArguments(ctx);
   const resultNode = parseFunctionResult(ctx);
   ctx.expect(['{']);
-  const statements$$1 = [];
+  const statements = [];
   while (ctx.token && ctx.token.value !== '}') {
     const stmt = statement(ctx);
     if (stmt) {
-      statements$$1.push(stmt);
+      statements.push(stmt);
     }
   }
   ctx.expect(['}']);
 
   return ctx.endNode(_extends({}, node, {
     value,
-    params: [argumentsNode, resultNode, ...statements$$1]
+    params: [argumentsNode, resultNode, ...statements]
   }), Syntax.FunctionDeclaration);
 }
 
@@ -1913,65 +2094,89 @@ const combineParsers = (sortedParsers = []) => {
   }, {});
 };
 
-const identity = id => id;
+/**
+ * Scope helpers.
+ *
+ * Normalizes how scope look ups are made
+ */
+const namespace$1 = Symbol('scope namespace');
 
-function map(visitors) {
-  function mapper(input) {
-    if (!Array.isArray(input)) {
-      throw new Error('Transform must be used on an Array. Received ' + JSON.stringify(input));
-    }
-    const visitor = (() => {
-      const [node] = input;
-      if (node.Type in visitors && typeof visitors[node.Type] === 'function') {
-        return visitors[node.Type];
-      }
-      return identity;
-    })();
+function enter$1(scopes, scopeName) {
+  return [...scopes, { [namespace$1]: scopeName }];
+}
 
-    if (visitor.length === 2) {
-      return visitor(input, mapper);
-    }
+function exit$1(scopes) {
+  return scopes.slice(0, -1);
+}
 
-    const [node, ...rest] = visitor(input);
-    const params = node.params.filter(Boolean).map(child => mapper([child, ...rest]));
+function current$1(scopes) {
+  return scopes[scopes.length - 1];
+}
 
-    return _extends({}, node, { params });
+function add$1(scopes, key, node) {
+  const cur = current$1(scopes);
+  if (cur) {
+    cur[key] = node;
   }
 
-  return mapper;
+  return cur;
 }
 
-function mapNode(visitor) {
-  const nodeMapper = node => {
-    if (node == null) {
-      return node;
+function find$1(scopes, key) {
+  const len = scopes.length;
+  let i = len - 1;
+  for (i; i >= 0; i--) {
+    const ref = scopes[i][key];
+    if (ref) {
+      return ref;
     }
+  }
 
-    const mappingFunction = (() => {
-      if ('*' in visitor && typeof visitor['*'] === 'function') {
-        return visitor['*'];
-      }
-
-      if (node.Type in visitor && typeof visitor[node.Type] === 'function') {
-        return visitor[node.Type];
-      }
-      return identity;
-    })();
-
-    if (mappingFunction.length === 2) {
-      return mappingFunction(node, nodeMapper);
-    }
-
-    const mappedNode = mappingFunction(node);
-    const params = mappedNode.params.map(nodeMapper);
-
-    return _extends({}, mappedNode, {
-      params
-    });
-  };
-
-  return nodeMapper;
+  return null;
 }
+
+function index$1(scope, key) {
+  const pos = Object.keys(scope).indexOf(key);
+  return pos > -1 ? pos : Object.keys(scope).length;
+}
+
+var scope$2 = {
+  enter: enter$1,
+  exit: exit$1,
+  add: add$1,
+  find: find$1,
+  current: current$1,
+  index: index$1,
+  namespace: namespace$1
+};
+
+const {
+  enter,
+  exit,
+  add,
+  find,
+  current,
+  namespace,
+  index
+} = scope$2;
+
+var scope = {
+  enter,
+  exit,
+  add,
+  find,
+  current,
+  namespace,
+  index
+};
+
+var scope_1 = scope.enter;
+var scope_2 = scope.exit;
+var scope_3 = scope.current;
+var scope_4 = scope.find;
+var scope_5 = scope.add;
+var scope_6 = scope.index;
+var scope_7 = scope.namespace;
 
 //      
 const FUNCTION_INDEX = 'function/index';
@@ -2203,28 +2408,19 @@ function Core() {
     semantics() {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
-        const scope = context.locals || context.globals;
-        const indexMeta = (() => {
-          let index = Object.keys(scope).indexOf(node.value);
-          if (index === -1) {
-            index = Object.keys(scope).length;
-          }
-          if (scope === context.locals) {
-            return { [LOCAL_INDEX]: index };
-          }
+        const scope$$1 = scope_3(context.scopes);
+        const index$$1 = scope_6(scope$$1, node.value);
 
-          return { [GLOBAL_INDEX]: index };
-        })();
-
-        scope[node.value] = extendNode({
+        scope$$1[node.value] = extendNode({
           params: node.params.map(extendNode({ type: node.type })),
-          meta: _extends({}, node.meta, indexMeta, {
+          meta: _extends({}, node.meta, {
+            [scope$$1[scope_7]]: index$$1,
             [TYPE_CONST]: node.Type === Syntax.ImmutableDeclaration
           }),
           Type: Syntax.Declaration
         }, node);
 
-        return next([scope[node.value], context]);
+        return next([scope$$1[node.value], context]);
       };
 
       return {
@@ -2237,12 +2433,8 @@ function Core() {
         BinaryExpression: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
           params: node.params.map(child => transform([child, context]))
         })),
-        Pair: next => (args, transform) => {
+        Pair: _next => (args, transform) => {
           const [typeCastMaybe, context] = args;
-          // Ignore everything in global scope (promotions only possible in functions
-          if (!context.locals) {
-            return next(args);
-          }
 
           const params = typeCastMaybe.params.map(p => transform([p, context]));
           const [targetNode, typeNode] = params;
@@ -2268,14 +2460,7 @@ function Core() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-
-          let ref;
-          if (context.locals) {
-            ref = context.locals[node.value];
-          }
-          if (!ref) {
-            ref = context.globals[node.value];
-          }
+          let ref = scope_4(context.scopes, node.value);
           if (ref) {
             return _extends({}, node, {
               meta: _extends({}, node.meta, ref.meta),
@@ -2383,7 +2568,7 @@ function typePlugin() {
           const [ast, context] = args;
           const { types } = context;
           // Types have to be pre-parsed before the rest of the program
-          const astWithTypes = mapNode({
+          const astWithTypes = mapNode_2({
             [Syntax.Export]: (node, transform) => {
               const [maybeType] = node.params;
               if (maybeType != null && [Syntax.Typedef, Syntax.Struct].includes(maybeType.Type)) {
@@ -2453,6 +2638,12 @@ const fragment = (source, parser) => {
 const expressionFragment = source => fragment(source, expression);
 const statementFragment = source => fragment(source, statement);
 
+const shifts = {
+  i64: 63,
+  f64: 63,
+  i32: 31,
+  f32: 32
+};
 // Unary expressions need to be patched so that the LHS type matches the RHS
 function unary$1 () {
   return {
@@ -2466,7 +2657,7 @@ function unary$1 () {
           switch (unaryNode.value) {
             // Transform bang
             case '!':
-              const shift = ['i64', 'f64'].includes(lhs.type) ? '63' : '31';
+              const shift = shifts[lhs.type];
               return transform([expressionFragment(`(((${String(lhs)} >> ${shift}) | ((~${String(lhs)} + 1) >> ${shift})) + 1)`), context]);
             case '~':
               const mask = ['i64', 'f64'].includes(transform([lhs, context]).type) ? '0xffffffffffff' : '0xffffff';
@@ -2499,7 +2690,8 @@ function coreFunctionPlugin() {
           context = _extends({}, context, {
             result: fun.result,
             locals: {},
-            arguments: []
+            arguments: [],
+            scopes: scope_1(context.scopes, LOCAL_INDEX)
           });
 
           // first two parameters to a function node are the arguments and result
@@ -2512,17 +2704,19 @@ function coreFunctionPlugin() {
             meta: _extends({}, fun.meta, {
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
-                argumentsCount: context.arguments.length
+                argumentsCount: context.arguments.length,
+                locals: scope_3(context.scopes)
               }
             })
           });
           context.functions[fun.value] = ref;
 
           // Parse the statements last, so that they can self-reference the function
-          const statements$$1 = rest.map(p => transform([p, context]));
+          const statements = rest.map(p => transform([p, context]));
 
-          ref.meta[FUNCTION_METADATA].locals = context.locals;
-          ref.params = [args, result, ...statements$$1];
+          ref.params = [args, result, ...statements];
+
+          context.scopes = scope_2(context.scopes);
 
           return ref;
         },
@@ -2592,7 +2786,7 @@ function Imports() {
     semantics: () => ({
       Import: _next => args => {
         const [node, context] = args;
-        return mapNode({
+        return mapNode_2({
           [Syntax.BinaryExpression]: (as, transform) => {
             const [maybePair, asIdentifier] = as.params;
             // if the original import is not typed this isn't a valid import and is ignored
@@ -2614,7 +2808,7 @@ function Imports() {
             }));
           },
           [Syntax.Pair]: (pairNode, __) => {
-            const { types, functions, globals } = context;
+            const { types, functions } = context;
             const [identifierNode, typeNode] = pairNode.params;
 
             if (types[typeNode.value] != null) {
@@ -2639,12 +2833,12 @@ function Imports() {
             }
 
             if (!['Table', 'Memory'].includes(typeNode.type)) {
-              const index = Object.keys(globals).length;
-
-              globals[identifierNode.value] = _extends({}, identifierNode, {
-                meta: { [GLOBAL_INDEX]: index, [TYPE_CONST]: true },
+              const scope$$1 = scope_3(context.scopes);
+              const index$$1 = scope_6(scope$$1, identifierNode.value);
+              scope_5(context.scopes, identifierNode.value, _extends({}, identifierNode, {
+                meta: { [scope$$1[scope_7]]: index$$1, [TYPE_CONST]: true },
                 type: typeNode.type
-              });
+              }));
             }
 
             return pairNode;
@@ -2710,7 +2904,7 @@ function arrayPlugin() {
         ImmutableDeclaration: declaration,
         Identifier: next => args => {
           const [node, context] = args;
-          const ref = context.locals[node.value] || context.globals[node.value];
+          const ref = scope_4(context.scopes, node.value);
           // Before moving on to the core parser all identifiers need to have
           // concrete basic types
           if (ref && ref.meta[TYPE_ARRAY]) {
@@ -2815,10 +3009,6 @@ function Strings() {
   };
 }
 
-function inScope(scopes, value) {
-  return scopes.some(scope => !!scope && scope[value]);
-}
-
 function functionPointer() {
   return {
     semantics() {
@@ -2840,9 +3030,9 @@ function functionPointer() {
         },
         Identifier: next => function pointer(args) {
           const [node, context] = args;
-          const { functions, table, locals, globals } = context;
+          const { functions, table, scopes } = context;
 
-          if (inScope([locals, globals], node.value) || !functions[node.value]) {
+          if (scope_4(scopes, node.value) || !functions[node.value]) {
             return next(args);
           }
 
@@ -2861,23 +3051,23 @@ function functionPointer() {
         },
         FunctionCall: next => function indirectCall(args, transform) {
           const [call, context] = args;
-          const { locals, types } = context;
-          const local = locals[call.value];
+          const { scopes, types } = context;
+          const ref = scope_4(scopes, call.value);
           // Nothing we need transform
-          if (!local) {
+          if (!ref) {
             return next(args);
           }
 
-          const typedef = types[local.type];
-          const typeIndex = Object.keys(types).indexOf(local.type);
+          const typedef = types[ref.type];
+          const typeIndex = Object.keys(types).indexOf(ref.type);
 
           // We will short all of the other middleware so transform the parameters
           // here and append an identifier which will be used to get the table
           // value
-          const params = [...call.params, _extends({}, local, { Type: Syntax.Identifier })].map(p => transform([p, context]));
+          const params = [...call.params, _extends({}, ref, { Type: Syntax.Identifier })].map(p => transform([p, context]));
 
           return _extends({}, call, {
-            meta: _extends({}, call.meta, local.meta, {
+            meta: _extends({}, call.meta, ref.meta, {
               [TYPE_INDEX]: typeIndex
             }),
             type: typedef != null ? typedef.type : call.type,
@@ -2929,7 +3119,7 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
   })];
 };
 
-function Struct$1() {
+function Struct() {
   return {
     semantics() {
       return {
@@ -2949,34 +3139,32 @@ function Struct$1() {
         },
         Identifier: next => args => {
           const [node, context] = args;
-          const { userTypes, locals, globals } = context;
-          const local = locals[node.value] || globals[node.value];
+          const { userTypes, scopes } = context;
+          const ref = scope_4(scopes, node.value);
           // Ignore anything not typed as a struct
-          if (!(local && userTypes[local.type])) {
+          if (!(ref && userTypes[ref.type])) {
             return next(args);
           }
 
           // Convert all struct uses to i32 types
           return _extends({}, node, {
-            meta: _extends({}, node.meta, local.meta, { ALIAS: local.type }),
+            meta: _extends({}, node.meta, ref.meta, { ALIAS: ref.type }),
             type: 'i32'
           });
         },
         ArraySubscript: next => (args, transform) => {
           const [node, context] = args;
-          const { userTypes, locals } = context;
+          const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
-          const local = locals[identifier.value];
-          if (!local) {
-            return next(args);
-          }
-          const userType = userTypes[local.type];
+          const ref = scope_4(scopes, identifier.value);
+          const userType = userTypes[ref.type];
+
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
             return _extends({}, node, {
-              type: objectKeyTypeMap ? objectKeyTypeMap[field.value] : 'i32',
+              type: objectKeyTypeMap[field.value],
               params: patchStringSubscript(metaObject, params)
             });
           }
@@ -3019,31 +3207,29 @@ function Struct$1() {
             },
             [Syntax.Spread]: (spread, _) => {
               // find userType
-              const { locals, userTypes } = context;
+              const { scopes, userTypes } = context;
               const [target] = spread.params;
-              const userType = userTypes[locals[target.value].type];
+              const userType = userTypes[scope_4(scopes, target.value).type];
               const keyOffsetMap = userType.meta[TYPE_OBJECT];
-              if (keyOffsetMap != null) {
-                // map over the keys
-                Object.keys(keyOffsetMap).forEach(key => {
-                  const offsetNode = _extends({}, target, {
-                    Type: Syntax.Identifier,
-                    value: key,
-                    params: []
-                  });
-                  // profit
-                  spreadKeys[key] = _extends({}, lhs, {
-                    Type: Syntax.MemoryAssignment,
-                    params: [_extends({}, lhs, {
-                      Type: Syntax.ArraySubscript,
-                      params: [lhs, _extends({}, offsetNode)]
-                    }), _extends({}, target, {
-                      Type: Syntax.ArraySubscript,
-                      params: [target, _extends({}, offsetNode)]
-                    })]
-                  });
+              // map over the keys
+              Object.keys(keyOffsetMap).forEach(key => {
+                const offsetNode = _extends({}, target, {
+                  Type: Syntax.Identifier,
+                  value: key,
+                  params: []
                 });
-              }
+                // profit
+                spreadKeys[key] = _extends({}, lhs, {
+                  Type: Syntax.MemoryAssignment,
+                  params: [_extends({}, lhs, {
+                    Type: Syntax.ArraySubscript,
+                    params: [lhs, _extends({}, offsetNode)]
+                  }), _extends({}, target, {
+                    Type: Syntax.ArraySubscript,
+                    params: [target, _extends({}, offsetNode)]
+                  })]
+                });
+              });
             }
           })(rhs);
 
@@ -3171,11 +3357,10 @@ function sizeofPlugin() {
             return next(args);
           }
 
-          const { locals, globals, userTypes, functions } = context;
+          const { scopes, userTypes, functions } = context;
           const [target] = sizeof.params;
-          const local = locals[target.value];
-          const { type = '' } = local || {};
-          const global = globals[target.value];
+          const ref = scope_4(scopes, target.value);
+          const { type = '' } = ref || {};
           const userType = userTypes[target.value] || userTypes[type];
           const func = functions[target.value];
 
@@ -3190,7 +3375,7 @@ function sizeofPlugin() {
             });
           }
 
-          const node = local || global || func;
+          const node = ref || func;
 
           return _extends({}, sizeof, {
             value: sizes$1[node ? node.type : target.value] || 4,
@@ -3402,7 +3587,7 @@ function closures () {
         fun.params = fun.params.map(p => {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
-            return transform([statementFragment(`const __env_ptr : i32 = __closure_malloc(${size});`), _extends({}, context, { locals: {} })]);
+            return transform([statementFragment(`const __env_ptr : i32 = __closure_malloc(${size});`), _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
           }
 
           return p;
@@ -3428,7 +3613,7 @@ function closures () {
       },
       Assignment: next => (args, transform) => {
         const [node, context] = args;
-        const { locals, globals, environment } = context;
+        const { scopes, environment } = context;
         const [rhs, lhs] = node.params;
 
         if (!context.isParsingClosure) {
@@ -3436,7 +3621,7 @@ function closures () {
         }
 
         // Closures are functions and have their own locals
-        if (locals[rhs.value] || globals[rhs.value]) {
+        if (scope_3(scopes)[rhs.value]) {
           return next(args);
         }
 
@@ -3461,8 +3646,8 @@ function closures () {
       },
       FunctionCall: next => (args, transform) => {
         const [call, context] = args;
-        const { locals, types } = context;
-        const local = locals[call.value];
+        const { scopes, types } = context;
+        const local = scope_4(scopes, call.value);
         if (local && local.meta.CLOSURE_INSTANCE) {
           // Unfortunately, we cannot create a statement for this within the
           // possible syntax so we need to manually structure an indirect call node
@@ -3507,7 +3692,7 @@ function closures () {
 
 //      
 const getBuiltInParsers = () => {
-  return [base().semantics, Core().semantics, Imports().semantics, typePlugin().semantics, unary$1().semantics, coreFunctionPlugin().semantics, booleanPlugin().semantics, arrayPlugin().semantics, memoryPlugin().semantics, Strings().semantics, functionPointer().semantics, Struct$1().semantics, nativePlugin().semantics, sizeofPlugin().semantics, defaultArguments().semantics, closures().semantics];
+  return [base().semantics, Core().semantics, Imports().semantics, typePlugin().semantics, unary$1().semantics, coreFunctionPlugin().semantics, booleanPlugin().semantics, arrayPlugin().semantics, memoryPlugin().semantics, Strings().semantics, functionPointer().semantics, Struct().semantics, nativePlugin().semantics, sizeofPlugin().semantics, defaultArguments().semantics, closures().semantics];
 };
 
 function semantics(ast, parsers = getBuiltInParsers()) {
@@ -3518,6 +3703,7 @@ function semantics(ast, parsers = getBuiltInParsers()) {
   const table = {};
   const hoist = [];
   const statics = {};
+  const scopes = scope_1([], GLOBAL_INDEX);
 
   const options = {
     functions,
@@ -3527,16 +3713,23 @@ function semantics(ast, parsers = getBuiltInParsers()) {
     table,
     hoist,
     statics,
-    path: []
+    path: [],
+    scopes
   };
 
   const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = map(combined)([ast, options]);
+  const patched = mapNode_1(combined)([ast, options]);
 
   return _extends({}, patched, {
     meta: _extends({}, patched.meta, {
       // Attach information collected to the AST
-      [AST_METADATA]: { functions, globals, types, userTypes, statics }
+      [AST_METADATA]: {
+        functions,
+        globals: scopes[0],
+        types,
+        userTypes,
+        statics
+      }
     }),
     params: [...patched.params, ...hoist]
   });
@@ -3554,10 +3747,10 @@ function semantics(ast, parsers = getBuiltInParsers()) {
  * @license MIT
  */
 
-const i32$1 = 1;
-const i64$1 = 1 << 1;
-const f32$1 = 1 << 2;
-const f64$1 = 1 << 3;
+const i32 = 1;
+const i64 = 1 << 1;
+const f32 = 1 << 2;
+const f64 = 1 << 3;
 const anyfunc = 1 << 4;
 const func = 1 << 5;
 const block_type = 1 << 6;
@@ -3574,10 +3767,10 @@ const u64 = 1 << 12;
 const word = 4;
 
 const sizeof = {
-  [i32$1]: word,
-  [i64$1]: word * 2,
-  [f32$1]: word,
-  [f64$1]: word * 2,
+  [i32]: word,
+  [i64]: word * 2,
+  [f32]: word,
+  [f64]: word * 2,
   [u32]: word,
   [u16]: word >> 1,
   [u8]: word >> 2,
@@ -3593,13 +3786,13 @@ const LITTLE_ENDIAN = true;
 
 const get$1 = (type, index, dataView) => {
   switch (type) {
-    case i32$1:
+    case i32:
       return dataView.getInt32(index, LITTLE_ENDIAN);
-    case i64$1:
+    case i64:
       return dataView.getInt64(index, LITTLE_ENDIAN);
-    case f32$1:
+    case f32:
       return dataView.getFloat32(index, LITTLE_ENDIAN);
-    case f64$1:
+    case f64:
       return dataView.getFloat64(index, LITTLE_ENDIAN);
     case anyfunc:
       return dataView.getUint32(index, LITTLE_ENDIAN);
@@ -3624,13 +3817,13 @@ const get$1 = (type, index, dataView) => {
 
 const set$1 = (type, index, dataView, value) => {
   switch (type) {
-    case i32$1:
+    case i32:
       return dataView.setInt32(index, value, LITTLE_ENDIAN);
-    case i64$1:
+    case i64:
       return dataView.setInt64(index, value, LITTLE_ENDIAN);
-    case f32$1:
+    case f32:
       return dataView.setFloat32(index, value, LITTLE_ENDIAN);
-    case f64$1:
+    case f64:
       return dataView.setFloat64(index, value, LITTLE_ENDIAN);
     case anyfunc:
       return dataView.setUint32(index, value, LITTLE_ENDIAN);
@@ -3653,11 +3846,11 @@ const set$1 = (type, index, dataView, value) => {
   }
 };
 
-var index = {
-  i32: i32$1,
-  i64: i64$1,
-  f32: f32$1,
-  f64: f64$1,
+var index$2 = {
+  i32,
+  i64,
+  f32,
+  f64,
   anyfunc,
   func,
   block_type,
@@ -3672,14 +3865,14 @@ var index = {
   sizeof
 };
 
-var index_1 = index.i32;
-var index_2 = index.i64;
-var index_3 = index.f32;
-var index_4 = index.f64;
-var index_9 = index.u8;
-var index_12 = index.u32;
-var index_14 = index.set;
-var index_16 = index.sizeof;
+var index_1 = index$2.i32;
+var index_2 = index$2.i64;
+var index_3 = index$2.f32;
+var index_4 = index$2.f64;
+var index_9 = index$2.u8;
+var index_12 = index$2.u32;
+var index_14 = index$2.set;
+var index_16 = index$2.sizeof;
 
 //      
 /**
@@ -3996,7 +4189,7 @@ const scopeOperation = curry_1((op, node) => {
 });
 
 const getConstOpcode = node => {
-  const nodeType = node.type || builtinTypes.i32;
+  const nodeType = node.type || waltSyntax_2.i32;
 
   const kind = def[nodeType + 'Const'];
   const params = [Number(node.value)];
@@ -4010,20 +4203,20 @@ const getConstOpcode = node => {
 // clean this up
 const getType = str => {
   switch (str) {
-    case builtinTypes.f32:
+    case waltSyntax_2.f32:
       return F32;
-    case builtinTypes.f64:
+    case waltSyntax_2.f64:
       return F64;
-    case builtinTypes.i64:
+    case waltSyntax_2.i64:
       return I64;
-    case builtinTypes.i32:
+    case waltSyntax_2.i32:
     default:
       return I32;
   }
 };
 
 const isBuiltinType = type => {
-  return typeof type === 'string' && builtinTypes[type] != null;
+  return typeof type === 'string' && waltSyntax_2[type] != null;
 };
 
 const generateValueType = node => ({
@@ -4104,7 +4297,7 @@ function validate(ast, {
         [Syntax.Declaration]: (node, _validator) => {
           const [start, end] = node.range;
           const [initializer] = node.params;
-          if (initializer != null && statements[initializer.Type] != null) {
+          if (initializer != null && waltSyntax_3[initializer.Type] != null) {
             problems.push(generateErrorString(`Unexpected statement ${initializer.Type}`, 'Attempting to assign a statement to a variable. Did you miss a semicolon(;)?', { start, end }, filename, functionName));
           }
           if (node.meta[TYPE_CONST]) {
@@ -4120,7 +4313,7 @@ function validate(ast, {
         [Syntax.Assignment]: node => {
           const [identifier] = node.params;
           const [start, end] = node.range;
-          const statement = node.params.find(param => statements[param.Type] != null);
+          const statement = node.params.find(param => waltSyntax_3[param.Type] != null);
           if (statement != null) {
             problems.push(generateErrorString('Unexpected statement in assignment', 'Statments cannot be used in assignment expressions. Did you miss a semicolon?', { start: statement.range[0], end: statement.range[1] }, filename, functionName));
           }
@@ -4328,7 +4521,7 @@ const generateDeclaration = (node, parent) => {
   if (initNode) {
     const metaIndex = node.meta[LOCAL_INDEX];
 
-    const type = isBuiltinType(node.type) ? node.type : i32;
+    const type = isBuiltinType(node.type) ? node.type : waltSyntax_4;
 
     return [...generateExpression(_extends({}, initNode, { type }), parent), {
       kind: def.SetLocal,
@@ -5070,7 +5263,7 @@ function generator(ast, config) {
   const findTableIndex = functionIndex => program.Element.findIndex(n => n.functionIndex === functionIndex);
 
   const typeMap = {};
-  const astWithTypes = mapNode({
+  const astWithTypes = mapNode_2({
     [Syntax.Typedef]: (node, _ignore) => {
       let typeIndex = program.Types.findIndex(({ id }) => id === node.value);
       let typeNode = program.Types[typeIndex];
@@ -5087,7 +5280,7 @@ function generator(ast, config) {
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     }
-  })(mapNode({
+  })(mapNode_2({
     [Syntax.Import]: (node, _) => node,
     [Syntax.StringLiteral]: (node, _ignore) => {
       if (Object.keys(statics).length === 0) {
@@ -5141,7 +5334,7 @@ function generator(ast, config) {
         return index;
       })();
 
-      const patched = mapNode({
+      const patched = mapNode_2({
         FunctionPointer(pointer) {
           const metaFunctionIndex = pointer.meta[FUNCTION_INDEX];
           const functionIndex = metaFunctionIndex;
@@ -5275,11 +5468,11 @@ const emit$2 = exports => {
   const payload = new OutputStream();
   payload.push(varuint32, exports.length, 'count');
 
-  exports.forEach(({ field, kind, index: index$$1 }) => {
+  exports.forEach(({ field, kind, index }) => {
     emitString(payload, field, 'field');
 
     payload.push(index_9, kind, 'Global');
-    payload.push(varuint32, index$$1, 'index');
+    payload.push(varuint32, index, 'index');
   });
 
   return payload;
@@ -5341,10 +5534,10 @@ function emitTables(start) {
 }
 
 //      
-const emitElement = stream => ({ functionIndex }, index$$1) => {
+const emitElement = stream => ({ functionIndex }, index) => {
   stream.push(varuint32, 0, 'table index');
   stream.push(index_9, def.i32Const.code, 'offset');
-  stream.push(varuint32, index$$1, index$$1.toString());
+  stream.push(varuint32, index, index.toString());
   stream.push(index_9, def.End.code, 'end');
   stream.push(varuint32, 1, 'number of elements');
   stream.push(varuint32, functionIndex, 'function index');
@@ -5975,7 +6168,7 @@ function closurePlugin$$1() {
 }
 
 //      
-const VERSION = '0.9.2';
+const VERSION = '0.9.3';
 
 // Used for deugging purposes
 const getIR = (source, {
@@ -6037,7 +6230,7 @@ exports.closurePlugin = closurePlugin$$1;
 exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
 exports.walkNode = walker;
-exports.mapNode = mapNode;
+exports.mapNode = mapNode_2;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
 exports.withPlugins = withPlugins;

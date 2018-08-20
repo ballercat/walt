@@ -1,6 +1,6 @@
 // @flow
-import Syntax from '../Syntax';
-import walkNode from '../utils/walk-node';
+import Syntax from 'walt-syntax';
+import walkNode from 'walt-parser-tools/walk-node';
 import type { NodeType, IntermediateTableType } from './flow/types';
 
 export default function generateMemory(node: NodeType): IntermediateTableType {

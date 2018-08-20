@@ -1,5 +1,3 @@
-// @flow
-
 // Main Program
 export const Program = 'Program';
 export const Keyword = 'Keyword';

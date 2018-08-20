@@ -1,6 +1,6 @@
 // @flow
-import Syntax from '../Syntax';
-import walkNode from '../utils/walk-node';
+import Syntax from 'walt-syntax';
+import walkNode from 'walt-parser-tools/walk-node';
 import { stringToType } from '../emitter/value_type';
 import { parseBounds } from '../utils/resizable-limits';
 import {

@@ -1,5 +1,5 @@
 // @flow
-import { builtinTypes } from '../Syntax';
+import { builtinTypes } from 'walt-syntax';
 import opcode from '../emitter/opcode';
 import curry from 'curry';
 import invariant from 'invariant';

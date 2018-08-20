@@ -10,6 +10,7 @@
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "coverage-local": "nyc report --reporter=html",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
+    "debug-container": "node --inspect-brk=\"$(hostname -I | xargs)\" node_modules/ava/profile.js",
     "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
     "build-prod": "cross-env NODE_ENV=production node_modules/rollup/bin/rollup -c rollup.config.js",
     "flow": "flow",
@@ -39,7 +40,9 @@
   "dependencies": {
     "curry": "1.2.0",
     "invariant": "2.2.2",
-    "wasm-types": "1.0.3"
+    "wasm-types": "1.0.3",
+    "walt-parser-tools": "^0.1.0",
+    "walt-syntax": "^0.1.0"
   },
   "devDependencies": {
     "ava": "0.24.0",

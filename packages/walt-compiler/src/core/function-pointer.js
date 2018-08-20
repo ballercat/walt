@@ -1,13 +1,10 @@
-import Syntax from '../Syntax';
+import Syntax from 'walt-syntax';
+import { find } from 'walt-parser-tools/scope';
 import {
   TYPE_INDEX,
   GLOBAL_INDEX,
   FUNCTION_INDEX,
 } from '../semantics/metadata';
-
-function inScope(scopes, value) {
-  return scopes.some(scope => !!scope && scope[value]);
-}
 
 export default function functionPointer() {
   return {
@@ -34,12 +31,9 @@ export default function functionPointer() {
         Identifier: next =>
           function pointer(args) {
             const [node, context] = args;
-            const { functions, table, locals, globals } = context;
+            const { functions, table, scopes } = context;
 
-            if (
-              inScope([locals, globals], node.value) ||
-              !functions[node.value]
-            ) {
+            if (find(scopes, node.value) || !functions[node.value]) {
               return next(args);
             }
 
@@ -60,29 +54,29 @@ export default function functionPointer() {
         FunctionCall: next =>
           function indirectCall(args, transform) {
             const [call, context] = args;
-            const { locals, types } = context;
-            const local = locals[call.value];
+            const { scopes, types } = context;
+            const ref = find(scopes, call.value);
             // Nothing we need transform
-            if (!local) {
+            if (!ref) {
               return next(args);
             }
 
-            const typedef = types[local.type];
-            const typeIndex = Object.keys(types).indexOf(local.type);
+            const typedef = types[ref.type];
+            const typeIndex = Object.keys(types).indexOf(ref.type);
 
             // We will short all of the other middleware so transform the parameters
             // here and append an identifier which will be used to get the table
             // value
             const params = [
               ...call.params,
-              { ...local, Type: Syntax.Identifier },
+              { ...ref, Type: Syntax.Identifier },
             ].map(p => transform([p, context]));
 
             return {
               ...call,
               meta: {
                 ...call.meta,
-                ...local.meta,
+                ...ref.meta,
                 [TYPE_INDEX]: typeIndex,
               },
               type: typedef != null ? typedef.type : call.type,

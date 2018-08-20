@@ -1,4 +1,6 @@
 // @flow
+import { mapNode } from 'walt-parser-tools/map-node';
+
 import parser from './parser';
 import semantics from './semantics';
 import validate from './validation';
@@ -12,8 +14,7 @@ import closurePlugin, { mapToImports } from './closure-plugin';
 import { VERSION_1 } from './emitter/preamble';
 import type { WebAssemblyModuleType, ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import walkNode from './utils/walk-node';
-import mapNode from './utils/map-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
 export {
   parser,
@@ -29,7 +30,7 @@ export {
   walkNode,
   mapNode,
 };
-export const VERSION = '0.9.2';
+export const VERSION = '0.9.3';
 
 // Used for deugging purposes
 export const getIR = (

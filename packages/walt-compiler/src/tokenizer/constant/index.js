@@ -1,6 +1,6 @@
 // @flow
 import token from '../token';
-import Syntax from '../../Syntax';
+import Syntax from 'walt-syntax';
 
 const { isNaN, parseInt } = Number;
 export const isNumber = (char: string) => !isNaN(parseInt(char));

@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 // @flow
-import walkNode from './walk-node';
-import Syntax from '../Syntax';
+import walkNode from 'walt-parser-tools/walk-node';
+import Syntax from 'walt-syntax';
 import { GLOBAL_INDEX, TYPE_CONST } from '../semantics/metadata';
 import { opcodeFromOperator, getTypecastOpcode } from '../emitter/opcode';
 import { parseBounds } from './resizable-limits';
