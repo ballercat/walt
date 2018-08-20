@@ -1,7 +1,7 @@
 import curry from 'curry';
 import Syntax from 'walt-syntax';
 import { mapNode } from 'walt-parser-tools/map-node';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
 const mapGeneric = curry((options, node, _) => {
   const { types } = options;

@@ -14,7 +14,7 @@ import closurePlugin, { mapToImports } from './closure-plugin';
 import { VERSION_1 } from './emitter/preamble';
 import type { WebAssemblyModuleType, ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import walkNode from './utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
 export {
   parser,

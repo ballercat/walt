@@ -1,7 +1,7 @@
 import Syntax from 'walt-syntax';
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
 
 export const getByteOffsetsAndSize = objectLiteralNode => {

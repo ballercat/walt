@@ -8,7 +8,7 @@ import Syntax from 'walt-syntax';
 import parser from '../parser';
 import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from '../utils/has-node';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 import {
   expressionFragment as expression,
   statementFragment as statement,

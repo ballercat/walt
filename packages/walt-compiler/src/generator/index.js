@@ -1,10 +1,10 @@
 // @flow
 import invariant from 'invariant';
 import Syntax from 'walt-syntax';
+import walkNode from 'walt-parser-tools/walk-node';
+import { mapNode } from 'walt-parser-tools/map-node';
 import mapSyntax from './map-syntax';
 import mergeBlock from './merge-block';
-import walkNode from '../utils/walk-node';
-import { mapNode } from 'walt-parser-tools/map-node';
 import generateElement from './element';
 import generateExport from './export';
 import generateMemory from './memory';

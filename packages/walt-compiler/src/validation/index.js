@@ -1,7 +1,7 @@
 // @flow
 // AST Validator
 import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from 'walt-syntax';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 import error from '../utils/generate-error';
 import { isBuiltinType } from '../generator/utils';
 import {

@@ -1,5 +1,5 @@
 import Syntax from 'walt-syntax';
-import walkNode from '../utils/walk-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
 export default function() {
   return {
