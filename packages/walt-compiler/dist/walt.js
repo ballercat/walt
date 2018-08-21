@@ -2498,12 +2498,9 @@ function base() {
   };
 }
 
-//      
-
-
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-function walker(visitor) {
+var walkNode$2 = function walker(visitor) {
   const walkNode = node => {
     if (node == null) {
       return node;
@@ -2534,7 +2531,9 @@ function walker(visitor) {
   };
 
   return walkNode;
-}
+};
+
+var walkNode = walkNode$2;
 
 const mapGeneric = curry_1((options, node, _) => {
   const { types } = options;
@@ -2583,7 +2582,7 @@ function typePlugin() {
             [Syntax.Typedef]: (node, _) => {
               let argumentsCount = 0;
               const defaultArgs = [];
-              walker({
+              walkNode({
                 Assignment(assignment) {
                   const defaultValue = assignment.params[1];
                   defaultArgs.push(defaultValue);
@@ -3084,7 +3083,7 @@ const getByteOffsetsAndSize = objectLiteralNode => {
   const offsetsByKey = {};
   const keyTypeMap = {};
   let size = 0;
-  walker({
+  walkNode({
     [Syntax.Pair]: keyTypePair => {
       const { value: key } = keyTypePair.params[0];
       const { value: typeString } = keyTypePair.params[1];
@@ -3182,7 +3181,7 @@ function Struct() {
           const spreadKeys = {};
           // We have to walk the nodes twice, once for regular prop keys and then again
           // for ...(spread)
-          walker({
+          walkNode({
             // Top level Identifiers _inside_ an object literal === shorthand
             // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
             // only way this is hit is if the identifier is TOP LEVEL
@@ -3280,7 +3279,7 @@ function defaultArguments () {
 
           const defaultArguments = [];
 
-          walker({
+          walkNode({
             Assignment: defaultArg => {
               const [, value] = defaultArg.params;
               defaultArguments.push(value);
@@ -3545,15 +3544,15 @@ function closures () {
 
         const environment = {};
         const envSize = {};
-        walker({
+        walkNode({
           Closure(closure, _) {
             // All closures have their own __env_ptr passed in at call site
             const declarations = { __env_ptr: true };
-            walker({
+            walkNode({
               // We need to make sure we ignore the arguments to the closure.
               // Otherwise they will be treaded as "closed over" variables
               FunctionArguments(closureArgs, _ignore) {
-                walker({
+                walkNode({
                   Pair(pair) {
                     const [identifier] = pair.params;
                     declarations[identifier.value] = identifier;
@@ -4242,7 +4241,7 @@ function validate(ast, {
   const { types, functions, userTypes } = metadata;
   const problems = [];
 
-  walker({
+  walkNode({
     [Syntax.Export]: _export => {
       const target = _export.params[0];
       const [start, end] = target.range;
@@ -4252,7 +4251,7 @@ function validate(ast, {
       }
     },
     [Syntax.Import]: (importNode, _) => {
-      walker({
+      walkNode({
         [Syntax.BinaryExpression]: (binary, __) => {
           const [start, end] = binary.range;
           problems.push(generateErrorString("Using an 'as' import without a type.", 'A type for original import ' + binary.params[0].value + ' is not defined nor could it be inferred.', { start, end }, filename, GLOBAL_LABEL));
@@ -4293,7 +4292,7 @@ function validate(ast, {
     },
     [Syntax.FunctionDeclaration]: (func, __) => {
       const functionName = `${func.value}()`;
-      walker({
+      walkNode({
         [Syntax.Declaration]: (node, _validator) => {
           const [start, end] = node.range;
           const [initializer] = node.params;
@@ -4808,7 +4807,7 @@ function generateExport(node) {
 //      
 const generateMemory = node => {
   const memory = { max: 0, initial: 0 };
-  walker({
+  walkNode({
     [Syntax.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
@@ -4823,7 +4822,7 @@ const generateMemory = node => {
 function generateMemory$2(node) {
   const table = { max: 0, initial: 0, type: '' };
 
-  walker({
+  walkNode({
     [Syntax.Pair]: ({ params }) => {
       // This could procude garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
@@ -4863,7 +4862,7 @@ const generateInit = node => {
 
 const parseBounds = node => {
   const memory = {};
-  walker({
+  walkNode({
     [Syntax.Pair]: ({ params }) => {
       const [{ value: key }, { value }] = params;
       memory[key] = parseInt(value);
@@ -4904,7 +4903,7 @@ function generateImportFromNode(node) {
   const imports = [];
 
   // Look for Pair Types, encode them into imports array
-  walker({
+  walkNode({
     [Syntax.Pair]: (pairNode, _) => {
       const [fieldIdentifierNode, typeOrIdentifierNode] = pairNode.params;
 
@@ -4961,7 +4960,7 @@ const generateImplicitFunctionType = functionNode => {
   const resultType = functionNode.type ? getType$1(functionNode.type) : null;
 
   const params = [];
-  walker({
+  walkNode({
     [Syntax.Pair]: pairNode => {
       const typeNode = pairNode.params[1];
       invariant_1(typeNode, 'Undefined type in a argument expression');
@@ -4985,7 +4984,7 @@ function generateType(node) {
   // Collect the function params and result by walking the tree of nodes
   const params = [];
 
-  walker({
+  walkNode({
     [Syntax.Type]: (t, __) => {
       params.push(getType$1(t.value));
     },
@@ -5381,7 +5380,7 @@ function generator(ast, config) {
     }
   };
 
-  walker(nodeMap)(astWithTypes);
+  walkNode(nodeMap)(astWithTypes);
 
   // Unlike function indexes we need function bodies to be exact
   program.Code = program.Code.filter(Boolean);
@@ -5902,7 +5901,7 @@ const getText$1 = node => {
 
 const parseParams = node => {
   const params = [];
-  walker({
+  walkNode({
     [Syntax.Pair]: (pair, _) => {
       params.push(`${pair.params[0].value} ${pair.params[1].value}`);
     },
@@ -5928,7 +5927,7 @@ const typedefString = node => {
 const getPrinters = add => ({
   [Syntax.Import]: (node, _print) => {
     const [nodes, mod] = node.params;
-    walker({
+    walkNode({
       [Syntax.Pair]: ({ params }, _) => {
         const { value: field } = params[0];
         const type = params[1];
@@ -6087,7 +6086,7 @@ const printNode = node => {
     depth += post;
   };
 
-  walker(getPrinters(add))(node);
+  walkNode(getPrinters(add))(node);
 
   const max = Math.max(...offsets);
   const edge = max + 4;
@@ -6229,7 +6228,7 @@ exports.debug = _debug;
 exports.closurePlugin = closurePlugin$$1;
 exports.stringEncoder = stringEncoder;
 exports.stringDecoder = stringDecoder;
-exports.walkNode = walker;
+exports.walkNode = walkNode;
 exports.mapNode = mapNode_2;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
