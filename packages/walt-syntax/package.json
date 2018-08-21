@@ -1,6 +1,6 @@
 {
   "name": "walt-syntax",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Walt Syntax",
   "main": "dist/walt-syntax.js",
   "scripts": {
@@ -24,7 +24,6 @@
     "url": "https://github.com/ballercat/walt/issues"
   },
   "homepage": "https://github.com/ballercat/walt/tree/master/packages/walt-syntax/",
-  "dependencies": {},
   "devDependencies": {
     "ava": "0.24.0",
     "babel-preset-env": "^1.7.0",
