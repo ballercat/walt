@@ -31,7 +31,6 @@ import struct from '../core/struct';
 import native from '../core/native';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
-import closures from '../syntax-sugar/closures';
 import { GLOBAL_INDEX } from './metadata.js';
 
 import type { NodeType, SemanticOptionsType } from '../flow/types';
@@ -53,14 +52,17 @@ const getBuiltInParsers = () => {
     native().semantics,
     sizeof().semantics,
     defaultArguments().semantics,
-    closures().semantics,
+    //     closures().semantics,
   ];
 };
 
+// Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  parsers: Array<(any) => any> = getBuiltInParsers()
+  extraParsers: Array<(any) => any> = []
 ): NodeType {
+  const parsers = [...getBuiltInParsers(), ...extraParsers];
+
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};

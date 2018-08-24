@@ -5,20 +5,30 @@
  *
  */
 import Syntax from 'walt-syntax';
-import parser from '../parser';
-import { enter, find, current } from 'walt-parser-tools/scope';
-import hasNode from '../utils/has-node';
-import walkNode from 'walt-parser-tools/walk-node';
 import {
+  parser,
   expressionFragment as expression,
   statementFragment as statement,
-} from '../parser/fragment';
-import { LOCAL_INDEX } from '../semantics/metadata';
-import { sizes } from '../types';
+} from 'walt-compiler';
+import { enter, find, current } from 'walt-parser-tools/scope';
+import hasNode from 'walt-parser-tools/has-node';
+import walkNode from 'walt-parser-tools/walk-node';
+
+import { dependency, DEPENDENCY_NAME } from './dependency';
+
+const sizes = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
 
 const sum = (a, b) => a + b;
+const LOCAL_INDEX = 'local/index';
 
-export default function() {
+export { DEPENDENCY_NAME, dependency };
+
+export function plugin() {
   const semantics = () => {
     // Declaration parser, re-used for mutable/immutable declarations
     const declarationParser = next => (args, transform) => {
@@ -89,7 +99,7 @@ export default function() {
         __closure_set_f32: ClosureSetf32,
         __closure_set_i64: ClosureSeti64,
         __closure_set_f64: ClosureSetf64
-      } from 'walt-plugin-closure';
+      } from '${DEPENDENCY_NAME}';
       type ClosureFree = (i32) => void;
       type ClosureGeti32 = (i32) => i32;
       type ClosureGetf32 = (i32) => f32;

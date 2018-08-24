@@ -1,5 +1,6 @@
 // @flow
 import { mapNode } from 'walt-parser-tools/map-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
 import parser from './parser';
 import semantics from './semantics';
@@ -10,11 +11,10 @@ import emitter from './emitter';
 import debug from './utils/debug';
 import prettyPrintNode from './utils/print-node';
 
-import closurePlugin, { mapToImports } from './closure-plugin';
 import { VERSION_1 } from './emitter/preamble';
-import type { WebAssemblyModuleType, ConfigType } from './flow/types';
+import type { ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import walkNode from 'walt-parser-tools/walk-node';
+import { expressionFragment, statementFragment } from './parser/fragment';
 
 export {
   parser,
@@ -24,13 +24,14 @@ export {
   emitter,
   prettyPrintNode,
   debug,
-  closurePlugin,
   stringEncoder,
   stringDecoder,
   walkNode,
   mapNode,
+  expressionFragment,
+  statementFragment,
 };
-export const VERSION = '0.9.3';
+export const VERSION = '0.9.4';
 
 // Used for deugging purposes
 export const getIR = (
@@ -44,11 +45,7 @@ export const getIR = (
 ) => {
   const ast = parser(source);
   const semanticAST = semantics(ast);
-
-  validate(semanticAST, {
-    lines,
-    filename,
-  });
+  validate(semanticAST, { lines, filename });
   const intermediateCode = generator(semanticAST, {
     version,
     encodeNames,
@@ -64,24 +61,41 @@ export const getIR = (
   return wasm;
 };
 
-export const withPlugins = (
-  plugins: { [string]: WebAssemblyModuleType },
-  importsObj?: { [string]: any }
+export const unstableCompileWalt = (
+  source: string,
+  {
+    filename = 'unknown',
+    plugins = [],
+    encodeNames,
+  }: {| filename: string, plugins: any[], encodeNames: boolean |}
 ) => {
-  const pluginMappers = {
-    closure: (closure, imports) => {
-      imports['walt-plugin-closure'] = mapToImports(closure);
-    },
+  const options = {
+    filename,
+    lines: source.split('\n'),
+    version: VERSION_1,
+    encodeNames,
   };
-  const resultImports = Object.entries(plugins).reduce((acc, [key, value]) => {
-    pluginMappers[key](value, acc);
-    return acc;
-  }, {});
 
-  return {
-    ...resultImports,
-    ...importsObj,
-  };
+  const ast = parser(source);
+  // Generate instances
+  const pluginInstances = plugins.reduce(
+    (acc, plugin) => {
+      const instance = plugin(options);
+
+      acc.semantics.push(instance.semantics);
+      return acc;
+    },
+    { semantics: [] }
+  );
+
+  const semanticAST = semantics(ast, pluginInstances.semantics);
+
+  validate(semanticAST, options);
+
+  const intermediateCode = generator(semanticAST, options);
+  const wasm = emitter(intermediateCode, options);
+
+  return wasm;
 };
 
 // Compiles a raw binary wasm buffer

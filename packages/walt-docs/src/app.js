@@ -14,8 +14,10 @@ import waltCompiler, {
   emitter,
   prettyPrintNode as printNode
 } from "walt-compiler";
+import { plugin as closurePlugin } from "walt-plugin-syntax-closure";
 
-const getAST = source => semantics(parser(source));
+// TODO: Make plugins configurable through the UI
+const getAST = source => semantics(parser(source), [closurePlugin().semantics]);
 
 const exampleList = Object.keys(examples).map(key => {
   return {
