@@ -1,0 +1,18 @@
+{
+  "presets": [
+    "flow",
+    [
+      "env", {
+      "targets": {
+        "chrome": "60.0.0"
+      }
+    }]
+  ],
+  "sourceMaps": "inline",
+  "plugins": [
+     "external-helpers",
+     "transform-runtime",
+     "transform-object-rest-spread"
+  ]
+}
+
