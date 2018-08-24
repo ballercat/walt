@@ -61,6 +61,7 @@ export const getIR = (
   return wasm;
 };
 
+// Compile with plugins, future default export
 export const unstableCompileWalt = (
   source: string,
   {

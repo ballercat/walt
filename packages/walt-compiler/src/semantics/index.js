@@ -52,7 +52,6 @@ const getBuiltInParsers = () => {
     native().semantics,
     sizeof().semantics,
     defaultArguments().semantics,
-    //     closures().semantics,
   ];
 };
 

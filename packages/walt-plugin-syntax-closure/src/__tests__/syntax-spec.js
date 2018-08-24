@@ -1,7 +1,6 @@
 import test from 'ava';
 import { unstableCompileWalt } from 'walt-compiler';
-import { dependency, DEPENDENCY_NAME } from '../dependency';
-import plugin from '..';
+import { plugin, dependency, DEPENDENCY_NAME } from '..';
 
 test('closures', t => {
   const source = `
