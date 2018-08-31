@@ -4,7 +4,90 @@
   (factory((global['walt-syntax'] = {})));
 }(this, (function (exports) { 'use strict';
 
+  const keyword = [
+    // EcmaScript
+    'break',
+    'if',
+    'else',
+    'import',
+    'as',
+    'from',
+    'export',
+    'return',
+    'switch',
+    'case',
+    'default',
+    'const',
+    'let',
+    'for',
+    'continue',
+    'do',
+    'while',
+    'function',
+
+    // s-expression
+    'global',
+    'module',
+    'type',
+    'lambda',
+  ];
+  const punctuator = [
+    '+',
+    '++',
+    '-',
+    '--',
+    '>>',
+    '>>>',
+    '<<',
+    '=',
+    '==',
+    '+=',
+    '-=',
+    '=>',
+    '<=',
+    '>=',
+    '!=',
+    '%',
+    '/',
+    '^',
+    '&',
+    '~',
+    '|',
+    '!',
+    '**',
+    ':',
+    '(',
+    ')',
+    '.',
+    '{',
+    '}',
+    ',',
+    '[',
+    ']',
+    ';',
+    '>',
+    '<',
+    '?',
+    '||',
+    '&&',
+    '{',
+    '}',
+    '...',
+  ];
+
+  const tokens = {
+    ws: /[ \t]+/,
+    number: { match: /[0-9]+/ },
+    identifier: {
+      match: /[^0-9][a-zA-Z0-9_]+/,
+      keyword,
+    },
+    punctuator,
+    NL: { match: /\n/, lineBreaks: true },
+  };
+
   // Main Program
+
   const Program = 'Program';
   const Keyword = 'Keyword';
   const Export = 'Export';
@@ -240,6 +323,7 @@
   exports.builtinTypes = builtinTypes;
   exports.statements = statements;
   exports.default = index;
+  exports.tokens = tokens;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

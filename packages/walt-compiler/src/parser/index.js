@@ -11,39 +11,45 @@ import Context from './context';
 import Tokenizer from '../tokenizer';
 import tokenStream from '../utils/token-stream';
 import Stream from '../utils/stream';
+import grammar from './grammar/grammar.ne';
+import nearley from 'nearley';
 import type { NodeType } from '../flow/types';
 
 export default function parse(source: string): NodeType {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokens = tokenStream(tokenizer.parse());
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  parser.feed(source);
 
-  const ctx = new Context({
-    stream: tokens,
-    token: tokens.tokens[0],
-    lines: stream.lines,
-    filename: 'unknown.walt',
-  });
+  return parser.results[0];
+  // const stream = new Stream(source);
+  // const tokenizer = new Tokenizer(stream);
+  // const tokens = tokenStream(tokenizer.parse());
 
-  const node: NodeType = ctx.makeNode(
-    {
-      value: 'ROOT_NODE',
-    },
-    Syntax.Program
-  );
+  // const ctx = new Context({
+  //   stream: tokens,
+  //   token: tokens.tokens[0],
+  //   lines: stream.lines,
+  //   filename: 'unknown.walt',
+  // });
 
-  // No code, no problem, empty ast equals
-  // (module) ; the most basic wasm module
-  if (!ctx.stream || !ctx.stream.length) {
-    return node;
-  }
+  // const node: NodeType = ctx.makeNode(
+  //   {
+  //     value: 'ROOT_NODE',
+  //   },
+  //   Syntax.Program
+  // );
 
-  while (ctx.stream.peek()) {
-    const child = statement(ctx);
-    if (child) {
-      node.params.push(child);
-    }
-  }
+  // // No code, no problem, empty ast equals
+  // // (module) ; the most basic wasm module
+  // if (!ctx.stream || !ctx.stream.length) {
+  //   return node;
+  // }
 
-  return node;
+  // while (ctx.stream.peek()) {
+  //   const child = statement(ctx);
+  //   if (child) {
+  //     node.params.push(child);
+  //   }
+  // }
+
+  // return node;
 }

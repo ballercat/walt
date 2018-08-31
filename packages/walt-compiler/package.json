@@ -18,7 +18,9 @@
     "prettier": "prettier --list-different src/**/*.js",
     "precommit": "lint-staged",
     "preversion": "npm run build && npm run build-prod",
-    "nyc": "nyc"
+    "nyc": "nyc",
+    "nearleyc": "nearleyc",
+    "grammar": "npm run nearleyc -- src/parser/grammar/grammar.ne -o src/parser/grammar/grammar.js"
   },
   "repository": {
     "type": "git",
@@ -40,6 +42,7 @@
   "dependencies": {
     "curry": "1.2.0",
     "invariant": "2.2.2",
+    "moo": "^0.4.3",
     "nearley": "^2.15.1",
     "walt-parser-tools": "^0.1.1",
     "walt-syntax": "^0.1.1",
@@ -90,7 +93,8 @@
     ],
     "source": [
       "src/**/*.js",
-      "src/**/*.walt"
+      "src/**/*.walt",
+      "src/**/*.ne"
     ],
     "failFast": true,
     "failWithoutAssertions": false,
