@@ -3,7 +3,8 @@ const Syntax = require('walt-syntax');
 const { nonEmpty } = require('./helpers');
 
 const marker = lexer => {
-  console.log(Array.from(lexer.clone()));
+  debugger;
+  console.log(Object.keys(lexer));
   return {
     col: lexer.col,
     line: lexer.line,
@@ -14,7 +15,7 @@ function factory(lexer) {
   const node = (Type, seed = {}) => d => ({
     value: '',
     meta: {},
-    range: [marker(lexer)],
+    range: [marker(lexer), marker(lexer)],
     type: null,
     ...seed,
     Type,
