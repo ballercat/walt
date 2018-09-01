@@ -5495,6 +5495,9 @@ const encode = (payload, { type, init, mutable }) => {
       payload.push(index_9, def.f64Const.code, def.f64Const.text);
       payload.push(index_4, init, `value (${init})`);
       break;
+    case I64:
+      payload.push(index_9, def.i64Const.code, def.i64Const.text);
+      payload.push(varint64, init, `value (${init})`);
   }
 
   payload.push(index_9, def.End.code, 'end');
@@ -6167,7 +6170,7 @@ function closurePlugin$$1() {
 }
 
 //      
-const VERSION = '0.9.3';
+const VERSION = '0.9.4';
 
 // Used for deugging purposes
 const getIR = (source, {
