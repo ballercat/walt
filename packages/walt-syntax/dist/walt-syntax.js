@@ -79,7 +79,7 @@
     ws: /[ \t]+/,
     number: { match: /[0-9]+/ },
     identifier: {
-      match: /[^0-9][a-zA-Z0-9_]+/,
+      match: /[\w]+/,
       keyword,
     },
     punctuator,

@@ -63,6 +63,7 @@ Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
+  | ReturnStatement       {% id %}
   | Export                {% id %}
 
 _Statement -> _ Statement {% nth(1) %}
@@ -84,8 +85,10 @@ ParameterList -> Pair (_ "," _ Pair):?
 FunctionResult -> (COLON _ Identifier {% nth(2) %}):?
 {% node(Syntax.FunctionResult) %}
 
-Declaration -> LET _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
-{% node(Syntax.Declaration) %}
+Declaration ->
+    LET _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
+    {% node(Syntax.Declaration) %}
+  | LET _ Pair _ SEPARATOR
 
 ImmutableDeclaration -> CONST _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
 {% node(Syntax.ImmutableDeclaration) %}
@@ -96,6 +99,9 @@ Pair -> Identifier _ COLON _ Identifier
 Export ->
     EXPORT __ ImmutableDeclaration {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
+
+ReturnStatement ->
+    RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
 
 # Expressions
 ExpressionStatement -> Expression SEPARATOR {% id %}
@@ -159,13 +165,17 @@ Product ->
   | Unary                 {% id %}
 
 Unary ->
-    "!" Access  {% unary %}
-  | "~" Access  {% unary %}
-  | "-" Access  {% unary %}
-  | "+" Access  {% unary %}
-  | "++" Access {% unary %}
-  | "--" Access {% unary %}
-  | Access      {% id %}
+    "!" Call  {% unary %}
+  | "~" Call  {% unary %}
+  | "-" Call  {% unary %}
+  | "+" Call  {% unary %}
+  | "++" Call {% unary %}
+  | "--" Call {% unary %}
+  | Call      {% id %}
+
+Call ->
+    Identifier _ LB Expression RB {% node(Syntax.FunctionCall) %}
+  | Access {% id %}
 
 Access ->
     Identifier DOT Identifier         {% subscript %}
@@ -176,7 +186,7 @@ Atom ->
     Identifier {% id %}
   | Number     {% id %}
 
-Identifier -> word             {% identifier %}
+Identifier -> %identifier      {% identifier %}
 Number -> digit                {% constant %}
 
 word ->
@@ -202,3 +212,4 @@ EQUALS    -> "="        {% nuller %}
 LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
 EXPORT    -> "export"   {% nuller %}
+RETURN    -> "return"   {% nuller %}
