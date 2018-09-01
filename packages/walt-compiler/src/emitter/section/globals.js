@@ -1,7 +1,7 @@
 // @flow
 import { u8, f32, f64 } from 'wasm-types';
-import { I32, F64, F32, getTypeString } from '../value_type';
-import { varuint32, varint32 } from '../numbers';
+import { I32, I64, F64, F32, getTypeString } from '../value_type';
+import { varuint32, varint32, varint64 } from '../numbers';
 import opcode from '../opcode';
 import OutputStream from '../../utils/output-stream';
 
@@ -22,6 +22,9 @@ const encode = (payload, { type, init, mutable }) => {
       payload.push(u8, opcode.f64Const.code, opcode.f64Const.text);
       payload.push(f64, init, `value (${init})`);
       break;
+    case I64:
+      payload.push(u8, opcode.i64Const.code, opcode.i64Const.text);
+      payload.push(varint64, init, `value (${init})`);
   }
 
   payload.push(u8, opcode.End.code, 'end');
