@@ -6,6 +6,12 @@ type String = {
 };
 type Assert = (String, i32, i32) => void;
 
+let globali64: i64 = 0;
+function testGlobali64(): i32 {
+  globali64 += 1;
+  return (globali64 : i32);
+}
+
 function testArraySubscript(): i32 {
   const arr: i32[] = __DATA_LENGTH__;
   arr[1] = 2;
@@ -254,4 +260,6 @@ export function run() {
   assert("LTE_SIGNED f64", comparison_testf64((-1: f64), LTE_SIGNED), 1);
 
   assert("type promotions", testPromotions(), 42);
+
+  assert("global i64 mutable variables", testGlobali64(), 1);
 }
