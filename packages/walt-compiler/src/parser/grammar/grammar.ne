@@ -7,8 +7,37 @@
 const moo = require('moo');
 const Syntax = require('walt-syntax');
 const { nth, nuller, nonEmpty, add } = require('./helpers');
-console.log(Syntax.tokens);
-const lexer = moo.compile(Syntax.tokens);
+
+const mooLexer = moo.compile(Syntax.tokens);
+// Additional utility on top of the default moo lexer.
+const lexer = {
+  current: null,
+  lines: [],
+  get line() {
+    return mooLexer.line;
+  },
+  get col() {
+    return mooLexer.col;
+  },
+  save() {
+    return mooLexer.save();
+  },
+  reset(chunk, info){
+    this.lines = chunk.split('\n');
+    return mooLexer.reset(chunk, info);
+  },
+  next() {
+    this.current = mooLexer.next();
+    return this.current;
+  },
+  formatError(token) {
+    return mooLexer.formatError(token);
+  },
+  has(name) {
+    return mooLexer.has(name);
+  }
+};
+
 const {
   node,
   binary,
@@ -20,7 +49,6 @@ const {
   subscript,
   fun,
 } = require('./nodes')(lexer);
-
 %}
 
 @lexer lexer
@@ -35,6 +63,7 @@ Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
+  | Export                {% id %}
 
 _Statement -> _ Statement {% nth(1) %}
 
@@ -63,6 +92,10 @@ ImmutableDeclaration -> CONST _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
+
+Export ->
+    EXPORT __ ImmutableDeclaration {% node(Syntax.Export, { value: 'export' }) %}
+  | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
 
 # Expressions
 ExpressionStatement -> Expression SEPARATOR {% id %}
@@ -168,4 +201,4 @@ COLON     -> ":"        {% nuller %}
 EQUALS    -> "="        {% nuller %}
 LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
-
+EXPORT    -> "export"   {% nuller %}

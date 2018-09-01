@@ -7,9 +7,9 @@ test('the most basic of modules in wasm', t => {
   t.snapshot(result);
 });
 
-test.only('compiles globals', t => {
+test('compiles globals', t => {
   const result = parser('const answer: i32 = 42;');
-  //  t.snapshot(result);
+  t.snapshot(result);
 });
 
 test('compiles exports', t => {

@@ -3,25 +3,38 @@ const Syntax = require('walt-syntax');
 const { nonEmpty } = require('./helpers');
 
 const marker = lexer => {
-  debugger;
-  console.log(Object.keys(lexer));
+  const { col, line } = lexer;
+
+  if (!lexer.lines.length) {
+    return { col, line, sourceLine: '' };
+  }
+
   return {
-    col: lexer.col,
-    line: lexer.line,
+    col,
+    line,
+    sourceLine: lexer.lines[lexer.line - 1],
   };
 };
 
 function factory(lexer) {
-  const node = (Type, seed = {}) => d => ({
-    value: '',
-    meta: {},
-    range: [marker(lexer), marker(lexer)],
-    type: null,
-    ...seed,
-    Type,
-    params: d.filter(nonEmpty),
-    toString() {},
-  });
+  const node = (Type, seed = {}) => d => {
+    const params = d.filter(nonEmpty);
+    const { value = '', meta = {} } = seed;
+    const start = marker(lexer);
+    const end = params[params.length - 1]
+      ? params[params.length - 1].range[1]
+      : { ...start, col: start.col + value.length };
+
+    return {
+      value,
+      type: null,
+      Type,
+      toString() {},
+      meta,
+      range: [start, end],
+      params,
+    };
+  };
 
   const binary = d => {
     const [lhs, operator, rhs] = d.filter(nonEmpty);
@@ -33,19 +46,9 @@ function factory(lexer) {
     };
   };
 
-  const constant = d => ({
-    Type: 'Constant',
-    value: d[0],
-    meta: [],
-    params: [],
-  });
+  const constant = d => node('Constant', { value: d[0].value })([]);
 
-  const identifier = d => ({
-    Type: 'Identifier',
-    value: d.join(''),
-    meta: [],
-    params: [],
-  });
+  const identifier = d => node('Identifier', { value: d.join('') })([]);
 
   const statement = d => {
     return d.filter(nonEmpty);
