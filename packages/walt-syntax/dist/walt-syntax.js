@@ -80,7 +80,7 @@
     number: { match: /[0-9]+/ },
     identifier: {
       match: /[\w]+/,
-      keyword,
+      keywords: { keyword },
     },
     punctuator,
     NL: { match: /\n/, lineBreaks: true },

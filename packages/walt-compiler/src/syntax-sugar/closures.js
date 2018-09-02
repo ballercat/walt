@@ -76,7 +76,15 @@ export default function() {
       ]);
     };
 
-    const closureImportsHeader = parser(`
+    return {
+      Program: next => args => {
+        const [program, context] = args;
+        return next(args);
+        if (!hasNode(Syntax.Closure, program)) {
+          return next(args);
+        }
+
+        const closureImportsHeader = parser(`
       // Start Closure Imports Header
       import {
         __closure_malloc: ClosureGeti32,
@@ -94,22 +102,12 @@ export default function() {
       type ClosureGeti32 = (i32) => i32;
       type ClosureGetf32 = (i32) => f32;
       type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64;
-      type ClosureSeti32 = (i32, i32) => void;
+      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
       type ClosureSetf32 = (i32, f32) => void;
       type ClosureSeti64 = (i32, i64) => void;
       type ClosureSetf64 = (i32, f64) => void;
       // End Closure Imports Header
     `).params;
-
-    return {
-      Program: next => args => {
-        const [program, context] = args;
-
-        if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
-        }
-
         const closures = [];
         const parsedProgram = next([
           {
@@ -171,6 +169,7 @@ export default function() {
         ]);
       },
       FunctionDeclaration: next => (args, transform) => {
+        return next(args);
         const [node, context] = args;
         const { globals } = context;
         if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {

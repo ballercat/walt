@@ -21,14 +21,14 @@ pirates.addHook(code => `module.exports = \`${code}\`;`, {
 
 // Another one for nearly grammars, gotta love JS
 pirates.addHook(
-  code => {
+  (code, file) => {
     // Parse the grammar source into an AST
     const grammarParser = new nearley.Parser(nearleyGrammar);
     grammarParser.feed(code);
     const grammarAst = grammarParser.results[0];
 
     // Compile the AST into a set of rules
-    const grammarInfoObject = compile(grammarAst, {});
+    const grammarInfoObject = compile(grammarAst, { file });
     // Generate JavaScript code from the rules
     const grammarJs = generate(grammarInfoObject, 'grammar');
 

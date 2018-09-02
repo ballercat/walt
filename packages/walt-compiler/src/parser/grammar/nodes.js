@@ -38,7 +38,7 @@ function factory(lexer) {
 
   const binary = d => {
     const [lhs, operator, rhs] = d.filter(nonEmpty);
-    return node(Syntax.BinaryExpression, { value: operator })([lhs, rhs]);
+    return node(Syntax.BinaryExpression, { value: operator.value })([lhs, rhs]);
   };
 
   const constant = d => node('Constant', { value: d[0].value })([]);

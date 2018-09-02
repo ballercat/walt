@@ -52,25 +52,28 @@ const {
 %}
 
 @lexer lexer
+# @include "./punctuators.ne"
+@include "./objects.ne"
 
 Program -> _SourceElement:* _ {% d => node('Program', {  value: 'ROOT_NODE' })(d[0]) %}
 _SourceElement -> _ SourceElement {% nth(1) %}
 SourceElement ->
     Function  {% id %}
+  | Struct    {% id %}
   | Statement {% id %}
+  | Export    {% id %}
 
 Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
   | ReturnStatement       {% id %}
-  | Export                {% id %}
 
 _Statement -> _ Statement {% nth(1) %}
 
 # The way blocks/statements are written is pretty frustrating tbh
-Block -> _Block {% d => node(Syntax.Block)(d[0]) %}
-_Block -> LCB _Statement:* _ RCB {% nth(1) %}
+Block -> LCB _ StatementList:*  _ RCB {% d => node(Syntax.Block)(d[2]) %}
+StatementList -> _ Statement {% nth(1) %}
 
 Function ->
   FUNCTION __ Identifier _ FunctionParameters _ FunctionResult _ Block
@@ -86,9 +89,8 @@ FunctionResult -> (COLON _ Identifier {% nth(2) %}):?
 {% node(Syntax.FunctionResult) %}
 
 Declaration ->
-    LET _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
-    {% node(Syntax.Declaration) %}
-  | LET _ Pair _ SEPARATOR
+    LET _ Pair _ EQUALS _ ExpressionStatement {% node(Syntax.Declaration) %}
+  | LET _ Pair _ SEPARATOR                    {% node(Syntax.Declaration) %}
 
 ImmutableDeclaration -> CONST _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
 {% node(Syntax.ImmutableDeclaration) %}
@@ -102,6 +104,8 @@ Export ->
 
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
+
+Struct -> TYPE __ Identifier _ EQUALS _ ObjectLiteral SEPARATOR {% node(Syntax.Struct) %}
 
 # Expressions
 ExpressionStatement -> Expression SEPARATOR {% id %}
@@ -196,10 +200,10 @@ digit ->
     [0-9]                      {% id %}
   | digit [0-9]                {% add %}
 
-
 # Punctuators
 SEPARATOR -> _ ";"      {% nuller %}
 FUNCTION  -> "function" {% nuller %}
+COMMA     -> ","        {% nuller %}
 DOT       -> "."        {% nuller %}
 LB        -> "("        {% nuller %}
 RB        -> ")"        {% nuller %}
@@ -213,3 +217,4 @@ LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
 EXPORT    -> "export"   {% nuller %}
 RETURN    -> "return"   {% nuller %}
+TYPE      -> "type"     {% nuller %}
