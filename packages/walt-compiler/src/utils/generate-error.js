@@ -30,7 +30,9 @@ export default function generateErrorString(
     return marker.end.sourceLine;
   })();
 
-  const highlight = new Array(end - col + 1).join('^').padStart(end, ' ');
+  const highlight = new Array(end - col + 2)
+    .join('^')
+    .padStart(marker.start.col - 2, ' ');
   return (
     '\n' +
     Line +

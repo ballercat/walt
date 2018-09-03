@@ -48,6 +48,10 @@ const {
   ternary,
   subscript,
   fun,
+  declaration,
+  call,
+  struct,
+  result,
 } = require('./nodes')(lexer);
 %}
 
@@ -86,14 +90,14 @@ ParameterList -> Pair (_ "," _ Pair):?
 {% id %}
 
 FunctionResult -> (COLON _ Identifier {% nth(2) %}):?
-{% node(Syntax.FunctionResult) %}
+{% result %}
 
 Declaration ->
-    LET _ Pair _ EQUALS _ ExpressionStatement {% node(Syntax.Declaration) %}
-  | LET _ Pair _ SEPARATOR                    {% node(Syntax.Declaration) %}
+    LET _ Pair _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
+  | LET _ Pair _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
 
-ImmutableDeclaration -> CONST _ Pair _ ("=" {% nuller %}) _ ExpressionStatement
-{% node(Syntax.ImmutableDeclaration) %}
+ImmutableDeclaration -> CONST _ Pair _ EQUALS _ ExpressionStatement
+{% declaration(Syntax.ImmutableDeclaration) %}
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
@@ -105,7 +109,7 @@ Export ->
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
 
-Struct -> TYPE __ Identifier _ EQUALS _ ObjectLiteral SEPARATOR {% node(Syntax.Struct) %}
+Struct -> TYPE __ Identifier _ EQUALS _ ObjectLiteral SEPARATOR {% struct %}
 
 # Expressions
 ExpressionStatement -> Expression SEPARATOR {% id %}
@@ -178,7 +182,7 @@ Unary ->
   | Call      {% id %}
 
 Call ->
-    Identifier _ LB Expression RB {% node(Syntax.FunctionCall) %}
+    Identifier _ LB Expression RB {% call %}
   | Access {% id %}
 
 Access ->

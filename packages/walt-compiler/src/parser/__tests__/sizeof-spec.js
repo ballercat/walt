@@ -1,7 +1,6 @@
 import test from 'ava';
 import compose from '../../utils/compose';
-import compile, { parser, debug, getIR } from '../..';
-import print from 'walt-buildtools/print';
+import compile, { debug, getIR } from '../..';
 
 const walt = `export function _32BitSizes(): i32 {
   let x: i32;
@@ -30,9 +29,6 @@ export function userDefinedFunctions() : i32 {
 `;
 
 test('type sizes', t => {
-  const node = parser(walt);
-  console.log(print(node));
-
   const getWasm = compose(debug, getIR);
   const wasm = getWasm(walt);
   t.snapshot(wasm);

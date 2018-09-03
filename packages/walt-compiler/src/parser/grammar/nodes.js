@@ -1,4 +1,5 @@
 // Node Types
+const { extendNode } = require('../../utils/extend-node');
 const Syntax = require('walt-syntax');
 const { nonEmpty } = require('./helpers');
 
@@ -15,6 +16,10 @@ const marker = lexer => {
     sourceLine: lexer.lines[lexer.line - 1],
   };
 };
+
+function drop(d = []) {
+  return d.filter(nonEmpty);
+}
 
 function factory(lexer) {
   const node = (Type, seed = {}) => d => {
@@ -41,9 +46,30 @@ function factory(lexer) {
     return node(Syntax.BinaryExpression, { value: operator.value })([lhs, rhs]);
   };
 
-  const constant = d => node('Constant', { value: d[0].value })([]);
+  const constant = d => {
+    return extendNode(
+      {
+        value: d[0].value,
+        type: 'i32',
+      },
+      node(Syntax.Constant)([])
+    );
+  };
 
   const identifier = d => node('Identifier', { value: d.join('') })([]);
+
+  const declaration = Type => d => {
+    const [pair, ...init] = drop(d);
+    const [id, type] = pair.params;
+
+    return extendNode(
+      {
+        value: id.value,
+        type: type.value,
+      },
+      node(Type)(init)
+    );
+  };
 
   const statement = d => {
     return d.filter(nonEmpty);
@@ -68,12 +94,12 @@ function factory(lexer) {
   };
 
   const subscript = d => {
-    const [identifier, field] = d.filter(nonEmpty);
+    const [id, field] = d.filter(nonEmpty);
     return {
       Type: 'ArraySubscript',
       value: identifier.value,
       meta: [],
-      params: [identifier, field],
+      params: [id, field],
     };
   };
 
@@ -86,6 +112,39 @@ function factory(lexer) {
       params: [args, result, block],
     };
   };
+
+  const result = d => {
+    const [type] = drop(d);
+
+    return extendNode(
+      {
+        type: type != null ? type.value : null,
+      },
+      node(Syntax.FunctionResult)(d)
+    );
+  };
+
+  const call = d => {
+    const [id, ...params] = drop(d);
+    return extendNode(
+      {
+        value: id.value,
+      },
+      node(Syntax.FunctionCall)(params)
+    );
+  };
+
+  const struct = d => {
+    const [id, ...params] = drop(d);
+    debugger;
+    return extendNode(
+      {
+        value: id.value,
+      },
+      node(Syntax.Struct)(params)
+    );
+  };
+
   return {
     node,
     binary,
@@ -96,6 +155,10 @@ function factory(lexer) {
     ternary,
     subscript,
     fun,
+    declaration,
+    call,
+    struct,
+    result,
   };
 }
 module.exports = factory;
