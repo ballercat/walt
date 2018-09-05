@@ -4,100 +4,128 @@
 @builtin "whitespace.ne"
 
 @{%
-const moo = require('moo');
-const Syntax = require('walt-syntax');
-const { nth, nuller, nonEmpty, add } = require('./helpers');
+  const moo = require('moo');
+  const Syntax = require('walt-syntax');
+  const { drop, nth, nuller, nonEmpty, add, flatten, compose } = require('./helpers');
 
-const mooLexer = moo.compile(Syntax.tokens);
-// Additional utility on top of the default moo lexer.
-const lexer = {
-  current: null,
-  lines: [],
-  get line() {
-    return mooLexer.line;
-  },
-  get col() {
-    return mooLexer.col;
-  },
-  save() {
-    return mooLexer.save();
-  },
-  reset(chunk, info){
-    this.lines = chunk.split('\n');
-    return mooLexer.reset(chunk, info);
-  },
-  next() {
-    this.current = mooLexer.next();
-    return this.current;
-  },
-  formatError(token) {
-    return mooLexer.formatError(token);
-  },
-  has(name) {
-    return mooLexer.has(name);
-  }
-};
+  const mooLexer = moo.compile(Syntax.tokens);
+  // Additional utility on top of the default moo lexer.
+  const lexer = {
+    current: null,
+    lines: [],
+    get line() {
+      return mooLexer.line;
+    },
+    get col() {
+      return mooLexer.col;
+    },
+    save() {
+      return mooLexer.save();
+    },
+    reset(chunk, info){
+      this.lines = chunk.split('\n');
+      return mooLexer.reset(chunk, info);
+    },
+    next() {
+      // It's a cruel and unusual punishment to implement comments with nearly
+      let token = mooLexer.next();
+      while(token && token.type === 'comment')
+        token = mooLexer.next();
+      this.current = token;
+      return this.current;
+    },
+    formatError(token) {
+      return mooLexer.formatError(token);
+    },
+    has(name) {
+      return mooLexer.has(name);
+    }
+  };
 
-const {
-  node,
-  binary,
-  constant,
-  identifier,
-  statement,
-  unary,
-  ternary,
-  subscript,
-  fun,
-  declaration,
-  call,
-  struct,
-  result,
-} = require('./nodes')(lexer);
+  const {
+    node,
+    binary,
+    constant,
+    identifier,
+    statement,
+    unary,
+    ternary,
+    subscript,
+    fun,
+    declaration,
+    call,
+    struct,
+    result,
+    string,
+    typedef,
+    comment,
+    voidFun,
+    type,
+    boolean,
+    assignment,
+  } = require('./nodes')(lexer);
 %}
 
 @lexer lexer
 # @include "./punctuators.ne"
 @include "./objects.ne"
+@include "./import.ne"
+@include "./control-flow.ne"
 
-Program -> _SourceElement:* _ {% d => node('Program', {  value: 'ROOT_NODE' })(d[0]) %}
-_SourceElement -> _ SourceElement {% nth(1) %}
+Program ->
+    _                     {% compose(node('Program', {  value: 'ROOT_NODE' }), flatten) %}
+  | _ SourceElementList _ {% compose(node('Program', {  value: 'ROOT_NODE' }), flatten) %}
+SourceElementList ->
+    SourceElement                      {% flatten %}
+  | SourceElement _ SourceElementList  {% compose(drop, flatten, flatten) %}
+
 SourceElement ->
     Function  {% id %}
+  | Declaration           {% id %}
+  | ImmutableDeclaration  {% id %}
   | Struct    {% id %}
-  | Statement {% id %}
+  | TypeDef   {% id %}
   | Export    {% id %}
+  | Import    {% id %}
 
 Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
+  | If                    {% id %}
   | ReturnStatement       {% id %}
 
-_Statement -> _ Statement {% nth(1) %}
+Block ->
+     LCB _ RCB                 {% node(Syntax.Block) %}
+  |  LCB _ StatementList _ RCB {% compose(node(Syntax.Block), flatten) %}
 
-# The way blocks/statements are written is pretty frustrating tbh
-Block -> LCB _ StatementList:*  _ RCB {% d => node(Syntax.Block)(d[2]) %}
-StatementList -> _ Statement {% nth(1) %}
+StatementList ->
+    Statement                 {% drop %}
+  | Statement _ StatementList {% flatten %}
 
 Function ->
-  FUNCTION __ Identifier _ FunctionParameters _ FunctionResult _ Block
-{% fun %}
+    FUNCTION __ Identifier _ FunctionParameters _ Block                  {% voidFun %}
+  | FUNCTION __ Identifier _ FunctionParameters _ FunctionResult _ Block {% fun %}
 
-FunctionParameters -> LB _ ParameterList:?  _ RB
-{% node(Syntax.FunctionArguments) %}
+FunctionParameters ->
+    LB _ RB                  {% node(Syntax.FunctionArguments) %}
+  | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten) %}
 
-ParameterList -> Pair (_ "," _ Pair):?
-{% id %}
+ParameterList ->
+    PropertyNameAndType {% id %}
+  | PropertyNameAndType _ COMMA _ ParameterList {% flatten  %}
 
-FunctionResult -> (COLON _ Identifier {% nth(2) %}):?
-{% result %}
+FunctionResult -> COLON _ Type {% compose(result, drop) %}
 
 Declaration ->
-    LET _ Pair _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
-  | LET _ Pair _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
+    LET _ PropertyNameAndType _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
+  | LET _ PropertyNameAndType _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
 
-ImmutableDeclaration -> CONST _ Pair _ EQUALS _ ExpressionStatement
-{% declaration(Syntax.ImmutableDeclaration) %}
+ImmutableDeclaration ->
+    CONST _ PropertyNameAndType _ EQUALS _ ExpressionStatement
+      {% declaration(Syntax.ImmutableDeclaration) %}
+  | CONST _ PropertyNameAndValue _ EQUALS _ ObjectLiteral _ SEPARATOR
+      {% declaration(Syntax.ImmutableDeclaration) %}
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
@@ -106,23 +134,22 @@ Export ->
     EXPORT __ ImmutableDeclaration {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
 
+
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
 
-Struct -> TYPE __ Identifier _ EQUALS _ ObjectLiteral SEPARATOR {% struct %}
+Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
+TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
 
 # Expressions
 ExpressionStatement -> Expression SEPARATOR {% id %}
-Expression -> Assignment                    {% id %}
+Expression -> Assignment       {% id %}
 
 # Operators, ordered by precedence asc
 Assignment ->
-    Identifier _ EQUALS _ Ternary {% node(Syntax.Assignment) %}
-  | Ternary                    {% id %}
+    Access _ EQUALS _ Ternary {% assignment %}
+  | Ternary                   {% id %}
 
-Assignment ->
-  Identifier LSb Expression RSB _ EQUALS _ Ternary
-  {% node(Syntax.MemoryAssignment) %}
 
 # Conditionals
 Ternary ->
@@ -167,10 +194,14 @@ Sum ->
   | Product                       {% id %}
 
 Product ->
-    Product _ "*" _ Unary {% binary %}
-  | Product _ "/" _ Unary {% binary %}
-  | Product _ "%" _ Unary {% binary %}
-  | Unary                 {% id %}
+    Product _ "*" _ Typecast {% binary %}
+  | Product _ "/" _ Typecast {% binary %}
+  | Product _ "%" _ Typecast {% binary %}
+  | Typecast                 {% id %}
+
+Typecast ->
+    Expression _ COLON _ Type {% node(Syntax.Pair) %}
+  | Unary                   {% id %}
 
 Unary ->
     "!" Call  {% unary %}
@@ -182,20 +213,46 @@ Unary ->
   | Call      {% id %}
 
 Call ->
-    Identifier _ LB Expression RB {% call %}
+    Identifier _ LB ArgumentList RB {% compose(call, flatten) %}
+  | Identifier _ LB _ RB            {% call %}
   | Access {% id %}
+
+ArgumentList ->
+    Expression                        {% id %}
+  | Expression _ COMMA _ ArgumentList {% flatten %}
 
 Access ->
     Identifier DOT Identifier         {% subscript %}
   | Identifier LSB _ Expression _ RSB {% subscript %}
-  | Atom                              {% id %}
+  | Grouping                              {% id %}
+
+Grouping ->
+    LB Expression RB {% nth(1) %}
+  | Atom             {% id %}
 
 Atom ->
-    Identifier {% id %}
-  | Number     {% id %}
+    Identifier    {% id %}
+  | StringLiteral {% id %}
+  | Number        {% id %}
+
+Type ->
+    _Type               {% id %}
+  | _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
+
+_Type ->
+    %type       {% type %}
+  | GenericType {% type %}
+  | Identifier  {% type %}
+
+
+GenericType -> Identifier LT _ ObjectLiteral _ GT {% type %}
 
 Identifier -> %identifier      {% identifier %}
-Number -> digit                {% constant %}
+Number -> %number                {% constant %}
+StringLiteral -> %string       {% string %}
+Boolean ->
+    "true"  {% boolean %}
+  | "false" {% boolean %}
 
 word ->
     [a-zA-Z_]                  {% id %}
@@ -203,6 +260,11 @@ word ->
 digit ->
     [0-9]                      {% id %}
   | digit [0-9]                {% add %}
+
+# FIXME: empty comment lines throw syntax errors if we attempt to parse them
+Comment ->
+    %comment            {% comment %}
+  | %comment _ Comment  {% comment %}
 
 # Punctuators
 SEPARATOR -> _ ";"      {% nuller %}
@@ -217,8 +279,16 @@ LCB       -> "{"        {% nuller %}
 RCB       -> "}"        {% nuller %}
 COLON     -> ":"        {% nuller %}
 EQUALS    -> "="        {% nuller %}
+GT        -> ">"        {% nuller %}
+LT        -> "<"        {% nuller %}
+FATARROW  -> "=>"       {% nuller %}
 LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
 EXPORT    -> "export"   {% nuller %}
+IMPORT    -> "import"   {% nuller %}
+AS        -> "as"       {% nuller %}
+FROM      -> "from"     {% nuller %}
 RETURN    -> "return"   {% nuller %}
 TYPE      -> "type"     {% nuller %}
+IF        -> "if"       {% nuller %}
+ELSE      -> "else"     {% nuller %}

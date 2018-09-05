@@ -79,7 +79,7 @@ export default function() {
     return {
       Program: next => args => {
         const [program, context] = args;
-        return next(args);
+
         if (!hasNode(Syntax.Closure, program)) {
           return next(args);
         }
@@ -169,7 +169,6 @@ export default function() {
         ]);
       },
       FunctionDeclaration: next => (args, transform) => {
-        return next(args);
         const [node, context] = args;
         const { globals } = context;
         if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {

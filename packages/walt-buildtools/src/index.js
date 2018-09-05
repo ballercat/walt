@@ -133,6 +133,7 @@ function compile(filepath, api) {
     version: 0x1,
     filename,
     filepath,
+    encodeNames: true
   };
 
   const tree = buildTree(filepath, api);
