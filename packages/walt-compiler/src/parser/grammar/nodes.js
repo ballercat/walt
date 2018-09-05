@@ -258,13 +258,13 @@ function factory(lexer) {
     comment,
     voidFun,
     boolean,
-    assignment(d) {
+    assignment(d, value) {
       let Type = Syntax.Assignment;
       if (d[0] && d[0].Type === Syntax.ArraySubscript) {
         Type = Syntax.MemoryAssignment;
       }
 
-      return node(Type)(d);
+      return node(Type, { value })(d);
     },
   };
 }

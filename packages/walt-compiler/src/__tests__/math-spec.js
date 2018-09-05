@@ -84,7 +84,7 @@ test('complex brackets', t =>
 
 test('array index & math', t =>
   compileAndRun(`
-    const memory: Memory = { 'initial': 1 };
+    const memory: Memory = { initial: 1 };
     export function test(): i32 {
       const x: i32[] = 0;
       x[0] = 7;

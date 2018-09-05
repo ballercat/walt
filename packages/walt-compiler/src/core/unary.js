@@ -57,6 +57,32 @@ export default function() {
               ]);
           }
         },
+        Assignment: next => args => {
+          const [assign, context] = args;
+          if (!['-=', '+='].includes(assign.value)) {
+            return next(args);
+          }
+
+          const operator = assign.value[0];
+          const [target, amount] = assign.params;
+
+          return next([
+            {
+              ...assign,
+              value: '=',
+              params: [
+                target,
+                {
+                  ...target,
+                  Type: Syntax.BinaryExpression,
+                  value: operator,
+                  params: [target, amount],
+                },
+              ],
+            },
+            context,
+          ]);
+        },
       };
     },
   };

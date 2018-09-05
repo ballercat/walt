@@ -147,8 +147,10 @@ Expression -> Assignment       {% id %}
 
 # Operators, ordered by precedence asc
 Assignment ->
-    Access _ EQUALS _ Ternary {% assignment %}
-  | Ternary                   {% id %}
+    Access _ EQUALS _ Ternary    {% d => assignment(d, '=') %}
+  | Access _ PLSEQUALS _ Ternary {% d => assignment(d, '+=') %}
+  | Access _ MINEQUALS _ Ternary {% d => assignment(d, '-=') %}
+  | Ternary                      {% id %}
 
 
 # Conditionals
@@ -232,6 +234,7 @@ Grouping ->
 
 Atom ->
     Identifier    {% id %}
+  | Boolean       {% id %}
   | StringLiteral {% id %}
   | Number        {% id %}
 
@@ -279,6 +282,8 @@ LCB       -> "{"        {% nuller %}
 RCB       -> "}"        {% nuller %}
 COLON     -> ":"        {% nuller %}
 EQUALS    -> "="        {% nuller %}
+PLSEQUALS -> "+="       {% nuller %}
+MINEQUALS -> "-="       {% nuller %}
 GT        -> ">"        {% nuller %}
 LT        -> "<"        {% nuller %}
 FATARROW  -> "=>"       {% nuller %}
