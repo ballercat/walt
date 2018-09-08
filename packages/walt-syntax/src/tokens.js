@@ -87,7 +87,7 @@ export const tokens = {
     { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) },
   ],
   identifier: {
-    match: /[\w]+/,
+    match: /[A-Za-z_$][A-Za-z0-9_$]*/,
     keywords: { keyword, type },
   },
   punctuator,

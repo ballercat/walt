@@ -143,6 +143,7 @@ Export ->
 
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
+  | RETURN _ SEPARATOR            {% node(Syntax.ReturnStatement) %}
 
 Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
 TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
