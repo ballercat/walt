@@ -15,3 +15,5 @@ For ->
 
 While ->
     WHILE _ LB _ Expression _ RB _ BranchBody {% whileLoop %}
+
+Break -> BREAK _ SEPARATOR {% node(Syntax.Break) %}

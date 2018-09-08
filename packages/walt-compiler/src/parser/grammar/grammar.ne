@@ -97,6 +97,7 @@ Statement ->
   | If                    {% id %}
   | For                   {% id %}
   | While                 {% id %}
+  | Break                 {% id %}
   | ReturnStatement       {% id %}
 
 Block ->
@@ -304,3 +305,4 @@ FOR       -> "for"      {% nuller %}
 WHILE     -> "while"    {% nuller %}
 SWITCH    -> "switch"   {% nuller %}
 DO        -> "do"       {% nuller %}
+BREAK     -> "break"    {% nuller %}
