@@ -6,7 +6,7 @@ const compileAndRun = (src, importsObj = {}) =>
 const outputIs = (t, value, input) => result =>
   t.is(result.instance.exports.test(input), value);
 
-test('for loop params', t =>
+test.only('for loop params', t =>
   compileAndRun(
     `export function test(): i32 {
   let i: i32 = 10;

@@ -63,6 +63,7 @@
     type,
     boolean,
     assignment,
+    forLoop,
   } = require('./nodes')(lexer);
 %}
 
@@ -93,6 +94,7 @@ Statement ->
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
   | If                    {% id %}
+  | For                   {% id %}
   | ReturnStatement       {% id %}
 
 Block ->
@@ -234,7 +236,6 @@ Grouping ->
 
 Atom ->
     Identifier    {% id %}
-  | Boolean       {% id %}
   | StringLiteral {% id %}
   | Number        {% id %}
 
@@ -297,3 +298,4 @@ RETURN    -> "return"   {% nuller %}
 TYPE      -> "type"     {% nuller %}
 IF        -> "if"       {% nuller %}
 ELSE      -> "else"     {% nuller %}
+FOR       -> "for"      {% nuller %}

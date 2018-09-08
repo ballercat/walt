@@ -266,6 +266,10 @@ function factory(lexer) {
 
       return node(Type, { value })(d);
     },
+    forLoop(d) {
+      const [initializer, condition, afterthought, ...body] = drop(d);
+      return node(Syntax.Loop)([initializer, condition, ...body, afterthought]);
+    },
   };
 }
 module.exports = factory;

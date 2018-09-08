@@ -19,7 +19,7 @@ test('empty module compilation', t =>
 test('invalid imports throw', t =>
   t.throws(() => compile("import foo from 'bar'")));
 
-test(
+test.only(
   'compiler',
   harness(path.resolve(__dirname, './compiler-spec.walt'), {
     externalConst: 42,

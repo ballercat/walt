@@ -8,3 +8,8 @@ Else ->
 BranchBody ->
     Statement {% id %}
   | Block     {% id %}
+
+For ->
+    FOR _ LB _ Expression _ SEPARATOR _ Expression _ SEPARATOR _ Expression _ RB _ BranchBody
+    {% forLoop %}
+
