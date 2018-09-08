@@ -230,6 +230,9 @@ ArgumentList ->
 
 Access ->
     Identifier DOT Identifier         {% subscript %}
+  | Identifier DOT Call               {% subscript %}
+  | NativeType DOT Identifier         {% subscript %}
+  | NativeType DOT Call               {% subscript %}
   | Identifier LSB _ Expression _ RSB {% subscript %}
   | Grouping                              {% id %}
 
@@ -247,10 +250,11 @@ Type ->
   | _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
 
 _Type ->
-    %type       {% type %}
+    NativeType  {% id %}
   | GenericType {% type %}
   | Identifier  {% type %}
 
+NativeType -> %type {% type %}
 
 GenericType -> Identifier LT _ ObjectLiteral _ GT {% type %}
 
