@@ -21,7 +21,9 @@ PropertyNameAndTypeList ->
 
 PropertyNameAndType -> PropertyName _ COLON _ Type {% node(Syntax.Pair) %}
 
-TypeDefinition -> LB _ TypeList _ RB  {% flatten %}
+TypeDefinition ->
+    LB _ TypeList _ RB  {% flatten %}
+  | LB _ RB             {% flatten %}
 TypeList ->
     Type                    {% id %}
   | Type _ COMMA _ TypeList {% flatten %}

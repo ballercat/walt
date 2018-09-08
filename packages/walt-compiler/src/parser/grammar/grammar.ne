@@ -138,6 +138,7 @@ Pair -> Identifier _ COLON _ Identifier
 Export ->
     EXPORT __ ImmutableDeclaration {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
+  | EXPORT __ TypeDef              {% node(Syntax.Export, { value: 'export' }) %}
 
 
 ReturnStatement ->

@@ -94,7 +94,7 @@ export default function Struct() {
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
           const ref = find(scopes, identifier.value);
-          const userType = userTypes[ref.type];
+          const userType = ref && userTypes[ref.type];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];

@@ -150,7 +150,7 @@ function factory(lexer) {
 
     return extendNode(
       {
-        type: type != null ? type.value : null,
+        type: type != null && type.value !== 'void' ? type.value : null,
       },
       node(Syntax.FunctionResult)(d)
     );
@@ -202,6 +202,7 @@ function factory(lexer) {
             node(Syntax.FunctionResult)([res])
           ),
         ],
+        type: res.type,
       },
       node(Syntax.Typedef)([id, args, result])
     );

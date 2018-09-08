@@ -82,14 +82,13 @@ export const tokens = {
     { match: /(?:[0-9]+(?:\.[0-9]+)?e-?[0-9]+)/ },
     { match: /[0-9]+\.[0-9]+|[0-9]+/ },
   ],
-  type,
   string: [
     { match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) },
     { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) },
   ],
   identifier: {
     match: /[\w]+/,
-    keywords: { keyword },
+    keywords: { keyword, type },
   },
   punctuator,
   newline: { match: /\n/, lineBreaks: true },
