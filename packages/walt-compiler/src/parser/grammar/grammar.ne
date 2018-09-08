@@ -65,6 +65,7 @@
     assignment,
     forLoop,
     whileLoop,
+    typeGeneric,
   } = require('./nodes')(lexer);
 %}
 
@@ -253,12 +254,12 @@ Type ->
 
 _Type ->
     NativeType  {% id %}
-  | GenericType {% type %}
+  | GenericType {% id %}
   | Identifier  {% type %}
 
 NativeType -> %type {% type %}
 
-GenericType -> Identifier LT _ ObjectLiteral _ GT {% type %}
+GenericType -> Identifier LT _ ObjectLiteral _ GT {% typeGeneric %}
 
 Identifier -> %identifier      {% identifier %}
 Number -> %number                {% constant %}

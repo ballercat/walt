@@ -176,17 +176,6 @@ function factory(lexer) {
     );
   };
 
-  const _type = d => {
-    return extendNode(
-      {
-        value: d[0].value,
-        type: d[0].value,
-        params: [],
-      },
-      node(Syntax.Type)(d)
-    );
-  };
-
   const typedef = d => {
     const [id, args, res] = drop(d);
 
@@ -254,7 +243,27 @@ function factory(lexer) {
     struct,
     result,
     string,
-    type: _type,
+    type(d) {
+      return extendNode(
+        {
+          value: d[0].value,
+          type: d[0].value,
+          params: [],
+        },
+        node(Syntax.Type)(d)
+      );
+    },
+    typeGeneric(d) {
+      const [id, obj] = drop(d);
+      return extendNode(
+        {
+          value: id.value,
+          type: id.value,
+          params: [obj],
+        },
+        node(Syntax.Type)(d)
+      );
+    },
     typedef,
     comment,
     voidFun,
