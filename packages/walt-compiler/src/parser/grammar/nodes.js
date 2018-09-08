@@ -270,6 +270,10 @@ function factory(lexer) {
       const [initializer, condition, afterthought, ...body] = drop(d);
       return node(Syntax.Loop)([initializer, condition, ...body, afterthought]);
     },
+    whileLoop(d) {
+      const noop = node(Syntax.Noop)([]);
+      return node(Syntax.Loop)([noop, ...d]);
+    },
   };
 }
 module.exports = factory;

@@ -13,3 +13,5 @@ For ->
     FOR _ LB _ Expression _ SEPARATOR _ Expression _ SEPARATOR _ Expression _ RB _ BranchBody
     {% forLoop %}
 
+While ->
+    WHILE _ LB _ Expression _ RB _ BranchBody {% whileLoop %}

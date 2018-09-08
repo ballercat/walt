@@ -64,6 +64,7 @@
     boolean,
     assignment,
     forLoop,
+    whileLoop,
   } = require('./nodes')(lexer);
 %}
 
@@ -95,6 +96,7 @@ Statement ->
   | ImmutableDeclaration  {% id %}
   | If                    {% id %}
   | For                   {% id %}
+  | While                 {% id %}
   | ReturnStatement       {% id %}
 
 Block ->
@@ -299,3 +301,6 @@ TYPE      -> "type"     {% nuller %}
 IF        -> "if"       {% nuller %}
 ELSE      -> "else"     {% nuller %}
 FOR       -> "for"      {% nuller %}
+WHILE     -> "while"    {% nuller %}
+SWITCH    -> "switch"   {% nuller %}
+DO        -> "do"       {% nuller %}

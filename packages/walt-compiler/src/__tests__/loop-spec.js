@@ -6,7 +6,7 @@ const compileAndRun = (src, importsObj = {}) =>
 const outputIs = (t, value, input) => result =>
   t.is(result.instance.exports.test(input), value);
 
-test.only('for loop params', t =>
+test('for loop params', t =>
   compileAndRun(
     `export function test(): i32 {
   let i: i32 = 10;
@@ -30,7 +30,7 @@ test('for loop', t =>
   }
   `).then(outputIs(t, -5, 5)));
 
-test('while loop', t =>
+test.only('while loop', t =>
   compileAndRun(`
   export function test(x: i32): i32 {
     let y: i32 = 0;
