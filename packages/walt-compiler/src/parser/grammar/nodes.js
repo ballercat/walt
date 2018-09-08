@@ -103,12 +103,12 @@ function factory(lexer) {
   };
 
   const ternary = d => {
-    return {
-      Type: 'TernaryExpression',
-      value: '?',
-      meta: [],
-      params: d.filter(t => nonEmpty(t) && t !== '?' && t !== ':'),
-    };
+    return extendNode(
+      {
+        value: '?',
+      },
+      node(Syntax.TernaryExpression)(d)
+    );
   };
 
   const subscript = d => {

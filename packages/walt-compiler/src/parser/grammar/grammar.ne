@@ -163,8 +163,10 @@ Assignment ->
 
 # Conditionals
 Ternary ->
-    Ternary _ "?" _ Ternary _ ":" _ Ternary {% ternary %}
-  | Binary                                  {% id %}
+    Ternary _ QUESTION _ TernaryPair {% ternary %}
+  | Binary                           {% id %}
+
+TernaryPair -> Expression _ COLON _ Expression {% node(Syntax.Pair) %}
 
 Binary -> Logical        {% id %}
 
@@ -282,7 +284,7 @@ Comment ->
 
 # Punctuators
 SEPARATOR -> _ ";"      {% nuller %}
-FUNCTION  -> "function" {% nuller %}
+QUESTION  -> "?"        {% nuller %}
 COMMA     -> ","        {% nuller %}
 DOT       -> "."        {% nuller %}
 LB        -> "("        {% nuller %}
@@ -298,6 +300,7 @@ MINEQUALS -> "-="       {% nuller %}
 GT        -> ">"        {% nuller %}
 LT        -> "<"        {% nuller %}
 FATARROW  -> "=>"       {% nuller %}
+FUNCTION  -> "function" {% nuller %}
 LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
 EXPORT    -> "export"   {% nuller %}
