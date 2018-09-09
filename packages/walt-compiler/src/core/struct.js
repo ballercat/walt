@@ -58,7 +58,6 @@ export default function Struct() {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
             node.params[0]
           );
-
           const struct = {
             ...node,
             meta: {

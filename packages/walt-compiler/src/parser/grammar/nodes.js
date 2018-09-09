@@ -156,12 +156,13 @@ function factory(lexer) {
   };
 
   const call = d => {
-    const [id, ...params] = drop(d);
+    let [id, ...params] = drop(d);
+
     return extendNode(
       {
         value: id.value,
       },
-      node(Syntax.FunctionCall)(params)
+      node(Syntax.FunctionCall)([id, ...params])
     );
   };
 

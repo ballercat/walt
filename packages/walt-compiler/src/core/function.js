@@ -103,6 +103,7 @@ export default function coreFunctionPlugin() {
                   ? functions[call.value].type
                   : null,
               meta: { [FUNCTION_INDEX]: index },
+              params: call.params.slice(1),
             },
             context,
           ]);

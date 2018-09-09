@@ -68,7 +68,7 @@ export default function functionPointer() {
             // here and append an identifier which will be used to get the table
             // value
             const params = [
-              ...call.params,
+              ...call.params.slice(1),
               { ...ref, Type: Syntax.Identifier },
             ].map(p => transform([p, context]));
 

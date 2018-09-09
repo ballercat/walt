@@ -132,7 +132,7 @@ Declaration ->
 ImmutableDeclaration ->
     CONST _ PropertyNameAndType _ EQUALS _ ExpressionStatement
       {% declaration(Syntax.ImmutableDeclaration) %}
-  | CONST _ PropertyNameAndValue _ EQUALS _ ObjectLiteral _ SEPARATOR
+  | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
 
