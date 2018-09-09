@@ -51,7 +51,7 @@ function factory(lexer) {
     const value = d[0].value;
     return extendNode(
       {
-        value,
+        value: `${value}`,
         type: value.toString().indexOf('.') !== -1 ? 'f32' : 'i32',
       },
       node(Syntax.Constant)([])
@@ -76,10 +76,10 @@ function factory(lexer) {
     return d.filter(nonEmpty);
   };
 
-  const unary = ([operator, target]) => {
+  const unary = ([operator, target], op) => {
     let params = [target];
 
-    if (operator.value === '-') {
+    if (op) {
       params = [
         {
           ...target,
@@ -94,8 +94,7 @@ function factory(lexer) {
 
     return extendNode(
       {
-        Type: 'UnaryExpression',
-        value: operator.value,
+        value: op,
         params,
       },
       node(Syntax.UnaryExpression)([operator, target])
@@ -283,6 +282,20 @@ function factory(lexer) {
     whileLoop(d) {
       const noop = node(Syntax.Noop)([]);
       return node(Syntax.Loop)([noop, ...d]);
+    },
+    spread(d) {
+      return node(Syntax.Spread)(d);
+    },
+    builtinDecl(d) {
+      const [id, typeNode] = drop(d);
+      return extendNode(
+        {
+          value: id.value,
+          type: typeNode.value,
+          params: [typeNode],
+        },
+        node(Syntax.ImmutableDeclaration)(d)
+      );
     },
   };
 }

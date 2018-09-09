@@ -141,7 +141,6 @@ export default function Core() {
           return { ...inputNode, params, type };
         },
         TernaryExpression: next => ([node, context]) => {
-          debugger;
           return next([balanceTypesInMathExpression(node), context]);
         },
       };

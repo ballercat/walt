@@ -66,6 +66,8 @@
     forLoop,
     whileLoop,
     typeGeneric,
+    spread,
+    builtinDecl,
   } = require('./nodes')(lexer);
 %}
 
@@ -132,6 +134,8 @@ ImmutableDeclaration ->
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ PropertyNameAndValue _ EQUALS _ ObjectLiteral _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
+  | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
+
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
@@ -141,7 +145,6 @@ Export ->
   | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ TypeDef              {% node(Syntax.Export, { value: 'export' }) %}
 
-
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
   | RETURN _ SEPARATOR            {% node(Syntax.ReturnStatement) %}
@@ -149,7 +152,7 @@ ReturnStatement ->
 Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
 TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
 
-# Expressions
+# Expression
 ExpressionStatement -> Expression SEPARATOR {% id %}
 Expression -> Assignment       {% id %}
 
@@ -158,6 +161,7 @@ Assignment ->
     Access _ EQUALS _ Ternary    {% d => assignment(d, '=') %}
   | Access _ PLSEQUALS _ Ternary {% d => assignment(d, '+=') %}
   | Access _ MINEQUALS _ Ternary {% d => assignment(d, '-=') %}
+  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
   | Ternary                      {% id %}
 
 
@@ -225,8 +229,8 @@ Unary ->
   | Call      {% id %}
 
 Call ->
-    Identifier _ LB ArgumentList RB {% compose(call, flatten) %}
-  | Identifier _ LB _ RB            {% call %}
+    Access _ LB ArgumentList RB {% compose(call, flatten) %}
+  | Access _ LB _ RB            {% call %}
   | Access {% id %}
 
 ArgumentList ->
@@ -235,11 +239,9 @@ ArgumentList ->
 
 Access ->
     Identifier DOT Identifier         {% subscript %}
-  | Identifier DOT Call               {% subscript %}
   | NativeType DOT Identifier         {% subscript %}
-  | NativeType DOT Call               {% subscript %}
-  | Identifier LSB _ Expression _ RSB {% subscript %}
-  | Grouping                              {% id %}
+  | Identifier LSB _ Ternary _ RSB    {% subscript %}
+  | Grouping                          {% id %}
 
 Grouping ->
     LB Expression RB {% nth(1) %}
@@ -261,7 +263,7 @@ _Type ->
 
 NativeType -> %type {% type %}
 
-GenericType -> Identifier LT _ ObjectLiteral _ GT {% typeGeneric %}
+GenericType -> Identifier LT _ StaticObjectLiteral _ GT {% typeGeneric %}
 
 Identifier -> %identifier      {% identifier %}
 Number -> %number                {% constant %}
@@ -300,6 +302,7 @@ MINEQUALS -> "-="       {% nuller %}
 GT        -> ">"        {% nuller %}
 LT        -> "<"        {% nuller %}
 FATARROW  -> "=>"       {% nuller %}
+SPREAD    -> "..."      {% nuller %}
 FUNCTION  -> "function" {% nuller %}
 LET       -> "let"      {% nuller %}
 CONST     -> "const"    {% nuller %}
