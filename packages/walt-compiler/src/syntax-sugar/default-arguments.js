@@ -1,8 +1,12 @@
 import Syntax from 'walt-syntax';
+import grammar from './default-arguments.ne';
 import walkNode from 'walt-parser-tools/walk-node';
 
 export default function() {
   return {
+    grammar() {
+      return grammar;
+    },
     semantics() {
       return {
         FunctionDeclaration: next => args => {

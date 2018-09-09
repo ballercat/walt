@@ -7,12 +7,75 @@
 
 // @flow
 import invariant from 'invariant';
-import grammar from './grammar/grammar.ne';
-import nearley from 'nearley';
+import { tokens } from 'walt-syntax';
+import moo from 'moo';
+import coreGrammar from './grammar/grammar.ne';
+import defaultArgsGrammar from '../syntax-sugar/default-arguments.ne';
+import { Parser, Grammar } from 'nearley';
 import type { NodeType } from '../flow/types';
 
-export default function parse(source: string): NodeType {
-  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+type GrammarType = {
+  Lexer: any,
+  ParserRules: Object[],
+  ParserStart: string,
+};
+type MakeGrammar = () => GrammarType;
+
+function makeLexer() {
+  const mooLexer = moo.compile(tokens);
+  // Additional utility on top of the default moo lexer.
+  return {
+    current: null,
+    lines: [],
+    get line() {
+      return mooLexer.line;
+    },
+    get col() {
+      return mooLexer.col;
+    },
+    save() {
+      return mooLexer.save();
+    },
+    reset(chunk, info) {
+      this.lines = chunk.split('\n');
+      return mooLexer.reset(chunk, info);
+    },
+    next() {
+      // It's a cruel and unusual punishment to implement comments with nearly
+      let token = mooLexer.next();
+      while (token && token.type === 'comment') {
+        token = mooLexer.next();
+      }
+      this.current = token;
+      return this.current;
+    },
+    formatError(token) {
+      return mooLexer.formatError(token);
+    },
+    has(name) {
+      return mooLexer.has(name);
+    },
+  };
+}
+
+export default function parse(
+  source: string,
+  grammarList: MakeGrammar[] = [coreGrammar, defaultArgsGrammar]
+): NodeType {
+  const context = {
+    lexer: makeLexer(),
+  };
+
+  const grammar = grammarList.slice(1).reduce((grammar, value) => {
+    const extra = value.call(context);
+    return {
+      ...grammar,
+      ParserRules: grammar.ParserRules.concat(extra.ParserRules),
+    };
+  }, grammarList[0].call(context));
+
+  debugger;
+  const parser = new Parser(Grammar.fromCompiled(grammar));
   parser.feed(source);
 
   invariant(
