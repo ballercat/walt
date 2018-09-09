@@ -144,6 +144,7 @@ Export ->
     EXPORT __ ImmutableDeclaration {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ Function             {% node(Syntax.Export, { value: 'export' }) %}
   | EXPORT __ TypeDef              {% node(Syntax.Export, { value: 'export' }) %}
+  | EXPORT __ Struct               {% node(Syntax.Export, { value: 'export' }) %}
 
 ReturnStatement ->
     RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
@@ -229,7 +230,7 @@ Unary ->
   | Call      {% id %}
 
 Call ->
-    Access _ LB ArgumentList RB {% compose(call, flatten) %}
+    Access _ LB _ ArgumentList _ RB {% compose(call, flatten) %}
   | Access _ LB _ RB            {% call %}
   | Access {% id %}
 
@@ -244,8 +245,8 @@ Access ->
   | Grouping                          {% id %}
 
 Grouping ->
-    LB Expression RB {% nth(1) %}
-  | Atom             {% id %}
+    LB _ Expression _ RB {% nth(2) %}
+  | Atom                 {% id %}
 
 Atom ->
     Identifier    {% id %}

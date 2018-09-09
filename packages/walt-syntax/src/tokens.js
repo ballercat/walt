@@ -74,7 +74,7 @@ const type = ['i32', 'i64', 'f32', 'f64', 'bool'];
 
 export const tokens = {
   whitespace: /[ \t]+/,
-  comment: [{ match: /\/\/.*?$/ }],
+  comment: [{ match: /\/\/.*?$/ }, { match: /\/\*.*?\*\// }],
   number: [
     { match: /0[xX][0-9a-fA-F]+/ },
     { match: /0[oO][0-9]+/ },
@@ -85,6 +85,7 @@ export const tokens = {
   string: [
     { match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) },
     { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) },
+    { match: /`(?:\\['\\bfnrtv0]|[^'\\])*?`/, value: x => x.slice(1, -1) },
   ],
   identifier: {
     match: /[A-Za-z_$][A-Za-z0-9_$]*/,
