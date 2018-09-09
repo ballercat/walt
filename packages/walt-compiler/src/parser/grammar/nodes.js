@@ -76,10 +76,10 @@ function factory(lexer) {
     return d.filter(nonEmpty);
   };
 
-  const unary = ([operator, target], op) => {
+  const unary = ([operator, target]) => {
     let params = [target];
 
-    if (op) {
+    if (operator.value === '-') {
       params = [
         {
           ...target,
@@ -94,7 +94,7 @@ function factory(lexer) {
 
     return extendNode(
       {
-        value: op,
+        value: operator.value,
         params,
       },
       node(Syntax.UnaryExpression)([operator, target])
