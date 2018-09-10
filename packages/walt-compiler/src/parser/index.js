@@ -66,15 +66,14 @@ export default function parse(
     lexer: makeLexer(),
   };
 
-  const grammar = grammarList.slice(1).reduce((grammar, value) => {
+  const grammar = grammarList.slice(1).reduce((acc, value) => {
     const extra = value.call(context);
     return {
-      ...grammar,
-      ParserRules: grammar.ParserRules.concat(extra.ParserRules),
+      ...acc,
+      ParserRules: acc.ParserRules.concat(extra.ParserRules),
     };
   }, grammarList[0].call(context));
 
-  debugger;
   const parser = new Parser(Grammar.fromCompiled(grammar));
   parser.feed(source);
 

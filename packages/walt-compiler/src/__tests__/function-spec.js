@@ -12,7 +12,7 @@ test.only('default arguments', t => {
 
   export function test(): i32 {
     const x: i32 = add(2);
-    const y: i32 = extern(1);
+    const y: i32 = extern(1, 0);
     return x + y;
   }`;
 

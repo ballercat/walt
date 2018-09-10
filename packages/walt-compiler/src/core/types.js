@@ -63,7 +63,9 @@ export default function typePlugin() {
             },
             [Syntax.Typedef]: (node, _) => {
               let argumentsCount = 0;
+              const [fnArgs] = node.params;
               const defaultArgs = [];
+
               walkNode({
                 Assignment(assignment) {
                   const defaultValue = assignment.params[1];
@@ -72,7 +74,7 @@ export default function typePlugin() {
                 Type() {
                   argumentsCount += 1;
                 },
-              })(node);
+              })(fnArgs);
               const parsed = {
                 ...node,
                 meta: {

@@ -9,12 +9,12 @@ TypeList ->
     DefaultArgument {% id %}
   | DefaultArgument _ COMMA _ TypeList {% flatten %}
 
-DefaultArgument -> Type _ EQUALS _ Atom {% node(Syntax.BinaryExpression) %}
+DefaultArgument -> Type _ EQUALS _ Atom {% node(Syntax.Assignment) %}
 
 ParameterList ->
     DefaultFunctionArgument  {% id %}
   | DefaultFunctionArgument _ COMMA _ ParameterList {% flatten %}
 
 DefaultFunctionArgument ->
-    PropertyNameAndType _ EQUALS _ Atom {% node(Syntax.BinaryExpression) %}
+    PropertyNameAndType _ EQUALS _ Atom {% node(Syntax.Assignment) %}
 
