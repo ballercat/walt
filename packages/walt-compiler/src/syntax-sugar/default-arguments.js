@@ -1,4 +1,3 @@
-import Syntax from 'walt-syntax';
 import grammar from './default-arguments.ne';
 import walkNode from 'walt-parser-tools/walk-node';
 

@@ -87,7 +87,7 @@ test('functions', t => {
 `;
   t.throws(() => getIR('function test() { return y; }'));
   const wasm = getIR(walt);
-  // t.snapshot(debug(wasm));
+  t.snapshot(debug(wasm));
   return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
     t.is(exports.testParams(2, 2), 4, 'function params');
@@ -100,7 +100,7 @@ test('functions', t => {
   });
 });
 
-test('closures', t => {
+test.skip('closures', t => {
   const source = `
 const table: Table<{ element: anyfunc, initial: 5 }>;
 type Func = (i32, i32) => i32;
