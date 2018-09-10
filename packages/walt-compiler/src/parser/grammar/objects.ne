@@ -17,7 +17,7 @@ StaticProperty -> Identifier _ COLON _ StaticPropertyValue {% node(Syntax.Pair) 
 
 StaticPropertyList ->
     StaticProperty  {% id %}
-  | StaticProperty _ COMMA _ StaticPropertyList {% id %}
+  | StaticProperty _ COMMA _ StaticPropertyList {% flatten %}
 
 ObjectLiteral ->
     LCB _ RCB

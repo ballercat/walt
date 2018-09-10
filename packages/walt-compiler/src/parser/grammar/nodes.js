@@ -289,6 +289,7 @@ function factory(lexer) {
     },
     builtinDecl(d) {
       const [id, typeNode] = drop(d);
+      console.log(id.value, typeNode);
       return extendNode(
         {
           value: id.value,
