@@ -1,5 +1,5 @@
 import Syntax from 'walt-syntax';
-import { expressionFragment as fragment } from '../parser/fragment';
+import { fragment } from '../parser/fragment';
 
 const shifts = {
   i64: 63,
