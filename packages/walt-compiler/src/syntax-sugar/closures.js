@@ -164,7 +164,7 @@ export default function() {
         context.closures.push(real);
 
         return transform([
-          expression(`(${real.value} | ((__env_ptr : i64) << 32)))`),
+          expression(`(${real.value} | ((__env_ptr : i64) << 32))`),
           context,
         ]);
       },
@@ -206,7 +206,7 @@ export default function() {
 
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
-        const injectedEnv = statement('const __env_ptr : i32 = 0;');
+        const injectedEnv = statement('const __env_ptr : i32 = 0');
         const [fnArgs, result, ...rest] = node.params;
 
         const closureContext = {
@@ -224,7 +224,7 @@ export default function() {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              statement(`const __env_ptr : i32 = __closure_malloc(${size});`),
+              statement(`const __env_ptr : i32 = __closure_malloc(${size})`),
               { ...context, scopes: enter(context.scopes, LOCAL_INDEX) },
             ]);
           }
@@ -239,7 +239,8 @@ export default function() {
       FunctionResult: next => args => {
         const [node, context] = args;
         const { types } = context;
-        if (types[node.value] && types[node.value].meta.CLOSURE_TYPE) {
+
+        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
           return next([
             {
               ...node,
@@ -305,14 +306,14 @@ export default function() {
 
           const params = [
             expression(`((${local.value} >> 32) : i32)`),
-            ...call.params,
+            ...call.params.slice(1),
             expression(`(${local.value} : i32)`),
           ].map(p => transform([p, context]));
 
           const typedef = types[local.meta.ALIAS];
           const typeIndex = Object.keys(types).indexOf(typedef.value);
 
-          return {
+          const icall = {
             ...call,
             meta: {
               ...local.meta,
@@ -323,6 +324,8 @@ export default function() {
             params,
             Type: Syntax.IndirectFunctionCall,
           };
+
+          return icall;
         }
 
         return next(args);

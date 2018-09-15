@@ -5,7 +5,8 @@ import walkNode from 'walt-parser-tools/walk-node';
 
 const mapGeneric = curry((options, node, _) => {
   const { types } = options;
-  const [generic, T] = node.params;
+  const [generic] = node.params;
+  const [T] = generic.params;
   const realType = types[T.value];
   const [args, result] = realType.params;
   // Patch the node to be a real type which we can reference later
@@ -32,6 +33,7 @@ const mapGeneric = curry((options, node, _) => {
     ],
   };
   types[patch.value] = patch;
+
   return patch;
 });
 

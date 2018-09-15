@@ -29,7 +29,6 @@ import type {
   IntermediateOpcodeType,
   IntermediateVariableType,
 } from './flow/types';
-
 const DATA_SECTION_HEADER_SIZE = 4;
 
 export const generateCode = (
@@ -132,7 +131,6 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
         ...node,
         meta: { ...node.meta, [TYPE_INDEX]: typeIndex },
       };
-
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     },

@@ -68,6 +68,9 @@
     typeGeneric,
     spread,
     builtinDecl,
+    genericType,
+    voidClosure,
+    closure,
   } = require('./nodes')(lexer);
 %}
 
@@ -75,6 +78,7 @@
 # @include "./punctuators.ne"
 @include "./objects.ne"
 @include "./import.ne"
+@include "./closures.ne"
 @include "./control-flow.ne"
 
 Program ->
@@ -97,6 +101,7 @@ Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
+  | Assignment            {% id %}
   | If                    {% id %}
   | For                   {% id %}
   | While                 {% id %}
@@ -153,18 +158,19 @@ ReturnStatement ->
 Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
 TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
 
+# Assignment is NOT a valid expression in Walt/Wasm. Assignment in WebAssembly
+# Does not yield the value assigned, it creates to values on the stack.
+Assignment ->
+    Access _ EQUALS _ Expression _ SEPARATOR    {% d => assignment(d, '=') %}
+  | Access _ PLSEQUALS _ Expression _ SEPARATOR {% d => assignment(d, '+=') %}
+  | Access _ MINEQUALS _ Expression _ SEPARATOR {% d => assignment(d, '-=') %}
+  | Access _ EQUALS _ ObjectLiteral _ SEPARATOR {% d => assignment(d, '=') %}
+
 # Expression
 ExpressionStatement -> Expression SEPARATOR {% id %}
-Expression -> Assignment       {% id %}
+Expression -> Ternary       {% id %}
 
 # Operators, ordered by precedence asc
-Assignment ->
-    Access _ EQUALS _ Ternary    {% d => assignment(d, '=') %}
-  | Access _ PLSEQUALS _ Ternary {% d => assignment(d, '+=') %}
-  | Access _ MINEQUALS _ Ternary {% d => assignment(d, '-=') %}
-  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
-  | Ternary                      {% id %}
-
 
 # Conditionals
 Ternary ->
@@ -218,6 +224,7 @@ Product ->
 
 Typecast ->
     Expression _ COLON _ Type {% node(Syntax.Pair) %}
+  | Expression _ AS _ Type  {% node(Syntax.Pair) %}
   | Unary                   {% id %}
 
 Unary ->

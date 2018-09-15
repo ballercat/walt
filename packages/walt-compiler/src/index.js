@@ -87,5 +87,6 @@ export const withPlugins = (
 // Compiles a raw binary wasm buffer
 export default function compileWalt(source: string, config: ConfigType) {
   const wasm = getIR(source, config);
+  //  console.log(debug(wasm));
   return wasm.buffer();
 }

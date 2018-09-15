@@ -274,6 +274,15 @@ function factory(lexer) {
         Type = Syntax.MemoryAssignment;
       }
 
+      if (['-=', '+='].includes(value)) {
+        const operator = value[0];
+        const [target, amount] = drop(d);
+        const b = binary([target, { value: operator }, amount]);
+        return node(Type, {
+          value: '=',
+        })([target, b]);
+      }
+
       return node(Type, { value })(d);
     },
     forLoop(d) {
@@ -297,6 +306,52 @@ function factory(lexer) {
           params: [typeNode],
         },
         node(Syntax.ImmutableDeclaration)(d)
+      );
+    },
+    genericType(d) {
+      const [id, gen, typeNode] = drop(d);
+      return extendNode(
+        {
+          value: id.value,
+          params: [gen, typeNode],
+        },
+        node(Syntax.GenericType)([])
+      );
+    },
+    voidClosure(d) {
+      const [args, block] = drop(d);
+      const resultNode = extendNode(
+        { type: null },
+        node(Syntax.FunctionResult)([])
+      );
+      return extendNode(
+        {
+          params: [
+            extendNode(
+              {
+                params: [args, resultNode, block],
+              },
+              node(Syntax.FunctionDeclaration)([])
+            ),
+          ],
+        },
+        node(Syntax.Closure)([])
+      );
+    },
+    closure(d) {
+      const [args, resultNode, block] = drop(d);
+      return extendNode(
+        {
+          params: [
+            extendNode(
+              {
+                params: [args, resultNode, block],
+              },
+              node(Syntax.FunctionDeclaration)([])
+            ),
+          ],
+        },
+        node(Syntax.Closure)([])
       );
     },
   };
