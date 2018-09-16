@@ -23,8 +23,8 @@ export default function() {
               const shift = shifts[lhs.type];
               return transform([
                 fragment(
-                  `(((${String(lhs)} >> ${shift}) | ((~${String(
-                    lhs
+                  `(((${String(lhs.value)} >> ${shift}) | ((~${String(
+                    lhs.value
                   )} + 1) >> ${shift})) + 1)`
                 ),
                 context,
@@ -36,7 +36,7 @@ export default function() {
                 ? '0xffffffffffff'
                 : '0xffffff';
               return transform([
-                fragment(`(${String(lhs)} ^ ${mask})`),
+                fragment(`(${String(lhs.value)} ^ ${mask})`),
                 context,
               ]);
             default:

@@ -114,9 +114,10 @@ function assemble(tree, options, api) {
       // Use global statics object
       statics = options.linker.statics;
     }
+
     const code = api.generator(
       mod.ast,
-      Object.assign({}, options, { linker: { statics } })
+      Object.assign({}, options, { filename: mod.filepath.split('/').slice(-1)[0], linker: { statics } })
     );
     const wasm = api.emitter(code, options).buffer();
 

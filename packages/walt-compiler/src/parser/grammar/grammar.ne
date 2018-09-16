@@ -160,11 +160,13 @@ TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPA
 
 # Assignment is NOT a valid expression in Walt/Wasm. Assignment in WebAssembly
 # Does not yield the value assigned, it creates to values on the stack.
-Assignment ->
-    Access _ EQUALS _ Expression _ SEPARATOR    {% d => assignment(d, '=') %}
-  | Access _ PLSEQUALS _ Expression _ SEPARATOR {% d => assignment(d, '+=') %}
-  | Access _ MINEQUALS _ Expression _ SEPARATOR {% d => assignment(d, '-=') %}
-  | Access _ EQUALS _ ObjectLiteral _ SEPARATOR {% d => assignment(d, '=') %}
+Assignment -> AssignmentExpression _ SEPARATOR {% id %}
+
+AssignmentExpression ->
+    Access _ EQUALS _ Expression    {% d => assignment(d, '=') %}
+  | Access _ PLSEQUALS _ Expression {% d => assignment(d, '+=') %}
+  | Access _ MINEQUALS _ Expression {% d => assignment(d, '-=') %}
+  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
 
 # Expression
 ExpressionStatement -> Expression SEPARATOR {% id %}
@@ -267,7 +269,7 @@ Type ->
 _Type ->
     NativeType  {% id %}
   | GenericType {% id %}
-  | Identifier  {% type %}
+  | Identifier  {% id %}
 
 NativeType -> %type {% type %}
 

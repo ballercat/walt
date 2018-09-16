@@ -12,7 +12,7 @@ ImportAndTypeList ->
 
 ImportAndType ->
     ImportName _ COLON _ Type       {% node(Syntax.Pair) %}
-  | ImportName _ AS _ Identifier    {% node(Syntax.BinaryExpression) %}
-  | ImportAndType _ AS _ Identifier {% node(Syntax.BinaryExpression) %}
+  | ImportName _ AS _ Identifier    {% node(Syntax.BinaryExpression, { value: 'as' }) %}
+  | ImportAndType _ AS _ Identifier {% node(Syntax.BinaryExpression, { value: 'as' }) %}
 
 ImportName -> Identifier {% id %}
