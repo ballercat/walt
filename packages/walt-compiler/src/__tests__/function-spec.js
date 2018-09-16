@@ -100,7 +100,7 @@ test('functions', t => {
   });
 });
 
-test.only('closures', t => {
+test('closures', t => {
   const source = `
 const table: Table<{ element: 'anyfunc', initial: 5 }>;
 type Func = (i32, i32) => i32;

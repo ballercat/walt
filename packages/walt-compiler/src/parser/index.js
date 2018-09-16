@@ -1,5 +1,4 @@
 /**
-      // aaaa
  * Syntax Analysis
  *
  * The parser below creates the "bare" Abstract Syntax Tree.
@@ -9,7 +8,9 @@
 import invariant from 'invariant';
 import { tokens } from 'walt-syntax';
 import moo from 'moo';
+// $FlowFixMe
 import coreGrammar from './grammar/grammar.ne';
+// $FlowFixMe
 import defaultArgsGrammar from '../syntax-sugar/default-arguments.ne';
 import { Parser, Grammar } from 'nearley';
 import type { NodeType } from '../flow/types';

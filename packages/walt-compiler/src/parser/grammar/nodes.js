@@ -243,6 +243,15 @@ function factory(lexer) {
     struct,
     result,
     string,
+    char(d) {
+      return extendNode(
+        {
+          value: d[0].value,
+          type: 'i32',
+        },
+        node(Syntax.CharacterLiteral)([])
+      );
+    },
     type(d) {
       return extendNode(
         {

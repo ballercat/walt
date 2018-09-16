@@ -42,7 +42,8 @@ function parseImports(ast, compiler) {
           imports[module.value] = Array.from(
             new Set(imports[module.value].concat(identifier.value))
           );
-          if (type === "Memory") {
+
+          if (type.value === "Memory") {
             hasMemory = true;
           }
         },

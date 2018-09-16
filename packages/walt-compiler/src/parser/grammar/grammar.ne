@@ -57,6 +57,7 @@
     struct,
     result,
     string,
+    char,
     typedef,
     comment,
     voidFun,
@@ -258,9 +259,10 @@ Grouping ->
   | Atom                 {% id %}
 
 Atom ->
-    Identifier    {% id %}
-  | StringLiteral {% id %}
-  | Number        {% id %}
+    Identifier       {% id %}
+  | StringLiteral    {% id %}
+  | CharacterLiteral {% id %}
+  | Number           {% id %}
 
 Type ->
     _Type               {% id %}
@@ -278,6 +280,7 @@ GenericType -> Identifier LT _ StaticObjectLiteral _ GT {% typeGeneric %}
 Identifier -> %identifier      {% identifier %}
 Number -> %number                {% constant %}
 StringLiteral -> %string       {% string %}
+CharacterLiteral -> %char      {% char %}
 Boolean ->
     "true"  {% boolean %}
   | "false" {% boolean %}
