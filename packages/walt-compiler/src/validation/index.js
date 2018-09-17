@@ -1,6 +1,6 @@
 // @flow
 // AST Validator
-import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from 'walt-syntax';
+import Syntax from 'walt-syntax';
 import walkNode from 'walt-parser-tools/walk-node';
 import error from '../utils/generate-error';
 import { isBuiltinType } from '../generator/utils';
@@ -100,34 +100,6 @@ export default function validate(
       walkNode({
         [Syntax.Declaration]: (node, _validator) => {
           const [start, end] = node.range;
-          const [initializer] = node.params;
-          if (
-            initializer != null &&
-            ALL_POSSIBLE_STATEMENTS[initializer.Type] != null
-          ) {
-            problems.push(
-              error(
-                `Unexpected statement ${initializer.Type}`,
-                'Attempting to assign a statement to a variable. Did you miss a semicolon(;)?',
-                { start, end },
-                filename,
-                functionName
-              )
-            );
-          }
-          if (node.meta[TYPE_CONST]) {
-            if (initializer == null) {
-              problems.push(
-                error(
-                  'Constant declaration without an initializer.',
-                  'Local Constants must be initialized with an expression.',
-                  { start, end },
-                  filename,
-                  functionName
-                )
-              );
-            }
-          }
 
           if (
             !isBuiltinType(node.type) &&
