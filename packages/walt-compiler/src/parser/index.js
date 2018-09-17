@@ -6,13 +6,15 @@
 
 // @flow
 import invariant from 'invariant';
-import { tokens } from 'walt-syntax';
+import Syntax, { tokens } from 'walt-syntax';
 import moo from 'moo';
 // $FlowFixMe
 import coreGrammar from './grammar/grammar.ne';
 // $FlowFixMe
 import defaultArgsGrammar from '../syntax-sugar/default-arguments.ne';
 import { Parser, Grammar } from 'nearley';
+import helpers from './grammar/helpers';
+import nodes from './grammar/nodes';
 import type { NodeType } from '../flow/types';
 
 type GrammarType = {
@@ -65,6 +67,9 @@ export default function parse(
 ): NodeType {
   const context = {
     lexer: makeLexer(),
+    nodes,
+    helpers,
+    Syntax,
   };
 
   const grammar = grammarList.slice(1).reduce((acc, value) => {

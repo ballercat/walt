@@ -1,5 +1,6 @@
 import Syntax from 'walt-syntax';
 import { find } from 'walt-parser-tools/scope';
+import { extendNode } from '../utils/extend-node';
 import {
   TYPE_INDEX,
   GLOBAL_INDEX,
@@ -40,7 +41,6 @@ export default function functionPointer() {
             if (table[node.value] == null) {
               table[node.value] = functions[node.value];
             }
-
             return {
               ...node,
               type: 'i32',
@@ -51,6 +51,25 @@ export default function functionPointer() {
               Type: Syntax.FunctionPointer,
             };
           },
+        FunctionResult: next => (args, transform) => {
+          const [node, context] = args;
+          const { types } = context;
+          if (!types[node.type]) {
+            return next(args);
+          }
+
+          return next([
+            extendNode(
+              {
+                type: 'i32',
+                meta: { ALIAS: node.type },
+                params: node.params.map(p => transform([p, context])),
+              },
+              node
+            ),
+            context,
+          ]);
+        },
         FunctionCall: next =>
           function indirectCall(args, transform) {
             const [call, context] = args;

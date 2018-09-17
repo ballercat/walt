@@ -1,8 +1,8 @@
 # Default Arguments
 @{%
-  const Syntax = require('walt-syntax');
-  const { flatten } = require('../parser/grammar/helpers');
-  const { node } = require('../parser/grammar/nodes')(this.lexer);
+  const Syntax = this.Syntax;
+  const { flatten } = this.helpers;
+  const { node } = this.nodes(this.lexer);
 %}
 
 TypeList ->

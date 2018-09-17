@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "postinstall": "lerna bootstrap",
+    "postinstall": "lerna bootstrap --hoist walt-compiler",
     "validate": "lerna run validate --stream",
     "test": "lerna run test --stream",
     "coverage": "lerna run coverage",

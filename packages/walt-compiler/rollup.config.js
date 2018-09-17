@@ -8,6 +8,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
 import flow from 'rollup-plugin-flow';
 import string from 'rollup-plugin-string';
+import nearley from './rollup-plugin-nearley';
 
 const PROD = process.env.NODE_ENV === 'production';
 
@@ -17,6 +18,7 @@ export default {
   format: 'umd',
   moduleName: 'Walt',
   plugins: [
+    nearley(),
     eslint(),
     flow(),
     replace({
@@ -83,7 +85,9 @@ export default {
           'f32',
           'i64',
           'f64',
+          'tokens',
         ],
+        'node_modules/nearley/lib/nearley.js': ['Parser', 'Grammar'],
       },
     }),
     PROD && uglify({}, minify),

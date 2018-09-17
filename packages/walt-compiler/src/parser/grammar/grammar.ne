@@ -4,44 +4,9 @@
 @builtin "whitespace.ne"
 
 @{%
-  const moo = require('moo');
-  const Syntax = require('walt-syntax');
-  const { drop, nth, nuller, nonEmpty, add, flatten, compose } = require('./helpers');
-
-  const mooLexer = moo.compile(Syntax.tokens);
-  // Additional utility on top of the default moo lexer.
-  const lexer = {
-    current: null,
-    lines: [],
-    get line() {
-      return mooLexer.line;
-    },
-    get col() {
-      return mooLexer.col;
-    },
-    save() {
-      return mooLexer.save();
-    },
-    reset(chunk, info){
-      this.lines = chunk.split('\n');
-      return mooLexer.reset(chunk, info);
-    },
-    next() {
-      // It's a cruel and unusual punishment to implement comments with nearly
-      let token = mooLexer.next();
-      while(token && token.type === 'comment')
-        token = mooLexer.next();
-      this.current = token;
-      return this.current;
-    },
-    formatError(token) {
-      return mooLexer.formatError(token);
-    },
-    has(name) {
-      return mooLexer.has(name);
-    }
-  };
-
+  const lexer = this.lexer;
+  const Syntax = this.Syntax;
+  const { drop, nth, nuller, nonEmpty, add, flatten, compose } = this.helpers;
   const {
     node,
     binary,
@@ -72,7 +37,7 @@
     genericType,
     voidClosure,
     closure,
-  } = require('./nodes')(lexer);
+  } = this.nodes(lexer);
 %}
 
 @lexer lexer

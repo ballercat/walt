@@ -93,6 +93,55 @@ var mapNode = mapNode_1$1;
 var mapNode_1 = mapNode.map;
 var mapNode_2 = mapNode.mapNode;
 
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
+var NODE_ENV = undefined;
+
+var invariant = function (condition, format, a, b, c, d, e, f) {
+  if (NODE_ENV !== 'production') {
+    if (format === undefined) {
+      throw new Error('invariant requires an error message argument');
+    }
+  }
+
+  if (!condition) {
+    var error;
+    if (format === undefined) {
+      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
+    } else {
+      var args = [a, b, c, d, e, f];
+      var argIndex = 0;
+      error = new Error(format.replace(/%s/g, function () {
+        return args[argIndex++];
+      }));
+      error.name = 'Invariant Violation';
+    }
+
+    error.framesToPop = 1; // we don't care about invariant's own frame
+    throw error;
+  }
+};
+
+var invariant_1 = invariant;
+
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 
@@ -109,6 +158,32 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
 (function (global, factory) {
   factory(exports);
 })(commonjsGlobal, function (exports) {
+  const keyword = [
+  // EcmaScript
+  'break', 'if', 'else', 'import', 'as', 'from', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'while', 'function',
+
+  // s-expression
+  'global', 'module', 'type', 'lambda'];
+  const punctuator = ['+', '++', '-', '--', '>>', '>>>', '<<', '=', '==', '+=', '-=', '=>', '<=', '>=', '!=', '%', '*', '/', '^', '&', '~', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', '[', ']', ';', '>', '<', '?', '||', '&&', '{', '}', '...'];
+
+  const type = ['i32', 'i64', 'f32', 'f64', 'bool'];
+
+  const tokens = {
+    whitespace: /[ \t]+/,
+    comment: [{ match: /\/\/.*?$/ }, { match: /\/\*.*?\*\// }],
+    number: [{ match: /0[xX][0-9a-fA-F]+/ }, { match: /0[oO][0-9]+/ }, { match: /0[bB][01]+/ }, { match: /(?:[0-9]+(?:\.[0-9]+)?e-?[0-9]+)/ }, { match: /[0-9]+\.[0-9]+|[0-9]+/ }],
+    char: [{ match: /'(?:\\['\\bfnrtv0]|[^'\\\n])'/, value: x => x.slice(1, -1) }],
+    string: [{ match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) }, { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) }, { match: /`(?:\\['\\bfnrtv0]|[^'\\])*?`/, value: x => x.slice(1, -1) }],
+    identifier: {
+      match: /[A-Za-z_$][A-Za-z0-9_$]*/,
+      keywords: { keyword, type }
+    },
+    punctuator,
+    newline: { match: /\n/, lineBreaks: true }
+  };
+
+  // Main Program
+
   const Program = 'Program';
   const Keyword = 'Keyword';
   const Export = 'Export';
@@ -344,6 +419,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
   exports.builtinTypes = builtinTypes;
   exports.statements = statements;
   exports.default = index;
+  exports.tokens = tokens;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 });
@@ -357,6 +433,479 @@ var waltSyntax_4 = waltSyntax.i32;
 var waltSyntax_5 = waltSyntax.f32;
 var waltSyntax_6 = waltSyntax.i64;
 var waltSyntax_7 = waltSyntax.f64;
+var waltSyntax_8 = waltSyntax.tokens;
+
+var moo = createCommonjsModule(function (module) {
+(function (root, factory) {
+  if (typeof undefined === 'function' && undefined.amd) {
+    undefined([], factory); /* global define */
+  } else if ('object' === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.moo = factory();
+  }
+})(commonjsGlobal, function () {
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+  // polyfill assign(), so we support IE9+
+  var assign = typeof Object.assign === 'function' ? Object.assign :
+  // https://tc39.github.io/ecma262/#sec-object.assign
+  function (target, sources) {
+    if (target == null) {
+      throw new TypeError('Target cannot be null or undefined');
+    }
+    target = Object(target);
+
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      if (source == null) continue;
+
+      for (var key in source) {
+        if (hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+
+  var hasSticky = typeof new RegExp().sticky === 'boolean';
+
+  /***************************************************************************/
+
+  function isRegExp(o) {
+    return o && o.constructor === RegExp;
+  }
+  function isObject(o) {
+    return o && typeof o === 'object' && o.constructor !== RegExp && !Array.isArray(o);
+  }
+
+  function reEscape(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  }
+  function reGroups(s) {
+    var re = new RegExp('|' + s);
+    return re.exec('').length - 1;
+  }
+  function reCapture(s) {
+    return '(' + s + ')';
+  }
+  function reUnion(regexps) {
+    var source = regexps.map(function (s) {
+      return "(?:" + s + ")";
+    }).join('|');
+    return "(?:" + source + ")";
+  }
+
+  function regexpOrLiteral(obj) {
+    if (typeof obj === 'string') {
+      return '(?:' + reEscape(obj) + ')';
+    } else if (isRegExp(obj)) {
+      // TODO: consider /u support
+      if (obj.ignoreCase) {
+        throw new Error('RegExp /i flag not allowed');
+      }
+      if (obj.global) {
+        throw new Error('RegExp /g flag is implied');
+      }
+      if (obj.sticky) {
+        throw new Error('RegExp /y flag is implied');
+      }
+      if (obj.multiline) {
+        throw new Error('RegExp /m flag is implied');
+      }
+      return obj.source;
+    } else {
+      throw new Error('not a pattern: ' + obj);
+    }
+  }
+
+  function objectToRules(object) {
+    var keys = Object.getOwnPropertyNames(object);
+    var result = [];
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var thing = object[key];
+      var rules = Array.isArray(thing) ? thing : [thing];
+      var match = [];
+      rules.forEach(function (rule) {
+        if (isObject(rule)) {
+          if (match.length) result.push(ruleOptions(key, match));
+          result.push(ruleOptions(key, rule));
+          match = [];
+        } else {
+          match.push(rule);
+        }
+      });
+      if (match.length) result.push(ruleOptions(key, match));
+    }
+    return result;
+  }
+
+  function arrayToRules(array) {
+    var result = [];
+    for (var i = 0; i < array.length; i++) {
+      var obj = array[i];
+      if (!obj.name) {
+        throw new Error('Rule has no name: ' + JSON.stringify(obj));
+      }
+      result.push(ruleOptions(obj.name, obj));
+    }
+    return result;
+  }
+
+  function ruleOptions(name, obj) {
+    if (typeof obj !== 'object' || Array.isArray(obj) || isRegExp(obj)) {
+      obj = { match: obj };
+    }
+
+    // nb. error implies lineBreaks
+    var options = assign({
+      tokenType: name,
+      lineBreaks: !!obj.error,
+      pop: false,
+      next: null,
+      push: null,
+      error: false,
+      value: null,
+      getType: null
+    }, obj);
+
+    // convert to array
+    var match = options.match;
+    options.match = Array.isArray(match) ? match : match ? [match] : [];
+    options.match.sort(function (a, b) {
+      return isRegExp(a) && isRegExp(b) ? 0 : isRegExp(b) ? -1 : isRegExp(a) ? +1 : b.length - a.length;
+    });
+    if (options.keywords) {
+      options.getType = keywordTransform(options.keywords);
+    }
+    return options;
+  }
+
+  function compileRules(rules, hasStates) {
+    rules = Array.isArray(rules) ? arrayToRules(rules) : objectToRules(rules);
+
+    var errorRule = null;
+    var groups = [];
+    var parts = [];
+    for (var i = 0; i < rules.length; i++) {
+      var options = rules[i];
+
+      if (options.error) {
+        if (errorRule) {
+          throw new Error("Multiple error rules not allowed: (for token '" + options.tokenType + "')");
+        }
+        errorRule = options;
+      }
+
+      // skip rules with no match
+      if (options.match.length === 0) {
+        continue;
+      }
+      groups.push(options);
+
+      // convert to RegExp
+      var pat = reUnion(options.match.map(regexpOrLiteral));
+
+      // validate
+      var regexp = new RegExp(pat);
+      if (regexp.test("")) {
+        throw new Error("RegExp matches empty string: " + regexp);
+      }
+      var groupCount = reGroups(pat);
+      if (groupCount > 0) {
+        throw new Error("RegExp has capture groups: " + regexp + "\nUse (?: … ) instead");
+      }
+      if (!hasStates && (options.pop || options.push || options.next)) {
+        throw new Error("State-switching options are not allowed in stateless lexers (for token '" + options.tokenType + "')");
+      }
+
+      // try and detect rules matching newlines
+      if (!options.lineBreaks && regexp.test('\n')) {
+        throw new Error('Rule should declare lineBreaks: ' + regexp);
+      }
+
+      // store regex
+      parts.push(reCapture(pat));
+    }
+
+    var suffix = hasSticky ? '' : '|(?:)';
+    var flags = hasSticky ? 'ym' : 'gm';
+    var combined = new RegExp(reUnion(parts) + suffix, flags);
+
+    return { regexp: combined, groups: groups, error: errorRule };
+  }
+
+  function compile(rules) {
+    var result = compileRules(rules);
+    return new Lexer({ start: result }, 'start');
+  }
+
+  function compileStates(states, start) {
+    var keys = Object.getOwnPropertyNames(states);
+    if (!start) start = keys[0];
+
+    var map = Object.create(null);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      map[key] = compileRules(states[key], true);
+    }
+
+    for (var i = 0; i < keys.length; i++) {
+      var groups = map[keys[i]].groups;
+      for (var j = 0; j < groups.length; j++) {
+        var g = groups[j];
+        var state = g && (g.push || g.next);
+        if (state && !map[state]) {
+          throw new Error("Missing state '" + state + "' (in token '" + g.tokenType + "' of state '" + keys[i] + "')");
+        }
+        if (g && g.pop && +g.pop !== 1) {
+          throw new Error("pop must be 1 (in token '" + g.tokenType + "' of state '" + keys[i] + "')");
+        }
+      }
+    }
+
+    return new Lexer(map, start);
+  }
+
+  function keywordTransform(map) {
+    var reverseMap = Object.create(null);
+    var byLength = Object.create(null);
+    var types = Object.getOwnPropertyNames(map);
+    for (var i = 0; i < types.length; i++) {
+      var tokenType = types[i];
+      var item = map[tokenType];
+      var keywordList = Array.isArray(item) ? item : [item];
+      keywordList.forEach(function (keyword) {
+        (byLength[keyword.length] = byLength[keyword.length] || []).push(keyword);
+        if (typeof keyword !== 'string') {
+          throw new Error("keyword must be string (in keyword '" + tokenType + "')");
+        }
+        reverseMap[keyword] = tokenType;
+      });
+    }
+
+    // fast string lookup
+    // https://jsperf.com/string-lookups
+    function str(x) {
+      return JSON.stringify(x);
+    }
+    var source = '';
+    source += '(function(value) {\n';
+    source += 'switch (value.length) {\n';
+    for (var length in byLength) {
+      var keywords = byLength[length];
+      source += 'case ' + length + ':\n';
+      source += 'switch (value) {\n';
+      keywords.forEach(function (keyword) {
+        var tokenType = reverseMap[keyword];
+        source += 'case ' + str(keyword) + ': return ' + str(tokenType) + '\n';
+      });
+      source += '}\n';
+    }
+    source += '}\n';
+    source += '})';
+    return eval(source); // getType
+  }
+
+  /***************************************************************************/
+
+  var Lexer = function (states, state) {
+    this.startState = state;
+    this.states = states;
+    this.buffer = '';
+    this.stack = [];
+    this.reset();
+  };
+
+  Lexer.prototype.reset = function (data, info) {
+    this.buffer = data || '';
+    this.index = 0;
+    this.line = info ? info.line : 1;
+    this.col = info ? info.col : 1;
+    this.setState(info ? info.state : this.startState);
+    return this;
+  };
+
+  Lexer.prototype.save = function () {
+    return {
+      line: this.line,
+      col: this.col,
+      state: this.state
+    };
+  };
+
+  Lexer.prototype.setState = function (state) {
+    if (!state || this.state === state) return;
+    this.state = state;
+    var info = this.states[state];
+    this.groups = info.groups;
+    this.error = info.error || { lineBreaks: true, shouldThrow: true };
+    this.re = info.regexp;
+  };
+
+  Lexer.prototype.popState = function () {
+    this.setState(this.stack.pop());
+  };
+
+  Lexer.prototype.pushState = function (state) {
+    this.stack.push(this.state);
+    this.setState(state);
+  };
+
+  Lexer.prototype._eat = hasSticky ? function (re) {
+    // assume re is /y
+    return re.exec(this.buffer);
+  } : function (re) {
+    // assume re is /g
+    var match = re.exec(this.buffer);
+    // will always match, since we used the |(?:) trick
+    if (match[0].length === 0) {
+      return null;
+    }
+    return match;
+  };
+
+  Lexer.prototype._getGroup = function (match) {
+    if (match === null) {
+      return -1;
+    }
+
+    var groupCount = this.groups.length;
+    for (var i = 0; i < groupCount; i++) {
+      if (match[i + 1] !== undefined) {
+        return i;
+      }
+    }
+    throw new Error('oops');
+  };
+
+  function tokenToString() {
+    return this.value;
+  }
+
+  Lexer.prototype.next = function () {
+    var re = this.re;
+    var buffer = this.buffer;
+
+    var index = re.lastIndex = this.index;
+    if (index === buffer.length) {
+      return; // EOF
+    }
+
+    var match = this._eat(re);
+    var i = this._getGroup(match);
+
+    var group, text;
+    if (i === -1) {
+      group = this.error;
+
+      // consume rest of buffer
+      text = buffer.slice(index);
+    } else {
+      text = match[0];
+      group = this.groups[i];
+    }
+
+    // count line breaks
+    var lineBreaks = 0;
+    if (group.lineBreaks) {
+      var matchNL = /\n/g;
+      var nl = 1;
+      if (text === '\n') {
+        lineBreaks = 1;
+      } else {
+        while (matchNL.exec(text)) {
+          lineBreaks++;nl = matchNL.lastIndex;
+        }
+      }
+    }
+
+    var token = {
+      type: group.getType && group.getType(text) || group.tokenType,
+      value: group.value ? group.value(text) : text,
+      text: text,
+      toString: tokenToString,
+      offset: index,
+      lineBreaks: lineBreaks,
+      line: this.line,
+      col: this.col
+      // nb. adding more props to token object will make V8 sad!
+
+    };var size = text.length;
+    this.index += size;
+    this.line += lineBreaks;
+    if (lineBreaks !== 0) {
+      this.col = size - nl + 1;
+    } else {
+      this.col += size;
+    }
+    // throw, if no rule with {error: true}
+    if (group.shouldThrow) {
+      throw new Error(this.formatError(token, "invalid syntax"));
+    }
+
+    if (group.pop) this.popState();else if (group.push) this.pushState(group.push);else if (group.next) this.setState(group.next);
+    return token;
+  };
+
+  if (typeof Symbol !== 'undefined' && Symbol.iterator) {
+    var LexerIterator = function (lexer) {
+      this.lexer = lexer;
+    };
+
+    LexerIterator.prototype.next = function () {
+      var token = this.lexer.next();
+      return { value: token, done: !token };
+    };
+
+    LexerIterator.prototype[Symbol.iterator] = function () {
+      return this;
+    };
+
+    Lexer.prototype[Symbol.iterator] = function () {
+      return new LexerIterator(this);
+    };
+  }
+
+  Lexer.prototype.formatError = function (token, message) {
+    var value = token.value;
+    var index = token.offset;
+    var eol = token.lineBreaks ? value.indexOf('\n') : value.length;
+    var start = Math.max(0, index - token.col + 1);
+    var firstLine = this.buffer.substring(start, index + eol);
+    message += " at line " + token.line + " col " + token.col + ":\n\n";
+    message += "  " + firstLine + "\n";
+    message += "  " + Array(token.col).join(" ") + "^";
+    return message;
+  };
+
+  Lexer.prototype.clone = function () {
+    return new Lexer(this.states, this.state);
+  };
+
+  Lexer.prototype.has = function (tokenType) {
+    for (var s in this.states) {
+      var groups = this.states[s].groups;
+      for (var i = 0; i < groups.length; i++) {
+        var group = groups[i];
+        if (group.tokenType === tokenType) return true;
+        if (group.keywords && hasOwnProperty.call(group.keywords, tokenType)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return {
+    compile: compile,
+    states: compileStates,
+    error: Object.freeze({ error: true })
+  };
+});
+});
 
 var _extends = Object.assign || function (target) {
   for (var i = 1; i < arguments.length; i++) {
@@ -396,1810 +945,496 @@ var objectWithoutProperties = function (obj, keys) {
   return target;
 };
 
-//      
-function blockParser(ctx) {
-  const node = ctx.startNode();
-  const params = [];
-  if (ctx.eat(['{'])) {
-    let stmt;
-    while (ctx.token && ctx.token.value !== '}') {
-      stmt = statement(ctx);
-      if (stmt) {
-        params.push(stmt);
-      }
-    }
-    ctx.expect(['}']);
-  }
-
-  return ctx.endNode(_extends({}, node, {
-    params
-  }), Syntax.Block);
+// Custom Walt Grammar Generator
+function id(x) {
+  return x[0];
 }
 
-//      
-const makeResult = node => _extends({
-  range: []
-}, node, {
-  meta: {},
-  params: [],
-  Type: Syntax.FunctionResult,
-  value: 'FUNCTION_RESULT'
-});
+function grammar() {
 
-const makeArgs = node => _extends({
-  range: []
-}, node, {
-  params: (() => {
-    if (node == null) {
-      return [];
-    }
-    return node.Type === Syntax.Sequence ? node.params : [node];
-  })(),
-  type: null,
-  meta: {},
-  value: 'FUNCTION_ARGUMENTS',
-  Type: Syntax.FunctionArguments
-});
+  const lexer = this.lexer;
+  const Syntax = this.Syntax;
+  const { drop, nth, nuller, nonEmpty, add, flatten, compose } = this.helpers;
+  const {
+    node,
+    binary,
+    constant,
+    identifier,
+    statement,
+    unary,
+    ternary,
+    subscript,
+    fun,
+    declaration,
+    call,
+    struct,
+    result,
+    string,
+    char,
+    typedef,
+    comment,
+    voidFun,
+    type,
+    boolean,
+    assignment,
+    forLoop,
+    whileLoop,
+    typeGeneric,
+    spread,
+    builtinDecl,
+    genericType,
+    voidClosure,
+    closure
+  } = this.nodes(lexer);
 
-function parselambda(ctx, op, operands) {
-  const args = operands[0];
-  const result = operands[1];
-  const block = operands[2] || result || args;
-  operands.splice(-3);
-
-  let baseParams = [];
-  const lambda = _extends({}, op, {
-    type: 'i32',
-    range: [ctx.token.start, ctx.token.end],
-    meta: {},
-    Type: Syntax.Closure,
-    params: []
-  });
-
-  const [lhs, rhs] = args.params;
-  // The reason why this is so tricky to parse is because there are too many
-  // optional parts of a coluse definition, like arguments and return type
-  if (args.Type === Syntax.Pair) {
-    if (lhs != null && rhs != null) {
-      baseParams = lhs.Type === Syntax.Pair ? [makeArgs(lhs), makeResult(rhs)] : [makeArgs(lhs.Type === Syntax.Sequence ? lhs : args), makeResult(rhs.Type === Syntax.Type ? rhs : null)];
-    } else {
-      baseParams = [makeArgs(null), makeResult(lhs)];
-    }
-  } else if (args.Type === Syntax.Sequence) {
-    baseParams = [makeArgs(args), makeResult(result.Type === Syntax.Type ? result : null)];
-  } else {
-    baseParams = [makeArgs(null), makeResult(null)];
-  }
-
-  return _extends({}, lambda, {
-    params: [_extends({}, lambda, {
-      Type: Syntax.FunctionDeclaration,
-      params: [...baseParams, block]
-    })]
-  });
-}
-
-//      
-const subscriptFromNode = (ctx, node) => {
-  const [identifier] = node.params;
-
-  return ctx.endNode(_extends({}, node, { value: identifier.value }), Syntax.ArraySubscript);
-};
-
-//      
-function binary(ctx, op, params) {
-  const node = _extends({}, params[0]);
-  node.value = op.value;
-  node.params = params;
-
-  let Type = Syntax.BinaryExpression;
-  if (node.value === '=') {
-    Type = Syntax.Assignment;
-  } else if (node.value === '-=' || node.value === '+=') {
-    Type = Syntax.Assignment;
-    const value = node.value[0];
-    node.value = '=';
-    node.params = [node.params[0], binary(ctx, _extends({}, op, { value }), [node.params[0], node.params[1]])];
-  } else if (node.value === '[' || node.value === '.') {
-    return subscriptFromNode(ctx, node);
-  } else if (node.value === ':') {
-    Type = Syntax.Pair;
-  } else if (node.value === '||' || node.value === '&&') {
-    Type = Syntax.Select;
-  }
-
-  return ctx.endNode(node, Type);
-}
-
-function unary(ctx, op, params) {
-  const [target] = params;
-  switch (op.value) {
-    case '--':
-      return _extends({}, target, {
-        Type: Syntax.UnaryExpression,
-        value: '-',
-        meta: {},
-        params: [_extends({}, target, {
-          value: '0',
-          Type: Syntax.Constant,
-          params: [],
-          meta: {}
-        }), target]
-      });
-    case '!':
-    case '~':
-      return _extends({}, target, {
-        value: op.value,
-        params,
-        Type: Syntax.UnaryExpression
-      });
-    default:
-      return _extends({}, op, {
-        range: [op.start, target.range[1]],
-        meta: {},
-        Type: Syntax.Spread,
-        params: [target]
-      });
-  }
-}
-
-function objectLiteral(ctx, op, params) {
-  const node = ctx.startNode(op);
-  node.params = params;
-  return ctx.endNode(node, Syntax.ObjectLiteral);
-}
-
-const ternary = (ctx, op, params) => {
-  const node = ctx.startNode(params[0]);
-  node.params = params;
-  node.value = op.value;
-  node.type = params[params.length - 1].type;
-
-  return ctx.endNode(node, Syntax.TernaryExpression);
-};
-
-const flattenSequence = sequence => {
-  return sequence.reduce((memo, node) => {
-    if (node.Type === Syntax.Sequence) {
-      memo.push.apply(memo, flattenSequence(node.params));
-    } else {
-      memo.push(node);
-    }
-
-    return memo;
-  }, []);
-};
-
-// Sequence is a list of comma separated nodes. It's a slighlty special operator
-// in that it unrolls any other sequences into it's own params
-const sequence = (ctx, op, params) => {
-  const node = ctx.startNode(params[0]);
-  node.value = op.value;
-  node.params = flattenSequence(params);
-  return ctx.endNode(node, Syntax.Sequence);
-};
-
-// Abstraction for handling operations
-const operator = (ctx, operators, operands) => {
-  const op = operators.pop();
-  switch (op.value) {
-    case '=>':
-      return parselambda(ctx, op, operands);
-    case '?':
-      return ternary(ctx, op, operands.splice(-2));
-    case ',':
-      return sequence(ctx, op, operands.splice(-2));
-    case '{':
-      return objectLiteral(ctx, op, operands.splice(-1));
-    case '--':
-    case '...':
-    case 'sizeof':
-    case '~':
-    case '!':
-      return unary(ctx, op, operands.splice(-1));
-    default:
-      return binary(ctx, op, operands.splice(-2));
-  }
-};
-
-//      
-
-function parseConstant(ctx) {
-  const node = ctx.startNode();
-  const value = ctx.token.value;
-  const type = value.toString().indexOf('.') !== -1 ? 'f32' : 'i32';
-  return ctx.endNode(_extends({}, node, { type, value }), Syntax.Constant);
-}
-
-//      
-// Note: string literal does not increment the token.
-function stringLiteral(ctx) {
-  const node = ctx.startNode();
-  node.value = ctx.token.value.substring(1, ctx.token.value.length - 1);
-
-  // Replace escape sequences
-  switch (node.value) {
-    case '\\b':
-      node.value = '\b';
-      break;
-    case '\\f':
-      node.value = '\f';
-      break;
-    case '\\n':
-      node.value = '\n';
-      break;
-    case '\\r':
-      node.value = '\r';
-      break;
-    case '\\t':
-      node.value = '\t';
-      break;
-    case '\\v':
-      node.value = '\v';
-      break;
-    case '\\0':
-      node.value = '\0';
-      break;
-    case "\\'":
-      node.value = "'";
-      break;
-    case '\\"':
-      node.value = '"';
-  }
-
-  const Type = ctx.token.value[0] === "'" && Array.from(node.value).length === 1 ? Syntax.CharacterLiteral : Syntax.StringLiteral;
-  return ctx.endNode(node, Type);
-}
-
-//      
-
-function builtInType(ctx) {
-  if (ctx.stream.peek().value === '<') {
-    const valueType = ctx.token.value;
-    ctx.eat(['Memory', 'Table']);
-    ctx.eat(['<']);
-    ctx.eat(['{']);
-    const node = ctx.makeNode({
-      value: valueType,
-      type: valueType,
-      params: [expression(ctx)]
-    }, Syntax.Type);
-    ctx.eat(['}']);
-    return node;
-  }
-
-  return ctx.makeNode({ value: ctx.token.value, type: ctx.token.value }, Syntax.Type);
-}
-
-//      
-// More or less JavaScript precedence
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-
-const PRECEDENCE_MEMBER_ACCESS = 19;
-
-const PRECEDENCE_NOT = 18;
-const PRECEDENCE_ASSIGNMENT = 3;
-
-
-const PRECEDENCE_DIVIDE = 1;
-const PRECEDENCE_MULTIPLY = 1;
-const PRECEDENCE_ADDITION = 0;
-const PRECEDENCE_SUBTRACTION = 0;
-const PRECEDENCE_SHIFT = -1;
-const PRECEDENCE_COMMA = -2;
-const PRECEDENCE_BITWISE_XOR = -2;
-const PRECEDENCE_SPREAD = -1;
-const PRECEDENCE_BITWISE_AND = -1;
-const PRECEDENCE_BITWISE_OR = -3;
-const PRECEDENCE_LOGICAL_AND = -4;
-
-const PRECEDENCE_LOGICAL_OR = -5;
-const PRECEDENCE_KEY_VALUE_PAIR = -1;
-
-const PRECEDENCE_PARAMS = -99;
-
-const precedence = {
-  '=>': PRECEDENCE_PARAMS,
-  '(': PRECEDENCE_PARAMS,
-  ',': PRECEDENCE_COMMA,
-  as: PRECEDENCE_COMMA + 1,
-  '>>': PRECEDENCE_SHIFT,
-  '>>>': PRECEDENCE_SHIFT,
-  '<<': PRECEDENCE_SHIFT,
-  '+': PRECEDENCE_ADDITION,
-  '-': PRECEDENCE_SUBTRACTION,
-  '*': PRECEDENCE_MULTIPLY,
-  '/': PRECEDENCE_DIVIDE,
-  '==': 2,
-  '!=': 2,
-  '.': PRECEDENCE_MEMBER_ACCESS,
-  '=': -1,
-  '-=': PRECEDENCE_ASSIGNMENT,
-  '+=': PRECEDENCE_ASSIGNMENT,
-  '?': 4,
-  '>': 5,
-  '<': 5,
-  ':': PRECEDENCE_KEY_VALUE_PAIR,
-  '^': PRECEDENCE_BITWISE_XOR,
-  '&': PRECEDENCE_BITWISE_AND,
-  '|': PRECEDENCE_BITWISE_OR,
-  '&&': PRECEDENCE_LOGICAL_AND,
-  '||': PRECEDENCE_LOGICAL_OR,
-  '...': PRECEDENCE_SPREAD,
-  '~': PRECEDENCE_NOT,
-  '!': PRECEDENCE_NOT
-};
-
-//      
-const getPrecedence = token => precedence[token.value];
-
-const getAssociativty = token => {
-  switch (token.value) {
-    case '=':
-    case '-=':
-    case '+=':
-    case '--':
-    case '++':
-    case '?':
-      return 'right';
-    case '+':
-    case '-':
-    case '/':
-    case '*':
-    case ':':
-    default:
-      return 'left';
-  }
-};
-
-//      
-// Maybe identifier, maybe function call
-const maybeIdentifier = ctx => {
-  const node = ctx.startNode();
-  ctx.eat(null, Syntax.Identifier);
-
-  if (node.value === 'false' || node.value === 'true') {
-    node.type = 'bool';
-    node.value = node.value === 'true' ? '1' : '0';
-    return ctx.endNode(node, Syntax.Constant);
-  }
-
-  if (ctx.eat(['('])) {
-    const params = [expression(ctx)];
-    const functionCall = ctx.endNode(_extends({}, node, {
-      params: params.filter(Boolean)
-    }), Syntax.FunctionCall);
-    ctx.expect([')']);
-    return functionCall;
-  }
-
-  return ctx.endNode(node, Syntax.Identifier);
-};
-
-//      
-/**
- * The expression parser for generating all parsed nodes, uses a modified Shunting
- * Yard algo.
- *
- * @author Arthur Buldauksas <arthurbuldauskas@gmail.com>
- */
-// PLEASE READ BEFORE EDITING:
-//
-// 100% of the program is statements which are made up of expressions. The code
-// below is the "engine" to parsing just about everything(useful) in the syntax.
-// Take great care editing it.
-//
-// * Avoid special cases as much as possible.
-// * Leverage precednece and other Shunting Yard rules.
-// * Simplify whenever possible, avoid adding code.
-//
-// Thanks.
-
-const last = list => list[list.length - 1];
-
-const isPunctuatorAndNotBracket = t => t && t.type === Syntax.Punctuator && t.value !== ']' && t.value !== ')';
-
-// Because expressions can be anywhere and likely nested inside another expression
-// this nesting is represented with a depth. If we reach an "exit" like a ) or a }
-// and drop our depth below zero we know we have escaped our intended expression
-// and we bail out.
-const predicate = (token, depth) => token.value !== ';' && depth > 0;
-
-// Exceptions to no-keywords-in-expressions
-const validKeywordsInExpressions = ['as'];
-
-// Shunting yard
-const expression = (ctx, check = predicate) => {
-  const operators = [];
-  const operands = [];
-
-  // Depth is the nesting level of brackets in this expression. If we find a
-  // closing bracket which causes our depth to fall below 1, then we know we
-  // should exit the expression.
-  let depth = 1;
-  let previousToken = null;
-
-  const consume = () => operands.push(operator(ctx, operators, operands));
-
-  const eatUntil = condition => {
-    let previous = last(operators);
-    while (previous && previous.value !== condition) {
-      consume();
-      previous = last(operators);
-    }
+  return {
+    Lexer: lexer,
+    ParserRules: [{ "name": "_$ebnf$1", "symbols": [] }, { "name": "_$ebnf$1", "symbols": ["_$ebnf$1", "wschar"], "postprocess": function arrpush(d) {
+        return d[0].concat([d[1]]);
+      } }, { "name": "_", "symbols": ["_$ebnf$1"], "postprocess": function (d) {
+        return null;
+      } }, { "name": "__$ebnf$1", "symbols": ["wschar"] }, { "name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function arrpush(d) {
+        return d[0].concat([d[1]]);
+      } }, { "name": "__", "symbols": ["__$ebnf$1"], "postprocess": function (d) {
+        return null;
+      } }, { "name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral)) }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "StaticPropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "StaticPropertyValue", "symbols": ["Number"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["Boolean"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "StaticProperty", "symbols": ["Identifier", "_", "COLON", "_", "StaticPropertyValue"], "postprocess": node(Syntax.Pair) }, { "name": "StaticPropertyList", "symbols": ["StaticProperty"], "postprocess": id }, { "name": "StaticPropertyList", "symbols": ["StaticProperty", "_", "COMMA", "_", "StaticPropertyList"], "postprocess": flatten }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.ObjectLiteral) }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "PropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyList", "symbols": ["Property"], "postprocess": id }, { "name": "PropertyList", "symbols": ["Property", "_", "COMMA", "_", "PropertyList"], "postprocess": flatten }, { "name": "Property", "symbols": ["Identifier", "_", "COLON", "_", "Ternary"], "postprocess": node(Syntax.Pair) }, { "name": "Property", "symbols": ["SPREAD", "Identifier"], "postprocess": spread }, { "name": "Property", "symbols": ["Identifier"], "postprocess": id }, { "name": "StructDefinition", "symbols": ["LCB", "_", "PropertyNameAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "PropertyNameAndTypeList"], "postprocess": flatten }, { "name": "PropertyNameAndType", "symbols": ["PropertyName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "TypeDefinition", "symbols": ["LB", "_", "TypeList", "_", "RB"], "postprocess": flatten }, { "name": "TypeDefinition", "symbols": ["LB", "_", "RB"], "postprocess": flatten }, { "name": "TypeList", "symbols": ["Type"], "postprocess": id }, { "name": "TypeList", "symbols": ["Type", "_", "COMMA", "_", "TypeList"], "postprocess": flatten }, { "name": "PropertyName", "symbols": ["Identifier"], "postprocess": id }, { "name": "Import", "symbols": ["IMPORT", "_", "ImportDefinition", "__", "FROM", "__", "StringLiteral", "_", "SEPARATOR"], "postprocess": node(Syntax.Import) }, { "name": "ImportDefinition", "symbols": ["LCB", "_", "ImportAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "ImportAndTypeList", "symbols": ["ImportName"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportName", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportAndType", "symbols": ["ImportAndType", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportName", "symbols": ["Identifier"], "postprocess": id }, { "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "GenericType", "_", "SEPARATOR"], "postprocess": genericType }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "Type", "_", "GT"], "postprocess": typeGeneric }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FATARROW", "_", "Block"], "postprocess": voidClosure }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FunctionResult", "_", "FATARROW", "_", "Block"], "postprocess": closure }, { "name": "Expression", "symbols": ["Closure"], "postprocess": id }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": node(Syntax.IfThenElse) }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody", "_", "Else"], "postprocess": node(Syntax.IfThenElse) }, { "name": "Else", "symbols": ["ELSE", "_", "BranchBody"], "postprocess": node(Syntax.Else) }, { "name": "BranchBody", "symbols": ["Statement"], "postprocess": id }, { "name": "BranchBody", "symbols": ["Block"], "postprocess": id }, { "name": "For", "symbols": ["FOR", "_", "LB", "_", "LoopArgument", "_", "SEPARATOR", "_", "Expression", "_", "SEPARATOR", "_", "LoopArgument", "_", "RB", "_", "BranchBody"], "postprocess": forLoop }, { "name": "LoopArgument", "symbols": ["Expression"], "postprocess": id }, { "name": "LoopArgument", "symbols": ["AssignmentExpression"], "postprocess": id }, { "name": "While", "symbols": ["WHILE", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": whileLoop }, { "name": "Break", "symbols": ["BREAK", "_", "SEPARATOR"], "postprocess": node(Syntax.Break) }, { "name": "Program", "symbols": ["_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "Program", "symbols": ["_", "SourceElementList", "_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "SourceElementList", "symbols": ["SourceElement"], "postprocess": flatten }, { "name": "SourceElementList", "symbols": ["SourceElement", "_", "SourceElementList"], "postprocess": compose(drop, flatten, flatten) }, { "name": "SourceElement", "symbols": ["Function"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Declaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["ImmutableDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Struct"], "postprocess": id }, { "name": "SourceElement", "symbols": ["TypeDef"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Export"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Import"], "postprocess": id }, { "name": "Statement", "symbols": ["ExpressionStatement"], "postprocess": id }, { "name": "Statement", "symbols": ["Declaration"], "postprocess": id }, { "name": "Statement", "symbols": ["ImmutableDeclaration"], "postprocess": id }, { "name": "Statement", "symbols": ["Assignment"], "postprocess": id }, { "name": "Statement", "symbols": ["If"], "postprocess": id }, { "name": "Statement", "symbols": ["For"], "postprocess": id }, { "name": "Statement", "symbols": ["While"], "postprocess": id }, { "name": "Statement", "symbols": ["Break"], "postprocess": id }, { "name": "Statement", "symbols": ["ReturnStatement"], "postprocess": id }, { "name": "Block", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.Block) }, { "name": "Block", "symbols": ["LCB", "_", "StatementList", "_", "RCB"], "postprocess": compose(node(Syntax.Block), flatten) }, { "name": "StatementList", "symbols": ["Statement"], "postprocess": drop }, { "name": "StatementList", "symbols": ["Statement", "_", "StatementList"], "postprocess": flatten }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "Block"], "postprocess": voidFun }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "FunctionResult", "_", "Block"], "postprocess": fun }, { "name": "FunctionParameters", "symbols": ["LB", "_", "RB"], "postprocess": node(Syntax.FunctionArguments) }, { "name": "FunctionParameters", "symbols": ["LB", "_", "ParameterList", "_", "RB"], "postprocess": compose(node(Syntax.FunctionArguments), flatten) }, { "name": "ParameterList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "ParameterList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "ParameterList"], "postprocess": flatten }, { "name": "FunctionResult", "symbols": ["COLON", "_", "Type"], "postprocess": compose(result, drop) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.Declaration) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ObjectLiteral", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "Identifier", "_", "COLON", "_", "GenericType", "_", "SEPARATOR"], "postprocess": builtinDecl }, { "name": "Pair", "symbols": ["Identifier", "_", "COLON", "_", "Identifier"], "postprocess": node(Syntax.Pair) }, { "name": "Export", "symbols": ["EXPORT", "__", "ImmutableDeclaration"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Function"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "TypeDef"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Struct"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "ReturnStatement", "symbols": ["RETURN", "__", "ExpressionStatement"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "ReturnStatement", "symbols": ["RETURN", "_", "SEPARATOR"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "Struct", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "StructDefinition", "SEPARATOR"], "postprocess": struct }, { "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "TypeDefinition", "_", "FATARROW", "_", "Type", "_", "SEPARATOR"], "postprocess": compose(typedef) }, { "name": "Assignment", "symbols": ["AssignmentExpression", "_", "SEPARATOR"], "postprocess": id }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "Expression"], "postprocess": d => assignment(d, '=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "PLSEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '+=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "MINEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '-=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "ObjectLiteral"], "postprocess": d => assignment(d, '=') }, { "name": "ExpressionStatement", "symbols": ["Expression", "SEPARATOR"], "postprocess": id }, { "name": "Expression", "symbols": ["Ternary"], "postprocess": id }, { "name": "Ternary", "symbols": ["Ternary", "_", "QUESTION", "_", "TernaryPair"], "postprocess": ternary }, { "name": "Ternary", "symbols": ["Binary"], "postprocess": id }, { "name": "TernaryPair", "symbols": ["Expression", "_", "COLON", "_", "Expression"], "postprocess": node(Syntax.Pair) }, { "name": "Binary", "symbols": ["Logical"], "postprocess": id }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "||" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "&&" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Bitwise"], "postprocess": id }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "|" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "^" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "&" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Equality"], "postprocess": id }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "==" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "!=" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Comparison"], "postprocess": id }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Shift"], "postprocess": id }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": "<<" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Sum"], "postprocess": id }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "+" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "-" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Product"], "postprocess": id }, { "name": "Product", "symbols": ["Product", "_", { "literal": "*" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "/" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "%" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Typecast"], "postprocess": id }, { "name": "Typecast", "symbols": ["Expression", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Expression", "_", "AS", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Unary"], "postprocess": id }, { "name": "Unary", "symbols": [{ "literal": "!" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "~" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "-" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "+" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "++" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "--" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": ["Call"], "postprocess": id }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "ArgumentList", "_", "RB"], "postprocess": compose(call, flatten) }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "RB"], "postprocess": call }, { "name": "Call", "symbols": ["Access"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression", "_", "COMMA", "_", "ArgumentList"], "postprocess": flatten }, { "name": "Access", "symbols": ["Identifier", "DOT", "Identifier"], "postprocess": subscript }, { "name": "Access", "symbols": ["NativeType", "DOT", "Identifier"], "postprocess": subscript }, { "name": "Access", "symbols": ["Identifier", "LSB", "_", "Ternary", "_", "RSB"], "postprocess": subscript }, { "name": "Access", "symbols": ["Grouping"], "postprocess": id }, { "name": "Grouping", "symbols": ["LB", "_", "Expression", "_", "RB"], "postprocess": nth(2) }, { "name": "Grouping", "symbols": ["Atom"], "postprocess": id }, { "name": "Atom", "symbols": ["Identifier"], "postprocess": id }, { "name": "Atom", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["CharacterLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["Number"], "postprocess": id }, { "name": "Type", "symbols": ["_Type"], "postprocess": id }, { "name": "Type", "symbols": ["_Type", "_", "LSB", "_", "RSB"], "postprocess": d => _extends({}, d[0], { value: d[0].value + "[]", type: d[0].type + "[]" }) }, { "name": "_Type", "symbols": ["NativeType"], "postprocess": id }, { "name": "_Type", "symbols": ["GenericType"], "postprocess": id }, { "name": "_Type", "symbols": ["Identifier"], "postprocess": id }, { "name": "NativeType", "symbols": [lexer.has("type") ? { type: "type" } : type], "postprocess": type }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "StaticObjectLiteral", "_", "GT"], "postprocess": typeGeneric }, { "name": "Identifier", "symbols": [lexer.has("identifier") ? { type: "identifier" } : identifier], "postprocess": identifier }, { "name": "Number", "symbols": [lexer.has("number") ? { type: "number" } : number], "postprocess": constant }, { "name": "StringLiteral", "symbols": [lexer.has("string") ? { type: "string" } : string], "postprocess": string }, { "name": "CharacterLiteral", "symbols": [lexer.has("char") ? { type: "char" } : char], "postprocess": char }, { "name": "Boolean", "symbols": [{ "literal": "true" }], "postprocess": boolean }, { "name": "Boolean", "symbols": [{ "literal": "false" }], "postprocess": boolean }, { "name": "word", "symbols": [/[a-zA-Z_]/], "postprocess": id }, { "name": "word", "symbols": ["word", /[a-zA-Z0-9_]/], "postprocess": add }, { "name": "digit", "symbols": [/[0-9]/], "postprocess": id }, { "name": "digit", "symbols": ["digit", /[0-9]/], "postprocess": add }, { "name": "Comment", "symbols": [lexer.has("comment") ? { type: "comment" } : comment], "postprocess": comment }, { "name": "Comment", "symbols": [lexer.has("comment") ? { type: "comment" } : comment, "_", "Comment"], "postprocess": comment }, { "name": "SEPARATOR", "symbols": ["_", { "literal": ";" }], "postprocess": nuller }, { "name": "QUESTION", "symbols": [{ "literal": "?" }], "postprocess": nuller }, { "name": "COMMA", "symbols": [{ "literal": "," }], "postprocess": nuller }, { "name": "DOT", "symbols": [{ "literal": "." }], "postprocess": nuller }, { "name": "LB", "symbols": [{ "literal": "(" }], "postprocess": nuller }, { "name": "RB", "symbols": [{ "literal": ")" }], "postprocess": nuller }, { "name": "LSB", "symbols": [{ "literal": "[" }], "postprocess": nuller }, { "name": "RSB", "symbols": [{ "literal": "]" }], "postprocess": nuller }, { "name": "LCB", "symbols": [{ "literal": "{" }], "postprocess": nuller }, { "name": "RCB", "symbols": [{ "literal": "}" }], "postprocess": nuller }, { "name": "COLON", "symbols": [{ "literal": ":" }], "postprocess": nuller }, { "name": "EQUALS", "symbols": [{ "literal": "=" }], "postprocess": nuller }, { "name": "PLSEQUALS", "symbols": [{ "literal": "+=" }], "postprocess": nuller }, { "name": "MINEQUALS", "symbols": [{ "literal": "-=" }], "postprocess": nuller }, { "name": "GT", "symbols": [{ "literal": ">" }], "postprocess": nuller }, { "name": "LT", "symbols": [{ "literal": "<" }], "postprocess": nuller }, { "name": "FATARROW", "symbols": [{ "literal": "=>" }], "postprocess": nuller }, { "name": "SPREAD", "symbols": [{ "literal": "..." }], "postprocess": nuller }, { "name": "FUNCTION", "symbols": [{ "literal": "function" }], "postprocess": nuller }, { "name": "LET", "symbols": [{ "literal": "let" }], "postprocess": nuller }, { "name": "CONST", "symbols": [{ "literal": "const" }], "postprocess": nuller }, { "name": "EXPORT", "symbols": [{ "literal": "export" }], "postprocess": nuller }, { "name": "IMPORT", "symbols": [{ "literal": "import" }], "postprocess": nuller }, { "name": "AS", "symbols": [{ "literal": "as" }], "postprocess": nuller }, { "name": "FROM", "symbols": [{ "literal": "from" }], "postprocess": nuller }, { "name": "RETURN", "symbols": [{ "literal": "return" }], "postprocess": nuller }, { "name": "TYPE", "symbols": [{ "literal": "type" }], "postprocess": nuller }, { "name": "IF", "symbols": [{ "literal": "if" }], "postprocess": nuller }, { "name": "ELSE", "symbols": [{ "literal": "else" }], "postprocess": nuller }, { "name": "FOR", "symbols": [{ "literal": "for" }], "postprocess": nuller }, { "name": "WHILE", "symbols": [{ "literal": "while" }], "postprocess": nuller }, { "name": "SWITCH", "symbols": [{ "literal": "switch" }], "postprocess": nuller }, { "name": "DO", "symbols": [{ "literal": "do" }], "postprocess": nuller }, { "name": "BREAK", "symbols": [{ "literal": "break" }], "postprocess": nuller }],
+    ParserStart: "Program"
   };
+}
 
-  // The rules for consuming punctuators(+ - , etc.)
-  const flushOperators = precedence => {
-    let previous = last(operators);
-    while (previous &&
-    // A sequence is a special case. Note that this is a check for a Sequence NODE.
-    // This is so that math operators don't "eat" already parsed sequences of nodes.
-    // To put it plainly a comma separated list should never be added to a number.
-    // Examples include code like: 1, 2, 3, 2 + 2.
-    previous.Type !== Syntax.Sequence &&
-    // The rest of this is Shunting Yard rules
-    getPrecedence(previous) >= precedence && getAssociativty(previous) === 'left') {
-      consume();
-      previous = last(operators);
-    }
+// Custom Walt Grammar Generator
+function id$1(x) {
+  return x[0];
+}
+
+function grammar$1() {
+
+  const Syntax = this.Syntax;
+  const { flatten } = this.helpers;
+  const { node } = this.nodes(this.lexer);
+
+  return {
+    Lexer: undefined,
+    ParserRules: [{ "name": "TypeList", "symbols": ["DefaultArgument"], "postprocess": id$1 }, { "name": "TypeList", "symbols": ["DefaultArgument", "_", "COMMA", "_", "TypeList"], "postprocess": flatten }, { "name": "DefaultArgument", "symbols": ["Type", "_", "EQUALS", "_", "Atom"], "postprocess": node(Syntax.Assignment) }, { "name": "ParameterList", "symbols": ["DefaultFunctionArgument"], "postprocess": id$1 }, { "name": "ParameterList", "symbols": ["DefaultFunctionArgument", "_", "COMMA", "_", "ParameterList"], "postprocess": flatten }, { "name": "DefaultFunctionArgument", "symbols": ["PropertyNameAndType", "_", "EQUALS", "_", "Atom"], "postprocess": node(Syntax.Assignment) }],
+    ParserStart: "TypeList"
   };
+}
 
-  // Process individual punctuators, below are the rules for handling things like
-  // brackets and code blocks. Other punctuators follow a precedence rule parsing
-  // approach.
-  const processPunctuator = () => {
-    switch (ctx.token.value) {
-      case '=>':
-        flushOperators(getPrecedence(ctx.token));
-        operators.push(ctx.token);
-        ctx.next();
-        if (ctx.token.value === '{') {
-          operands.push(blockParser(ctx));
-        }
-        return false;
-      case '(':
-        depth++;
-        operators.push(ctx.token);
-        break;
-      case '[':
-        depth++;
-        operators.push(ctx.token);
-        break;
-      case ']':
-        depth--;
-        eatUntil('[');
-        consume();
-        break;
-      case ')':
-        {
-          depth--;
-          if (depth < 1) {
-            return false;
-          }
-          // If we are not in a group already find the last LBracket,
-          // consume everything until that point
-          eatUntil('(');
-          // Pop left bracket
-          operators.pop();
+var nearley = createCommonjsModule(function (module) {
+(function (root, factory) {
+    if ('object' === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.nearley = factory();
+    }
+})(commonjsGlobal, function () {
 
-          break;
+    function Rule(name, symbols, postprocess) {
+        this.id = ++Rule.highestId;
+        this.name = name;
+        this.symbols = symbols; // a list of literal | regex class | nonterminal
+        this.postprocess = postprocess;
+        return this;
+    }
+    Rule.highestId = 0;
+
+    Rule.prototype.toString = function (withCursorAt) {
+        function stringifySymbolSequence(e) {
+            return e.literal ? JSON.stringify(e.literal) : e.type ? '%' + e.type : e.toString();
         }
-      case '{':
-        depth++;
-        operators.push(ctx.token);
-        break;
-      case '}':
-        depth--;
-        if (depth < 1) {
-          return false;
+        var symbolSequence = typeof withCursorAt === "undefined" ? this.symbols.map(stringifySymbolSequence).join(' ') : this.symbols.slice(0, withCursorAt).map(stringifySymbolSequence).join(' ') + " ● " + this.symbols.slice(withCursorAt).map(stringifySymbolSequence).join(' ');
+        return this.name + " → " + symbolSequence;
+    };
+
+    // a State is a rule at a position from a given starting point in the input stream (reference)
+    function State(rule, dot, reference, wantedBy) {
+        this.rule = rule;
+        this.dot = dot;
+        this.reference = reference;
+        this.data = [];
+        this.wantedBy = wantedBy;
+        this.isComplete = this.dot === rule.symbols.length;
+    }
+
+    State.prototype.toString = function () {
+        return "{" + this.rule.toString(this.dot) + "}, from: " + (this.reference || 0);
+    };
+
+    State.prototype.nextState = function (child) {
+        var state = new State(this.rule, this.dot + 1, this.reference, this.wantedBy);
+        state.left = this;
+        state.right = child;
+        if (state.isComplete) {
+            state.data = state.build();
         }
-        eatUntil('{');
-        consume();
-        break;
-      default:
-        {
-          const token = (t => {
-            if (t.value === '-' && previousToken == null || t.value === '-' && isPunctuatorAndNotBracket(previousToken)) {
-              return _extends({}, t, {
-                value: '--'
-              });
+        return state;
+    };
+
+    State.prototype.build = function () {
+        var children = [];
+        var node = this;
+        do {
+            children.push(node.right.data);
+            node = node.left;
+        } while (node.left);
+        children.reverse();
+        return children;
+    };
+
+    State.prototype.finish = function () {
+        if (this.rule.postprocess) {
+            this.data = this.rule.postprocess(this.data, this.reference, Parser.fail);
+        }
+    };
+
+    function Column(grammar, index) {
+        this.grammar = grammar;
+        this.index = index;
+        this.states = [];
+        this.wants = {}; // states indexed by the non-terminal they expect
+        this.scannable = []; // list of states that expect a token
+        this.completed = {}; // states that are nullable
+    }
+
+    Column.prototype.process = function (nextColumn) {
+        var states = this.states;
+        var wants = this.wants;
+        var completed = this.completed;
+
+        for (var w = 0; w < states.length; w++) {
+            // nb. we push() during iteration
+            var state = states[w];
+
+            if (state.isComplete) {
+                state.finish();
+                if (state.data !== Parser.fail) {
+                    // complete
+                    var wantedBy = state.wantedBy;
+                    for (var i = wantedBy.length; i--;) {
+                        // this line is hot
+                        var left = wantedBy[i];
+                        this.complete(left, state);
+                    }
+
+                    // special-case nullables
+                    if (state.reference === this.index) {
+                        // make sure future predictors of this rule get completed.
+                        var exp = state.rule.name;
+                        (this.completed[exp] = this.completed[exp] || []).push(state);
+                    }
+                }
+            } else {
+                // queue scannable states
+                var exp = state.rule.symbols[state.dot];
+                if (typeof exp !== 'string') {
+                    this.scannable.push(state);
+                    continue;
+                }
+
+                // predict
+                if (wants[exp]) {
+                    wants[exp].push(state);
+
+                    if (completed.hasOwnProperty(exp)) {
+                        var nulls = completed[exp];
+                        for (var i = 0; i < nulls.length; i++) {
+                            var right = nulls[i];
+                            this.complete(state, right);
+                        }
+                    }
+                } else {
+                    wants[exp] = [state];
+                    this.predict(exp);
+                }
+            }
+        }
+    };
+
+    Column.prototype.predict = function (exp) {
+        var rules = this.grammar.byName[exp] || [];
+
+        for (var i = 0; i < rules.length; i++) {
+            var r = rules[i];
+            var wantedBy = this.wants[exp];
+            var s = new State(r, 0, this.index, wantedBy);
+            this.states.push(s);
+        }
+    };
+
+    Column.prototype.complete = function (left, right) {
+        var copy = left.nextState(right);
+        this.states.push(copy);
+    };
+
+    function Grammar(rules, start) {
+        this.rules = rules;
+        this.start = start || this.rules[0].name;
+        var byName = this.byName = {};
+        this.rules.forEach(function (rule) {
+            if (!byName.hasOwnProperty(rule.name)) {
+                byName[rule.name] = [];
+            }
+            byName[rule.name].push(rule);
+        });
+    }
+
+    // So we can allow passing (rules, start) directly to Parser for backwards compatibility
+    Grammar.fromCompiled = function (rules, start) {
+        var lexer = rules.Lexer;
+        if (rules.ParserStart) {
+            start = rules.ParserStart;
+            rules = rules.ParserRules;
+        }
+        var rules = rules.map(function (r) {
+            return new Rule(r.name, r.symbols, r.postprocess);
+        });
+        var g = new Grammar(rules, start);
+        g.lexer = lexer; // nb. storing lexer on Grammar is iffy, but unavoidable
+        return g;
+    };
+
+    function StreamLexer() {
+        this.reset("");
+    }
+
+    StreamLexer.prototype.reset = function (data, state) {
+        this.buffer = data;
+        this.index = 0;
+        this.line = state ? state.line : 1;
+        this.lastLineBreak = state ? -state.col : 0;
+    };
+
+    StreamLexer.prototype.next = function () {
+        if (this.index < this.buffer.length) {
+            var ch = this.buffer[this.index++];
+            if (ch === '\n') {
+                this.line += 1;
+                this.lastLineBreak = this.index;
+            }
+            return { value: ch };
+        }
+    };
+
+    StreamLexer.prototype.save = function () {
+        return {
+            line: this.line,
+            col: this.index - this.lastLineBreak
+        };
+    };
+
+    StreamLexer.prototype.formatError = function (token, message) {
+        // nb. this gets called after consuming the offending token,
+        // so the culprit is index-1
+        var buffer = this.buffer;
+        if (typeof buffer === 'string') {
+            var nextLineBreak = buffer.indexOf('\n', this.index);
+            if (nextLineBreak === -1) nextLineBreak = buffer.length;
+            var line = buffer.substring(this.lastLineBreak, nextLineBreak);
+            var col = this.index - this.lastLineBreak;
+            message += " at line " + this.line + " col " + col + ":\n\n";
+            message += "  " + line + "\n";
+            message += "  " + Array(col).join(" ") + "^";
+            return message;
+        } else {
+            return message + " at index " + (this.index - 1);
+        }
+    };
+
+    function Parser(rules, start, options) {
+        if (rules instanceof Grammar) {
+            var grammar = rules;
+            var options = start;
+        } else {
+            var grammar = Grammar.fromCompiled(rules, start);
+        }
+        this.grammar = grammar;
+
+        // Read options
+        this.options = {
+            keepHistory: false,
+            lexer: grammar.lexer || new StreamLexer()
+        };
+        for (var key in options || {}) {
+            this.options[key] = options[key];
+        }
+
+        // Setup lexer
+        this.lexer = this.options.lexer;
+        this.lexerState = undefined;
+
+        // Setup a table
+        var column = new Column(grammar, 0);
+        var table = this.table = [column];
+
+        // I could be expecting anything.
+        column.wants[grammar.start] = [];
+        column.predict(grammar.start);
+        // TODO what if start rule is nullable?
+        column.process();
+        this.current = 0; // token index
+    }
+
+    // create a reserved token for indicating a parse fail
+    Parser.fail = {};
+
+    Parser.prototype.feed = function (chunk) {
+        var lexer = this.lexer;
+        lexer.reset(chunk, this.lexerState);
+
+        var token;
+        while (token = lexer.next()) {
+            // We add new states to table[current+1]
+            var column = this.table[this.current];
+
+            // GC unused states
+            if (!this.options.keepHistory) {
+                delete this.table[this.current - 1];
             }
 
-            return t;
-          })(ctx.token);
+            var n = this.current + 1;
+            var nextColumn = new Column(this.grammar, n);
+            this.table.push(nextColumn);
 
-          flushOperators(getPrecedence(token));
-          operators.push(token);
+            // Advance all tokens that expect the symbol
+            var literal = token.text !== undefined ? token.text : token.value;
+            var value = lexer.constructor === StreamLexer ? token.value : token;
+            var scannable = column.scannable;
+            for (var w = scannable.length; w--;) {
+                var state = scannable[w];
+                var expect = state.rule.symbols[state.dot];
+                // Try to consume the token
+                // either regex or literal
+                if (expect.test ? expect.test(value) : expect.type ? expect.type === token.type : expect.literal === literal) {
+                    // Add it
+                    var next = state.nextState({ data: value, token: token, isToken: true, reference: n - 1 });
+                    nextColumn.states.push(next);
+                }
+            }
+
+            // Next, for each of the rules, we either
+            // (a) complete it, and try to see if the reference row expected that
+            //     rule
+            // (b) predict the next nonterminal it expects by adding that
+            //     nonterminal's start state
+            // To prevent duplication, we also keep track of rules we have already
+            // added
+
+            nextColumn.process();
+
+            // If needed, throw an error:
+            if (nextColumn.states.length === 0) {
+                // No states at all! This is not good.
+                var message = this.lexer.formatError(token, "invalid syntax") + "\n";
+                message += "Unexpected " + (token.type ? token.type + " token: " : "");
+                message += JSON.stringify(token.value !== undefined ? token.value : token) + "\n";
+                var err = new Error(message);
+                err.offset = this.current;
+                err.token = token;
+                throw err;
+            }
+
+            // maybe save lexer state
+            if (this.options.keepHistory) {
+                column.lexerState = lexer.save();
+            }
+
+            this.current++;
         }
-    }
-  };
-
-  // Process individual tokens, this will either push to an operand stack or
-  // process an operator.
-  const process = () => {
-    switch (ctx.token.type) {
-      case Syntax.Constant:
-        operands.push(parseConstant(ctx));
-        break;
-      case Syntax.Identifier:
-        previousToken = ctx.token;
-        // Maybe an Identifier or a function call
-        operands.push(maybeIdentifier(ctx));
-        return false;
-      case Syntax.StringLiteral:
-        operands.push(stringLiteral(ctx));
-        break;
-      case Syntax.Type:
-        operands.push(builtInType(ctx));
-        break;
-      case Syntax.Keyword:
-      case Syntax.Punctuator:
-        // Some special keywords may show up in expressions, but only a small
-        // subset. These keywords are treated as punctuators and processed by
-        // the overall punctuator rules
-        // EXAMPLE: the 'as' keyword - import statements consist of a sequence of
-        // expressions but the as keyword can be used to rename an import within.
-        if (ctx.token.type === Syntax.Keyword && !validKeywordsInExpressions.includes(ctx.token.value)) {
-          break;
-        }
-        const punctuatorResult = processPunctuator();
-        if (punctuatorResult != null) {
-          return punctuatorResult;
-        }
-        break;
-    }
-
-    return true;
-  };
-
-  while (ctx.token && check(ctx.token, depth)) {
-    if (process()) {
-      previousToken = ctx.token;
-      ctx.next();
-    }
-  }
-
-  // If we get to the end of our available tokens then proceed to eat any left over
-  // operators and finalize the expression.
-  while (operators.length) {
-    consume();
-  }
-
-  // Last operand should be a node that is at the "root" of this expression
-  return operands.pop();
-};
-
-//      
-const declaration = ctx => {
-  const node = ctx.startNode();
-  let Type = Syntax.Declaration;
-
-  if (ctx.token.value === 'const') {
-    Type = Syntax.ImmutableDeclaration;
-  }
-
-  ctx.eat(['const', 'let', 'function']);
-
-  node.value = ctx.expect(null, Syntax.Identifier).value;
-  ctx.expect([':']);
-
-  let type = ctx.token.value;
-
-  if (!ctx.eat(null, Syntax.Type)) {
-    ctx.expect(null, Syntax.Identifier);
-  }
-
-  const params = [];
-  // Parse generic
-  if (ctx.eat(['<'])) {
-    ctx.eat(['{']);
-    params.push(expression(ctx));
-    ctx.eat(['}']);
-    ctx.eat(['>']);
-  } else if (ctx.eat(['='])) {
-    params.push(expression(ctx));
-  }
-
-  return ctx.endNode(_extends({}, node, { params, type }), Type);
-};
-
-//      
-const parseArguments = ctx => {
-  ctx.expect(['(']);
-  const argumentsNode = ctx.makeNode({
-    params: [expression(ctx)],
-    value: 'FUNCTION_ARGUMENTS'
-  }, Syntax.FunctionArguments);
-  ctx.expect([')']);
-  return argumentsNode;
-};
-
-const parseFunctionResult = ctx => {
-  const baseNode = ctx.startNode();
-  if (ctx.eat([':'])) {
-    return ctx.endNode(_extends({}, baseNode, {
-      value: ctx.token.value,
-      type: (() => {
-        const value = ctx.token.value;
-        if (ctx.eat(null, Syntax.Type)) {
-          return value === 'void' ? null : value;
+        if (column) {
+            this.lexerState = lexer.save();
         }
 
-        // If we did not find a user-type we default to an i32
-        ctx.expect(null, Syntax.Identifier);
+        // Incrementally keep track of results
+        this.results = this.finish();
 
-        return 'i32';
-      })()
-    }), Syntax.FunctionResult);
-  }
+        // Allow chaining, for whatever it's worth
+        return this;
+    };
 
-  return ctx.endNode(_extends({}, baseNode, {
-    value: 'FUNCTION_RESULT'
-  }), Syntax.FunctionResult);
-};
+    Parser.prototype.save = function () {
+        var column = this.table[this.current];
+        column.lexerState = this.lexerState;
+        return column;
+    };
 
-function maybeFunctionDeclaration(ctx) {
-  if (!ctx.eat(['function'])) {
-    return declaration(ctx);
-  }
+    Parser.prototype.restore = function (column) {
+        var index = column.index;
+        this.current = index;
+        this.table[index] = column;
+        this.table.splice(index + 1);
+        this.lexerState = column.lexerState;
 
-  const node = ctx.startNode();
-  const value = ctx.expect(null, Syntax.Identifier).value;
-  const argumentsNode = parseArguments(ctx);
-  const resultNode = parseFunctionResult(ctx);
-  ctx.expect(['{']);
-  const statements = [];
-  while (ctx.token && ctx.token.value !== '}') {
-    const stmt = statement(ctx);
-    if (stmt) {
-      statements.push(stmt);
-    }
-  }
-  ctx.expect(['}']);
+        // Incrementally keep track of results
+        this.results = this.finish();
+    };
 
-  return ctx.endNode(_extends({}, node, {
-    value,
-    params: [argumentsNode, resultNode, ...statements]
-  }), Syntax.FunctionDeclaration);
-}
+    // nb. deprecated: use save/restore instead!
+    Parser.prototype.rewind = function (index) {
+        if (!this.options.keepHistory) {
+            throw new Error('set option `keepHistory` to enable rewinding');
+        }
+        // nb. recall column (table) indicies fall between token indicies.
+        //        col 0   --   token 0   --   col 1
+        this.restore(this.table[index]);
+    };
 
-//      
+    Parser.prototype.finish = function () {
+        // Return the possible parsings
+        var considerations = [];
+        var start = this.grammar.start;
+        var column = this.table[this.table.length - 1];
+        column.states.forEach(function (t) {
+            if (t.rule.name === start && t.dot === t.rule.symbols.length && t.reference === 0 && t.data !== Parser.fail) {
+                considerations.push(t);
+            }
+        });
+        return considerations.map(function (c) {
+            return c.data;
+        });
+    };
 
-function generateErrorString(msg, error, marker, filename, func) {
-  let line;
-  let col;
-  let end;
-
-  if (marker.start.line !== marker.end.line) {
-    end = marker.start.col + 1;
-    col = marker.start.col;
-    line = marker.start.line;
-  } else {
-    line = marker.start.line;
-    col = marker.start.col;
-    end = marker.end.col;
-  }
-  const Line = (() => {
-    if (marker.start.sourceLine !== marker.end.sourceLine) {
-      return marker.start.sourceLine + '\n' + marker.end.sourceLine;
-    }
-    return marker.end.sourceLine;
-  })();
-
-  const highlight = new Array(end - col + 1).join('^').padStart(end, ' ');
-  return '\n' + Line + '\n' + highlight + ` ${error}` + '\n' + msg + '\n' + `  at ${func} (${filename}:${line}:${col})`;
-}
-
-//      
-function typeParser(ctx) {
-  const node = ctx.startNode();
-  ctx.eat(['type']);
-
-  const value = ctx.expect(null, Syntax.Identifier).value;
-  ctx.expect(['=']);
-
-  const maybeGeneric = ctx.token.value;
-  // Generic Type
-  if (ctx.eat(null, Syntax.Identifier)) {
-    ctx.expect(['<']);
-    const idNode = ctx.makeNode(_extends({}, ctx.token, { type: null }), Syntax.Identifier);
-    ctx.expect(null, Syntax.Identifier);
-    ctx.expect(['>']);
-
-    const genericTypeNode = ctx.endNode(_extends({}, node, { value, params: [_extends({}, idNode, { value: maybeGeneric }), idNode] }), Syntax.GenericType);
-    return genericTypeNode;
-  }
-
-  // Regular function type definition
-  if (ctx.eat(['('])) {
-    // Arguments are optional
-    const argsExpression = expression(ctx);
-    const args = argsExpression != null ? _extends({}, argsExpression, {
-      value: 'FUNCTION_ARGUMENTS',
-      Type: Syntax.FunctionArguments,
-      params: [argsExpression]
-    }) : _extends({}, node, {
-      value: 'FUNCTION_ARGUMENTS',
-      Type: Syntax.FunctionArguments,
-      params: []
-    });
-
-    ctx.expect([')']);
-    ctx.expect(['=>']);
-    // Result is not optional
-    const result = _extends({}, expression(ctx), {
-      value: 'FUNCTION_RESULT',
-      Type: Syntax.FunctionResult
-    });
-    return ctx.endNode(_extends({}, node, {
-      value,
-      type: result.type,
-      params: [args, result]
-    }), Syntax.Typedef);
-  }
-
-  // Sanity check definition
-  if (ctx.token.value !== '{') {
-    const start = node.range[0];
-    const end = ctx.token.end;
-    throw new SyntaxError(generateErrorString('Invalid type syntax', 'A function type must be of form (<type>, ...) <type>', { start, end }, '', ''));
-  }
-
-  // Struct type definition
-  return ctx.endNode(_extends({}, node, {
-    value,
-    params: [expression(ctx)],
-    type: 'i32'
-  }), Syntax.Struct);
-}
-
-//      
-function parseExport(ctx) {
-  const node = ctx.startNode();
-  ctx.eat(['export']);
-
-  if (ctx.token.value === 'type') {
-    const typedef = typeParser(ctx);
-    return ctx.endNode(_extends({}, node, {
-      params: [typedef]
-    }), Syntax.Export);
-  }
-  const params = [maybeFunctionDeclaration(ctx)];
-
-  return ctx.endNode(_extends({}, node, { params }), Syntax.Export);
-}
-
-//      
-function parseImport(ctx) {
-  const baseNode = ctx.startNode();
-  ctx.eat(['import']);
-
-  if (!ctx.eat(['{'])) {
-    throw ctx.syntaxError('expected {');
-  }
-
-  const fields = expression(ctx);
-
-  ctx.expect(['}']);
-  ctx.expect(['from']);
-
-  const module = expression(ctx);
-
-  return ctx.endNode(_extends({}, baseNode, { params: [fields, module] }), Syntax.Import);
-}
-
-//      
-function breakParser(ctx) {
-  const node = ctx.startNode();
-  ctx.expect(['break']);
-  return ctx.endNode(node, Syntax.Break);
-}
-
-//      
-const paramList = ctx => {
-  ctx.expect(['(']);
-  const params = [];
-  let node = null;
-  while (ctx.token.value && ctx.token.value !== ')') {
-    node = expression(ctx);
-    if (node) {
-      params.push(node);
-      ctx.eat([';']);
-    }
-  }
-
-  ctx.expect([')']);
-  return params;
-};
-
-const forLoop = ctx => {
-  const node = ctx.startNode();
-  ctx.eat(['for']);
-
-  // Pop the last expression from param list to append to the body of the loop.
-  // This is important to do here as it'll be more difficult to acomplish later
-  // in the generator accurately. In a for-loop we always want the afterthought
-  // to follow the entire body, so here we are.
-  const [initializer, condition, afterthought] = paramList(ctx);
-  const body = [];
-
-  ctx.expect(['{']);
-
-  let stmt = null;
-  while (ctx.token && ctx.token.value !== '}') {
-    stmt = statement(ctx);
-    if (stmt) {
-      body.push(stmt);
-    }
-  }
-  ctx.expect(['}']);
-
-  return ctx.endNode(_extends({}, node, {
-    params: [initializer, condition, ...body, afterthought]
-  }), Syntax.Loop);
-};
-
-//      
-const whileLoop = ctx => {
-  const node = ctx.startNode();
-  ctx.eat(['while']);
-  ctx.expect(['(']);
-
-  const initializer = ctx.makeNode({}, Syntax.Noop);
-  const condition = expression(ctx);
-  const body = [];
-
-  ctx.expect([')']);
-  ctx.expect(['{']);
-
-  let stmt = null;
-  while (ctx.token && ctx.token.value !== '}') {
-    stmt = statement(ctx);
-    if (stmt) {
-      body.push(stmt);
-    }
-  }
-
-  ctx.expect(['}']);
-
-  return ctx.endNode(_extends({}, node, {
-    params: [initializer, condition, ...body]
-  }), Syntax.Loop);
-};
-
-/**
- * Context is used to parse tokens into the base AST.
- * Originally the parser was a giant class and the context was the 'this' pointer.
- * Maintaining a monolithic parser is rather difficult so it was broken up into a
- * collection of self-contained parsers for each syntactic construct. The context
- * is passed around between each one to generate the desired tree
- */
-
-//      
-class Context {
-
-  constructor({
-    stream,
-    token,
-    lines
-  }) {
-    this.token = token;
-    this.stream = stream;
-    this.lines = lines;
-  }
-
-  syntaxError(msg, error) {
-    const functionId = 'unknown';
-    return new SyntaxError(generateErrorString(msg, error || '', this.token, this.filename || 'unknown', functionId));
-  }
-
-  unexpectedValue(value) {
-    return this.syntaxError(`Expected: ${String(value)}`, 'Unexpected value');
-  }
-
-  unexpected(token) {
-    return this.syntaxError(`Expected: ${String(token)}`, `Unexpected token ${this.token.type}`);
-  }
-
-  unknown({ value }) {
-    return this.syntaxError('Unknown token', value);
-  }
-
-  unsupported() {
-    return this.syntaxError('Language feature not supported', this.token.value);
-  }
-
-  expect(value, type) {
-    const token = this.token;
-    if (!this.eat(value, type)) {
-      throw value ? this.unexpectedValue(value) : this.unexpected(type);
-    }
-
-    return token;
-  }
-
-  next() {
-    this.token = this.stream.next();
-  }
-
-  eat(value, type) {
-    if (value) {
-      if (value.includes(this.token.value)) {
-        this.next();
-        return true;
-      }
-      return false;
-    }
-
-    if (this.token.type === type) {
-      this.next();
-      return true;
-    }
-
-    return false;
-  }
-
-  startNode(token = this.token || {}) {
     return {
-      Type: '',
-      value: token.value,
-      range: [token.start],
-      meta: {},
-      params: [],
-      type: null
+        Parser: Parser,
+        Grammar: Grammar,
+        Rule: Rule
     };
-  }
+});
+});
 
-  endNode(base, Type) {
-    const token = this.token || this.stream.last() || {};
-    const range = base.range.concat(token.start);
-    const toString = () => {
-      const start = range[0];
-      const end = range[range.length - 1];
-
-      return start.sourceLine.slice(start.col, end.col);
-    };
-    const { toString: omit } = base,
-          seed = objectWithoutProperties(base, ['toString']);
-    const node = _extends({
-      toString
-    }, seed, {
-      Type,
-      range
-    });
-    return node;
-  }
-
-  makeNode(node, syntax) {
-    return this.endNode(_extends({}, this.startNode(), node), syntax);
-  }
-}
+var nearley_1 = nearley.Parser;
+var nearley_2 = nearley.Grammar;
 
 //      
-const returnStatement = ctx => {
-  const node = ctx.startNode();
-  ctx.expect(['return']);
-  const expr = expression(ctx);
+var compose = ((...fns) => fns.reduce((f, g) => (...args) => f(g(...args))));
 
-  node.params.push(expr);
+const nth = n => d => d[n];
+const nuller = () => null;
+const nonEmpty = d => {
+  return Array.isArray(d) ? !!d.length : d != null;
+};
+const add = d => `${d[0]}${d[1]}`;
 
-  return ctx.endNode(node, Syntax.ReturnStatement);
+const flatten = d => d.reduce((acc, v) => {
+  if (Array.isArray(v)) {
+    return acc.concat(v);
+  }
+
+  return acc.concat(v);
+}, []);
+
+const drop = (d = []) => {
+  return d.filter(nonEmpty);
 };
 
-//      
-const condition = ctx => {
-  ctx.expect(['(']);
-  const expr = expression(ctx);
-  ctx.expect([')']);
-  return expr;
-};
-
-function parseIfStatement(ctx) {
-  const node = _extends({}, ctx.startNode(ctx.token));
-
-  ctx.eat(['if']);
-  // First operand is the expression
-  const params = [condition(ctx)];
-  const statementNode = statement(ctx);
-  if (statementNode) {
-    params.push(statementNode);
-  }
-
-  ctx.eat([';']);
-  while (ctx.eat(['else'])) {
-    // maybe another if statement
-    const elseNode = ctx.makeNode(null, Syntax.Else);
-    const elseParams = [];
-    const stmt = statement(ctx);
-    if (stmt) {
-      elseParams.push(stmt);
-    }
-    params.push(_extends({}, elseNode, { params: elseParams }));
-  }
-
-  return ctx.endNode(_extends({}, node, {
-    params
-  }), Syntax.IfThenElse);
-}
-
-//      
-const keyword = ctx => {
-  switch (ctx.token.value) {
-    case 'let':
-    case 'const':
-      return declaration(ctx);
-    case 'function':
-      return maybeFunctionDeclaration(ctx);
-    case 'export':
-      return parseExport(ctx);
-    case 'import':
-      return parseImport(ctx);
-    case 'type':
-      return typeParser(ctx);
-    case 'if':
-      return parseIfStatement(ctx);
-    case 'for':
-      return forLoop(ctx);
-    case 'while':
-      return whileLoop(ctx);
-    case 'return':
-      return returnStatement(ctx);
-    case 'break':
-      return breakParser(ctx);
-    default:
-      throw ctx.unsupported();
-  }
-};
-
-/**
- * Copyright 2013-2015, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var NODE_ENV = undefined;
-
-var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (NODE_ENV !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-};
-
-var invariant_1 = invariant;
-
-//      
-// Parse the expression and set the appropriate Type for the generator
-const memoryStore = ctx => {
-  // Parse the assignment
-  const node = expression(ctx);
-
-  invariant_1(node.params.length > 0, 'Memory Store expression could not be parsed');
-
-  const type = node.params[0].type;
-
-  return ctx.endNode(_extends({}, node, { type }), Syntax.MemoryAssignment);
-};
-
-//      
-// It is easier to parse assignment this way as we need to maintain a valid type
-// through out the right-hand side of the expression
-function maybeAssignment(ctx) {
-  const nextValue = ctx.stream.peek().value;
-  if (nextValue === '[' || nextValue === '.') {
-    return memoryStore(ctx);
-  }
-  return expression(ctx);
-}
-
-//      
-const statement = ctx => {
-  switch (ctx.token.type) {
-    case Syntax.Keyword:
-      return keyword(ctx);
-    case Syntax.Identifier:
-      return maybeAssignment(ctx);
-    case Syntax.Punctuator:
-    default:
-      if (ctx.eat([';'])) {
-        return null;
-      }
-      if (ctx.token.value === '{') {
-        return blockParser(ctx);
-      }
-      return expression(ctx);
-  }
-};
-
-//      
-const eol = char => char === '\n';
-
-// Base Character stream class
-class Stream {
-
-  constructor(input) {
-    this.pos = this.line = this.col = 0;
-    this.input = input;
-    this.lines = input.split('\n');
-    this.newLine();
-  }
-
-  // Peek at a character at current position
-  peek() {
-    return this.input.charAt(this.pos);
-  }
-
-  // Advance to next character in stream
-  next() {
-    const char = this.input.charAt(this.pos++);
-
-    if (this.eol(char)) {
-      this.newLine();
-    } else {
-      this.col++;
-    }
-
-    return char;
-  }
-
-  // Begin a new line
-  newLine() {
-    this.line++;
-    this.col = 0;
-  }
-
-  // Is the character an end of line
-  eol(char) {
-    return char === '\n';
-  }
-
-  // Is the character an end of file
-  eof(char) {
-    return char === '';
-  }
-
-  // Is the charater a whitespace
-  static whitespace(char) {
-    return char === '\n' || char === ' ' || char === '\t' || char === '\v' || char === '\r' || char === '\f';
-  }
-}
-
-//      
-/**
- * A very basic trie with functional,recursive search
- */
-const fsearch = node => {
-  const next = char => {
-    if (node && node.children[char]) {
-      return fsearch(node.children[char]);
-    }
-
-    return null;
-  };
-
-  next.leaf = node.leaf;
-
-  return next;
-};
-
-class Trie {
-
-  constructor(words) {
-    this.root = {
-      char: '',
-      children: {},
-      leaf: false
-    };
-
-    words.map(word => this.add(word));
-    this.fsearch = fsearch(this.root);
-  }
-
-  add(word) {
-    let current = this.root;
-    let char = word.slice(0, 1);
-
-    word = word.slice(1);
-
-    while (typeof current.children[char] !== 'undefined' && char.length > 0) {
-      current = current.children[char];
-      char = word.slice(0, 1);
-      word = word.slice(1);
-    }
-
-    while (char.length > 0) {
-      const node = {
-        char,
-        children: {},
-        leaf: false
-      };
-
-      current.children[char] = node;
-      current = node;
-      char = word.slice(0, 1);
-      word = word.slice(1);
-    }
-
-    current.leaf = true;
-  }
-}
-
-var trie$1 = Trie;
-
-//      
-const wrap = (predicate, type, supported) => {
-  const wrapper = value => {
-    const result = predicate(value);
-    return typeof result === 'function' ? wrap(result, type, supported) : result;
-  };
-  wrapper.type = type;
-  wrapper.supported = supported;
-  wrapper.strict = !!supported;
-  wrapper.leaf = predicate.leaf;
-  return wrapper;
-};
-
-var token = wrap;
-
-//      
-const supported = ['+', '++', '-', '--', '>>', '>>>', '<<', '=', '==', '+=', '-=', '=>', '<=', '>=', '!=', '%', '/', '^', '&', '~', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', '[', ']', ';', '>', '<', '?', '||', '&&', '{', '}', '...'];
-
-const trie = new trie$1(supported);
-var punctuator = token(trie.fsearch, Syntax.Punctuator, supported);
-
-//      
-const { isNaN, parseInt: parseInt$1 } = Number;
-const isNumber = char => !isNaN(parseInt$1(char));
-const isDot = char => char === '.';
-const number = char => isNumber(char) ? number : null;
-
-const numberOrDot = char => {
-  if (isDot(char)) {
-    return number;
-  }
-
-  if (isNumber(char)) {
-    return numberOrDot;
-  }
-  return null;
-};
-
-const hex = char => {
-  if (/[0-9a-fA-F]/.test(char)) {
-    return hex;
-  }
-
-  return null;
-};
-
-const maybeExponent = char => {
-  switch (char) {
-    case 'e':
-    case 'E':
-      return number;
-    default:
-      return numberOrDot(char);
-  }
-};
-const maybeModifier = char => {
-  switch (char) {
-    case 'b':
-    case 'B':
-      return number;
-    case 'o':
-      return number;
-    case 'x':
-    case 'X':
-      return hex;
-    default:
-      return numberOrDot(char);
-  }
-};
-
-const root = char => {
-  if (char === '-') {
-    return root;
-  } else if (isDot(char)) {
-    return number;
-  } else if (char === '0') {
-    return maybeModifier;
-  } else if (isNumber(char)) {
-    return maybeExponent;
-  }
-
-  return null;
-};
-
-var constant = token(root, Syntax.Constant);
-
-//      
-const quoteOK = quoteCheck => () => quoteCheck;
-const nextFails = () => null;
-
-const endsInSingleQuote = char => {
-  if (/\\/.test(char)) {
-    return quoteOK(endsInSingleQuote);
-  }
-  if (char === "'") {
-    return nextFails;
-  }
-
-  return endsInSingleQuote;
-};
-
-const endsInDoubleQuote = char => {
-  if (/\\/.test(char)) {
-    return quoteOK(endsInDoubleQuote);
-  }
-  if (char === '"' || char === '`') {
-    return nextFails;
-  }
-
-  return endsInDoubleQuote;
-};
-
-const maybeQuote = char => {
-  if (char === "'") {
-    return endsInSingleQuote;
-  }
-  if (char === '"' || char === '`') {
-    return endsInDoubleQuote;
-  }
-
-  return null;
-};
-
-const stringParser = token(maybeQuote, Syntax.StringLiteral);
-
-//      
-const isValidIdentifier = char => {
-  // Don't allow these
-  return !stringParser(char) && !punctuator(char) && !eol(char) && char !== ' ';
-};
-
-const supportAny = char => {
-  return isValidIdentifier(char) ? supportAny : null;
-};
-
-const parse$1 = char => {
-  return isValidIdentifier(char) && !constant(char) ? supportAny : null;
-};
-const tokenParser = token(parse$1, Syntax.Identifier);
-
-//      
-const supported$1 = [
-// EcmaScript
-'break', 'if', 'else', 'import', 'as', 'from', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'while', 'function',
-
-// s-expression
-'global', 'module', 'type', 'lambda',
-
-// Unsupported
-'catch', 'extends', 'super',
-// There is no concept of this in wast
-'this', 'debugger',
-// vars and lets are replaced with types (i32, f32, etc)
-'var',
-// no classes in wast
-'class', 'try', 'finally',
-// Everything is statically typed
-'typeof'];
-
-const trie$2 = new trie$1(supported$1);
-const root$1 = trie$2.fsearch;
-
-var keyword$2 = token(root$1, Syntax.Keyword, supported$1);
-
-//      
-const SLASH = '/';
-const ASTERIX = '*';
-
-const SINGLE_LINE = `${SLASH}${SLASH}`;
-const MULTI_LINE_START = `${SLASH}${ASTERIX}`;
-const MULTI_LINE_END = `${ASTERIX}${SLASH}`;
-
-const COMMENT_IDENTIFIERS = [SINGLE_LINE, MULTI_LINE_START, MULTI_LINE_END];
-
-//      
-const parser = char => {
-  let isMultiline = false;
-  let isSingleLine = false;
-  let previous;
-
-  const isComment = current => {
-    if (eol(current)) {
-      isSingleLine = false;
-    }
-
-    switch (`${previous}${current}`) {
-      case MULTI_LINE_END:
-        {
-          isMultiline = false;
-          return isComment;
-        }
-      case MULTI_LINE_START:
-        {
-          isMultiline = true;
-          return isComment;
-        }
-      case SINGLE_LINE:
-        {
-          isSingleLine = true;
-          return isComment;
-        }
-      default:
-        {
-          if (isMultiline || isSingleLine) {
-            previous = current;
-            return isComment;
-          }
-        }
-    }
-  };
-
-  const maybeComment = current => {
-    const buffer = previous;
-    previous = current;
-
-    if (current === SLASH || isMultiline || COMMENT_IDENTIFIERS.indexOf(`${buffer}${current}`) > -1) {
-      return isComment;
-    }
-
-    return null;
-  };
-
-  return maybeComment(char);
-};
-
-var comments = token(parser, Syntax.Comment);
-
-//      
-const supported$2 = ['i32', 'i64', 'f32', 'f64', 'i32[]', 'i64[]', 'f32[]', 'f64[]', 'u8[]', 'bool', 'Function', 'Memory', 'Table', 'void'];
-const trie$3 = new trie$1(supported$2);
-var type = token(trie$3.fsearch, Syntax.Type, supported$2);
-
-//      
-class Tokenizer {
-
-  constructor(stream, parsers = [punctuator, constant, tokenParser, keyword$2, stringParser, type, comments]) {
-    this.stream = stream;
-    this.tokens = [];
-    this.pos = 0;
-    this.parsers = parsers;
-  }
-
-  /**
-   * Get next token
-   */
-  next() {
-    let value = '';
-    this.seekNonWhitespace();
-    let char = '';
-    let matchers = this.parsers;
-    let next;
-    let nextMatchers = this.match(char, matchers);
-    let start = {
-      sourceLine: this.stream.lines[this.stream.line - 1],
-      line: this.stream.line,
-      col: this.stream.col
-    };
-
-    do {
-      char = this.stream.peek();
-      matchers = this.match(char, matchers);
-      value += char;
-      this.stream.next();
-      next = this.stream.peek();
-      nextMatchers = this.match(next, matchers);
-    } while (!this.stream.eof(next) && nextMatchers.length > 0);
-
-    // If we fell off the end then bail out
-    if (this.stream.eof(value)) {
-      return null;
-    }
-
-    const token = this.token(value, matchers);
-    token.start = start;
-    token.end = {
-      sourceLine: this.stream.lines[this.stream.line - 1],
-      line: this.stream.line,
-      col: this.stream.col
-    };
-    // Comments are ignored for now
-    if (token.type !== comments.type) {
-      this.tokens.push(token);
-    }
-
-    return this.tokens[this.pos++];
-  }
-
-  match(char, parsers) {
-    return parsers.map(parse => parse(char)).filter(p => p);
-  }
-
-  /**
-   * Match a particular non-whitespace value to a token
-   */
-  token(value, parsers, token = {
-    type: 'unknown',
-    value,
-    start: {},
-    end: {}
-  }) {
-    // Strict parsers must end on a leaf node
-    if (parsers.length > 1) {
-      parsers = parsers.filter(parser => parser.strict ? parser.leaf : true);
-      if (parsers.length > 1) {
-        parsers = parsers.filter(parser => parser.strict);
-      }
-    }
-
-    token.type = parsers.pop().type;
-
-    return token;
-  }
-
-  /**
-   * Seek Stream until next non-whitespace character. Can end in eof/eol
-   */
-  seekNonWhitespace() {
-    while (this.stream.peek() && Stream.whitespace(this.stream.peek())) {
-      this.stream.next();
-    }
-  }
-
-  parse() {
-    while (!this.stream.eof(this.stream.peek())) {
-      this.next();
-    }
-    return this.tokens;
-  }
-}
-
-//      
-
-
-function tokenStream(tokens) {
-  const length = tokens.length;
-  let pos = 0;
-
-  const next = () => tokens[++pos];
-  const peek = () => tokens[pos + 1];
-  const last = () => tokens[length - 1];
-
-  return { pos, tokens, next, peek, last, length };
-}
-
-/**
- * Syntax Analysis
- *
- * The parser below creates the "bare" Abstract Syntax Tree.
- */
-
-//      
-function parse(source) {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokens = tokenStream(tokenizer.parse());
-
-  const ctx = new Context({
-    stream: tokens,
-    token: tokens.tokens[0],
-    lines: stream.lines,
-    filename: 'unknown.walt'
-  });
-
-  const node = ctx.makeNode({
-    value: 'ROOT_NODE'
-  }, Syntax.Program);
-
-  // No code, no problem, empty ast equals
-  // (module) ; the most basic wasm module
-  if (!ctx.stream || !ctx.stream.length) {
-    return node;
-  }
-
-  while (ctx.stream.peek()) {
-    const child = statement(ctx);
-    if (child) {
-      node.params.push(child);
-    }
-  }
-
-  return node;
-}
-
-// Return a single method which will chain all of the middleware provided
-const combineMiddleware = transforms => {
-  let transform;
-
-  const chain = transforms.reduce((stack, go) => {
-    return go(args => {
-      // Each middleware get's a node and context object. The context allows for
-      // nested node to have knowledge of the outer/parent context. All of this is
-      // part of args array
-      return stack(args, transform);
-    });
-    // unroll last result
-  }, ([id]) => id);
-
-  return (args, topLevelTranfrom) => {
-    transform = topLevelTranfrom;
-    // kick off the chain of middleware, starting from right to left
-    return chain(args, transform);
-  };
-};
-
-const combineParsers = (sortedParsers = []) => {
-  const wildcards = [];
-
-  // Normalize parsers by type
-  const parsersByType = sortedParsers.reduce((acc, parser) => {
-    Object.entries(parser).forEach(([type, cb]) => {
-      // Wildcards may only handle types which have other callbacks attached to
-      // them.
-      if (type === '*') {
-        wildcards.push(cb);
-        return;
-      }
-
-      if (acc[type] == null) {
-        // Prepend any previously defined wildcard to maintain precedence
-        acc[type] = [...wildcards];
-      }
-
-      acc[type].push(cb);
-    });
-
-    return acc;
-  }, {});
-
-  return Object.entries(parsersByType).reduce((acc, [key, transforms]) => {
-    acc[key] = combineMiddleware(transforms);
-
-    return acc;
-  }, {});
-};
-
-/**
- * Scope helpers.
- *
- * Normalizes how scope look ups are made
- */
-const namespace$1 = Symbol('scope namespace');
-
-function enter$1(scopes, scopeName) {
-  return [...scopes, { [namespace$1]: scopeName }];
-}
-
-function exit$1(scopes) {
-  return scopes.slice(0, -1);
-}
-
-function current$1(scopes) {
-  return scopes[scopes.length - 1];
-}
-
-function add$1(scopes, key, node) {
-  const cur = current$1(scopes);
-  if (cur) {
-    cur[key] = node;
-  }
-
-  return cur;
-}
-
-function find$1(scopes, key) {
-  const len = scopes.length;
-  let i = len - 1;
-  for (i; i >= 0; i--) {
-    const ref = scopes[i][key];
-    if (ref) {
-      return ref;
-    }
-  }
-
-  return null;
-}
-
-function index$1(scope, key) {
-  const pos = Object.keys(scope).indexOf(key);
-  return pos > -1 ? pos : Object.keys(scope).length;
-}
-
-var scope$2 = {
-  enter: enter$1,
-  exit: exit$1,
-  add: add$1,
-  find: find$1,
-  current: current$1,
-  index: index$1,
-  namespace: namespace$1
-};
-
-const {
-  enter,
-  exit,
+var helpers = {
+  nth,
+  nuller,
+  nonEmpty,
   add,
-  find,
-  current,
-  namespace,
-  index
-} = scope$2;
-
-var scope = {
-  enter,
-  exit,
-  add,
-  find,
-  current,
-  namespace,
-  index
+  flatten,
+  compose,
+  drop
 };
-
-var scope_1 = scope.enter;
-var scope_2 = scope.exit;
-var scope_3 = scope.current;
-var scope_4 = scope.find;
-var scope_5 = scope.add;
-var scope_6 = scope.index;
-var scope_7 = scope.namespace;
-
-//      
-const FUNCTION_INDEX = 'function/index';
-
-
-
-const LOCAL_INDEX = 'local/index';
-const GLOBAL_INDEX = 'global/index';
-
-const TYPE_CONST = 'type/const';
-const TYPE_ARRAY = 'type/array';
-
-const TYPE_OBJECT = 'type/object';
-const TYPE_INDEX = 'TYPE_INDEX';
-const OBJECT_SIZE = 'OBJECT_SIZE';
-const TYPE_CAST = 'type/cast';
-const OBJECT_KEY_TYPES = 'object/key-types';
-
-const AST_METADATA = 'AST_METADATA';
-const FUNCTION_METADATA = 'FUNCTION_METADATA';
-const ALIAS = 'alias';
-
-// Statics
 
 var slice = Array.prototype.slice;
 var toArray$1 = function (a) {
@@ -2334,9 +1569,519 @@ curry.adapt = function (fn) {
 
 var curry_1 = curry;
 
-const extendNode = curry_1((options, node) => {
-  return _extends({}, node, options);
+const extendNode = curry_1((_ref, node) => {
+  let { meta } = _ref,
+      options = objectWithoutProperties(_ref, ['meta']);
+
+  return _extends({}, node, {
+    meta: _extends({}, node.meta, meta)
+  }, options);
 });
+
+// Node Types
+const marker = lexer => {
+  const { col, line } = lexer;
+
+  if (!lexer.lines.length) {
+    return { col, line, sourceLine: '' };
+  }
+
+  return {
+    col,
+    line,
+    sourceLine: lexer.lines[lexer.line - 1]
+  };
+};
+
+function factory(lexer) {
+  const node = (Type, seed = {}) => d => {
+    const params = d.filter(nonEmpty);
+    const { value = '', meta = {} } = seed;
+    const start = marker(lexer);
+    const end = params[params.length - 1] && params[params.length - 1].range ? params[params.length - 1].range[1] : _extends({}, start, { col: start.col + value.length });
+
+    return {
+      value,
+      type: null,
+      Type,
+      toString() {},
+      meta,
+      range: [start, end],
+      params
+    };
+  };
+
+  const binary = d => {
+    const [lhs, operator, rhs] = d.filter(nonEmpty);
+    let Type = Syntax.BinaryExpression;
+    if (operator.value === '||' || operator.value === '&&') {
+      Type = Syntax.Select;
+    }
+    return node(Type, { value: operator.value })([lhs, rhs]);
+  };
+
+  const constant = d => {
+    const value = d[0].value;
+    return extendNode({
+      value: `${value}`,
+      type: value.toString().indexOf('.') !== -1 ? 'f32' : 'i32'
+    }, node(Syntax.Constant)([]));
+  };
+
+  const identifier = d => node('Identifier', { value: d.join('') })([]);
+
+  const declaration = Type => d => {
+    const [pair, ...init] = drop(d);
+    const [id, type] = pair.params;
+    return extendNode({
+      value: id.value,
+      type: type.value
+    }, node(Type)(init));
+  };
+
+  const statement = d => {
+    return d.filter(nonEmpty);
+  };
+
+  const unary = ([operator, target]) => {
+    let params = [target];
+
+    if (operator.value === '-') {
+      params = [_extends({}, target, {
+        value: '0',
+        Type: Syntax.Constant,
+        params: [],
+        meta: {}
+      }), target];
+    }
+
+    return extendNode({
+      value: operator.value,
+      params
+    }, node(Syntax.UnaryExpression)([operator, target]));
+  };
+
+  const ternary = d => {
+    return extendNode({
+      value: '?'
+    }, node(Syntax.TernaryExpression)(d));
+  };
+
+  const subscript = d => {
+    const [id, field] = d.filter(nonEmpty);
+    return extendNode({
+      value: id.value,
+      params: [id, field]
+    }, node(Syntax.ArraySubscript)([id, field]));
+  };
+
+  const fun = d => {
+    const [name, args, result, block] = d.filter(nonEmpty);
+    return _extends({}, name, {
+      Type: Syntax.FunctionDeclaration,
+      meta: [],
+      params: [args, result, block]
+    });
+  };
+
+  const voidFun = d => {
+    const params = drop(d);
+    const [name, args, block] = params;
+    const result = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
+    return extendNode({
+      value: name.value,
+      params: [args, result, block]
+    }, node(Syntax.FunctionDeclaration)(params));
+  };
+
+  const result = d => {
+    const [type] = drop(d);
+
+    return extendNode({
+      type: type != null && type.value !== 'void' ? type.value : null
+    }, node(Syntax.FunctionResult)(d));
+  };
+
+  const call = d => {
+    let [id, ...params] = drop(d);
+
+    return extendNode({
+      value: id.value
+    }, node(Syntax.FunctionCall)([id, ...params]));
+  };
+
+  const struct = d => {
+    const [id, ...params] = drop(d);
+    return extendNode({
+      value: id.value
+    }, node(Syntax.Struct)(params));
+  };
+
+  const typedef = d => {
+    const [id, args, res] = drop(d);
+
+    return extendNode({
+      value: id.value,
+      params: [node(Syntax.FunctionArguments)(args), extendNode({
+        type: res.value
+      }, node(Syntax.FunctionResult)([res]))],
+      type: res.type
+    }, node(Syntax.Typedef)([id, args, result]));
+  };
+
+  const string = d => {
+    return extendNode({
+      value: d[0].value,
+      type: 'i32'
+    }, node(Syntax.StringLiteral)([]));
+  };
+
+  const comment = d => {
+    return extendNode({
+      value: d[0].value,
+      params: []
+    }, node(Syntax.Comment)(d));
+  };
+
+  const boolean = d => {
+    return extendNode({
+      value: d[0].value,
+      type: 'i32',
+      params: []
+    }, node(Syntax.Boolean)(d));
+  };
+
+  return {
+    node,
+    binary,
+    constant,
+    identifier,
+    statement,
+    unary,
+    ternary,
+    subscript,
+    fun,
+    declaration,
+    call,
+    struct,
+    result,
+    string,
+    char(d) {
+      return extendNode({
+        value: d[0].value,
+        type: 'i32'
+      }, node(Syntax.CharacterLiteral)([]));
+    },
+    type(d) {
+      return extendNode({
+        value: d[0].value,
+        type: d[0].value,
+        params: []
+      }, node(Syntax.Type)(d));
+    },
+    typeGeneric(d) {
+      const [id, obj] = drop(d);
+      return extendNode({
+        value: id.value,
+        type: id.value,
+        params: [obj]
+      }, node(Syntax.Type)(d));
+    },
+    typedef,
+    comment,
+    voidFun,
+    boolean,
+    assignment(d, value) {
+      let Type = Syntax.Assignment;
+      if (d[0] && d[0].Type === Syntax.ArraySubscript) {
+        Type = Syntax.MemoryAssignment;
+      }
+
+      if (['-=', '+='].includes(value)) {
+        const operator = value[0];
+        const [target, amount] = drop(d);
+        const b = binary([target, { value: operator }, amount]);
+        return node(Type, {
+          value: '='
+        })([target, b]);
+      }
+
+      return node(Type, { value })(d);
+    },
+    forLoop(d) {
+      const [initializer, condition, afterthought, ...body] = drop(d);
+      return node(Syntax.Loop)([initializer, condition, ...body, afterthought]);
+    },
+    whileLoop(d) {
+      const noop = node(Syntax.Noop)([]);
+      return node(Syntax.Loop)([noop, ...d]);
+    },
+    spread(d) {
+      return node(Syntax.Spread)(d);
+    },
+    builtinDecl(d) {
+      const [id, typeNode] = drop(d);
+
+      return extendNode({
+        value: id.value,
+        type: typeNode.value,
+        params: [typeNode]
+      }, node(Syntax.ImmutableDeclaration)(d));
+    },
+    genericType(d) {
+      const [id, gen, typeNode] = drop(d);
+      return extendNode({
+        value: id.value,
+        params: [gen, typeNode]
+      }, node(Syntax.GenericType)([]));
+    },
+    voidClosure(d) {
+      const [args, block] = drop(d);
+      const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
+      return extendNode({
+        params: [extendNode({
+          params: [args, resultNode, block]
+        }, node(Syntax.FunctionDeclaration)([]))]
+      }, node(Syntax.Closure)([]));
+    },
+    closure(d) {
+      const [args, resultNode, block] = drop(d);
+      return extendNode({
+        params: [extendNode({
+          params: [args, resultNode, block]
+        }, node(Syntax.FunctionDeclaration)([]))]
+      }, node(Syntax.Closure)([]));
+    }
+  };
+}
+
+/**
+ * Syntax Analysis
+ *
+ * The parser below creates the "bare" Abstract Syntax Tree.
+ */
+
+//      
+// $FlowFixMe
+// $FlowFixMe
+function makeLexer() {
+  const mooLexer = moo.compile(waltSyntax_8);
+  // Additional utility on top of the default moo lexer.
+  return {
+    current: null,
+    lines: [],
+    get line() {
+      return mooLexer.line;
+    },
+    get col() {
+      return mooLexer.col;
+    },
+    save() {
+      return mooLexer.save();
+    },
+    reset(chunk, info) {
+      this.lines = chunk.split('\n');
+      return mooLexer.reset(chunk, info);
+    },
+    next() {
+      // It's a cruel and unusual punishment to implement comments with nearly
+      let token = mooLexer.next();
+      while (token && token.type === 'comment') {
+        token = mooLexer.next();
+      }
+      this.current = token;
+      return this.current;
+    },
+    formatError(token) {
+      return mooLexer.formatError(token);
+    },
+    has(name) {
+      return mooLexer.has(name);
+    }
+  };
+}
+
+function parse(source, grammarList = [grammar, grammar$1]) {
+  const context = {
+    lexer: makeLexer(),
+    nodes: factory,
+    helpers,
+    Syntax
+  };
+
+  const grammar$$1 = grammarList.slice(1).reduce((acc, value) => {
+    const extra = value.call(context);
+    return _extends({}, acc, {
+      ParserRules: acc.ParserRules.concat(extra.ParserRules)
+    });
+  }, grammarList[0].call(context));
+
+  const parser = new nearley_1(nearley_2.fromCompiled(grammar$$1));
+  parser.feed(source);
+
+  invariant_1(parser.results.length === 1, `Ambiguous syntax number of productions: ${parser.results.length}`);
+
+  return parser.results[0];
+}
+
+// Return a single method which will chain all of the middleware provided
+const combineMiddleware = transforms => {
+  let transform;
+
+  const chain = transforms.reduce((stack, go) => {
+    return go(args => {
+      // Each middleware get's a node and context object. The context allows for
+      // nested node to have knowledge of the outer/parent context. All of this is
+      // part of args array
+      return stack(args, transform);
+    });
+    // unroll last result
+  }, ([id]) => id);
+
+  return (args, topLevelTranfrom) => {
+    transform = topLevelTranfrom;
+    // kick off the chain of middleware, starting from right to left
+    return chain(args, transform);
+  };
+};
+
+const combineParsers = (sortedParsers = []) => {
+  const wildcards = [];
+
+  // Normalize parsers by type
+  const parsersByType = sortedParsers.reduce((acc, parser) => {
+    Object.entries(parser).forEach(([type, cb]) => {
+      // Wildcards may only handle types which have other callbacks attached to
+      // them.
+      if (type === '*') {
+        wildcards.push(cb);
+        return;
+      }
+
+      if (acc[type] == null) {
+        // Prepend any previously defined wildcard to maintain precedence
+        acc[type] = [...wildcards];
+      }
+
+      acc[type].push(cb);
+    });
+
+    return acc;
+  }, {});
+
+  return Object.entries(parsersByType).reduce((acc, [key, transforms]) => {
+    acc[key] = combineMiddleware(transforms);
+
+    return acc;
+  }, {});
+};
+
+/**
+ * Scope helpers.
+ *
+ * Normalizes how scope look ups are made
+ */
+const namespace$1 = Symbol('scope namespace');
+
+function enter$1(scopes, scopeName) {
+  return [...scopes, { [namespace$1]: scopeName }];
+}
+
+function exit$1(scopes) {
+  return scopes.slice(0, -1);
+}
+
+function current$1(scopes) {
+  return scopes[scopes.length - 1];
+}
+
+function add$2(scopes, key, node) {
+  const cur = current$1(scopes);
+  if (cur) {
+    cur[key] = node;
+  }
+
+  return cur;
+}
+
+function find$1(scopes, key) {
+  const len = scopes.length;
+  let i = len - 1;
+  for (i; i >= 0; i--) {
+    const ref = scopes[i][key];
+    if (ref) {
+      return ref;
+    }
+  }
+
+  return null;
+}
+
+function index$1(scope, key) {
+  const pos = Object.keys(scope).indexOf(key);
+  return pos > -1 ? pos : Object.keys(scope).length;
+}
+
+var scope$2 = {
+  enter: enter$1,
+  exit: exit$1,
+  add: add$2,
+  find: find$1,
+  current: current$1,
+  index: index$1,
+  namespace: namespace$1
+};
+
+const {
+  enter,
+  exit,
+  add: add$1,
+  find,
+  current,
+  namespace,
+  index
+} = scope$2;
+
+var scope = {
+  enter,
+  exit,
+  add: add$1,
+  find,
+  current,
+  namespace,
+  index
+};
+
+var scope_1 = scope.enter;
+var scope_2 = scope.exit;
+var scope_3 = scope.current;
+var scope_4 = scope.find;
+var scope_5 = scope.add;
+var scope_6 = scope.index;
+var scope_7 = scope.namespace;
+
+//      
+const FUNCTION_INDEX = 'function/index';
+
+
+
+const LOCAL_INDEX = 'local/index';
+const GLOBAL_INDEX = 'global/index';
+
+const TYPE_CONST = 'type/const';
+const TYPE_ARRAY = 'type/array';
+
+const TYPE_OBJECT = 'type/object';
+const TYPE_INDEX = 'TYPE_INDEX';
+const OBJECT_SIZE = 'OBJECT_SIZE';
+const TYPE_CAST = 'type/cast';
+const OBJECT_KEY_TYPES = 'object/key-types';
+
+const AST_METADATA = 'AST_METADATA';
+const FUNCTION_METADATA = 'FUNCTION_METADATA';
+const ALIAS = 'alias';
+
+// Statics
 
 //      
 const sizes = {
@@ -2475,6 +2220,9 @@ function Core() {
           const params = inputNode.params.map(p => transform([p, context]));
           const { type } = params[0];
           return _extends({}, inputNode, { params, type });
+        },
+        TernaryExpression: next => ([node, context]) => {
+          return next([balanceTypesInMathExpression(node), context]);
         }
       };
     }
@@ -2537,7 +2285,8 @@ var walkNode = walkNode$2;
 
 const mapGeneric = curry_1((options, node, _) => {
   const { types } = options;
-  const [generic, T] = node.params;
+  const [generic] = node.params;
+  const [T] = generic.params;
   const realType = types[T.value];
   const [args, result] = realType.params;
   // Patch the node to be a real type which we can reference later
@@ -2555,6 +2304,7 @@ const mapGeneric = curry_1((options, node, _) => {
     }), result]
   });
   types[patch.value] = patch;
+
   return patch;
 });
 
@@ -2581,7 +2331,9 @@ function typePlugin() {
             },
             [Syntax.Typedef]: (node, _) => {
               let argumentsCount = 0;
+              const [fnArgs] = node.params;
               const defaultArgs = [];
+
               walkNode({
                 Assignment(assignment) {
                   const defaultValue = assignment.params[1];
@@ -2590,7 +2342,7 @@ function typePlugin() {
                 Type() {
                   argumentsCount += 1;
                 }
-              })(node);
+              })(fnArgs);
               const parsed = _extends({}, node, {
                 meta: _extends({}, node.meta, {
                   FUNCTION_METADATA: {
@@ -2619,23 +2371,17 @@ function typePlugin() {
  */
 
 //      
-const fragment = (source, parser) => {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokens = tokenStream(tokenizer.parse());
-
-  const ctx = new Context({
-    stream: tokens,
-    token: tokens.tokens[0],
-    lines: stream.lines,
-    filename: 'unknown.walt'
-  });
-
-  return parser(ctx);
+const fragment = source => {
+  // For fragments we must wrap the source in a function
+  // otherwise the parser will fail as it's not a valid
+  // place for an expression
+  const program = parse(`function fragment() {
+    ${source};
+  }`);
+  // 1st node is a function.
+  // 3rd node of a function is a block, containing a single expression
+  return program.params[0].params[2].params[0];
 };
-
-const expressionFragment = source => fragment(source, expression);
-const statementFragment = source => fragment(source, statement);
 
 const shifts = {
   i64: 63,
@@ -2644,7 +2390,7 @@ const shifts = {
   f32: 32
 };
 // Unary expressions need to be patched so that the LHS type matches the RHS
-function unary$1 () {
+function unary () {
   return {
     semantics() {
       return {
@@ -2657,10 +2403,10 @@ function unary$1 () {
             // Transform bang
             case '!':
               const shift = shifts[lhs.type];
-              return transform([expressionFragment(`(((${String(lhs)} >> ${shift}) | ((~${String(lhs)} + 1) >> ${shift})) + 1)`), context]);
+              return transform([fragment(`(((${String(lhs.value)} >> ${shift}) | ((~${String(lhs.value)} + 1) >> ${shift})) + 1)`), context]);
             case '~':
               const mask = ['i64', 'f64'].includes(transform([lhs, context]).type) ? '0xffffffffffff' : '0xffffff';
-              return transform([expressionFragment(`(${String(lhs)} ^ ${mask})`), context]);
+              return transform([fragment(`(${String(lhs.value)} ^ ${mask})`), context]);
             default:
               return transform([_extends({}, unaryNode, {
                 type: rhs.type,
@@ -2670,6 +2416,24 @@ function unary$1 () {
                 Type: Syntax.BinaryExpression
               }), context]);
           }
+        },
+        MemoryAssignment: next => args => {
+          const [assign, context] = args;
+          if (!['-=', '+='].includes(assign.value)) {
+            return next(args);
+          }
+
+          const operator = assign.value[0];
+          const [target, amount] = assign.params;
+
+          return next([_extends({}, assign, {
+            value: '=',
+            params: [target, _extends({}, target, {
+              Type: Syntax.BinaryExpression,
+              value: operator,
+              params: [target, amount]
+            })]
+          }), context]);
         }
       };
     }
@@ -2754,7 +2518,8 @@ function coreFunctionPlugin() {
 
           return next([_extends({}, call, {
             type: functions[call.value] != null ? functions[call.value].type : null,
-            meta: { [FUNCTION_INDEX]: index }
+            meta: { [FUNCTION_INDEX]: index },
+            params: call.params.slice(1)
           }), context]);
         },
         ReturnStatement: _ignore => ([returnNode, context], transform) => {
@@ -2831,7 +2596,7 @@ function Imports() {
               });
             }
 
-            if (!['Table', 'Memory'].includes(typeNode.type)) {
+            if (!['Table', 'Memory'].includes(typeNode.value)) {
               const scope$$1 = scope_3(context.scopes);
               const index$$1 = scope_6(scope$$1, identifierNode.value);
               scope_5(context.scopes, identifierNode.value, _extends({}, identifierNode, {
@@ -2859,6 +2624,18 @@ function booleanPlugin() {
         return next([decl, context]);
       };
       return {
+        Identifier: next => (args, transform) => {
+          const [id, context] = args;
+          if (!(id.value === 'true' || id.value === 'false')) {
+            return next(args);
+          }
+
+          return transform([_extends({}, id, {
+            Type: Syntax.Constant,
+            value: id.value === 'true' ? '1' : '0',
+            type: 'i32'
+          }), context]);
+        },
         FunctionResult: next => ([result, context]) => {
           if (result.type === 'bool') {
             return next([_extends({}, result, { type: 'i32' }), context]);
@@ -3038,7 +2815,6 @@ function functionPointer() {
           if (table[node.value] == null) {
             table[node.value] = functions[node.value];
           }
-
           return _extends({}, node, {
             type: 'i32',
             meta: {
@@ -3047,6 +2823,19 @@ function functionPointer() {
             value: Object.keys(table).indexOf(node.value),
             Type: Syntax.FunctionPointer
           });
+        },
+        FunctionResult: next => (args, transform) => {
+          const [node, context] = args;
+          const { types } = context;
+          if (!types[node.type]) {
+            return next(args);
+          }
+
+          return next([extendNode({
+            type: 'i32',
+            meta: { ALIAS: node.type },
+            params: node.params.map(p => transform([p, context]))
+          }, node), context]);
         },
         FunctionCall: next => function indirectCall(args, transform) {
           const [call, context] = args;
@@ -3063,7 +2852,7 @@ function functionPointer() {
           // We will short all of the other middleware so transform the parameters
           // here and append an identifier which will be used to get the table
           // value
-          const params = [...call.params, _extends({}, ref, { Type: Syntax.Identifier })].map(p => transform([p, context]));
+          const params = [...call.params.slice(1), _extends({}, ref, { Type: Syntax.Identifier })].map(p => transform([p, context]));
 
           return _extends({}, call, {
             meta: _extends({}, call.meta, ref.meta, {
@@ -3124,7 +2913,6 @@ function Struct() {
       return {
         Struct: _ => ([node, { userTypes }]) => {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(node.params[0]);
-
           const struct = _extends({}, node, {
             meta: _extends({}, node.meta, {
               [TYPE_OBJECT]: offsetsByKey,
@@ -3135,6 +2923,19 @@ function Struct() {
 
           userTypes[struct.value] = struct;
           return struct;
+        },
+        FunctionResult: next => (args, transform) => {
+          const [node, context] = args;
+          const { userTypes } = context;
+          if (!userTypes[node.type]) {
+            return next(args);
+          }
+
+          return next([extendNode({
+            type: 'i32',
+            meta: { ALIAS: node.type },
+            params: node.params.map(p => transform([p, context]))
+          }, node), context]);
         },
         Identifier: next => args => {
           const [node, context] = args;
@@ -3157,7 +2958,7 @@ function Struct() {
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
           const ref = scope_4(scopes, identifier.value);
-          const userType = userTypes[ref.type];
+          const userType = ref && userTypes[ref.type];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
@@ -3250,7 +3051,7 @@ function nativePlugin() {
   return {
     semantics() {
       return {
-        ArraySubscript: next => (args, transform) => {
+        ArraySubscripts: next => (args, transform) => {
           const [node, context] = args;
           const [identifier, field] = node.params;
           if (identifier.Type === Syntax.Type && field.Type === Syntax.FunctionCall) {
@@ -3263,6 +3064,22 @@ function nativePlugin() {
           }
 
           return next(args);
+        },
+        FunctionCall: next => (args, transform) => {
+          const [node, context] = args;
+          const [id, ...fnArgs] = node.params;
+          if (id.Type === Syntax.ArraySubscript && id.params[0] && id.params[0].Type === Syntax.Type) {
+            const [type, method] = id.params;
+
+            return extendNode({
+              value: `${type.value}.${method.value}`,
+              type: type.value,
+              params: fnArgs.map(p => transform([p, context])),
+              Type: Syntax.NativeMethod
+            }, node);
+          }
+
+          return next(args);
         }
       };
     }
@@ -3271,6 +3088,7 @@ function nativePlugin() {
 
 function defaultArguments () {
   return {
+    grammar: grammar$1,
     semantics() {
       return {
         FunctionDeclaration: next => args => {
@@ -3315,7 +3133,9 @@ function defaultArguments () {
         FunctionCall: next => args => {
           const [call, context] = args;
           const { functions } = context;
-          const target = functions[call.value];
+          const [id, ...fnArgs] = call.params;
+
+          const target = functions[id.value];
 
           // Most likely a built-in funciton
           if (!target) {
@@ -3323,7 +3143,7 @@ function defaultArguments () {
           }
 
           const expectedArguments = target.meta.FUNCTION_METADATA.argumentsCount;
-          const count = call.params.length > 0 && call.params[0].Type === Syntax.Sequence ? call.params[0].length : call.params.length;
+          const count = fnArgs.length;
           const difference = expectedArguments - count;
           if (difference > 0) {
             return next([_extends({}, call, {
@@ -3357,7 +3177,7 @@ function sizeofPlugin() {
           }
 
           const { scopes, userTypes, functions } = context;
-          const [target] = sizeof.params;
+          const [, target] = sizeof.params;
           const ref = scope_4(scopes, target.value);
           const { type = '' } = ref || {};
           const userType = userTypes[target.value] || userTypes[type];
@@ -3452,13 +3272,21 @@ function closures () {
 
       const [lhs] = parsed.params;
       const ref = environment[parsed.value];
-      const call = expressionFragment(`__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`);
+      const call = fragment(`__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`);
       return transform([_extends({}, call, {
         params: [...call.params, lhs]
       }), context]);
     };
 
-    const closureImportsHeader = parse(`
+    return {
+      Program: next => args => {
+        const [program, context] = args;
+
+        if (!hasNode(Syntax.Closure, program)) {
+          return next(args);
+        }
+
+        const closureImportsHeader = parse(`
       // Start Closure Imports Header
       import {
         __closure_malloc: ClosureGeti32,
@@ -3476,22 +3304,12 @@ function closures () {
       type ClosureGeti32 = (i32) => i32;
       type ClosureGetf32 = (i32) => f32;
       type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64;
-      type ClosureSeti32 = (i32, i32) => void;
+      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
       type ClosureSetf32 = (i32, f32) => void;
       type ClosureSeti64 = (i32, i64) => void;
       type ClosureSetf64 = (i32, f64) => void;
       // End Closure Imports Header
     `).params;
-
-    return {
-      Program: next => args => {
-        const [program, context] = args;
-
-        if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
-        }
-
         const closures = [];
         const parsedProgram = next([_extends({}, program, {
           params: [...closureImportsHeader, ...program.params]
@@ -3524,7 +3342,7 @@ function closures () {
             // Parens are necessary around a fragment as it has to be a complete
             // expression, a ; would also likely work and be discarded but that would
             // be even odder in the context of function arguments
-            params: [expressionFragment('(__env_ptr : i32)'), ...fnArgs.params]
+            params: [fragment('(__env_ptr : i32)'), ...fnArgs.params]
           }), result, ...rest]
         }), context]);
 
@@ -3533,7 +3351,7 @@ function closures () {
         // of the final WASM output.
         context.closures.push(real);
 
-        return transform([expressionFragment(`(${real.value} | ((__env_ptr : i64) << 32)))`), context]);
+        return transform([fragment(`(${real.value} | ((__env_ptr : i64) << 32))`), context]);
       },
       FunctionDeclaration: next => (args, transform) => {
         const [node, context] = args;
@@ -3573,7 +3391,7 @@ function closures () {
 
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
-        const injectedEnv = statementFragment('const __env_ptr : i32 = 0;');
+        const injectedEnv = fragment('const __env_ptr : i32 = 0');
         const [fnArgs, result, ...rest] = node.params;
 
         const closureContext = _extends({}, context, {
@@ -3586,7 +3404,7 @@ function closures () {
         fun.params = fun.params.map(p => {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
-            return transform([statementFragment(`const __env_ptr : i32 = __closure_malloc(${size});`), _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
+            return transform([fragment(`const __env_ptr : i32 = __closure_malloc(${size})`), _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
           }
 
           return p;
@@ -3599,7 +3417,8 @@ function closures () {
       FunctionResult: next => args => {
         const [node, context] = args;
         const { types } = context;
-        if (types[node.value] && types[node.value].meta.CLOSURE_TYPE) {
+
+        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
           return next([_extends({}, node, {
             type: 'i64',
             value: 'i64',
@@ -3626,7 +3445,7 @@ function closures () {
 
         const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
 
-        const call = expressionFragment(`__closure_set_${type}(__env_ptr + ${offset})`);
+        const call = fragment(`__closure_set_${type}(__env_ptr + ${offset})`);
         return transform([_extends({}, call, {
           params: [...call.params, lhs]
         }), context]);
@@ -3641,7 +3460,7 @@ function closures () {
 
         const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
 
-        return transform([expressionFragment(`__closure_get_${type}(__env_ptr + ${offset})`), context]);
+        return transform([fragment(`__closure_get_${type}(__env_ptr + ${offset})`), context]);
       },
       FunctionCall: next => (args, transform) => {
         const [call, context] = args;
@@ -3651,12 +3470,12 @@ function closures () {
           // Unfortunately, we cannot create a statement for this within the
           // possible syntax so we need to manually structure an indirect call node
 
-          const params = [expressionFragment(`((${local.value} >> 32) : i32)`), ...call.params, expressionFragment(`(${local.value} : i32)`)].map(p => transform([p, context]));
+          const params = [fragment(`((${local.value} >> 32) : i32)`), ...call.params.slice(1), fragment(`(${local.value} : i32)`)].map(p => transform([p, context]));
 
           const typedef = types[local.meta.ALIAS];
           const typeIndex = Object.keys(types).indexOf(typedef.value);
 
-          return _extends({}, call, {
+          const icall = _extends({}, call, {
             meta: _extends({}, local.meta, call.meta, {
               TYPE_INDEX: typeIndex
             }),
@@ -3664,6 +3483,8 @@ function closures () {
             params,
             Type: Syntax.IndirectFunctionCall
           });
+
+          return icall;
         }
 
         return next(args);
@@ -3691,7 +3512,7 @@ function closures () {
 
 //      
 const getBuiltInParsers = () => {
-  return [base().semantics, Core().semantics, Imports().semantics, typePlugin().semantics, unary$1().semantics, coreFunctionPlugin().semantics, booleanPlugin().semantics, arrayPlugin().semantics, memoryPlugin().semantics, Strings().semantics, functionPointer().semantics, Struct().semantics, nativePlugin().semantics, sizeofPlugin().semantics, defaultArguments().semantics, closures().semantics];
+  return [base().semantics, Core().semantics, Imports().semantics, typePlugin().semantics, unary().semantics, coreFunctionPlugin().semantics, booleanPlugin().semantics, arrayPlugin().semantics, memoryPlugin().semantics, Strings().semantics, functionPointer().semantics, Struct().semantics, nativePlugin().semantics, sizeofPlugin().semantics, defaultArguments().semantics, closures().semantics];
 };
 
 function semantics(ast, parsers = getBuiltInParsers()) {
@@ -3732,6 +3553,33 @@ function semantics(ast, parsers = getBuiltInParsers()) {
     }),
     params: [...patched.params, ...hoist]
   });
+}
+
+//      
+
+function generateErrorString(msg, error, marker, filename, func) {
+  let line;
+  let col;
+  let end;
+
+  if (marker.start.line !== marker.end.line) {
+    end = marker.start.col + 1;
+    col = marker.start.col;
+    line = marker.start.line;
+  } else {
+    line = marker.start.line;
+    col = marker.start.col;
+    end = marker.end.col;
+  }
+  const Line = (() => {
+    if (marker.start.sourceLine !== marker.end.sourceLine) {
+      return marker.start.sourceLine + '\n' + marker.end.sourceLine;
+    }
+    return marker.end.sourceLine;
+  })();
+
+  const highlight = new Array(end - col + 2).join('^').padStart(marker.start.col - 2, ' ');
+  return '\n' + Line + '\n' + highlight + ` ${error}` + '\n' + msg + '\n' + `  at ${func} (${filename}:${line}:${col})`;
 }
 
 /* eslint-env es6 */
@@ -4442,7 +4290,7 @@ const generateTernary = (node, parent) => {
   // It's a single param for the boolean check followed by
   // another param which is a Pair Node containing the 2(TWO) param results of
   // true and false branches.
-  // The whole thing is encoded as an implicitly retunred if/then/else block.
+  // The whole thing is encoded as an implicitly returned if/then/else block.
   const mapper = mapSyntax(parent);
   const resultPair = node.params[1];
 
@@ -5275,17 +5123,20 @@ function generator(ast, config) {
       typeNode = _extends({}, node, {
         meta: _extends({}, node.meta, { [TYPE_INDEX]: typeIndex })
       });
-
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     }
   })(mapNode_2({
     [Syntax.Import]: (node, _) => node,
     [Syntax.StringLiteral]: (node, _ignore) => {
-      if (Object.keys(statics).length === 0) {
+      const { value } = node;
+
+      // Don't replace any statics which are not mapped. For example table
+      // definitions have StringLiterals, but these literals do not get converted.
+      if (staticsMap[value] == null) {
         return node;
       }
-      const { value } = node;
+
       return _extends({}, node, {
         value: String(staticsMap[value]),
         Type: Syntax.Constant
@@ -6170,7 +6021,7 @@ function closurePlugin$$1() {
 }
 
 //      
-const VERSION = '0.9.4';
+const VERSION = '0.10.0';
 
 // Used for deugging purposes
 const getIR = (source, {

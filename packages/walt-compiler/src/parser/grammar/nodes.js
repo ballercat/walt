@@ -1,7 +1,7 @@
 // Node Types
-const { extendNode } = require('../../utils/extend-node');
-const Syntax = require('walt-syntax');
-const { nonEmpty, drop } = require('./helpers');
+import { extendNode } from '../../utils/extend-node';
+import Syntax from 'walt-syntax';
+import { nonEmpty, drop } from './helpers';
 
 const marker = lexer => {
   const { col, line } = lexer;
@@ -17,7 +17,7 @@ const marker = lexer => {
   };
 };
 
-function factory(lexer) {
+export default function factory(lexer) {
   const node = (Type, seed = {}) => d => {
     const params = d.filter(nonEmpty);
     const { value = '', meta = {} } = seed;
@@ -365,4 +365,3 @@ function factory(lexer) {
     },
   };
 }
-module.exports = factory;

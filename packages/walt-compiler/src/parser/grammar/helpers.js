@@ -1,13 +1,13 @@
-const compose = require('../../utils/compose').default;
+import compose from '../../utils/compose';
 
-const nth = n => d => d[n];
-const nuller = () => null;
-const nonEmpty = d => {
+export const nth = n => d => d[n];
+export const nuller = () => null;
+export const nonEmpty = d => {
   return Array.isArray(d) ? !!d.length : d != null;
 };
-const add = d => `${d[0]}${d[1]}`;
+export const add = d => `${d[0]}${d[1]}`;
 
-const flatten = d =>
+export const flatten = d =>
   d.reduce((acc, v) => {
     if (Array.isArray(v)) {
       return acc.concat(v);
@@ -16,11 +16,11 @@ const flatten = d =>
     return acc.concat(v);
   }, []);
 
-const drop = (d = []) => {
+export const drop = (d = []) => {
   return d.filter(nonEmpty);
 };
 
-module.exports = {
+export default {
   nth,
   nuller,
   nonEmpty,
