@@ -34,13 +34,6 @@ export default function booleanPlugin() {
 
           return next([result, context]);
         },
-        Constant: next => ([constant, ...rest]) => {
-          if (constant.type === 'bool') {
-            return next([{ ...constant, type: 'i32' }]);
-          }
-
-          return next([constant, ...rest]);
-        },
         Declaration: declaration,
         ImmutableDeclaration: declaration,
       };
