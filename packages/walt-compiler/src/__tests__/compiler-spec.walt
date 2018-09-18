@@ -2,13 +2,13 @@ import { assert: Assert, memory: Memory<{ initial: 1 }> } from 'env';
 import { externalConst: i32 } from 'env';
 type String = {
   length: i32,
-  chars: i32[],
+  chars: i32[]
 };
 type Assert = (String, i32, i32) => void;
 
 let globali64: i64 = 0;
 function testGlobali64(): i32 {
-  globali64 += 1;
+  globali64 = globali64 + 1;
   return (globali64 : i32);
 }
 
@@ -83,8 +83,6 @@ function testEscapeSequences(char : i32) : i32 {
   } else if (char == '\0') {
     return true;
   } else if (char == '\'') {
-    return true;
-  } else if (char == '\"') {
     return true;
   }
   return false;
@@ -213,6 +211,15 @@ function testPromotions(): i32 {
   return (i >> 32): i32;
 }
 
+type Func = () => i32;
+const table: Table = { element: 'anyfunc', initial: 1 };
+function returnsTwo() : i32 {
+  return 2;
+}
+function testFunctionPointer(): Func {
+  return returnsTwo;
+}
+
 export function run() {
   assert("array subscripts - (math should work)", testArraySubscript(), 4);
   assert("large signed constant encoding", testLargeSignedConstant(), 126);
@@ -262,4 +269,7 @@ export function run() {
   assert("type promotions", testPromotions(), 42);
 
   assert("global i64 mutable variables", testGlobali64(), 1);
+
+  const fnPointer : Func = testFunctionPointer();
+  assert("function pointer", fnPointer(), 2);
 }

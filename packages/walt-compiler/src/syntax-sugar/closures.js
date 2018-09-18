@@ -9,10 +9,7 @@ import parser from '../parser';
 import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from '../utils/has-node';
 import walkNode from 'walt-parser-tools/walk-node';
-import {
-  expressionFragment as expression,
-  statementFragment as statement,
-} from '../parser/fragment';
+import { fragment } from '../parser/fragment';
 import { LOCAL_INDEX } from '../semantics/metadata';
 import { sizes } from '../types';
 
@@ -59,12 +56,12 @@ export default function() {
       // If the variable is declared but has no initializer we simply nullify the
       // node as there is nothing else to do here.
       if (!parsed.params.length) {
-        return null;
+        return { ...parsed, Type: Syntax.Noop };
       }
 
       const [lhs] = parsed.params;
       const ref = environment[parsed.value];
-      const call = expression(
+      const call = fragment(
         `__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`
       );
       return transform([
@@ -76,7 +73,15 @@ export default function() {
       ]);
     };
 
-    const closureImportsHeader = parser(`
+    return {
+      Program: next => args => {
+        const [program, context] = args;
+
+        if (!hasNode(Syntax.Closure, program)) {
+          return next(args);
+        }
+
+        const closureImportsHeader = parser(`
       // Start Closure Imports Header
       import {
         __closure_malloc: ClosureGeti32,
@@ -94,22 +99,12 @@ export default function() {
       type ClosureGeti32 = (i32) => i32;
       type ClosureGetf32 = (i32) => f32;
       type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64;
-      type ClosureSeti32 = (i32, i32) => void;
+      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
       type ClosureSetf32 = (i32, f32) => void;
       type ClosureSeti64 = (i32, i64) => void;
       type ClosureSetf64 = (i32, f64) => void;
       // End Closure Imports Header
     `).params;
-
-    return {
-      Program: next => args => {
-        const [program, context] = args;
-
-        if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
-        }
-
         const closures = [];
         const parsedProgram = next([
           {
@@ -151,7 +146,7 @@ export default function() {
                 // Parens are necessary around a fragment as it has to be a complete
                 // expression, a ; would also likely work and be discarded but that would
                 // be even odder in the context of function arguments
-                params: [expression('(__env_ptr : i32)'), ...fnArgs.params],
+                params: [fragment('(__env_ptr : i32)'), ...fnArgs.params],
               },
               result,
               ...rest,
@@ -166,7 +161,7 @@ export default function() {
         context.closures.push(real);
 
         return transform([
-          expression(`(${real.value} | ((__env_ptr : i64) << 32)))`),
+          fragment(`(${real.value} | ((__env_ptr : i64) << 32))`),
           context,
         ]);
       },
@@ -208,7 +203,7 @@ export default function() {
 
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
-        const injectedEnv = statement('const __env_ptr : i32 = 0;');
+        const injectedEnv = fragment('const __env_ptr : i32 = 0');
         const [fnArgs, result, ...rest] = node.params;
 
         const closureContext = {
@@ -226,7 +221,7 @@ export default function() {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              statement(`const __env_ptr : i32 = __closure_malloc(${size});`),
+              fragment(`const __env_ptr : i32 = __closure_malloc(${size})`),
               { ...context, scopes: enter(context.scopes, LOCAL_INDEX) },
             ]);
           }
@@ -241,7 +236,8 @@ export default function() {
       FunctionResult: next => args => {
         const [node, context] = args;
         const { types } = context;
-        if (types[node.value] && types[node.value].meta.CLOSURE_TYPE) {
+
+        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
           return next([
             {
               ...node,
@@ -273,7 +269,7 @@ export default function() {
 
         const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
 
-        const call = expression(`__closure_set_${type}(__env_ptr + ${offset})`);
+        const call = fragment(`__closure_set_${type}(__env_ptr + ${offset})`);
         return transform([
           {
             ...call,
@@ -293,7 +289,7 @@ export default function() {
         const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
 
         return transform([
-          expression(`__closure_get_${type}(__env_ptr + ${offset})`),
+          fragment(`__closure_get_${type}(__env_ptr + ${offset})`),
           context,
         ]);
       },
@@ -306,15 +302,15 @@ export default function() {
           // possible syntax so we need to manually structure an indirect call node
 
           const params = [
-            expression(`((${local.value} >> 32) : i32)`),
-            ...call.params,
-            expression(`(${local.value} : i32)`),
+            fragment(`((${local.value} >> 32) : i32)`),
+            ...call.params.slice(1),
+            fragment(`(${local.value} : i32)`),
           ].map(p => transform([p, context]));
 
           const typedef = types[local.meta.ALIAS];
           const typeIndex = Object.keys(types).indexOf(typedef.value);
 
-          return {
+          const icall = {
             ...call,
             meta: {
               ...local.meta,
@@ -325,6 +321,8 @@ export default function() {
             params,
             Type: Syntax.IndirectFunctionCall,
           };
+
+          return icall;
         }
 
         return next(args);

@@ -10,7 +10,7 @@ const generateTernary: GeneratorType = (node, parent) => {
   // It's a single param for the boolean check followed by
   // another param which is a Pair Node containing the 2(TWO) param results of
   // true and false branches.
-  // The whole thing is encoded as an implicitly retunred if/then/else block.
+  // The whole thing is encoded as an implicitly returned if/then/else block.
   const mapper = mapSyntax(parent);
   const resultPair = node.params[1];
 

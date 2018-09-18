@@ -48,7 +48,7 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   });
   t.is(typeof wasm.instance.exports.run === "function", true);
   t.is(wasm.instance.exports.run(), 1);
-
+  return wasm;
   const view = new DataView(memory.buffer);
   // The two static strings returned here are stored in different module imports
   // so this is a pretty important thing to get right.

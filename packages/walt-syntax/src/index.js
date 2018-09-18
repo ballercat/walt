@@ -1,4 +1,6 @@
 // Main Program
+export { tokens } from './tokens';
+
 export const Program = 'Program';
 export const Keyword = 'Keyword';
 export const Export = 'Export';

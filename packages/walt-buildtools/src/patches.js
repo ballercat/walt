@@ -8,6 +8,9 @@ function inferImportTypes(ast, deps, compiler) {
   const patch = compiler.mapNode({
     Import(importNode, _) {
       const module = importNode.params[1];
+      if (!deps[module.value]) {
+        return importNode;
+      }
 
       return compiler.mapNode({
         Pair(pair, _) {

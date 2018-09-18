@@ -1,8 +1,9 @@
-import Syntax from 'walt-syntax';
+import grammar from './default-arguments.ne';
 import walkNode from 'walt-parser-tools/walk-node';
 
 export default function() {
   return {
+    grammar,
     semantics() {
       return {
         FunctionDeclaration: next => args => {
@@ -51,7 +52,9 @@ export default function() {
         FunctionCall: next => args => {
           const [call, context] = args;
           const { functions } = context;
-          const target = functions[call.value];
+          const [id, ...fnArgs] = call.params;
+
+          const target = functions[id.value];
 
           // Most likely a built-in funciton
           if (!target) {
@@ -60,10 +63,7 @@ export default function() {
 
           const expectedArguments =
             target.meta.FUNCTION_METADATA.argumentsCount;
-          const count =
-            call.params.length > 0 && call.params[0].Type === Syntax.Sequence
-              ? call.params[0].length
-              : call.params.length;
+          const count = fnArgs.length;
           const difference = expectedArguments - count;
           if (difference > 0) {
             return next([

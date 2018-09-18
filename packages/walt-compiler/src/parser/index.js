@@ -5,45 +5,88 @@
  */
 
 // @flow
-import Syntax from 'walt-syntax';
-import statement from './statement';
-import Context from './context';
-import Tokenizer from '../tokenizer';
-import tokenStream from '../utils/token-stream';
-import Stream from '../utils/stream';
+import invariant from 'invariant';
+import Syntax, { tokens } from 'walt-syntax';
+import moo from 'moo';
+// $FlowFixMe
+import coreGrammar from './grammar/grammar.ne';
+// $FlowFixMe
+import defaultArgsGrammar from '../syntax-sugar/default-arguments.ne';
+import { Parser, Grammar } from 'nearley';
+import helpers from './grammar/helpers';
+import nodes from './grammar/nodes';
 import type { NodeType } from '../flow/types';
 
-export default function parse(source: string): NodeType {
-  const stream = new Stream(source);
-  const tokenizer = new Tokenizer(stream);
-  const tokens = tokenStream(tokenizer.parse());
+type GrammarType = {
+  Lexer: any,
+  ParserRules: Object[],
+  ParserStart: string,
+};
+type MakeGrammar = () => GrammarType;
 
-  const ctx = new Context({
-    stream: tokens,
-    token: tokens.tokens[0],
-    lines: stream.lines,
-    filename: 'unknown.walt',
-  });
-
-  const node: NodeType = ctx.makeNode(
-    {
-      value: 'ROOT_NODE',
+function makeLexer() {
+  const mooLexer = moo.compile(tokens);
+  // Additional utility on top of the default moo lexer.
+  return {
+    current: null,
+    lines: [],
+    get line() {
+      return mooLexer.line;
     },
-    Syntax.Program
+    get col() {
+      return mooLexer.col;
+    },
+    save() {
+      return mooLexer.save();
+    },
+    reset(chunk, info) {
+      this.lines = chunk.split('\n');
+      return mooLexer.reset(chunk, info);
+    },
+    next() {
+      // It's a cruel and unusual punishment to implement comments with nearly
+      let token = mooLexer.next();
+      while (token && token.type === 'comment') {
+        token = mooLexer.next();
+      }
+      this.current = token;
+      return this.current;
+    },
+    formatError(token) {
+      return mooLexer.formatError(token);
+    },
+    has(name) {
+      return mooLexer.has(name);
+    },
+  };
+}
+
+export default function parse(
+  source: string,
+  grammarList: MakeGrammar[] = [coreGrammar, defaultArgsGrammar]
+): NodeType {
+  const context = {
+    lexer: makeLexer(),
+    nodes,
+    helpers,
+    Syntax,
+  };
+
+  const grammar = grammarList.slice(1).reduce((acc, value) => {
+    const extra = value.call(context);
+    return {
+      ...acc,
+      ParserRules: acc.ParserRules.concat(extra.ParserRules),
+    };
+  }, grammarList[0].call(context));
+
+  const parser = new Parser(Grammar.fromCompiled(grammar));
+  parser.feed(source);
+
+  invariant(
+    parser.results.length === 1,
+    `Ambiguous syntax number of productions: ${parser.results.length}`
   );
 
-  // No code, no problem, empty ast equals
-  // (module) ; the most basic wasm module
-  if (!ctx.stream || !ctx.stream.length) {
-    return node;
-  }
-
-  while (ctx.stream.peek()) {
-    const child = statement(ctx);
-    if (child) {
-      node.params.push(child);
-    }
-  }
-
-  return node;
+  return parser.results[0];
 }

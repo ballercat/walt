@@ -2,6 +2,9 @@
 "use strict";
 
 function getValue(node) {
+  if (typeof value !== 'string') {
+    return node.value;
+  }
   if (node.value.length < 60) {
     return node.value;
   }

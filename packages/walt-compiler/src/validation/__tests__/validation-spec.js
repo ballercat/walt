@@ -14,7 +14,7 @@ test('ast must have metadata attached', t => {
   t.snapshot(error);
 });
 
-test.skip('typos throw', t => {
+test('typos throw', t => {
   const error = t.throws(() => parseAndValidate('expost const x: i32;'));
   t.snapshot(error, true);
 });

@@ -12,7 +12,7 @@ test('default arguments', t => {
 
   export function test(): i32 {
     const x: i32 = add(2);
-    const y: i32 = extern(1);
+    const y: i32 = extern(1, 0);
     return x + y;
   }`;
 
@@ -44,7 +44,7 @@ test('function pointer', t => {
 test('functions', t => {
   const walt = `
   // For pointers
-  const table: Table<{ element: anyfunc, initial: 10, max: 10 }>;
+  const table: Table<{ element: 'anyfunc', initial: 10, max: 10 }>;
   // For object operations
   const memory: Memory<{ initial: 1 }>;
 
@@ -83,7 +83,7 @@ test('functions', t => {
     arr[0] = 2;
     arr[4] = 3;
     return addArray(arr, 0, 4);
-  };
+  }
 `;
   t.throws(() => getIR('function test() { return y; }'));
   const wasm = getIR(walt);
@@ -102,7 +102,7 @@ test('functions', t => {
 
 test('closures', t => {
   const source = `
-const table: Table<{ element: anyfunc, initial: 5 }>;
+const table: Table<{ element: 'anyfunc', initial: 5 }>;
 type Func = (i32, i32) => i32;
 type Simple = () => i32;
 type Void = () => void;
@@ -114,24 +114,22 @@ type VoidClosure = Lambda<Void>;
 type ArgsOnlyClosure = Lambda<ArgsOnly>;
 
 function getSimpleLambda(): SimpleClosure {
-  let x: i32 = 0;
+  let x: i32;
   const z: i64 = (1 : i64);
   return (): i32 => {
-    // assignment here, we need to cover regular assignment in closures
     let y: i32 = 0;
-    y = z: i32;
+    y = z : i32;
     x += y;
     return x;
-  }
+  };
 }
-
 function getLambda(): Closure {
   // close over two locals
   let x: i32 = 0;
   return (xx: i32, yy: i32): i32 => {
     x += yy;
     return x + xx;
-  }
+  };
 }
 
 // Closures below are not useful, but necessary to cover all scenarios
@@ -139,19 +137,19 @@ function getVoidLamba(): VoidClosure {
   let x: i32 = 0;
   return () => {
     x += 1;
-  }
+  };
 }
 
 function getArgsOnlyLambda(): ArgsOnlyClosure {
   let x: i32 = 0;
   return (z: i32, y: i32) => {
     x+= z + y;
-  }
+  };
 }
 
 export function test(): i32 {
   const closure: Closure = getLambda();
-  // // should be 5
+  // should be 5
   const x: i32 = closure(2, 3);
 
   const closure2: SimpleClosure = getSimpleLambda();
@@ -163,6 +161,7 @@ export function test(): i32 {
   return x + y;
 }
 `;
+
   return WebAssembly.instantiate(closurePlugin())
     .then(closure =>
       WebAssembly.instantiate(
@@ -174,6 +173,7 @@ export function test(): i32 {
     )
     .then(result => {
       const fn = result.instance.exports.test;
-      t.is(fn(), 7);
+
+      t.is(fn(2, 2), 7);
     });
 });

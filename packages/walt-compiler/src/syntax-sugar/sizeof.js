@@ -22,7 +22,7 @@ export default function sizeofPlugin() {
           }
 
           const { scopes, userTypes, functions } = context;
-          const [target] = sizeof.params;
+          const [, target] = sizeof.params;
           const ref = find(scopes, target.value);
           const { type = '' } = ref || {};
           const userType = userTypes[target.value] || userTypes[type];

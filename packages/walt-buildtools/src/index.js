@@ -42,7 +42,8 @@ function parseImports(ast, compiler) {
           imports[module.value] = Array.from(
             new Set(imports[module.value].concat(identifier.value))
           );
-          if (type === "Memory") {
+
+          if (type.value === "Memory") {
             hasMemory = true;
           }
         },
@@ -114,9 +115,10 @@ function assemble(tree, options, api) {
       // Use global statics object
       statics = options.linker.statics;
     }
+
     const code = api.generator(
       mod.ast,
-      Object.assign({}, options, { linker: { statics } })
+      Object.assign({}, options, { filename: mod.filepath.split('/').slice(-1)[0], linker: { statics } })
     );
     const wasm = api.emitter(code, options).buffer();
 
@@ -133,6 +135,7 @@ function compile(filepath, api) {
     version: 0x1,
     filename,
     filepath,
+    encodeNames: true
   };
 
   const tree = buildTree(filepath, api);

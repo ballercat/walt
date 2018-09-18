@@ -140,6 +140,9 @@ export default function Core() {
           const { type } = params[0];
           return { ...inputNode, params, type };
         },
+        TernaryExpression: next => ([node, context]) => {
+          return next([balanceTypesInMathExpression(node), context]);
+        },
       };
     },
   };

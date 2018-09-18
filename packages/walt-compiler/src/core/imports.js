@@ -70,7 +70,7 @@ export default function Imports() {
               };
             }
 
-            if (!['Table', 'Memory'].includes(typeNode.type)) {
+            if (!['Table', 'Memory'].includes(typeNode.value)) {
               const scope = current(context.scopes);
               const index = scopeIndex(scope, identifierNode.value);
               add(context.scopes, identifierNode.value, {
