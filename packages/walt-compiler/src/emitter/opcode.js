@@ -239,7 +239,7 @@ export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
 };
 
 /**
- * Return opcode mapping to the operator. Signed result is always prefered
+ * Return opcode mapping to the operator. Signed result is always preferred
  */
 export const opcodeFromOperator = ({
   type,

@@ -50,7 +50,7 @@ class Stream {
     return char === '';
   }
 
-  // Is the charater a whitespace
+  // Is the character a whitespace
   static whitespace(char: string): boolean {
     return (
       char === '\n' ||

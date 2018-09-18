@@ -32,7 +32,7 @@ export {
 };
 export const VERSION = '0.10.0';
 
-// Used for deugging purposes
+// Used for debugging purposes
 export const getIR = (
   source: string,
   {

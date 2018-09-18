@@ -19,7 +19,7 @@ export default function() {
             },
           })(argumentsNode);
 
-          // Attach any default arguments found to the function node direclty,
+          // Attach any default arguments found to the function node directly,
           // proceed with the rest of the parsers
           return next([
             {
@@ -45,7 +45,7 @@ export default function() {
           //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
           const [pair] = node.params;
 
-          // Short circuit the parsers since it does not make sence to process
+          // Short circuit the parsers since it does not make sense to process
           // assignment anymore. Instead parse the Pair, which is the argument.
           return transform([pair, context]);
         },
@@ -56,7 +56,7 @@ export default function() {
 
           const target = functions[id.value];
 
-          // Most likely a built-in funciton
+          // Most likely a built-in function
           if (!target) {
             return next(args);
           }
