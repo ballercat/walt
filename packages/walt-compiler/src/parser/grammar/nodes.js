@@ -207,27 +207,6 @@ export default function factory(lexer) {
     );
   };
 
-  const comment = d => {
-    return extendNode(
-      {
-        value: d[0].value,
-        params: [],
-      },
-      node(Syntax.Comment)(d)
-    );
-  };
-
-  const boolean = d => {
-    return extendNode(
-      {
-        value: d[0].value,
-        type: 'i32',
-        params: [],
-      },
-      node(Syntax.Boolean)(d)
-    );
-  };
-
   return {
     node,
     binary,
@@ -274,9 +253,7 @@ export default function factory(lexer) {
       );
     },
     typedef,
-    comment,
     voidFun,
-    boolean,
     assignment(d, value) {
       let Type = Syntax.Assignment;
       if (d[0] && d[0].Type === Syntax.ArraySubscript) {

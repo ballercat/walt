@@ -56,7 +56,7 @@ export default function() {
       // If the variable is declared but has no initializer we simply nullify the
       // node as there is nothing else to do here.
       if (!parsed.params.length) {
-        return null;
+        return { ...parsed, Type: Syntax.Noop };
       }
 
       const [lhs] = parsed.params;

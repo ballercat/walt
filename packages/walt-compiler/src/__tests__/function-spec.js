@@ -114,7 +114,7 @@ type VoidClosure = Lambda<Void>;
 type ArgsOnlyClosure = Lambda<ArgsOnly>;
 
 function getSimpleLambda(): SimpleClosure {
-  let x: i32 = 0;
+  let x: i32;
   const z: i64 = (1 : i64);
   return (): i32 => {
     let y: i32 = 0;

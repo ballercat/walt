@@ -24,10 +24,8 @@
     string,
     char,
     typedef,
-    comment,
     voidFun,
     type,
-    boolean,
     assignment,
     forLoop,
     whileLoop,
@@ -246,9 +244,9 @@ Identifier -> %identifier      {% identifier %}
 Number -> %number                {% constant %}
 StringLiteral -> %string       {% string %}
 CharacterLiteral -> %char      {% char %}
-Boolean ->
-    "true"  {% boolean %}
-  | "false" {% boolean %}
+# Boolean ->
+#     "true"  {% boolean %}
+#   | "false" {% boolean %}
 
 word ->
     [a-zA-Z_]                  {% id %}
@@ -258,9 +256,9 @@ digit ->
   | digit [0-9]                {% add %}
 
 # FIXME: empty comment lines throw syntax errors if we attempt to parse them
-Comment ->
-    %comment            {% comment %}
-  | %comment _ Comment  {% comment %}
+# Comment ->
+#     %comment            {% comment %}
+#   | %comment _ Comment  {% comment %}
 
 # Punctuators
 SEPARATOR -> _ ";"      {% nuller %}

@@ -116,6 +116,7 @@
     "exclude": [
       "src/**/print-node.js",
       "src/**/__tests__/*.js",
+      "src/**/grammar.js",
       "dist/*.js"
     ]
   }
