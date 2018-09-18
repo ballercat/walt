@@ -1,7 +1,7 @@
 /**
  * Core language plugin
  *
- * The parsers in here very closly mirror the underlying WebAssembly structure
+ * The parsers in here very closely mirror the underlying WebAssembly structure
  * and are used as the core language for every feature built on top.
  */
 import Syntax from 'walt-syntax';

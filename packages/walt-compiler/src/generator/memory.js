@@ -7,7 +7,7 @@ const generateMemory = (node: NodeType): IntermediateMemoryType => {
   const memory = { max: 0, initial: 0 };
   walkNode({
     [Syntax.Pair]: ({ params }) => {
-      // This could procude garbage values but that is a fault of the source code
+      // This could produce garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
       memory[key] = parseInt(value);
     },
