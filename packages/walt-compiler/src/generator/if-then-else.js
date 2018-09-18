@@ -22,7 +22,7 @@ const generateIf: GeneratorType = (node, parent) => {
     // implicit 'then' block
     ...[thenBlock].map(mapper).reduce(mergeBlock, []),
 
-    // fllowed by the optional 'else'
+    // followed by the optional 'else'
     ...restParams.map(mapper).reduce(mergeBlock, []),
     { kind: opcode.End, params: [] },
   ];

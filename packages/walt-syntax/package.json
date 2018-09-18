@@ -1,11 +1,13 @@
 {
   "name": "walt-syntax",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Walt Syntax",
   "main": "dist/walt-syntax.js",
   "scripts": {
     "test": "ava",
-    "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js"
+    "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
+    "preversion": "npm run build",
+    "lint": "eslint"
   },
   "repository": {
     "type": "git",
@@ -26,12 +28,14 @@
   "homepage": "https://github.com/ballercat/walt/tree/master/packages/walt-syntax/",
   "devDependencies": {
     "ava": "0.24.0",
+    "babel-eslint": "^9.0.0",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
     "cross-env": "^5.2.0",
-    "eslint": "^5.0.0",
+    "eslint": "^5.4.0",
     "husky": "0.14.3",
     "lint-staged": "6.0.0",
+    "moo": "^0.4.3",
     "prettier": "1.9.2",
     "rollup": "^0.64.1"
   },

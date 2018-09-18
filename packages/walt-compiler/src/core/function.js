@@ -1,6 +1,6 @@
 /* Core function plugin
  *
- * This plugin only handles the basics of functions like vanilla funciton calls,
+ * This plugin only handles the basics of functions like vanilla function calls,
  * arguments and return statements
  */
 import Syntax from 'walt-syntax';
@@ -56,7 +56,7 @@ export default function coreFunctionPlugin() {
           return ref;
         },
         FunctionResult: _ignore => ([result, context]) => {
-          // Function statements are sybligs of FuncionResult so we need to mutate
+          // Function statements are sybligs of FunctionResult so we need to mutate
           // the parent context (FunctionDeclaration)
           context.result = result.type;
           return result;
@@ -103,6 +103,7 @@ export default function coreFunctionPlugin() {
                   ? functions[call.value].type
                   : null,
               meta: { [FUNCTION_INDEX]: index },
+              params: call.params.slice(1),
             },
             context,
           ]);
@@ -112,7 +113,7 @@ export default function coreFunctionPlugin() {
             transform([p, context])
           );
           const { result } = context;
-          // Consants as return values need to be assigned a correct type
+          // Constants as return values need to be assigned a correct type
           // (matching the result expected)
           if (
             expression != null &&

@@ -1,4 +1,5 @@
-import { expressionFragment } from '../../parser/fragment';
+import { fragment } from '../../parser/fragment';
+
 import test from 'ava';
 import { map } from 'walt-parser-tools/map-node';
 import { combineParsers } from '..';
@@ -83,7 +84,7 @@ test('plugin system', t => {
   const plugins = [base, plugin1, plugin2];
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
-  const ast = expressionFragment('x + 2;');
+  const ast = fragment('x + 2');
 
   const node = map(parsers)([ast]);
 
@@ -112,7 +113,7 @@ test('plugin invariants', t => {
     }),
   });
 
-  const ast = expressionFragment('x + 2;');
+  const ast = fragment('x + 2');
   const parsers = combineParsers([plugin].map(p => p().semantics()));
 
   t.throws(() => map(parsers)([ast]));

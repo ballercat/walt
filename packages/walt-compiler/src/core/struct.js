@@ -2,6 +2,7 @@ import Syntax from 'walt-syntax';
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
+import { extendNode } from '../utils/extend-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
 
 export const getByteOffsetsAndSize = objectLiteralNode => {
@@ -58,7 +59,6 @@ export default function Struct() {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
             node.params[0]
           );
-
           const struct = {
             ...node,
             meta: {
@@ -71,6 +71,25 @@ export default function Struct() {
 
           userTypes[struct.value] = struct;
           return struct;
+        },
+        FunctionResult: next => (args, transform) => {
+          const [node, context] = args;
+          const { userTypes } = context;
+          if (!userTypes[node.type]) {
+            return next(args);
+          }
+
+          return next([
+            extendNode(
+              {
+                type: 'i32',
+                meta: { ALIAS: node.type },
+                params: node.params.map(p => transform([p, context])),
+              },
+              node
+            ),
+            context,
+          ]);
         },
         Identifier: next => args => {
           const [node, context] = args;
@@ -94,7 +113,7 @@ export default function Struct() {
           const params = node.params.map(p => transform([p, context]));
           const [identifier, field] = params;
           const ref = find(scopes, identifier.value);
-          const userType = userTypes[ref.type];
+          const userType = ref && userTypes[ref.type];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];

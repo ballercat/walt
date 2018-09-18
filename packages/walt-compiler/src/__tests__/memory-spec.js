@@ -9,7 +9,7 @@ const outputIs = (t, value) => result =>
 test('memory can be defined', t =>
   compileAndRun(
     `
-  const memory: Memory = { 'initial': 2, max: 2 };
+  const memory: Memory<{ initial: 2, max: 2 }>;
 
   export function test(): i32 {
     let x: i32[] = 0;

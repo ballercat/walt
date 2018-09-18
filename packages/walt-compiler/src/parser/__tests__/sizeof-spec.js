@@ -32,6 +32,7 @@ test('type sizes', t => {
   const getWasm = compose(debug, getIR);
   const wasm = getWasm(walt);
   t.snapshot(wasm);
+
   return WebAssembly.instantiate(compile(walt)).then(result => {
     t.is(result.instance.exports._32BitSizes(), 8, '32 bit sizes combined');
     t.is(result.instance.exports._64BitSizes(), 16, '64 bit sizes combined');

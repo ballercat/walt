@@ -4,7 +4,108 @@
   (factory((global['walt-syntax'] = {})));
 }(this, (function (exports) { 'use strict';
 
+  const keyword = [
+    // EcmaScript
+    'break',
+    'if',
+    'else',
+    'import',
+    'as',
+    'from',
+    'export',
+    'return',
+    'switch',
+    'case',
+    'default',
+    'const',
+    'let',
+    'for',
+    'continue',
+    'do',
+    'while',
+    'function',
+
+    // s-expression
+    'global',
+    'module',
+    'type',
+    'lambda',
+  ];
+  const punctuator = [
+    '+',
+    '++',
+    '-',
+    '--',
+    '>>',
+    '>>>',
+    '<<',
+    '=',
+    '==',
+    '+=',
+    '-=',
+    '=>',
+    '<=',
+    '>=',
+    '!=',
+    '%',
+    '*',
+    '/',
+    '^',
+    '&',
+    '~',
+    '|',
+    '!',
+    '**',
+    ':',
+    '(',
+    ')',
+    '.',
+    '{',
+    '}',
+    ',',
+    '[',
+    ']',
+    ';',
+    '>',
+    '<',
+    '?',
+    '||',
+    '&&',
+    '{',
+    '}',
+    '...',
+  ];
+
+  const type = ['i32', 'i64', 'f32', 'f64', 'bool'];
+
+  const tokens = {
+    whitespace: /[ \t]+/,
+    comment: [{ match: /\/\/.*?$/ }, { match: /\/\*.*?\*\// }],
+    number: [
+      { match: /0[xX][0-9a-fA-F]+/ },
+      { match: /0[oO][0-9]+/ },
+      { match: /0[bB][01]+/ },
+      { match: /(?:[0-9]+(?:\.[0-9]+)?e-?[0-9]+)/ },
+      { match: /[0-9]+\.[0-9]+|[0-9]+/ },
+    ],
+    char: [
+      { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])'/, value: x => x.slice(1, -1) },
+    ],
+    string: [
+      { match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) },
+      { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) },
+      { match: /`(?:\\['\\bfnrtv0]|[^'\\])*?`/, value: x => x.slice(1, -1) },
+    ],
+    identifier: {
+      match: /[A-Za-z_$][A-Za-z0-9_$]*/,
+      keywords: { keyword, type },
+    },
+    punctuator,
+    newline: { match: /\n/, lineBreaks: true },
+  };
+
   // Main Program
+
   const Program = 'Program';
   const Keyword = 'Keyword';
   const Export = 'Export';
@@ -240,6 +341,7 @@
   exports.builtinTypes = builtinTypes;
   exports.statements = statements;
   exports.default = index;
+  exports.tokens = tokens;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

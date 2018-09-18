@@ -1,23 +1,29 @@
 import Syntax from 'walt-syntax';
+import { extendNode } from '../utils/extend-node';
 
 export default function nativePlugin() {
   return {
     semantics() {
       return {
-        ArraySubscript: next => (args, transform) => {
+        FunctionCall: next => (args, transform) => {
           const [node, context] = args;
-          const [identifier, field] = node.params;
+          const [id, ...fnArgs] = node.params;
           if (
-            identifier.Type === Syntax.Type &&
-            field.Type === Syntax.FunctionCall
+            id.Type === Syntax.ArraySubscript &&
+            id.params[0] &&
+            id.params[0].Type === Syntax.Type
           ) {
-            return {
-              ...node,
-              Type: Syntax.NativeMethod,
-              type: identifier.value,
-              value: identifier.value + '.' + field.value,
-              params: field.params.map(p => transform([p, context])),
-            };
+            const [type, method] = id.params;
+
+            return extendNode(
+              {
+                value: `${type.value}.${method.value}`,
+                type: type.value,
+                params: fnArgs.map(p => transform([p, context])),
+                Type: Syntax.NativeMethod,
+              },
+              node
+            );
           }
 
           return next(args);

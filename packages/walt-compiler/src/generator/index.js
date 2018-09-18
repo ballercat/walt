@@ -29,7 +29,6 @@ import type {
   IntermediateOpcodeType,
   IntermediateVariableType,
 } from './flow/types';
-
 const DATA_SECTION_HEADER_SIZE = 4;
 
 export const generateCode = (
@@ -132,7 +131,6 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
         ...node,
         meta: { ...node.meta, [TYPE_INDEX]: typeIndex },
       };
-
       typeMap[node.value] = { typeIndex, typeNode };
       return typeNode;
     },
@@ -140,10 +138,14 @@ function generator(ast: NodeType, config: ConfigType): ProgramType {
     mapNode({
       [Syntax.Import]: (node, _) => node,
       [Syntax.StringLiteral]: (node, _ignore) => {
-        if (Object.keys(statics).length === 0) {
+        const { value } = node;
+
+        // Don't replace any statics which are not mapped. For example table
+        // definitions have StringLiterals, but these literals do not get converted.
+        if (staticsMap[value] == null) {
           return node;
         }
-        const { value } = node;
+
         return {
           ...node,
           value: String(staticsMap[value]),

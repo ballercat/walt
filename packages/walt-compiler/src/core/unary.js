@@ -1,5 +1,5 @@
 import Syntax from 'walt-syntax';
-import { expressionFragment as fragment } from '../parser/fragment';
+import { fragment } from '../parser/fragment';
 
 const shifts = {
   i64: 63,
@@ -23,8 +23,8 @@ export default function() {
               const shift = shifts[lhs.type];
               return transform([
                 fragment(
-                  `(((${String(lhs)} >> ${shift}) | ((~${String(
-                    lhs
+                  `(((${String(lhs.value)} >> ${shift}) | ((~${String(
+                    lhs.value
                   )} + 1) >> ${shift})) + 1)`
                 ),
                 context,
@@ -36,7 +36,7 @@ export default function() {
                 ? '0xffffffffffff'
                 : '0xffffff';
               return transform([
-                fragment(`(${String(lhs)} ^ ${mask})`),
+                fragment(`(${String(lhs.value)} ^ ${mask})`),
                 context,
               ]);
             default:

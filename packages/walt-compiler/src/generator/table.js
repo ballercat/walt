@@ -8,7 +8,7 @@ export default function generateMemory(node: NodeType): IntermediateTableType {
 
   walkNode({
     [Syntax.Pair]: ({ params }) => {
-      // This could procude garbage values but that is a fault of the source code
+      // This could produce garbage values but that is a fault of the source code
       const [{ value: key }, { value }] = params;
       if (key === 'initial') {
         table.initial = parseInt(value);

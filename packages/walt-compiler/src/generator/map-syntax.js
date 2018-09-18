@@ -11,7 +11,6 @@ import generateArraySubscript from './array-subscript';
 import generateAssignment from './assignment';
 import generateMemoryAssignment from './memory-assignment';
 import generateLoop from './loop';
-import generateSequence from './sequence';
 import generateTypecast from './typecast';
 import generateBreak from './break';
 import generateNoop from './noop';
@@ -50,8 +49,6 @@ export const syntaxMap: { [string]: GeneratorType } = {
   // Loops
   [Syntax.Loop]: generateLoop,
   [Syntax.Break]: generateBreak,
-  // Comma separated lists
-  [Syntax.Sequence]: generateSequence,
   // Typecast
   [Syntax.TypeCast]: generateTypecast,
   [Syntax.Noop]: generateNoop,

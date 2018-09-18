@@ -5,11 +5,7 @@
  *
  */
 import Syntax from 'walt-syntax';
-import {
-  parser,
-  expressionFragment as expression,
-  statementFragment as statement,
-} from 'walt-compiler';
+import { parser, fragment } from 'walt-compiler';
 import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from 'walt-parser-tools/has-node';
 import walkNode from 'walt-parser-tools/walk-node';
@@ -69,12 +65,12 @@ export function plugin() {
       // If the variable is declared but has no initializer we simply nullify the
       // node as there is nothing else to do here.
       if (!parsed.params.length) {
-        return null;
+        return { ...parsed, Type: Syntax.Noop };
       }
 
       const [lhs] = parsed.params;
       const ref = environment[parsed.value];
-      const call = expression(
+      const call = fragment(
         `__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`
       );
       return transform([
@@ -86,7 +82,15 @@ export function plugin() {
       ]);
     };
 
-    const closureImportsHeader = parser(`
+    return {
+      Program: next => args => {
+        const [program, context] = args;
+
+        if (!hasNode(Syntax.Closure, program)) {
+          return next(args);
+        }
+
+        const closureImportsHeader = parser(`
       // Start Closure Imports Header
       import {
         __closure_malloc: ClosureGeti32,
@@ -104,22 +108,12 @@ export function plugin() {
       type ClosureGeti32 = (i32) => i32;
       type ClosureGetf32 = (i32) => f32;
       type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64;
-      type ClosureSeti32 = (i32, i32) => void;
+      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
       type ClosureSetf32 = (i32, f32) => void;
       type ClosureSeti64 = (i32, i64) => void;
       type ClosureSetf64 = (i32, f64) => void;
       // End Closure Imports Header
     `).params;
-
-    return {
-      Program: next => args => {
-        const [program, context] = args;
-
-        if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
-        }
-
         const closures = [];
         const parsedProgram = next([
           {
@@ -161,7 +155,7 @@ export function plugin() {
                 // Parens are necessary around a fragment as it has to be a complete
                 // expression, a ; would also likely work and be discarded but that would
                 // be even odder in the context of function arguments
-                params: [expression('(__env_ptr : i32)'), ...fnArgs.params],
+                params: [fragment('(__env_ptr : i32)'), ...fnArgs.params],
               },
               result,
               ...rest,
@@ -176,7 +170,7 @@ export function plugin() {
         context.closures.push(real);
 
         return transform([
-          expression(`(${real.value} | ((__env_ptr : i64) << 32)))`),
+          fragment(`(${real.value} | ((__env_ptr : i64) << 32))`),
           context,
         ]);
       },
@@ -218,7 +212,7 @@ export function plugin() {
 
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
-        const injectedEnv = statement('const __env_ptr : i32 = 0;');
+        const injectedEnv = fragment('const __env_ptr : i32 = 0');
         const [fnArgs, result, ...rest] = node.params;
 
         const closureContext = {
@@ -236,7 +230,7 @@ export function plugin() {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              statement(`const __env_ptr : i32 = __closure_malloc(${size});`),
+              fragment(`const __env_ptr : i32 = __closure_malloc(${size})`),
               { ...context, scopes: enter(context.scopes, LOCAL_INDEX) },
             ]);
           }
@@ -251,7 +245,8 @@ export function plugin() {
       FunctionResult: next => args => {
         const [node, context] = args;
         const { types } = context;
-        if (types[node.value] && types[node.value].meta.CLOSURE_TYPE) {
+
+        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
           return next([
             {
               ...node,
@@ -283,7 +278,7 @@ export function plugin() {
 
         const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
 
-        const call = expression(`__closure_set_${type}(__env_ptr + ${offset})`);
+        const call = fragment(`__closure_set_${type}(__env_ptr + ${offset})`);
         return transform([
           {
             ...call,
@@ -303,7 +298,7 @@ export function plugin() {
         const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
 
         return transform([
-          expression(`__closure_get_${type}(__env_ptr + ${offset})`),
+          fragment(`__closure_get_${type}(__env_ptr + ${offset})`),
           context,
         ]);
       },
@@ -316,15 +311,15 @@ export function plugin() {
           // possible syntax so we need to manually structure an indirect call node
 
           const params = [
-            expression(`((${local.value} >> 32) : i32)`),
-            ...call.params,
-            expression(`(${local.value} : i32)`),
+            fragment(`((${local.value} >> 32) : i32)`),
+            ...call.params.slice(1),
+            fragment(`(${local.value} : i32)`),
           ].map(p => transform([p, context]));
 
           const typedef = types[local.meta.ALIAS];
           const typeIndex = Object.keys(types).indexOf(typedef.value);
 
-          return {
+          const icall = {
             ...call,
             meta: {
               ...local.meta,
@@ -335,6 +330,8 @@ export function plugin() {
             params,
             Type: Syntax.IndirectFunctionCall,
           };
+
+          return icall;
         }
 
         return next(args);

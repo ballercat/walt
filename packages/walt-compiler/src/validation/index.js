@@ -1,15 +1,10 @@
 // @flow
 // AST Validator
-import Syntax, { statements as ALL_POSSIBLE_STATEMENTS } from 'walt-syntax';
+import Syntax from 'walt-syntax';
 import walkNode from 'walt-parser-tools/walk-node';
 import error from '../utils/generate-error';
 import { isBuiltinType } from '../generator/utils';
-import {
-  GLOBAL_INDEX,
-  TYPE_CONST,
-  ALIAS,
-  AST_METADATA,
-} from '../semantics/metadata';
+import { TYPE_CONST, ALIAS, AST_METADATA } from '../semantics/metadata';
 import { typeWeight } from '../types';
 import type { NodeType } from '../flow/types';
 
@@ -33,22 +28,6 @@ export default function validate(
   const problems = [];
 
   walkNode({
-    [Syntax.Export]: _export => {
-      const target = _export.params[0];
-      const [start, end] = target.range;
-      const globalIndex = target.meta[GLOBAL_INDEX];
-      if (globalIndex != null && !target.params.length) {
-        problems.push(
-          error(
-            'Global exports must have a value',
-            '',
-            { start, end },
-            filename,
-            GLOBAL_LABEL
-          )
-        );
-      }
-    },
     [Syntax.Import]: (importNode, _) => {
       walkNode({
         [Syntax.BinaryExpression]: (binary, __) => {
@@ -99,34 +78,7 @@ export default function validate(
     [Syntax.ImmutableDeclaration]: (_, __) => {},
     [Syntax.Declaration]: (decl, _validator) => {
       const [start, end] = decl.range;
-      const [initializer] = decl.params;
 
-      if (decl.meta[TYPE_CONST]) {
-        const validTypes = [Syntax.Constant, Syntax.StringLiteral];
-        if (initializer != null && !validTypes.includes(initializer.Type)) {
-          problems.push(
-            error(
-              'Global Constants must be initialized with a Number literal.',
-              'WebAssembly does not allow for non number literal constant initializers.',
-              { start, end },
-              filename,
-              GLOBAL_LABEL
-            )
-          );
-        }
-
-        if (initializer == null) {
-          problems.push(
-            error(
-              'Constant declaration without an initializer.',
-              'Global constants must be initialized with a Number literal.',
-              { start, end },
-              filename,
-              GLOBAL_LABEL
-            )
-          );
-        }
-      }
       if (
         !isBuiltinType(decl.type) &&
         !types[decl.type] &&
@@ -148,34 +100,6 @@ export default function validate(
       walkNode({
         [Syntax.Declaration]: (node, _validator) => {
           const [start, end] = node.range;
-          const [initializer] = node.params;
-          if (
-            initializer != null &&
-            ALL_POSSIBLE_STATEMENTS[initializer.Type] != null
-          ) {
-            problems.push(
-              error(
-                `Unexpected statement ${initializer.Type}`,
-                'Attempting to assign a statement to a variable. Did you miss a semicolon(;)?',
-                { start, end },
-                filename,
-                functionName
-              )
-            );
-          }
-          if (node.meta[TYPE_CONST]) {
-            if (initializer == null) {
-              problems.push(
-                error(
-                  'Constant declaration without an initializer.',
-                  'Local Constants must be initialized with an expression.',
-                  { start, end },
-                  filename,
-                  functionName
-                )
-              );
-            }
-          }
 
           if (
             !isBuiltinType(node.type) &&
@@ -197,20 +121,6 @@ export default function validate(
         [Syntax.Assignment]: node => {
           const [identifier] = node.params;
           const [start, end] = node.range;
-          const statement = node.params.find(
-            param => ALL_POSSIBLE_STATEMENTS[param.Type] != null
-          );
-          if (statement != null) {
-            problems.push(
-              error(
-                'Unexpected statement in assignment',
-                'Statments cannot be used in assignment expressions. Did you miss a semicolon?',
-                { start: statement.range[0], end: statement.range[1] },
-                filename,
-                functionName
-              )
-            );
-          }
 
           const isConst = identifier.meta[TYPE_CONST];
           if (isConst) {

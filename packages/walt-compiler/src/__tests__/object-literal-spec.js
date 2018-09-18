@@ -1,9 +1,9 @@
 import test from 'ava';
 import { getIR, debug } from '..';
 
-test.only('objects', t => {
+test('objects', t => {
   const walt = `
-  const memory: Memory<{ initial: 1 }>;
+  const memory: Memory = { initial: 1 };
   type TestType = { x: i32, y: i32, z: i32 };
   type MixedType = { x: i32, y: f32, z: i64, w: f64 };
 

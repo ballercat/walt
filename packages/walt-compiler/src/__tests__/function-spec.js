@@ -11,7 +11,7 @@ test('default arguments', t => {
 
   export function test(): i32 {
     const x: i32 = add(2);
-    const y: i32 = extern(1);
+    const y: i32 = extern(1, 0);
     return x + y;
   }`;
 
@@ -43,7 +43,7 @@ test('function pointer', t => {
 test('functions', t => {
   const walt = `
   // For pointers
-  const table: Table<{ element: anyfunc, initial: 10, max: 10 }>;
+  const table: Table<{ element: 'anyfunc', initial: 10, max: 10 }>;
   // For object operations
   const memory: Memory<{ initial: 1 }>;
 
@@ -82,7 +82,7 @@ test('functions', t => {
     arr[0] = 2;
     arr[4] = 3;
     return addArray(arr, 0, 4);
-  };
+  }
 `;
   t.throws(() => getIR('function test() { return y; }'));
   const wasm = getIR(walt);

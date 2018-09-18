@@ -14,7 +14,7 @@ import prettyPrintNode from './utils/print-node';
 import { VERSION_1 } from './emitter/preamble';
 import type { ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import { expressionFragment, statementFragment } from './parser/fragment';
+import { fragment } from './parser/fragment';
 
 export {
   parser,
@@ -28,12 +28,11 @@ export {
   stringDecoder,
   walkNode,
   mapNode,
-  expressionFragment,
-  statementFragment,
+  fragment,
 };
-export const VERSION = '0.9.4';
+export const VERSION = '0.11.0';
 
-// Used for deugging purposes
+// Used for debugging purposes
 export const getIR = (
   source: string,
   {

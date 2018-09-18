@@ -1,5 +1,5 @@
 import test from 'ava';
-import { statementFragment } from '../parser/fragment';
+import parser from '../parser';
 import generateImportFromNode from '../generator/import';
 import compile from '..';
 
@@ -70,8 +70,8 @@ test('function pointers', t =>
   }));
 
 test('import expression generator', t => {
-  const node = statementFragment(
+  const node = parser(
     "import { field: i32, foo: CustomType, bar: SomeOtherType } from 'env';"
   );
-  t.snapshot(generateImportFromNode(node));
+  t.snapshot(generateImportFromNode(node.params[0]));
 });

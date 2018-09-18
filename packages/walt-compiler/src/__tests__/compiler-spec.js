@@ -58,6 +58,7 @@ test('bool types', t => {
       return bar() || foo();
     }
   `;
+
   return compileAndRun(source).then(({ instance }) => {
     t.is(instance.exports.test(), 1);
   });
