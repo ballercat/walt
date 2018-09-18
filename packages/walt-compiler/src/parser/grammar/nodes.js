@@ -72,10 +72,6 @@ export default function factory(lexer) {
     );
   };
 
-  const statement = d => {
-    return d.filter(nonEmpty);
-  };
-
   const unary = ([operator, target]) => {
     let params = [target];
 
@@ -212,7 +208,6 @@ export default function factory(lexer) {
     binary,
     constant,
     identifier,
-    statement,
     unary,
     ternary,
     subscript,

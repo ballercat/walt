@@ -16,7 +16,7 @@ export const flatten = d =>
     return acc.concat(v);
   }, []);
 
-export const drop = (d = []) => {
+export const drop = d => {
   return d.filter(nonEmpty);
 };
 
