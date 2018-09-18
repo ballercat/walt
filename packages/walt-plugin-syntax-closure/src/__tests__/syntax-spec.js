@@ -4,7 +4,7 @@ import { plugin, dependency, DEPENDENCY_NAME } from '..';
 
 test('closures', t => {
   const source = `
-const table: Table<{ element: anyfunc, initial: 5 }>;
+const table: Table<{ element: 'anyfunc', initial: 5 }>;
 type Func = (i32, i32) => i32;
 type Simple = () => i32;
 type Void = () => void;
@@ -24,7 +24,7 @@ function getSimpleLambda(): SimpleClosure {
     y = z: i32;
     x += y;
     return x;
-  }
+  };
 }
 
 function getLambda(): Closure {
@@ -33,7 +33,7 @@ function getLambda(): Closure {
   return (xx: i32, yy: i32): i32 => {
     x += yy;
     return x + xx;
-  }
+  };
 }
 
 // Closures below are not useful, but necessary to cover all scenarios
@@ -41,14 +41,14 @@ function getVoidLamba(): VoidClosure {
   let x: i32 = 0;
   return () => {
     x += 1;
-  }
+  };
 }
 
 function getArgsOnlyLambda(): ArgsOnlyClosure {
   let x: i32 = 0;
   return (z: i32, y: i32) => {
     x+= z + y;
-  }
+  };
 }
 
 export function test(): i32 {
