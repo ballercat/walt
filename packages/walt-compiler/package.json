@@ -45,7 +45,7 @@
     "moo": "^0.4.3",
     "nearley": "^2.15.1",
     "walt-parser-tools": "^0.1.5",
-    "walt-syntax": "^0.2.1",
+    "walt-syntax": "^0.2.0",
     "wasm-types": "1.0.3"
   },
   "devDependencies": {
