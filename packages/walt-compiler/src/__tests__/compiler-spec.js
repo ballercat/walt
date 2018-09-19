@@ -1,5 +1,6 @@
 import test from 'ava';
-import parse from '../parser';
+import makeParser from '../parser';
+import { makeFragment } from '../parser/fragment';
 import validate from '../validation';
 import semantics from '../semantics';
 import compile from '..';
@@ -27,8 +28,11 @@ test(
 );
 
 test('import as', t => {
+  const parser = makeParser([]);
+  const fragment = makeFragment(parser);
+
   const node = semantics(
-    parse(`
+    parser(`
 import {
   getStringIterator,
   next as string_next,
@@ -36,7 +40,9 @@ import {
   stringLength,
   indexOf
 } from '../walt/string';
-`)
+`),
+    [],
+    { parser, fragment }
   );
   const error = t.throws(() => validate(node, {}));
   t.snapshot(print(node));

@@ -71,6 +71,7 @@ test('function pointers', t =>
 
 test('import expression generator', t => {
   const node = parser(
+    [],
     "import { field: i32, foo: CustomType, bar: SomeOtherType } from 'env';"
   );
   t.snapshot(generateImportFromNode(node.params[0]));

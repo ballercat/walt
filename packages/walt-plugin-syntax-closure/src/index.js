@@ -1,15 +1,12 @@
 /**
  * Closure plugin.
  *
- * Here be dragons
- *
  */
 import Syntax from 'walt-syntax';
-import { parser, fragment } from 'walt-compiler';
 import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from 'walt-parser-tools/has-node';
 import walkNode from 'walt-parser-tools/walk-node';
-
+import grammar from './closures.ne';
 import { dependency, DEPENDENCY_NAME } from './dependency';
 
 const sizes = {
@@ -25,7 +22,7 @@ const LOCAL_INDEX = 'local/index';
 export { DEPENDENCY_NAME, dependency };
 
 export function plugin() {
-  const semantics = () => {
+  const semantics = ({ parser, fragment }) => {
     // Declaration parser, re-used for mutable/immutable declarations
     const declarationParser = next => (args, transform) => {
       const [node, context] = args;
@@ -340,6 +337,7 @@ export function plugin() {
   };
 
   return {
+    grammar,
     semantics,
   };
 }

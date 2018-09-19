@@ -1,5 +1,4 @@
 import Syntax from 'walt-syntax';
-import { fragment } from '../parser/fragment';
 
 const shifts = {
   i64: 63,
@@ -10,7 +9,7 @@ const shifts = {
 // Unary expressions need to be patched so that the LHS type matches the RHS
 export default function() {
   return {
-    semantics() {
+    semantics({ fragment }) {
       return {
         UnaryExpression: _ignore => (args, transform) => {
           const [unaryNode, context] = args;

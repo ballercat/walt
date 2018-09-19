@@ -4,7 +4,7 @@ import semantics from '../../semantics';
 import validate from '..';
 
 const parseAndValidate = source =>
-  validate(semantics(parser(source)), {
+  validate(semantics(parser([], source)), {
     lines: source.split('/n'),
     filename: 'spec.walt',
   });

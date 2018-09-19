@@ -1,8 +1,10 @@
-import { fragment } from '../../parser/fragment';
-
+import { makeFragment } from '../../parser/fragment';
+import makeParser from '../../parser';
 import test from 'ava';
 import { map } from 'walt-parser-tools/map-node';
 import { combineParsers } from '..';
+
+const fragment = makeFragment(makeParser([]));
 
 test('plugin system', t => {
   const calls = [];

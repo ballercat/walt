@@ -7,7 +7,8 @@
   "scripts": {
     "postinstall": "lerna bootstrap",
     "validate": "lerna run validate --stream",
-    "test": "lerna run test --stream",
+    "test": "npm run build && lerna run test --stream",
+    "build": "lerna run build --stream",
     "coverage": "lerna run coverage",
     "publish": "lerna publish",
     "clean": "lerna clean"
@@ -32,7 +33,18 @@
   },
   "homepage": "https://github.com/ballercat/walt#readme",
   "devDependencies": {
-    "lerna": "^2.11.0"
+    "babel-register": "^6.26.0",
+    "lerna": "^2.11.0",
+    "nearley": "^2.15.1",
+    "pirates": "^4.0.0",
+    "rollup": "^0.66.0",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-eslint": "^5.0.0",
+    "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-string": "^2.0.2",
+    "rollup-plugin-uglify": "^6.0.0"
   },
   "nyc": {
     "cache": true

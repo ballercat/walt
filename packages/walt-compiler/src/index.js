@@ -2,7 +2,7 @@
 import { mapNode } from 'walt-parser-tools/map-node';
 import walkNode from 'walt-parser-tools/walk-node';
 
-import parser from './parser';
+import makeParser from './parser';
 import semantics from './semantics';
 import validate from './validation';
 import generator from './generator';
@@ -14,10 +14,11 @@ import prettyPrintNode from './utils/print-node';
 import { VERSION_1 } from './emitter/preamble';
 import type { ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import { fragment } from './parser/fragment';
+import { makeFragment } from './parser/fragment';
 
 export {
-  parser,
+  makeParser,
+  makeFragment,
   semantics,
   validate,
   generator,
@@ -28,29 +29,35 @@ export {
   stringDecoder,
   walkNode,
   mapNode,
-  fragment,
 };
 export const VERSION = '0.11.0';
 
 // Used for debugging purposes
-export const getIR = (
-  source: string,
-  {
+export const getIR = (source: string, config: ConfigType) => {
+  const {
     version = VERSION_1,
     encodeNames = false,
     lines = source ? source.split('\n') : [],
     filename = 'unknown',
-  }: ConfigType = {}
-) => {
-  const ast = parser(source);
-  const semanticAST = semantics(ast);
-  validate(semanticAST, { lines, filename });
-  const intermediateCode = generator(semanticAST, {
+    extensions = [],
+  } =
+    config || {};
+
+  const parser = makeParser([]);
+  const fragment = makeFragment(parser);
+
+  const options = {
     version,
     encodeNames,
     lines,
     filename,
-  });
+    extensions,
+  };
+
+  const ast = parser(source);
+  const semanticAST = semantics(ast, [], { ...options, parser, fragment });
+  validate(semanticAST, { lines, filename });
+  const intermediateCode = generator(semanticAST, options);
   const wasm = emitter(intermediateCode, {
     version,
     encodeNames,
@@ -61,38 +68,49 @@ export const getIR = (
 };
 
 // Compile with plugins, future default export
-export const unstableCompileWalt = (
-  source: string,
-  {
-    filename = 'unknown',
-    plugins = [],
-    encodeNames,
-  }: {| filename: string, plugins: any[], encodeNames: boolean |}
-) => {
+export const unstableCompileWalt = (source: string, config: ConfigType) => {
+  const { extensions = [] } = config;
+
   const options = {
-    filename,
+    filename: config.filename,
     lines: source.split('\n'),
-    version: VERSION_1,
-    encodeNames,
+    version: config.VERSION_1,
+    encodeNames: config.encodeNames,
   };
 
-  const ast = parser(source);
-  // Generate instances
-  const pluginInstances = plugins.reduce(
+  // Generate plugin instances and sort them by the extended compiler phase
+  const plugins = extensions.reduce(
     (acc, plugin) => {
       const instance = plugin(options);
 
-      acc.semantics.push(instance.semantics);
+      if (typeof instance.grammar === 'function') {
+        acc.grammar.push(instance.grammar);
+      }
+
+      if (typeof instance.semantics === 'function') {
+        acc.semantics.push(instance.semantics);
+      }
+
       return acc;
     },
-    { semantics: [] }
+    {
+      grammar: [],
+      semantics: [],
+    }
   );
 
-  const semanticAST = semantics(ast, pluginInstances.semantics);
+  const parser = makeParser(plugins.grammar);
+  const fragment = makeFragment(parser);
+  const ast = parser(source);
+
+  const semanticAST = semantics(ast, plugins.semantics, {
+    parser,
+    fragment,
+  });
 
   validate(semanticAST, options);
 
-  const intermediateCode = generator(semanticAST, options);
+  const intermediateCode = generator(semanticAST, config);
   const wasm = emitter(intermediateCode, options);
 
   return wasm;

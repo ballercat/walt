@@ -33,16 +33,13 @@
     spread,
     builtinDecl,
     genericType,
-    voidClosure,
-    closure,
   } = this.nodes(lexer);
 %}
 
 @lexer lexer
-# @include "./punctuators.ne"
+
 @include "./objects.ne"
 @include "./import.ne"
-@include "./closures.ne"
 @include "./control-flow.ne"
 
 Program ->

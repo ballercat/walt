@@ -3,9 +3,9 @@ import preamble from './preamble';
 import section from './section';
 import OutputStream from '../utils/output-stream';
 import type { ProgramType } from '../generator/flow/types';
-import type { ConfigType } from '../flow/types';
+import type { BaseOptions } from '../flow/types';
 
-function emit(program: ProgramType, config: ConfigType) {
+function emit(program: ProgramType, config: BaseOptions) {
   const stream = new OutputStream();
 
   // Write MAGIC and VERSION. This is now a valid WASM Module

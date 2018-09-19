@@ -32,14 +32,23 @@ export type WebAssemblyModuleType = {
   },
 };
 
-export type ConfigType = {
+export type BaseOptions = {
   version: number,
   encodeNames: boolean,
   lines: string[],
   filename: string,
+};
+
+export type Plugin = BaseOptions => {
+  grammar: () => any,
+  semantics: { parser: string => NodeType, fragment: string => NodeType },
+};
+
+export type ConfigType = BaseOptions & {
   linker?: {
     statics: { [string]: number },
   },
+  extensions: Array<Plugin>,
 };
 
 export type TypeCastType = {

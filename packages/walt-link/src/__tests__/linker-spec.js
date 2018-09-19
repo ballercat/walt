@@ -39,6 +39,7 @@ test("returns (src: string) => (importsObj) => Promise<Wasm>", async t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const factory = link("./index.walt", null, {
     ...compiler,
+    parser: compiler.makeParser([]),
     getFileContents,
     resolve,
   });

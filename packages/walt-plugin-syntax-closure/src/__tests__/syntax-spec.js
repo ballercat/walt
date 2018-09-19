@@ -70,7 +70,7 @@ export function test(): i32 {
       WebAssembly.instantiate(
         unstableCompileWalt(source, {
           encodeNames: true,
-          plugins: [plugin],
+          extensions: [plugin],
         }).buffer(),
         {
           [DEPENDENCY_NAME]: closure.instance.exports,

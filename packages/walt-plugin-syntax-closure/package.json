@@ -27,10 +27,8 @@
   "homepage": "https://github.com/ballercat/walt#readme",
   "dependencies": {
     "walt-parser-tools": "^0.1.1",
-    "walt-syntax": "^0.1.1"
-  },
-  "peerDependencies": {
-    "walt-compiler": "^0.9.3"
+    "walt-syntax": "^0.1.1",
+    "walt-compiler": "^0.10.2"
   },
   "devDependencies": {
     "ava": "0.24.0",
@@ -57,7 +55,7 @@
     "rollup-plugin-replace": "2.0.0",
     "rollup-plugin-string": "^2.0.2",
     "rollup-plugin-uglify": "2.0.1",
-    "walt-compiler": "^0.9.3"
+    "rollup-plugin-walt-grammar": "^0.1.0"
   },
   "prettier": {
     "trailingComma": "es5",
@@ -69,14 +67,15 @@
     ],
     "source": [
       "src/**/*.js",
-      "src/**/*.walt"
+      "src/**/*.walt",
+      "src/**/*.ne"
     ],
     "failFast": true,
     "failWithoutAssertions": false,
     "tap": false,
     "powerAssert": false,
     "require": [
-      "./src/__tests__/_register.js"
+      "../../_register.js"
     ],
     "babel": "inherit"
   },
