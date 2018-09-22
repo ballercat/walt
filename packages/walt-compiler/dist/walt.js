@@ -1573,6 +1573,15 @@ var nearley_2 = nearley.Grammar;
 //      
 var compose = ((...fns) => fns.reduce((f, g) => (...args) => f(g(...args))));
 
+const extendNode = curry_1((_ref, node) => {
+  let { meta } = _ref,
+      options = objectWithoutProperties(_ref, ['meta']);
+
+  return _extends({}, node, {
+    meta: _extends({}, node.meta, meta)
+  }, options);
+});
+
 const nth = n => d => d[n];
 const nuller = () => null;
 const nonEmpty = d => {
@@ -1599,17 +1608,9 @@ var helpers = {
   add,
   flatten,
   compose,
-  drop
+  drop,
+  extendNode
 };
-
-const extendNode = curry_1((_ref, node) => {
-  let { meta } = _ref,
-      options = objectWithoutProperties(_ref, ['meta']);
-
-  return _extends({}, node, {
-    meta: _extends({}, node.meta, meta)
-  }, options);
-});
 
 // Node Types
 const marker = lexer => {
