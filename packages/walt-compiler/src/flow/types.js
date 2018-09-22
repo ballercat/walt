@@ -51,6 +51,12 @@ export type ConfigType = BaseOptions & {
   extensions: Array<Plugin>,
 };
 
+export type GeneratorOptions = BaseOptions & {
+  linker?: {
+    statics: { [string]: number },
+  },
+};
+
 export type TypeCastType = {
   ...$Exact<NodeType>,
   type: string,

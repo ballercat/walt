@@ -23,7 +23,7 @@ import {
   AST_METADATA,
 } from '../semantics/metadata';
 
-import type { NodeType, ConfigType } from '../flow/types';
+import type { NodeType, GeneratorOptions } from '../flow/types';
 import type {
   ProgramType,
   IntermediateOpcodeType,
@@ -62,7 +62,7 @@ export const generateCode = (
   return block;
 };
 
-function generator(ast: NodeType, config: ConfigType): ProgramType {
+function generator(ast: NodeType, config: GeneratorOptions): ProgramType {
   const program: ProgramType = {
     Version: config.version,
     Types: [],

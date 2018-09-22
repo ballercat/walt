@@ -69,12 +69,12 @@ export const getIR = (source: string, config: ConfigType) => {
 
 // Compile with plugins, future default export
 export const unstableCompileWalt = (source: string, config: ConfigType) => {
-  const { extensions = [] } = config;
+  const { extensions = [], linker } = config;
 
   const options = {
     filename: config.filename,
     lines: source.split('\n'),
-    version: config.VERSION_1,
+    version: VERSION_1,
     encodeNames: config.encodeNames,
   };
 
@@ -110,7 +110,7 @@ export const unstableCompileWalt = (source: string, config: ConfigType) => {
 
   validate(semanticAST, options);
 
-  const intermediateCode = generator(semanticAST, config);
+  const intermediateCode = generator(semanticAST, { ...options, linker });
   const wasm = emitter(intermediateCode, options);
 
   return wasm;

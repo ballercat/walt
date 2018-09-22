@@ -5555,12 +5555,15 @@ const makeFragment = curry_1((parser, source) => {
 const VERSION = '0.11.0';
 
 // Used for debugging purposes
-const getIR = (source, {
-  version = VERSION_1,
-  encodeNames = false,
-  lines = source ? source.split('\n') : [],
-  filename = 'unknown'
-} = {}) => {
+const getIR = (source, config) => {
+  const {
+    version = VERSION_1,
+    encodeNames = false,
+    lines = source ? source.split('\n') : [],
+    filename = 'unknown',
+    extensions = []
+  } = config || {};
+
   const parser = makeParser([]);
   const fragment = makeFragment(parser);
 
@@ -5568,18 +5571,14 @@ const getIR = (source, {
     version,
     encodeNames,
     lines,
-    filename
+    filename,
+    extensions
   };
 
   const ast = parser(source);
   const semanticAST = semantics(ast, [], _extends({}, options, { parser, fragment }));
   validate(semanticAST, { lines, filename });
-  const intermediateCode = generator(semanticAST, {
-    version,
-    encodeNames,
-    lines,
-    filename
-  });
+  const intermediateCode = generator(semanticAST, options);
   const wasm = emit(intermediateCode, {
     version,
     encodeNames,
@@ -5590,12 +5589,14 @@ const getIR = (source, {
 };
 
 // Compile with plugins, future default export
-const unstableCompileWalt = (source, { filename = 'unknown', extensions = [], encodeNames }) => {
+const unstableCompileWalt = (source, config) => {
+  const { extensions = [], linker } = config;
+
   const options = {
-    filename,
+    filename: config.filename,
     lines: source.split('\n'),
     version: VERSION_1,
-    encodeNames
+    encodeNames: config.encodeNames
   };
 
   // Generate plugin instances and sort them by the extended compiler phase
@@ -5627,7 +5628,7 @@ const unstableCompileWalt = (source, { filename = 'unknown', extensions = [], en
 
   validate(semanticAST, options);
 
-  const intermediateCode = generator(semanticAST, options);
+  const intermediateCode = generator(semanticAST, _extends({}, options, { linker }));
   const wasm = emit(intermediateCode, options);
 
   return wasm;

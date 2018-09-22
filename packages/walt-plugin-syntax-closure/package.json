@@ -5,6 +5,7 @@
   "main": "dist/walt-plugin-syntax-closures.js",
   "scripts": {
     "test": "ava",
+    "debug-container": "node --inspect-brk=\"$(hostname -I | xargs)\" node_modules/ava/profile.js",
     "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
     "build-prod": "cross-env NODE_ENV=production node_modules/rollup/bin/rollup -c rollup.config.js"
   },

@@ -5959,12 +5959,15 @@ var walt = createCommonjsModule(function (module, exports) {
   const VERSION = '0.11.0';
 
   // Used for debugging purposes
-  const getIR = (source, {
-    version = VERSION_1,
-    encodeNames = false,
-    lines = source ? source.split('\n') : [],
-    filename = 'unknown'
-  } = {}) => {
+  const getIR = (source, config) => {
+    const {
+      version = VERSION_1,
+      encodeNames = false,
+      lines = source ? source.split('\n') : [],
+      filename = 'unknown',
+      extensions = []
+    } = config || {};
+
     const parser = makeParser([]);
     const fragment = makeFragment(parser);
 
@@ -5972,18 +5975,14 @@ var walt = createCommonjsModule(function (module, exports) {
       version,
       encodeNames,
       lines,
-      filename
+      filename,
+      extensions
     };
 
     const ast = parser(source);
     const semanticAST = semantics(ast, [], _extends({}, options, { parser, fragment }));
     validate(semanticAST, { lines, filename });
-    const intermediateCode = generator(semanticAST, {
-      version,
-      encodeNames,
-      lines,
-      filename
-    });
+    const intermediateCode = generator(semanticAST, options);
     const wasm = emit(intermediateCode, {
       version,
       encodeNames,
@@ -5994,12 +5993,14 @@ var walt = createCommonjsModule(function (module, exports) {
   };
 
   // Compile with plugins, future default export
-  const unstableCompileWalt = (source, { filename = 'unknown', extensions = [], encodeNames }) => {
+  const unstableCompileWalt = (source, config) => {
+    const { extensions = [] } = config;
+
     const options = {
-      filename,
+      filename: config.filename,
       lines: source.split('\n'),
       version: VERSION_1,
-      encodeNames
+      encodeNames: config.encodeNames
     };
 
     // Generate plugin instances and sort them by the extended compiler phase
@@ -6031,7 +6032,7 @@ var walt = createCommonjsModule(function (module, exports) {
 
     validate(semanticAST, options);
 
-    const intermediateCode = generator(semanticAST, options);
+    const intermediateCode = generator(semanticAST, config);
     const wasm = emit(intermediateCode, options);
 
     return wasm;

@@ -65,11 +65,12 @@ export function test(): i32 {
   return x + y;
 }
 `;
+
   return WebAssembly.instantiate(dependency().buffer())
     .then(closure =>
       WebAssembly.instantiate(
         unstableCompileWalt(source, {
-          encodeNames: true,
+          version: 1,
           extensions: [plugin],
         }).buffer(),
         {
