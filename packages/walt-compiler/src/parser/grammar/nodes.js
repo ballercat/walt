@@ -299,41 +299,5 @@ export default function factory(lexer) {
         node(Syntax.GenericType)([])
       );
     },
-    voidClosure(d) {
-      const [args, block] = drop(d);
-      const resultNode = extendNode(
-        { type: null },
-        node(Syntax.FunctionResult)([])
-      );
-      return extendNode(
-        {
-          params: [
-            extendNode(
-              {
-                params: [args, resultNode, block],
-              },
-              node(Syntax.FunctionDeclaration)([])
-            ),
-          ],
-        },
-        node(Syntax.Closure)([])
-      );
-    },
-    closure(d) {
-      const [args, resultNode, block] = drop(d);
-      return extendNode(
-        {
-          params: [
-            extendNode(
-              {
-                params: [args, resultNode, block],
-              },
-              node(Syntax.FunctionDeclaration)([])
-            ),
-          ],
-        },
-        node(Syntax.Closure)([])
-      );
-    },
   };
 }

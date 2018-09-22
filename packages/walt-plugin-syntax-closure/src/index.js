@@ -21,6 +21,31 @@ const LOCAL_INDEX = 'local/index';
 
 export { DEPENDENCY_NAME, dependency };
 
+const importsSource = `
+// Start Closure Imports Header
+import {
+  __closure_malloc: ClosureGeti32,
+  __closure_free: ClosureFree,
+  __closure_get_i32: ClosureGeti32,
+  __closure_get_f32: ClosureGetf32,
+  __closure_get_i64: ClosureGeti64,
+  __closure_get_f64: ClosureGetf64,
+  __closure_set_i32: ClosureSeti32,
+  __closure_set_f32: ClosureSetf32,
+  __closure_set_i64: ClosureSeti64,
+  __closure_set_f64: ClosureSetf64
+} from '${DEPENDENCY_NAME}';
+type ClosureFree = (i32) => void;
+type ClosureGeti32 = (i32) => i32;
+type ClosureGetf32 = (i32) => f32;
+type ClosureGeti64 = (i32) => i64;
+type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
+type ClosureSetf32 = (i32, f32) => void;
+type ClosureSeti64 = (i32, i64) => void;
+type ClosureSetf64 = (i32, f64) => void;
+// End Closure Imports Header
+`;
+
 export function plugin() {
   const semantics = ({ parser, fragment }) => {
     // Declaration parser, re-used for mutable/immutable declarations
@@ -80,37 +105,55 @@ export function plugin() {
     };
 
     return {
-      Program: next => args => {
-        const [program, context] = args;
+      // One drawback of having a plugin for closures isntead of built in support
+      // is that it's rather difficult to pre-parse the Generic Closure types.
+      // Since generics depend on the real type nodes being already processed we
+      // loose the benifit of using a generic type before its defined.
+      GenericType: _ => semanticArgs => {
+        const [node, context] = semanticArgs;
+        const { types } = context;
+        const [generic] = node.params;
+        const [T] = generic.params;
+        const realType = types[T.value];
+        const [args, result] = realType.params;
+        // Patch the node to be a real type which we can reference later
+        const patch = {
+          ...realType,
+          range: generic.range,
+          value: node.value,
+          meta: {
+            ...realType.meta,
+            CLOSURE_TYPE: generic.value === 'Lambda',
+          },
+          params: [
+            {
+              ...args,
+              params: [
+                {
+                  ...args,
+                  params: [],
+                  type: 'i32',
+                  value: 'i32',
+                  Type: Syntax.Type,
+                },
+                ...args.params,
+              ],
+            },
+            result,
+          ],
+        };
+        types[patch.value] = patch;
+
+        return patch;
+      },
+      Program: next => semanticArgs => {
+        const [program, context] = semanticArgs;
 
         if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
+          return next(semanticArgs);
         }
 
-        const closureImportsHeader = parser(`
-      // Start Closure Imports Header
-      import {
-        __closure_malloc: ClosureGeti32,
-        __closure_free: ClosureFree,
-        __closure_get_i32: ClosureGeti32,
-        __closure_get_f32: ClosureGetf32,
-        __closure_get_i64: ClosureGeti64,
-        __closure_get_f64: ClosureGetf64,
-        __closure_set_i32: ClosureSeti32,
-        __closure_set_f32: ClosureSetf32,
-        __closure_set_i64: ClosureSeti64,
-        __closure_set_f64: ClosureSetf64
-      } from '${DEPENDENCY_NAME}';
-      type ClosureFree = (i32) => void;
-      type ClosureGeti32 = (i32) => i32;
-      type ClosureGetf32 = (i32) => f32;
-      type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
-      type ClosureSetf32 = (i32, f32) => void;
-      type ClosureSeti64 = (i32, i64) => void;
-      type ClosureSetf64 = (i32, f64) => void;
-      // End Closure Imports Header
-    `).params;
+        const closureImportsHeader = parser(importsSource).params;
         const closures = [];
         const parsedProgram = next([
           {
@@ -124,7 +167,6 @@ export function plugin() {
           ...parsedProgram,
           params: [...parsedProgram.params, ...closures],
         };
-
         return result;
       },
       Closure: _next => (args, transform) => {
