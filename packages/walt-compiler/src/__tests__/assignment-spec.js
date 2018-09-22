@@ -1,7 +1,6 @@
 import test from 'ava';
-import compile from '..';
+import { compileAndRun } from '../utils/test-utils';
 
-const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 

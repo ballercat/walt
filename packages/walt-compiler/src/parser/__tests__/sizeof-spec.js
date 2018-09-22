@@ -1,6 +1,6 @@
 import test from 'ava';
 import compose from '../../utils/compose';
-import compile, { debug, getIR } from '../..';
+import { debug, getIR, compile } from '../..';
 
 const walt = `export function _32BitSizes(): i32 {
   let x: i32;
@@ -33,7 +33,7 @@ test('type sizes', t => {
   const wasm = getWasm(walt);
   t.snapshot(wasm);
 
-  return WebAssembly.instantiate(compile(walt)).then(result => {
+  return WebAssembly.instantiate(compile(walt).buffer()).then(result => {
     t.is(result.instance.exports._32BitSizes(), 8, '32 bit sizes combined');
     t.is(result.instance.exports._64BitSizes(), 16, '64 bit sizes combined');
     t.is(result.instance.exports.userDefinedObject(), 16, 'object types');

@@ -1,5 +1,5 @@
 import test from 'ava';
-import compile, { getIR, debug } from '..';
+import { compile, getIR, debug } from '..';
 
 test('default arguments', t => {
   const walt = `
@@ -15,7 +15,7 @@ test('default arguments', t => {
     return x + y;
   }`;
 
-  return WebAssembly.instantiate(compile(walt), {
+  return WebAssembly.instantiate(compile(walt).buffer(), {
     env: { extern: (k, i) => k + i },
   }).then(mod => {
     t.is(mod.instance.exports.test(), 4);
@@ -35,7 +35,7 @@ test('function pointer', t => {
     }
   `;
 
-  return WebAssembly.instantiate(compile(walt)).then(mod => {
+  return WebAssembly.instantiate(compile(walt).buffer()).then(mod => {
     t.is(mod.instance.exports.test(), 42);
   });
 });

@@ -1,10 +1,7 @@
 import test from 'ava';
 import parser from '../parser';
 import generateImportFromNode from '../generator/import';
-import compile from '..';
-
-const compileAndRun = (src, importsObj = {}) =>
-  WebAssembly.instantiate(compile(src, { encodeNames: true }), importsObj);
+import { compileAndRun } from '../utils/test-utils';
 
 test('function typed imports', t => {
   // What is happening here:

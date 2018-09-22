@@ -7,7 +7,8 @@ import { enter, find, current } from 'walt-parser-tools/scope';
 import hasNode from 'walt-parser-tools/has-node';
 import walkNode from 'walt-parser-tools/walk-node';
 import grammar from './closures.ne';
-import { dependency, DEPENDENCY_NAME } from './dependency';
+import source from './closures.walt';
+export const DEPENDENCY_NAME = 'walt-plugin-closure';
 
 const sizes = {
   i64: 8,
@@ -18,8 +19,6 @@ const sizes = {
 
 const sum = (a, b) => a + b;
 const LOCAL_INDEX = 'local/index';
-
-export { DEPENDENCY_NAME, dependency };
 
 const importsSource = `
 // Start Closure Imports Header
@@ -381,5 +380,14 @@ export function plugin() {
   return {
     grammar,
     semantics,
+    imports(options, compile) {
+      return WebAssembly.instantiate(compile(source, options).buffer()).then(
+        mod => {
+          return {
+            [DEPENDENCY_NAME]: mod.instance.exports,
+          };
+        }
+      );
+    },
   };
 }

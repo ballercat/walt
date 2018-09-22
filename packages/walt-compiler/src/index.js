@@ -68,14 +68,20 @@ export const getIR = (source: string, config: ConfigType) => {
 };
 
 // Compile with plugins, future default export
-export const unstableCompileWalt = (source: string, config: ConfigType) => {
-  const { extensions = [], linker } = config;
+export const compile = (source: string, config: ConfigType) => {
+  const {
+    filename = 'unknown.walt',
+    extensions = [],
+    linker,
+    encodeNames = false,
+  } =
+    config || {};
 
   const options = {
-    filename: config.filename,
+    filename,
     lines: source.split('\n'),
     version: VERSION_1,
-    encodeNames: config.encodeNames,
+    encodeNames,
   };
 
   // Generate plugin instances and sort them by the extended compiler phase
@@ -113,11 +119,11 @@ export const unstableCompileWalt = (source: string, config: ConfigType) => {
   const intermediateCode = generator(semanticAST, { ...options, linker });
   const wasm = emitter(intermediateCode, options);
 
-  return wasm;
+  return {
+    buffer() {
+      return wasm.buffer();
+    },
+    ast,
+    semanticAST,
+  };
 };
-
-// Compiles a raw binary wasm buffer
-export default function compileWalt(source: string, config: ConfigType) {
-  const wasm = getIR(source, config);
-  return wasm.buffer();
-}

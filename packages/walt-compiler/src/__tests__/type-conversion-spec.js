@@ -1,5 +1,5 @@
 import test from 'ava';
-import compile, { debug, getIR } from '..';
+import { compile, debug, getIR } from '..';
 import compose from '../utils/compose';
 
 const walt = `export function constant(): f32 {
@@ -37,7 +37,7 @@ test('typecasts work', t => {
   const getWasm = compose(debug, getIR);
   const wasm = getWasm(walt);
   t.snapshot(wasm);
-  return WebAssembly.instantiate(compile(walt)).then(result => {
+  return WebAssembly.instantiate(compile(walt).buffer()).then(result => {
     t.is(result.instance.exports.constant(), 0.5);
     t.is(result.instance.exports.variableTypecast(2), 7);
     t.is(result.instance.exports._32IntTypecast(2.0), 4);

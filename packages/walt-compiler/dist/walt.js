@@ -1846,23 +1846,6 @@ function factory(lexer) {
         value: id.value,
         params: [gen, typeNode]
       }, node(Syntax.GenericType)([]));
-    },
-    voidClosure(d) {
-      const [args, block] = drop(d);
-      const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
-      return extendNode({
-        params: [extendNode({
-          params: [args, resultNode, block]
-        }, node(Syntax.FunctionDeclaration)([]))]
-      }, node(Syntax.Closure)([]));
-    },
-    closure(d) {
-      const [args, resultNode, block] = drop(d);
-      return extendNode({
-        params: [extendNode({
-          params: [args, resultNode, block]
-        }, node(Syntax.FunctionDeclaration)([]))]
-      }, node(Syntax.Closure)([]));
     }
   };
 }
@@ -2255,31 +2238,6 @@ function base() {
   };
 }
 
-const mapGeneric = curry_1((options, node, _) => {
-  const { types } = options;
-  const [generic] = node.params;
-  const [T] = generic.params;
-  const realType = types[T.value];
-  const [args, result] = realType.params;
-  // Patch the node to be a real type which we can reference later
-  const patch = _extends({}, realType, {
-    range: generic.range,
-    value: node.value,
-    meta: _extends({}, realType.meta, { CLOSURE_TYPE: generic.value === 'Lambda' }),
-    params: [_extends({}, args, {
-      params: [_extends({}, args, {
-        params: [],
-        type: 'i32',
-        value: 'i32',
-        Type: Syntax.Type
-      }), ...args.params]
-    }), result]
-  });
-  types[patch.value] = patch;
-
-  return patch;
-});
-
 function typePlugin() {
   return {
     semantics() {
@@ -2325,8 +2283,7 @@ function typePlugin() {
               });
               types[node.value] = parsed;
               return parsed;
-            },
-            [Syntax.GenericType]: mapGeneric({ types })
+            }
           })(ast);
 
           return next([astWithTypes, context]);
@@ -5590,14 +5547,19 @@ const getIR = (source, config) => {
 };
 
 // Compile with plugins, future default export
-const unstableCompileWalt = (source, config) => {
-  const { extensions = [], linker } = config;
+const compile = (source, config) => {
+  const {
+    filename = 'unknown.walt',
+    extensions = [],
+    linker,
+    encodeNames = false
+  } = config || {};
 
   const options = {
-    filename: config.filename,
+    filename,
     lines: source.split('\n'),
     version: VERSION_1,
-    encodeNames: config.encodeNames
+    encodeNames
   };
 
   // Generate plugin instances and sort them by the extended compiler phase
@@ -5632,14 +5594,14 @@ const unstableCompileWalt = (source, config) => {
   const intermediateCode = generator(semanticAST, _extends({}, options, { linker }));
   const wasm = emit(intermediateCode, options);
 
-  return wasm;
+  return {
+    buffer() {
+      return wasm.buffer();
+    },
+    ast,
+    semanticAST
+  };
 };
-
-// Compiles a raw binary wasm buffer
-function compileWalt(source, config) {
-  const wasm = getIR(source, config);
-  return wasm.buffer();
-}
 
 exports.makeParser = makeParser;
 exports.makeFragment = makeFragment;
@@ -5655,8 +5617,7 @@ exports.walkNode = walkNode;
 exports.mapNode = mapNode_2;
 exports.VERSION = VERSION;
 exports.getIR = getIR;
-exports.unstableCompileWalt = unstableCompileWalt;
-exports['default'] = compileWalt;
+exports.compile = compile;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

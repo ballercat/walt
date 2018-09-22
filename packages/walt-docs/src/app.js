@@ -7,17 +7,10 @@ import "./css/app";
 import examples from "./examples";
 import AstView from "./ast-view";
 import waltCompiler, {
-  parser,
-  semantics,
-  validate,
-  generator,
-  emitter,
+  compile,
   prettyPrintNode as printNode
 } from "walt-compiler";
 import { plugin as closurePlugin } from "walt-plugin-syntax-closure";
-
-// TODO: Make plugins configurable through the UI
-const getAST = source => semantics(parser(source), [closurePlugin().semantics]);
 
 const exampleList = Object.keys(examples).map(key => {
   return {
@@ -43,20 +36,24 @@ function debounce(func, wait, immediate) {
 }
 
 class Explorer extends React.Component {
-  state = {
-    code: examples.Default.code,
-    js: examples.Default.js,
-    ast: getAST(examples.Default.code),
-    wasm: printNode(getAST(examples.Default.code)),
-    compiling: false,
-    logs: [],
-    activeItem: "code",
-    example: "Default"
-  };
+  state = (() => {
+    const wasm = compile(examples.Default.code);
+    return {
+      code: examples.Default.code,
+      extensions: [],
+      js: examples.Default.js,
+      ast: wasm.ast,
+      wasm: printNode(wasm.ast),
+      compiling: false,
+      logs: [],
+      activeItem: "code",
+      example: "Default"
+    };
+  })();
 
   compileAndRun = () => {
     const compiler = eval(`(${this.state.js})`);
-    const buffer = this.bytecode.buffer();
+    const buffer = this.bytecode;
     Promise.resolve(compiler(buffer))
       .then(cancel =>
         // without this raf the spinner will not likely render as everything is
@@ -81,12 +78,15 @@ class Explorer extends React.Component {
             version: 1,
             encodeNames: true,
             filename: this.state.example,
-            source: this.state.code.split("\n")
+            source: this.state.code.split("\n"),
+            extensions: this.state.extensions
           };
-          const ast = getAST(this.state.code);
-          validate(ast, config);
-          this.bytecode = emitter(generator(ast, config), config);
-          this.setState({ wasm: printNode(ast), ast }, this.compileAndRun);
+          const wasm = compile(this.state.code, config);
+          this.bytecode = wasm.buffer();
+          this.setState(
+            { wasm: printNode(wasm.ast), ast: wasm.ast },
+            this.compileAndRun
+          );
         } catch (e) {
           this.setState({ compiling: false });
           setTimeout(() => {
@@ -117,10 +117,17 @@ class Explorer extends React.Component {
   };
 
   handleSelectExample = (e, { value }) => {
-    const { js, code } = examples[value];
+    const { js, code, extensions } = examples[value];
     this.setState({ compiling: true, example: value });
+    const wasm = compile(code, { extensions });
     requestAnimationFrame(() =>
-      this.setState({ code, js, compiling: false, ast: getAST(code) })
+      this.setState({
+        code,
+        js,
+        compiling: false,
+        extensions,
+        ast: wasm.ast
+      })
     );
   };
 

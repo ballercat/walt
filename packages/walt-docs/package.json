@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server -d --hot --inline",
+    "start-container": "webpack-dev-server -d --hot --inline --host=$(hostname -I | xargs)",
     "build": "webpack && cp index.html explorer.js explorer.js.map walt.png ../../docs/",
     "prettier": "prettier",
     "preversion": "npm run build"

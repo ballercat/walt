@@ -1,6 +1,6 @@
 import test from 'ava';
-import { unstableCompileWalt } from 'walt-compiler';
-import { plugin, dependency, DEPENDENCY_NAME } from '..';
+import { compile } from 'walt-compiler';
+import { plugin } from '..';
 
 test('closures', t => {
   const source = `
@@ -66,17 +66,11 @@ export function test(): i32 {
 }
 `;
 
-  return WebAssembly.instantiate(dependency().buffer())
-    .then(closure =>
-      WebAssembly.instantiate(
-        unstableCompileWalt(source, {
-          version: 1,
-          extensions: [plugin],
-        }).buffer(),
-        {
-          [DEPENDENCY_NAME]: closure.instance.exports,
-        }
-      )
+  const options = { version: 1, extensions: [plugin] };
+  return plugin()
+    .imports(options, compile)
+    .then(imports =>
+      WebAssembly.instantiate(compile(source, options).buffer(), imports)
     )
     .then(result => {
       const fn = result.instance.exports.test;

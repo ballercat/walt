@@ -8,7 +8,13 @@ import makeParser from '../parser';
 import { makeFragment } from '../parser/fragment';
 import emitter from '../emitter';
 import generator from '../generator';
-import { mapNode, walkNode, prettyPrintNode } from '..';
+import { compile, mapNode, walkNode, prettyPrintNode } from '..';
+
+export const compileAndRun = (src, imports) =>
+  WebAssembly.instantiate(
+    compile(src, { encodeNames: true }).buffer(),
+    imports
+  );
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;
