@@ -1,8 +1,8 @@
 # Walt Plugin Closures
 
 This is a reference implementation of
-[Closures](https://en.wikipedia.org/wiki/Closure_(computer_programming) plugin
-for the [Walt WebAssembly Compiler](https://github.com/ballercat/walt).
+[Closures](<https://en.wikipedia.org/wiki/Closure_(computer_programming)>)
+plugin for the [Walt WebAssembly Compiler](https://github.com/ballercat/walt).
 
 ## Syntax
 
@@ -108,6 +108,9 @@ type ClosureSeti64 = (i32, i64) => void;
 type ClosureSetf64 = (i32, f64) => void;
 // End Closure Imports Header
 ```
+
+**Note**: There is no memory cleanup in the reference implementation of the
+imports.
 
 **Note**: You may provide your own import object under `walt-plugin-closure` as
 long as it matches the API above. The buit-in import provided by plugin isn't
