@@ -6,7 +6,8 @@
   "scripts": {
     "test": "ava",
     "build": "cross-env node_modules/rollup/bin/rollup -c rollup.config.js",
-    "preversion": "npm run build",
+    "build-prod": "cross-env NODE_ENV=production node_modules/rollup/bin/rollup -c rollup.config.js",
+    "preversion": "npm run build && npm run build-prod",
     "lint": "eslint"
   },
   "repository": {
