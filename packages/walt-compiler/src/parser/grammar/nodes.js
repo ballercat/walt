@@ -289,15 +289,5 @@ export default function factory(lexer) {
         node(Syntax.ImmutableDeclaration)(d)
       );
     },
-    genericType(d) {
-      const [id, gen, typeNode] = drop(d);
-      return extendNode(
-        {
-          value: id.value,
-          params: [gen, typeNode],
-        },
-        node(Syntax.GenericType)([])
-      );
-    },
   };
 }
