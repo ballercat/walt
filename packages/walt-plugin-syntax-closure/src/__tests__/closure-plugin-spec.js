@@ -1,6 +1,6 @@
 import test from 'ava';
 import { compile } from 'walt-compiler';
-import { plugin } from '..';
+import { plugin, imports } from '..';
 
 test('closures', t => {
   const source = `
@@ -67,10 +67,9 @@ export function test(): i32 {
 `;
 
   const options = { version: 1, extensions: [plugin] };
-  return plugin()
-    .imports(options, compile)
-    .then(imports =>
-      WebAssembly.instantiate(compile(source, options).buffer(), imports)
+  return Promise.resolve(imports(options, compile))
+    .then(closureImports =>
+      WebAssembly.instantiate(compile(source, options).buffer(), closureImports)
     )
     .then(result => {
       const fn = result.instance.exports.test;

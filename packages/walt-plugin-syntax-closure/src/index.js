@@ -45,6 +45,15 @@ type ClosureSetf64 = (i32, f64) => void;
 // End Closure Imports Header
 `;
 
+// Imports for the users of the plugin
+export function imports(options, compile) {
+  return WebAssembly.instantiate(compile(source, options).buffer()).then(
+    mod => ({
+      [DEPENDENCY_NAME]: mod.instance.exports,
+    })
+  );
+}
+
 export function plugin() {
   const semantics = ({ parser, fragment }) => {
     // Declaration parser, re-used for mutable/immutable declarations
@@ -380,14 +389,5 @@ export function plugin() {
   return {
     grammar,
     semantics,
-    imports(options, compile) {
-      return WebAssembly.instantiate(compile(source, options).buffer()).then(
-        mod => {
-          return {
-            [DEPENDENCY_NAME]: mod.instance.exports,
-          };
-        }
-      );
-    },
   };
 }
