@@ -32,7 +32,6 @@
     typeGeneric,
     spread,
     builtinDecl,
-    genericType,
   } = this.nodes(lexer);
 %}
 
