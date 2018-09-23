@@ -1,7 +1,7 @@
 @{%
   const { Syntax } = this;
   const { drop, extendNode } = this.helpers;
-  const { node, genericType, typeGeneric } = this.nodes(this.lexer);
+  const { node, typeGeneric } = this.nodes(this.lexer);
   const voidClosure = (d) => {
     const [args, block] = drop(d);
     const resultNode = extendNode(
@@ -36,6 +36,17 @@
         ],
       },
       node(Syntax.Closure)([])
+    );
+  };
+
+  const genericType = (d) => {
+    const [id, gen, typeNode] = drop(d);
+    return extendNode(
+      {
+        value: id.value,
+        params: [gen, typeNode],
+      },
+      node(Syntax.GenericType)([])
     );
   };
 %}

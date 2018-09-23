@@ -1149,8 +1149,7 @@ function grammar() {
     whileLoop,
     typeGeneric,
     spread,
-    builtinDecl,
-    genericType
+    builtinDecl
   } = this.nodes(lexer);
 
   return {
@@ -1839,13 +1838,6 @@ function factory(lexer) {
         type: typeNode.value,
         params: [typeNode]
       }, node(Syntax.ImmutableDeclaration)(d));
-    },
-    genericType(d) {
-      const [id, gen, typeNode] = drop(d);
-      return extendNode({
-        value: id.value,
-        params: [gen, typeNode]
-      }, node(Syntax.GenericType)([]));
     }
   };
 }
