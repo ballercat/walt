@@ -1,4 +1,7 @@
 import compose from '../../utils/compose';
+import { extendNode } from '../../utils/extend-node';
+
+export { extendNode };
 
 export const nth = n => d => d[n];
 export const nuller = () => null;
@@ -28,4 +31,5 @@ export default {
   flatten,
   compose,
   drop,
+  extendNode,
 };

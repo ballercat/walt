@@ -31,10 +31,27 @@ import struct from '../core/struct';
 import native from '../core/native';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
-import closures from '../syntax-sugar/closures';
 import { GLOBAL_INDEX } from './metadata.js';
 
 import type { NodeType, SemanticOptionsType } from '../flow/types';
+
+export const builtinSemantics = [
+  base,
+  core,
+  _imports,
+  _types,
+  unary,
+  _function,
+  booleans,
+  array,
+  memory,
+  string,
+  functionPointer,
+  struct,
+  native,
+  sizeof,
+  defaultArguments,
+];
 
 const getBuiltInParsers = () => {
   return [
@@ -53,14 +70,24 @@ const getBuiltInParsers = () => {
     native().semantics,
     sizeof().semantics,
     defaultArguments().semantics,
-    closures().semantics,
   ];
 };
 
+// Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  parsers: Array<(any) => any> = getBuiltInParsers()
+  extraSemantics: Array<(any) => any> = [],
+  options: {} = {}
 ): NodeType {
+  // Generate all the plugin instances with proper options
+  const plugins = [...getBuiltInParsers(), ...extraSemantics];
+
+  // Here each semantics parser will receive a reference to the parser & fragment
+  // this allows a semantic plugin to utilize the same grammar rules as the rest
+  // of the program.
+  const combined = combineParsers(plugins.map(p => p(options)));
+
+  // Create the root context which will be used to parse the AST
   const functions: { [string]: NodeType } = {};
   const globals: { [string]: NodeType } = {};
   const types: { [string]: NodeType } = {};
@@ -70,7 +97,7 @@ function semantics(
   const statics: { [string]: null } = {};
   const scopes = enterScope([], GLOBAL_INDEX);
 
-  const options: SemanticOptionsType = {
+  const context: SemanticOptionsType = {
     functions,
     globals,
     types,
@@ -81,9 +108,7 @@ function semantics(
     path: [],
     scopes,
   };
-
-  const combined = combineParsers(parsers.map(p => p(options)));
-  const patched = map(combined)([ast, options]);
+  const patched = map(combined)([ast, context]);
 
   return {
     ...patched,

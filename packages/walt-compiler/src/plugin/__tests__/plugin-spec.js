@@ -1,8 +1,11 @@
-import { fragment } from '../../parser/fragment';
-
+import { makeFragment } from '../../parser/fragment';
+import makeParser from '../../parser';
 import test from 'ava';
 import { map } from 'walt-parser-tools/map-node';
 import { combineParsers } from '..';
+import { compile } from '../..';
+
+const fragment = makeFragment(makeParser([]));
 
 test('plugin system', t => {
   const calls = [];
@@ -117,4 +120,27 @@ test('plugin invariants', t => {
   const parsers = combineParsers([plugin].map(p => p().semantics()));
 
   t.throws(() => map(parsers)([ast]));
+});
+
+test('compiler extensions use', t => {
+  const calls = [];
+  const plugin = (...args) => {
+    calls.push(['plugin', args]);
+    return {
+      semantics(...args) {
+        calls.push(['semantics', args]);
+        return {};
+      },
+      grammar(...args) {
+        calls.push(['grammar', args]);
+        return {
+          ParserRules: {},
+        };
+      },
+    };
+  };
+
+  compile('const x: i32 = 0;', { extensions: [plugin] });
+
+  t.snapshot(calls);
 });

@@ -1,11 +1,11 @@
 // @flow
 import test from 'ava';
 import printNode from '../print-node';
-// import { expressionFragment, statementFragment } from "../../parser/fragment";
-import { parser, semantics } from '../..';
+import parser from '../../parser';
+import semantics from '../../semantics';
 import compose from '../compose';
 
-const getAST = compose(semantics, parser);
+const getAST = compose(semantics, parser([]));
 
 test('full ast printer', t => {
   const node = getAST(`
@@ -28,15 +28,17 @@ test('full ast printer', t => {
 });
 
 test('plain ast parser', t => {
-  const node = parser(`
+  const node = parser(
+    [],
+    `
     type Type = (i32, f32) => i32;
-    type Inc = Closure<Type>;
 
     function simple(y: i32): i32 {
       const x : i32 = 2;
       return x + y;
     }
-  `);
+  `
+  );
 
   t.snapshot(printNode(node));
 });

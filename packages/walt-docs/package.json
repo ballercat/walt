@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server -d --hot --inline",
+    "start-container": "webpack-dev-server -d --hot --inline --host=$(hostname -I | xargs)",
     "build": "webpack && cp index.html explorer.js explorer.js.map walt.png ../../docs/",
     "prettier": "prettier",
     "preversion": "npm run build"
@@ -68,6 +69,7 @@
     "react-dom": "15.6.1",
     "semantic-ui-css": "2.2.12",
     "semantic-ui-react": "0.73.1",
-    "walt-compiler": "^0.10.2"
+    "walt-compiler": "^0.10.2",
+    "walt-plugin-syntax-closure": "^0.1.0"
   }
 }

@@ -1,8 +1,8 @@
 // Custom require setup, babel-register + .walt to strings
-import nearley from 'nearley';
-import compile from 'nearley/lib/compile';
-import nearleyGrammar from 'nearley/lib/nearley-language-bootstrapped';
-import generate from 'nearley/lib/generate';
+const nearley = require('nearley');
+const compile = require('nearley/lib/compile');
+const nearleyGrammar = require('nearley/lib/nearley-language-bootstrapped');
+const generate = require('nearley/lib/generate');
 
 function dedentFunc(func) {
   let lines = func.toString().split(/\n/);
@@ -121,7 +121,7 @@ export default function grammar() {
   return output;
 }
 
-export default function nearleyGramar(_options = {}) {
+module.exports = function nearleyGramar(_options = {}) {
   return {
     name: 'nearley',
     transform(code, file) {

@@ -1,7 +1,6 @@
 import test from 'ava';
-import compile from '..';
+import { compileAndRun } from '../utils/test-utils';
 
-const compileAndRun = src => WebAssembly.instantiate(compile(src));
 const checks = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
 
 // Spec showing if/then branches and recursive functions

@@ -4,10 +4,17 @@ import fs from 'fs';
 import { getText } from '../utils/string';
 import semantics from '../semantics';
 import validate from '../validation';
-import parser from '../parser';
+import makeParser from '../parser';
+import { makeFragment } from '../parser/fragment';
 import emitter from '../emitter';
 import generator from '../generator';
-import { mapNode, walkNode, prettyPrintNode } from '..';
+import { compile, mapNode, walkNode, prettyPrintNode } from '..';
+
+export const compileAndRun = (src, imports) =>
+  WebAssembly.instantiate(
+    compile(src, { encodeNames: true }).buffer(),
+    imports
+  );
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;
@@ -34,13 +41,18 @@ export const harness = (filepath, env) => t => {
   const view = new DataView(memory.buffer);
   const decodeText = getText(view);
 
+  const parser = makeParser([]);
+  const fragment = makeFragment(parser);
+
   const build = link(filepath, {
     resolve,
     getFileContents,
     mapNode,
     walkNode,
     parser,
-    semantics,
+    semantics(ast) {
+      return semantics(ast, [], { parser, fragment });
+    },
     validate,
     emitter,
     generator,

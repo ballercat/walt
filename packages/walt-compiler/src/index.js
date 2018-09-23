@@ -1,7 +1,8 @@
 // @flow
 import { mapNode } from 'walt-parser-tools/map-node';
+import walkNode from 'walt-parser-tools/walk-node';
 
-import parser from './parser';
+import makeParser from './parser';
 import semantics from './semantics';
 import validate from './validation';
 import generator from './generator';
@@ -10,51 +11,53 @@ import emitter from './emitter';
 import debug from './utils/debug';
 import prettyPrintNode from './utils/print-node';
 
-import closurePlugin, { mapToImports } from './closure-plugin';
 import { VERSION_1 } from './emitter/preamble';
-import type { WebAssemblyModuleType, ConfigType } from './flow/types';
+import type { ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
-import walkNode from 'walt-parser-tools/walk-node';
+import { makeFragment } from './parser/fragment';
 
 export {
-  parser,
+  makeParser,
+  makeFragment,
   semantics,
   validate,
   generator,
   emitter,
   prettyPrintNode,
   debug,
-  closurePlugin,
   stringEncoder,
   stringDecoder,
   walkNode,
   mapNode,
 };
-export const VERSION = '0.10.0';
+export const VERSION = '0.11.0';
 
 // Used for debugging purposes
-export const getIR = (
-  source: string,
-  {
+export const getIR = (source: string, config: ConfigType) => {
+  const {
     version = VERSION_1,
     encodeNames = false,
     lines = source ? source.split('\n') : [],
     filename = 'unknown',
-  }: ConfigType = {}
-) => {
-  const ast = parser(source);
-  const semanticAST = semantics(ast);
+    extensions = [],
+  } =
+    config || {};
 
-  validate(semanticAST, {
-    lines,
-    filename,
-  });
-  const intermediateCode = generator(semanticAST, {
+  const parser = makeParser([]);
+  const fragment = makeFragment(parser);
+
+  const options = {
     version,
     encodeNames,
     lines,
     filename,
-  });
+    extensions,
+  };
+
+  const ast = parser(source);
+  const semanticAST = semantics(ast, [], { ...options, parser, fragment });
+  validate(semanticAST, { lines, filename });
+  const intermediateCode = generator(semanticAST, options);
   const wasm = emitter(intermediateCode, {
     version,
     encodeNames,
@@ -64,28 +67,63 @@ export const getIR = (
   return wasm;
 };
 
-export const withPlugins = (
-  plugins: { [string]: WebAssemblyModuleType },
-  importsObj?: { [string]: any }
-) => {
-  const pluginMappers = {
-    closure: (closure, imports) => {
-      imports['walt-plugin-closure'] = mapToImports(closure);
-    },
+// Compile with plugins, future default export
+export const compile = (source: string, config: ConfigType) => {
+  const {
+    filename = 'unknown.walt',
+    extensions = [],
+    linker,
+    encodeNames = false,
+  } =
+    config || {};
+
+  const options = {
+    filename,
+    lines: source.split('\n'),
+    version: VERSION_1,
+    encodeNames,
   };
-  const resultImports = Object.entries(plugins).reduce((acc, [key, value]) => {
-    pluginMappers[key](value, acc);
-    return acc;
-  }, {});
+
+  // Generate plugin instances and sort them by the extended compiler phase
+  const plugins = extensions.reduce(
+    (acc, plugin) => {
+      const instance = plugin(options);
+
+      if (typeof instance.grammar === 'function') {
+        acc.grammar.push(instance.grammar);
+      }
+
+      if (typeof instance.semantics === 'function') {
+        acc.semantics.push(instance.semantics);
+      }
+
+      return acc;
+    },
+    {
+      grammar: [],
+      semantics: [],
+    }
+  );
+
+  const parser = makeParser(plugins.grammar);
+  const fragment = makeFragment(parser);
+  const ast = parser(source);
+
+  const semanticAST = semantics(ast, plugins.semantics, {
+    parser,
+    fragment,
+  });
+
+  validate(semanticAST, options);
+
+  const intermediateCode = generator(semanticAST, { ...options, linker });
+  const wasm = emitter(intermediateCode, options);
 
   return {
-    ...resultImports,
-    ...importsObj,
+    buffer() {
+      return wasm.buffer();
+    },
+    ast,
+    semanticAST,
   };
 };
-
-// Compiles a raw binary wasm buffer
-export default function compileWalt(source: string, config: ConfigType) {
-  const wasm = getIR(source, config);
-  return wasm.buffer();
-}

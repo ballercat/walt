@@ -1,8 +1,8 @@
 import test from 'ava';
-import compile from '..';
+import { compile } from '..';
 
 const compileAndRun = (src, imports) =>
-  WebAssembly.instantiate(compile(src), imports);
+  WebAssembly.instantiate(compile(src).buffer(), imports);
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 

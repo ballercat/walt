@@ -1,8 +1,5 @@
 import test from 'ava';
-import compile from '..';
-
-const compileAndRun = (src, importsObj = {}) =>
-  WebAssembly.instantiate(compile(src), importsObj);
+import { compileAndRun } from '../utils/test-utils';
 
 test('bitwise operators', t => {
   return compileAndRun(`

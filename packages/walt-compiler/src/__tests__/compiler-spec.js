@@ -1,14 +1,12 @@
 import test from 'ava';
-import parse from '../parser';
+import makeParser from '../parser';
+import { makeFragment } from '../parser/fragment';
 import validate from '../validation';
 import semantics from '../semantics';
-import compile from '..';
+import { compile } from '..';
 import print from 'walt-buildtools/print';
 import path from 'path';
-import { harness } from '../utils/test-utils';
-
-const compileAndRun = (src, imports) =>
-  WebAssembly.instantiate(compile(src, { encodeNames: true }), imports);
+import { harness, compileAndRun } from '../utils/test-utils';
 
 test('empty module compilation', t =>
   compileAndRun('').then(({ module, instance }) => {
@@ -27,8 +25,11 @@ test(
 );
 
 test('import as', t => {
+  const parser = makeParser([]);
+  const fragment = makeFragment(parser);
+
   const node = semantics(
-    parse(`
+    parser(`
 import {
   getStringIterator,
   next as string_next,
@@ -36,7 +37,9 @@ import {
   stringLength,
   indexOf
 } from '../walt/string';
-`)
+`),
+    [],
+    { parser, fragment }
   );
   const error = t.throws(() => validate(node, {}));
   t.snapshot(print(node));

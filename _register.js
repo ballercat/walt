@@ -1,8 +1,15 @@
-// Custom require setup, babel-register + .walt to strings
+// Custom require setup for ava tests
+//
+// Includes:
+//
+// * babel-register
+// * .walt to strings
+// * .ne to grammar functions
+
 const pirates = require('pirates');
 const nearley = require('nearley');
 const compile = require('nearley/lib/compile');
-const generate = require('../parser/grammar/generator');
+const generate = require('./generator');
 const nearleyGrammar = require('nearley/lib/nearley-language-bootstrapped');
 
 require('babel-register')({

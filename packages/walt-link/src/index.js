@@ -39,8 +39,19 @@ const getFileContents = resolver => (file, parent, mode) => {
   return fs.readFileSync(resolver(file, parent), mode);
 };
 
-function link(file, options = { logger: console }, api = compiler) {
-  invariant(api, "An API needs to be provided to the linker.");
+function link(file, options = { logger: console }, api) {
+  if (api == null) {
+    const parser = compiler.makeParser([]);
+    const fragment = compiler.makeFragment(parser);
+
+    api = Object.assign({}, compiler, {
+      parser,
+      fragment,
+      semantics(ast) {
+        return compiler.semantics(ast, [], { parser, fragment });
+      },
+    });
+  }
 
   if (api.resolve == null) {
     api = Object.assign(

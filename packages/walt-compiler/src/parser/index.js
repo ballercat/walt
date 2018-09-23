@@ -8,6 +8,7 @@
 import invariant from 'invariant';
 import Syntax, { tokens } from 'walt-syntax';
 import moo from 'moo';
+import curry from 'curry';
 // $FlowFixMe
 import coreGrammar from './grammar/grammar.ne';
 // $FlowFixMe
@@ -61,10 +62,11 @@ function makeLexer() {
   };
 }
 
-export default function parse(
-  source: string,
-  grammarList: MakeGrammar[] = [coreGrammar, defaultArgsGrammar]
+export default curry(function parse(
+  extraGrammar: MakeGrammar[],
+  source: string
 ): NodeType {
+  const grammarList = [coreGrammar, defaultArgsGrammar, ...extraGrammar];
   const context = {
     lexer: makeLexer(),
     nodes,
@@ -72,7 +74,7 @@ export default function parse(
     Syntax,
   };
 
-  const grammar = grammarList.slice(1).reduce((acc, value) => {
+  const grammar = grammarList.slice(1).reduce((acc: any, value: Function) => {
     const extra = value.call(context);
     return {
       ...acc,
@@ -81,6 +83,7 @@ export default function parse(
   }, grammarList[0].call(context));
 
   const parser = new Parser(Grammar.fromCompiled(grammar));
+
   parser.feed(source);
 
   invariant(
@@ -89,4 +92,4 @@ export default function parse(
   );
 
   return parser.results[0];
-}
+});

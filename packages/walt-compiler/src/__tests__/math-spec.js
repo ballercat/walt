@@ -4,9 +4,9 @@
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators
  */
 import test from 'ava';
-import compile from '..';
+import { compile } from '..';
 
-const compileAndRun = src => WebAssembly.instantiate(compile(src));
+const compileAndRun = src => WebAssembly.instantiate(compile(src).buffer());
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 

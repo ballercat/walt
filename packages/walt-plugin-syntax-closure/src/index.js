@@ -1,22 +1,61 @@
 /**
  * Closure plugin.
  *
- * Here be dragons
- *
  */
 import Syntax from 'walt-syntax';
-import parser from '../parser';
 import { enter, find, current } from 'walt-parser-tools/scope';
-import hasNode from '../utils/has-node';
+import hasNode from 'walt-parser-tools/has-node';
 import walkNode from 'walt-parser-tools/walk-node';
-import { fragment } from '../parser/fragment';
-import { LOCAL_INDEX } from '../semantics/metadata';
-import { sizes } from '../types';
+import grammar from './closures.ne';
+import source from './closures.walt';
+export const DEPENDENCY_NAME = 'walt-plugin-closure';
+
+const sizes = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
 
 const sum = (a, b) => a + b;
+const LOCAL_INDEX = 'local/index';
 
-export default function() {
-  const semantics = () => {
+const importsSource = `
+// Start Closure Imports Header
+import {
+  __closure_malloc: ClosureGeti32,
+  __closure_free: ClosureFree,
+  __closure_get_i32: ClosureGeti32,
+  __closure_get_f32: ClosureGetf32,
+  __closure_get_i64: ClosureGeti64,
+  __closure_get_f64: ClosureGetf64,
+  __closure_set_i32: ClosureSeti32,
+  __closure_set_f32: ClosureSetf32,
+  __closure_set_i64: ClosureSeti64,
+  __closure_set_f64: ClosureSetf64
+} from '${DEPENDENCY_NAME}';
+type ClosureFree = (i32) => void;
+type ClosureGeti32 = (i32) => i32;
+type ClosureGetf32 = (i32) => f32;
+type ClosureGeti64 = (i32) => i64;
+type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
+type ClosureSetf32 = (i32, f32) => void;
+type ClosureSeti64 = (i32, i64) => void;
+type ClosureSetf64 = (i32, f64) => void;
+// End Closure Imports Header
+`;
+
+// Imports for the users of the plugin
+export function imports(options, compile) {
+  return WebAssembly.instantiate(compile(source, options).buffer()).then(
+    mod => ({
+      [DEPENDENCY_NAME]: mod.instance.exports,
+    })
+  );
+}
+
+export function plugin() {
+  const semantics = ({ parser, fragment }) => {
     // Declaration parser, re-used for mutable/immutable declarations
     const declarationParser = next => (args, transform) => {
       const [node, context] = args;
@@ -74,37 +113,55 @@ export default function() {
     };
 
     return {
-      Program: next => args => {
-        const [program, context] = args;
+      // One drawback of having a plugin for closures isntead of built in support
+      // is that it's rather difficult to pre-parse the Generic Closure types.
+      // Since generics depend on the real type nodes being already processed we
+      // loose the benifit of using a generic type before its defined.
+      GenericType: _ => semanticArgs => {
+        const [node, context] = semanticArgs;
+        const { types } = context;
+        const [generic] = node.params;
+        const [T] = generic.params;
+        const realType = types[T.value];
+        const [args, result] = realType.params;
+        // Patch the node to be a real type which we can reference later
+        const patch = {
+          ...realType,
+          range: generic.range,
+          value: node.value,
+          meta: {
+            ...realType.meta,
+            CLOSURE_TYPE: generic.value === 'Lambda',
+          },
+          params: [
+            {
+              ...args,
+              params: [
+                {
+                  ...args,
+                  params: [],
+                  type: 'i32',
+                  value: 'i32',
+                  Type: Syntax.Type,
+                },
+                ...args.params,
+              ],
+            },
+            result,
+          ],
+        };
+        types[patch.value] = patch;
+
+        return patch;
+      },
+      Program: next => semanticArgs => {
+        const [program, context] = semanticArgs;
 
         if (!hasNode(Syntax.Closure, program)) {
-          return next(args);
+          return next(semanticArgs);
         }
 
-        const closureImportsHeader = parser(`
-      // Start Closure Imports Header
-      import {
-        __closure_malloc: ClosureGeti32,
-        __closure_free: ClosureFree,
-        __closure_get_i32: ClosureGeti32,
-        __closure_get_f32: ClosureGetf32,
-        __closure_get_i64: ClosureGeti64,
-        __closure_get_f64: ClosureGetf64,
-        __closure_set_i32: ClosureSeti32,
-        __closure_set_f32: ClosureSetf32,
-        __closure_set_i64: ClosureSeti64,
-        __closure_set_f64: ClosureSetf64
-      } from 'walt-plugin-closure';
-      type ClosureFree = (i32) => void;
-      type ClosureGeti32 = (i32) => i32;
-      type ClosureGetf32 = (i32) => f32;
-      type ClosureGeti64 = (i32) => i64;
-      type ClosureGetf64 = (i32) => f64; type ClosureSeti32 = (i32, i32) => void;
-      type ClosureSetf32 = (i32, f32) => void;
-      type ClosureSeti64 = (i32, i64) => void;
-      type ClosureSetf64 = (i32, f64) => void;
-      // End Closure Imports Header
-    `).params;
+        const closureImportsHeader = parser(importsSource).params;
         const closures = [];
         const parsedProgram = next([
           {
@@ -118,7 +175,6 @@ export default function() {
           ...parsedProgram,
           params: [...parsedProgram.params, ...closures],
         };
-
         return result;
       },
       Closure: _next => (args, transform) => {
@@ -331,6 +387,7 @@ export default function() {
   };
 
   return {
+    grammar,
     semantics,
   };
 }
