@@ -416,7 +416,7 @@ function grammar() {
 
   const { Syntax } = this;
   const { drop, extendNode } = this.helpers;
-  const { node, genericType, typeGeneric } = this.nodes(this.lexer);
+  const { node, typeGeneric } = this.nodes(this.lexer);
   const voidClosure = d => {
     const [args, block] = drop(d);
     const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
@@ -433,6 +433,14 @@ function grammar() {
         params: [args, resultNode, block]
       }, node(Syntax.FunctionDeclaration)([]))]
     }, node(Syntax.Closure)([]));
+  };
+
+  const genericType = d => {
+    const [id, gen, typeNode] = drop(d);
+    return extendNode({
+      value: id.value,
+      params: [gen, typeNode]
+    }, node(Syntax.GenericType)([]));
   };
 
   return {
@@ -498,6 +506,13 @@ type ClosureSeti64 = (i32, i64) => void;
 type ClosureSetf64 = (i32, f64) => void;
 // End Closure Imports Header
 `;
+
+// Imports for the users of the plugin
+function imports(options, compile) {
+  return WebAssembly.instantiate(compile(source, options).buffer()).then(mod => ({
+    [DEPENDENCY_NAME]: mod.instance.exports
+  }));
+}
 
 function plugin() {
   const semantics = ({ parser, fragment }) => {
@@ -767,18 +782,12 @@ function plugin() {
 
   return {
     grammar,
-    semantics,
-    imports(options, compile) {
-      return WebAssembly.instantiate(compile(source, options).buffer()).then(mod => {
-        return {
-          [DEPENDENCY_NAME]: mod.instance.exports
-        };
-      });
-    }
+    semantics
   };
 }
 
 exports.DEPENDENCY_NAME = DEPENDENCY_NAME;
+exports.imports = imports;
 exports.plugin = plugin;
 
 Object.defineProperty(exports, '__esModule', { value: true });

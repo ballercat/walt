@@ -81,6 +81,7 @@ class Explorer extends React.Component {
             source: this.state.code.split("\n"),
             extensions: this.state.extensions
           };
+
           const wasm = compile(this.state.code, config);
           this.bytecode = wasm.buffer();
           this.setState(
@@ -119,6 +120,7 @@ class Explorer extends React.Component {
   handleSelectExample = (e, { value }) => {
     const { js, code, extensions } = examples[value];
     this.setState({ compiling: true, example: value });
+
     const wasm = compile(code, { extensions });
     requestAnimationFrame(() =>
       this.setState({
