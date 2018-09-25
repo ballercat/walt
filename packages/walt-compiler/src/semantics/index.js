@@ -32,8 +32,12 @@ import native from '../core/native';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
 import { GLOBAL_INDEX } from './metadata.js';
-
-import type { NodeType, SemanticOptionsType } from '../flow/types';
+import type {
+  NodeType,
+  Context,
+  SemanticOptions,
+  SemanticPlugin,
+} from '../flow/types';
 
 export const builtinSemantics = [
   base,
@@ -53,7 +57,7 @@ export const builtinSemantics = [
   defaultArguments,
 ];
 
-const getBuiltInParsers = () => {
+const getBuiltInParsers = (): SemanticPlugin[] => {
   return [
     base().semantics,
     core().semantics,
@@ -76,40 +80,29 @@ const getBuiltInParsers = () => {
 // Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  extraSemantics: Array<(any) => any> = [],
-  options: {} = {}
+  extraSemantics: SemanticPlugin[],
+  options: SemanticOptions
 ): NodeType {
   // Generate all the plugin instances with proper options
-  const plugins = [...getBuiltInParsers(), ...extraSemantics];
+  const plugins: SemanticPlugin[] = [...getBuiltInParsers(), ...extraSemantics];
 
   // Here each semantics parser will receive a reference to the parser & fragment
   // this allows a semantic plugin to utilize the same grammar rules as the rest
   // of the program.
   const combined = combineParsers(plugins.map(p => p(options)));
-
-  // Create the root context which will be used to parse the AST
-  const functions: { [string]: NodeType } = {};
-  const globals: { [string]: NodeType } = {};
-  const types: { [string]: NodeType } = {};
-  const userTypes: { [string]: NodeType } = {};
-  const table: { [string]: NodeType } = {};
-  const hoist: NodeType[] = [];
-  const statics: { [string]: null } = {};
-  const scopes = enterScope([], GLOBAL_INDEX);
-
-  const context: SemanticOptionsType = {
-    functions,
-    globals,
-    types,
-    userTypes,
-    table,
-    hoist,
-    statics,
+  const context: Context = {
+    functions: {},
+    types: {},
+    userTypes: {},
+    table: {},
+    hoist: [],
+    statics: {},
     path: [],
-    scopes,
+    scopes: enterScope([], GLOBAL_INDEX),
   };
   const patched = map(combined)([ast, context]);
 
+  const { functions, scopes, types, userTypes, statics, hoist } = context;
   return {
     ...patched,
     meta: {

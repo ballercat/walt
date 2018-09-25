@@ -32,6 +32,32 @@ export type WebAssemblyModuleType = {
   },
 };
 
+export type NodeMap = { [string]: NodeType };
+
+// Semantics
+export type SemanticOptions = {
+  parser: string => NodeType,
+  fragment: string => NodeType,
+};
+export type Transform = NodeType => NodeType;
+export type Context = {
+  functions: NodeMap,
+  globals: NodeMap,
+  types: NodeMap,
+  userTypes: NodeMap,
+  table: NodeMap,
+  hoist: NodeType[],
+  statics: { [string]: null },
+  scopes: NodeMap[],
+};
+export type NodeParser = NodeParser => (
+  [NodeType, Context],
+  Transform
+) => NodeType;
+export type Semantics = {
+  [string]: NodeParser,
+};
+export type SemanticPlugin = SemanticOptions => Semantics;
 export type BaseOptions = {
   version: number,
   encodeNames: boolean,
@@ -39,16 +65,16 @@ export type BaseOptions = {
   filename: string,
 };
 
-export type Plugin = BaseOptions => {
-  grammar: () => any,
-  semantics: { parser: string => NodeType, fragment: string => NodeType },
+export type Plugin = {
+  grammar?: () => any,
+  semantics: SemanticOptions => Semantics,
 };
 
 export type ConfigType = BaseOptions & {
   linker?: {
     statics: { [string]: number },
   },
-  extensions: Array<Plugin>,
+  extensions: Array<(BaseOptions) => Plugin>,
 };
 
 export type GeneratorOptions = BaseOptions & {
@@ -61,14 +87,4 @@ export type TypeCastType = {
   ...$Exact<NodeType>,
   type: string,
   params: [{ ...NodeType, type: string }],
-};
-
-export type SemanticOptionsType = {
-  functions: { [string]: NodeType },
-  globals: { [string]: NodeType },
-  types: { [string]: NodeType },
-  userTypes: { [string]: NodeType },
-  table: { [string]: NodeType },
-  hoist: NodeType[],
-  statics: { [string]: null },
 };

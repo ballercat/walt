@@ -1,5 +1,7 @@
 /* Core function plugin
  *
+ * @flow
+ *
  * This plugin only handles the basics of functions like vanilla function calls,
  * arguments and return statements
  */
@@ -16,7 +18,10 @@ export default function coreFunctionPlugin() {
   return {
     semantics() {
       return {
-        FunctionDeclaration: _ignore => ([fun, context], transform) => {
+        [Syntax.FunctionDeclaration]: _ignore => (
+          [fun, context],
+          transform
+        ) => {
           context = {
             ...context,
             result: fun.result,
@@ -67,7 +72,7 @@ export default function coreFunctionPlugin() {
             { ...context, isParsingArguments: true },
           ]);
         },
-        Pair: next => (args, transform) => {
+        [Syntax.Pair]: next => (args, transform) => {
           const [node, context] = args;
           if (context.isParsingArguments) {
             const [identifier, typeNode] = node.params;
@@ -91,7 +96,7 @@ export default function coreFunctionPlugin() {
           return next(args);
         },
         // Regular function calls
-        FunctionCall: next => ([call, context]) => {
+        [Syntax.FunctionCall]: next => ([call, context]) => {
           const { functions } = context;
           const index = Object.keys(functions).indexOf(call.value);
 
@@ -108,7 +113,10 @@ export default function coreFunctionPlugin() {
             context,
           ]);
         },
-        ReturnStatement: _ignore => ([returnNode, context], transform) => {
+        [Syntax.ReturnStatement]: _ignore => (
+          [returnNode, context],
+          transform
+        ) => {
           const [expression] = returnNode.params.map(p =>
             transform([p, context])
           );
