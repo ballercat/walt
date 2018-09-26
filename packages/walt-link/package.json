@@ -6,6 +6,7 @@
   "scripts": {
     "test": "ava",
     "debug": "node --inspect-brk node_modules/ava/profile.js",
+    "debug-container": "node --inspect-brk=\"$(hostname -I | xargs)\" node_modules/ava/profile.js",
     "prettier": "prettier --list-different src/**/*.js"
   },
   "keywords": [

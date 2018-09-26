@@ -80,7 +80,7 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
 // Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  extraSemantics: SemanticsFactory[],
+  extraSemantics: SemanticsFactory[] = [],
   options: SemanticOptions
 ): NodeType {
   // Generate all the plugin instances with proper options
