@@ -78,6 +78,7 @@ export default {
           'add',
           'index',
           'namespace',
+          'signature',
         ],
         'node_modules/walt-parser-tools/map-node.js': ['map', 'mapNode'],
         'node_modules/walt-syntax/dist/walt-syntax.js': [
