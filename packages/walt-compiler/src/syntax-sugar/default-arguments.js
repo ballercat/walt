@@ -1,13 +1,23 @@
+/**
+ * Default Arguments syntax sugar plugin.
+ *
+ * Converts FUNCTION CALLS with missing arguments to default values
+ *
+ * @flow
+ */
+import Syntax from 'walt-syntax';
+// $FlowFixMe
 import grammar from './default-arguments.ne';
 import { current } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
+import type { SemanticPlugin, GrammarPlugin } from '../flow/types';
 
-export default function() {
+export default function(): SemanticPlugin & GrammarPlugin {
   return {
     grammar,
     semantics() {
       return {
-        FunctionDeclaration: next => args => {
+        [Syntax.FunctionDeclaration]: next => args => {
           const [node, context] = args;
           const [argumentsNode] = node.params;
 
@@ -30,7 +40,7 @@ export default function() {
             context,
           ]);
         },
-        Assignment: next => (args, transform) => {
+        [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;
           // Not inside arguments
           const currentScope = current(context.scopes);
@@ -54,7 +64,7 @@ export default function() {
           // assignment anymore. Instead parse the Pair, which is the argument.
           return transform([pair, context]);
         },
-        FunctionCall: next => args => {
+        [Syntax.FunctionCall]: next => args => {
           const [call, context] = args;
           const { functions } = context;
           const [id, ...fnArgs] = call.params;

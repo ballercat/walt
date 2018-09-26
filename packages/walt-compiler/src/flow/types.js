@@ -59,6 +59,13 @@ export type Semantics = {
 export type SemanticsFactory = SemanticOptions => Semantics;
 export type SemanticPlugin = { semantics: SemanticsFactory };
 
+// Grammar
+export type Grammar = {
+  ParserRules: mixed[],
+};
+export type GrammarFactory = () => Grammar;
+export type GrammarPlugin = { grammar: GrammarFactory };
+
 export type BaseOptions = {
   version: number,
   encodeNames: boolean,
