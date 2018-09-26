@@ -1,3 +1,8 @@
+/**
+ * Array Plugin
+ *
+ * @flow
+ */
 import { find } from 'walt-parser-tools/scope';
 import { TYPE_ARRAY } from '../semantics/metadata';
 
