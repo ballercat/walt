@@ -87,9 +87,12 @@ function semantics(
   const plugins = [...getBuiltInParsers(), ...extraSemantics];
 
   // Here each semantics parser will receive a reference to the parser & fragment
-  // this allows a semantic plugin to utilize the same grammar rules as the rest
+  // this allows a semantic parser to utilize the same grammar rules as the rest
   // of the program.
   const combined = combineParsers(plugins.map(p => p(options)));
+
+  // The context is what we use to transfer state from one parser to another.
+  // Global state like type information and scope chains for example.
   const context: Context = {
     functions: {},
     types: {},
@@ -100,13 +103,14 @@ function semantics(
     path: [],
     scopes: enterScope([], GLOBAL_INDEX),
   };
-  const patched = map(combined)([ast, context]);
+  // Parse the current ast
+  const parsed = map(combined)([ast, context]);
 
   const { functions, scopes, types, userTypes, statics, hoist } = context;
   return {
-    ...patched,
+    ...parsed,
     meta: {
-      ...patched.meta,
+      ...parsed.meta,
       // Attach information collected to the AST
       [AST_METADATA]: {
         functions,
@@ -116,7 +120,7 @@ function semantics(
         statics,
       },
     },
-    params: [...patched.params, ...hoist],
+    params: [...parsed.params, ...hoist],
   };
 }
 
