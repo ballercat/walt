@@ -223,7 +223,7 @@ export function plugin() {
       },
       FunctionDeclaration: next => (args, transform) => {
         const [node, context] = args;
-        const { globals } = context;
+        const globals = context.scopes[0];
         if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {
           return next(args);
         }
