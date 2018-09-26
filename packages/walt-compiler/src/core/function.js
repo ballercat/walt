@@ -58,7 +58,7 @@ export default function coreFunctionPlugin(): SemanticPlugin {
 
           return ref;
         },
-        FunctionResult: _next => ([result, context]) => {
+        [Syntax.FunctionResult]: _next => ([result, context]) => {
           // Function statements are sybligs of FunctionResult so we need to mutate
           // the parent context (FunctionDeclaration)
           const currentScope = current(context.scopes);
@@ -66,7 +66,7 @@ export default function coreFunctionPlugin(): SemanticPlugin {
 
           return result;
         },
-        FunctionArguments: next => ([args, context], transform) => {
+        [Syntax.FunctionArguments]: next => ([args, context], transform) => {
           const currentScope = current(context.scopes);
           if (currentScope.arguments != null) {
             return next([args, context]);

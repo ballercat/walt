@@ -3,10 +3,12 @@
  *
  * @flow
  */
+import Syntax from 'walt-syntax';
 import { find } from 'walt-parser-tools/scope';
 import { TYPE_ARRAY } from '../semantics/metadata';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function arrayPlugin() {
+export default function arrayPlugin(): SemanticPlugin {
   return {
     semantics() {
       const declaration = next => args => {
@@ -29,9 +31,9 @@ export default function arrayPlugin() {
       };
 
       return {
-        Declaration: declaration,
-        ImmutableDeclaration: declaration,
-        Identifier: next => args => {
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration,
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           const ref = find(context.scopes, node.value);
           // Before moving on to the core parser all identifiers need to have
@@ -49,7 +51,7 @@ export default function arrayPlugin() {
 
           return next(args);
         },
-        ArraySubscript: _ignore => (args, transform) => {
+        [Syntax.ArraySubscript]: _ignore => (args, transform) => {
           const [node, context] = args;
 
           // To find out the type of this subscript we first must process it's

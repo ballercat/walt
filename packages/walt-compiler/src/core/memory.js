@@ -1,11 +1,17 @@
+/**
+ * Handles access to memory and Memory type declaration
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
 import { GLOBAL_INDEX } from '../semantics/metadata';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function memoryPlugin() {
+export default function memoryPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [identifier] = args;
           if (identifier.value === '__DATA_LENGTH__') {
             return {
@@ -31,7 +37,7 @@ export default function memoryPlugin() {
 
           return next(args);
         },
-        ImmutableDeclaration: next => args => {
+        [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration

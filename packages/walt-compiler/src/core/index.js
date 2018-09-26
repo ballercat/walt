@@ -3,6 +3,8 @@
  *
  * The parsers in here very closely mirror the underlying WebAssembly structure
  * and are used as the core language for every feature built on top.
+ *
+ * @flow
  */
 import Syntax from 'walt-syntax';
 import {
@@ -14,6 +16,7 @@ import {
 import { extendNode } from '../utils/extend-node';
 import { TYPE_CAST, TYPE_CONST } from '../semantics/metadata';
 import { typeWeight } from '../types';
+import type { SemanticPlugin } from '../flow/types';
 
 const balanceTypesInMathExpression = expression => {
   // find the heaviest type in the expression
@@ -56,7 +59,7 @@ const balanceTypesInMathExpression = expression => {
 };
 
 // Core plugin
-export default function Core() {
+export default function Core(): SemanticPlugin {
   return {
     semantics() {
       // Parse declaration node
@@ -81,20 +84,20 @@ export default function Core() {
       };
 
       return {
-        Declaration: declaration,
-        ImmutableDeclaration: declaration,
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration,
         // CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),
-        Select: _ => ([node, context], transform) =>
+        [Syntax.Select]: _ => ([node, context], transform) =>
           balanceTypesInMathExpression({
             ...node,
             params: node.params.map(child => transform([child, context])),
           }),
-        BinaryExpression: _ => ([node, context], transform) =>
+        [Syntax.BinaryExpression]: _ => ([node, context], transform) =>
           balanceTypesInMathExpression({
             ...node,
             params: node.params.map(child => transform([child, context])),
           }),
-        Pair: _next => (args, transform) => {
+        [Syntax.Pair]: _next => (args, transform) => {
           const [typeCastMaybe, context] = args;
 
           const params = typeCastMaybe.params.map(p => transform([p, context]));
@@ -121,7 +124,7 @@ export default function Core() {
             params,
           };
         },
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           let ref = find(context.scopes, node.value);
           if (ref) {
@@ -134,13 +137,13 @@ export default function Core() {
 
           return next(args);
         },
-        MemoryAssignment: _ignore => (args, transform) => {
+        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
           const [inputNode, context] = args;
           const params = inputNode.params.map(p => transform([p, context]));
           const { type } = params[0];
           return { ...inputNode, params, type };
         },
-        TernaryExpression: next => ([node, context]) => {
+        [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([balanceTypesInMathExpression(node), context]);
         },
       };
