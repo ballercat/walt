@@ -36,7 +36,7 @@ import type {
   NodeType,
   Context,
   SemanticOptions,
-  SemanticPlugin,
+  SemanticsFactory,
 } from '../flow/types';
 
 export const builtinSemantics = [
@@ -57,7 +57,7 @@ export const builtinSemantics = [
   defaultArguments,
 ];
 
-const getBuiltInParsers = (): SemanticPlugin[] => {
+const getBuiltInParsers = (): SemanticsFactory[] => {
   return [
     base().semantics,
     core().semantics,
@@ -80,11 +80,11 @@ const getBuiltInParsers = (): SemanticPlugin[] => {
 // Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  extraSemantics: SemanticPlugin[],
+  extraSemantics: SemanticsFactory[],
   options: SemanticOptions
 ): NodeType {
   // Generate all the plugin instances with proper options
-  const plugins: SemanticPlugin[] = [...getBuiltInParsers(), ...extraSemantics];
+  const plugins = [...getBuiltInParsers(), ...extraSemantics];
 
   // Here each semantics parser will receive a reference to the parser & fragment
   // this allows a semantic plugin to utilize the same grammar rules as the rest

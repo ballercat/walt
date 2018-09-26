@@ -4,9 +4,13 @@
  * Normalizes how scope look ups are made
  */
 const namespace = Symbol('scope namespace');
+const signature = Symbol('signature');
 
 function enter(scopes, scopeName) {
-  return [...scopes, { [namespace]: scopeName }];
+  return [
+    ...scopes,
+    { [namespace]: scopeName, [signature]: { result: null, arguments: null } },
+  ];
 }
 
 function exit(scopes) {
@@ -52,4 +56,5 @@ module.exports = {
   current,
   index,
   namespace,
+  signature,
 };

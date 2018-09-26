@@ -6,15 +6,17 @@
  * arguments and return statements
  */
 import Syntax from 'walt-syntax';
-import { current, enter, exit } from 'walt-parser-tools/scope';
+import { current, enter, exit, signature } from 'walt-parser-tools/scope';
+import walkNode from 'walt-parser-tools/walk-node';
 import {
   FUNCTION_INDEX,
   FUNCTION_METADATA,
   LOCAL_INDEX,
 } from '../semantics/metadata';
 import { typeWeight } from '../types';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function coreFunctionPlugin() {
+export default function coreFunctionPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
@@ -22,13 +24,9 @@ export default function coreFunctionPlugin() {
           [fun, context],
           transform
         ) => {
-          context = {
-            ...context,
-            result: fun.result,
-            locals: {},
-            arguments: [],
-            scopes: enter(context.scopes, LOCAL_INDEX),
-          };
+          // Enter a new scope, where all new declaration will go into
+          context.scopes = enter(context.scopes, LOCAL_INDEX);
+          const currentScope = current(context.scopes);
 
           // first two parameters to a function node are the arguments and result
           const [argsNode, resultNode, ...rest] = fun.params;
@@ -38,13 +36,13 @@ export default function coreFunctionPlugin() {
 
           const ref = {
             ...fun,
-            // This is set by the parsers below if necessary
-            type: context.result,
+            // This is set by the parsers below if necessary, defaults to null
+            type: currentScope[signature].result,
             meta: {
               ...fun.meta,
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
-                argumentsCount: context.arguments.length,
+                argumentsCount: currentScope[signature].arguments.length,
                 locals: current(context.scopes),
               },
             },
@@ -60,40 +58,42 @@ export default function coreFunctionPlugin() {
 
           return ref;
         },
-        FunctionResult: _ignore => ([result, context]) => {
+        FunctionResult: _next => ([result, context]) => {
           // Function statements are sybligs of FunctionResult so we need to mutate
           // the parent context (FunctionDeclaration)
-          context.result = result.type;
+          const currentScope = current(context.scopes);
+          currentScope[signature].result = result.type;
+
           return result;
         },
-        FunctionArguments: next => ([args, context]) => {
-          return next([
-            { ...args, params: args.params.filter(Boolean) },
-            { ...context, isParsingArguments: true },
-          ]);
-        },
-        [Syntax.Pair]: next => (args, transform) => {
-          const [node, context] = args;
-          if (context.isParsingArguments) {
-            const [identifier, typeNode] = node.params;
-
-            context.arguments.push(node);
-
-            transform([
-              {
-                ...node,
-                value: identifier.value,
-                type: typeNode.value,
-                params: [],
-                Type: Syntax.Declaration,
-              },
-              context,
-            ]);
-
-            return node;
+        FunctionArguments: next => ([args, context], transform) => {
+          const currentScope = current(context.scopes);
+          if (currentScope.arguments != null) {
+            return next([args, context]);
           }
 
-          return next(args);
+          currentScope[signature].arguments = [];
+
+          walkNode({
+            [Syntax.Pair]: node => {
+              const [identifier, typeNode] = node.params;
+
+              currentScope[signature].arguments.push(node);
+
+              transform([
+                {
+                  ...node,
+                  value: identifier.value,
+                  type: typeNode.value,
+                  params: [],
+                  Type: Syntax.Declaration,
+                },
+                context,
+              ]);
+            },
+          })({ ...args, params: args.params.filter(Boolean) });
+
+          return args;
         },
         // Regular function calls
         [Syntax.FunctionCall]: next => ([call, context]) => {
@@ -113,14 +113,16 @@ export default function coreFunctionPlugin() {
             context,
           ]);
         },
-        [Syntax.ReturnStatement]: _ignore => (
+        [Syntax.ReturnStatement]: _next => (
           [returnNode, context],
           transform
         ) => {
+          const currentScope = current(context.scopes);
+
           const [expression] = returnNode.params.map(p =>
             transform([p, context])
           );
-          const { result } = context;
+          const { result } = currentScope[signature];
           // Constants as return values need to be assigned a correct type
           // (matching the result expected)
           if (

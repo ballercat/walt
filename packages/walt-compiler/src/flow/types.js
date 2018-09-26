@@ -39,10 +39,8 @@ export type SemanticOptions = {
   parser: string => NodeType,
   fragment: string => NodeType,
 };
-export type Transform = NodeType => NodeType;
 export type Context = {
   functions: NodeMap,
-  globals: NodeMap,
   types: NodeMap,
   userTypes: NodeMap,
   table: NodeMap,
@@ -50,14 +48,17 @@ export type Context = {
   statics: { [string]: null },
   scopes: NodeMap[],
 };
+export type Transform = ([NodeType, Context]) => NodeType;
 export type NodeParser = NodeParser => (
   [NodeType, Context],
   Transform
 ) => NodeType;
 export type Semantics = {
-  [string]: NodeParser,
+  [string]: (Transform) => ([NodeType, Context], Transform) => NodeType,
 };
-export type SemanticPlugin = SemanticOptions => Semantics;
+export type SemanticsFactory = SemanticOptions => Semantics;
+export type SemanticPlugin = { semantics: SemanticsFactory };
+
 export type BaseOptions = {
   version: number,
   encodeNames: boolean,

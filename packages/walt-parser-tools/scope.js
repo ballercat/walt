@@ -5,6 +5,7 @@ const {
   find,
   current,
   namespace,
+  signature,
   index,
 } = require('./src/scope');
 
@@ -16,4 +17,5 @@ module.exports = {
   current,
   namespace,
   index,
+  signature,
 };

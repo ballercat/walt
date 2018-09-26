@@ -1,4 +1,5 @@
 import grammar from './default-arguments.ne';
+import { current } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 
 export default function() {
@@ -32,7 +33,11 @@ export default function() {
         Assignment: next => (args, transform) => {
           const [node, context] = args;
           // Not inside arguments
-          if (!context.isParsingArguments) {
+          const currentScope = current(context.scopes);
+
+          // Arguments have not been set for scope yet and the current scope is
+          // not global
+          if (currentScope.arguments == null && context.scopes.length > 1) {
             return next(args);
           }
 
