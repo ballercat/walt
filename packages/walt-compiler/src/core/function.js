@@ -66,11 +66,8 @@ export default function coreFunctionPlugin(): SemanticPlugin {
 
           return result;
         },
-        [Syntax.FunctionArguments]: next => ([args, context], transform) => {
+        [Syntax.FunctionArguments]: _next => ([args, context], transform) => {
           const currentScope = current(context.scopes);
-          if (currentScope.arguments != null) {
-            return next([args, context]);
-          }
 
           currentScope[signature].arguments = [];
 
