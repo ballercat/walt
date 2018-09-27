@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.12.0] - Sep 2018
+
+- Improve documentation
+- Add flow types to plugins
+- Add 'signature' to scope chains
+
+## [0.11.0] - Sep 2018
+
+- Split out Closures into a plugin
+- Improve plugin architecture
+- Add Rollup plugin for Walt Grammar
+- Add shared rollup configuration
+
+## [0.10.0] - Sep 2018
+
+- Replace parser with nearley project
+- Implement Plugin API
+- Convert all syntax to EBNF grammar
+- Convert most syntax validation to be powered by grammar
+
 ## [0.2.1]
 
 ### Added

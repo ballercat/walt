@@ -8,7 +8,6 @@
 import Syntax from 'walt-syntax';
 // $FlowFixMe
 import grammar from './default-arguments.ne';
-import { current } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 import type { SemanticPlugin, GrammarPlugin } from '../flow/types';
 
