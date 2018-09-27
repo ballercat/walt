@@ -14,22 +14,26 @@ import {
   LOCAL_INDEX,
 } from '../semantics/metadata';
 import { typeWeight } from '../types';
-import type { SemanticPlugin } from '../flow/types';
+import type {
+  SemanticPlugin,
+  FunctionDeclaration,
+  FunctionArguments,
+  Context,
+} from '../flow/types';
 
 export default function coreFunctionPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
         [Syntax.FunctionDeclaration]: _ignore => (
-          [fun, context],
+          [fun, context]: [FunctionDeclaration, Context],
           transform
         ) => {
           // Enter a new scope, where all new declaration will go into
           context.scopes = enter(context.scopes, LOCAL_INDEX);
           const currentScope = current(context.scopes);
 
-          // first two parameters to a function node are the arguments and result
-          const [argsNode, resultNode, ...rest] = fun.params;
+          const [argsNode, resultNode, block] = fun.params;
           const [args, result] = [argsNode, resultNode].map(p =>
             transform([p, context])
           );
@@ -49,10 +53,8 @@ export default function coreFunctionPlugin(): SemanticPlugin {
           };
           context.functions[fun.value] = ref;
 
-          // Parse the statements last, so that they can self-reference the function
-          const statements = rest.map(p => transform([p, context]));
-
-          ref.params = [args, result, ...statements];
+          // Parse the block last, so that they can self-reference the function
+          ref.params = [args, result, transform([block, context])];
 
           context.scopes = exit(context.scopes);
 
@@ -66,7 +68,10 @@ export default function coreFunctionPlugin(): SemanticPlugin {
 
           return result;
         },
-        [Syntax.FunctionArguments]: _next => ([args, context], transform) => {
+        [Syntax.FunctionArguments]: _next => (
+          [args, context]: [FunctionArguments, Context],
+          transform
+        ) => {
           const currentScope = current(context.scopes);
 
           currentScope[signature].arguments = [];

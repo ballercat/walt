@@ -24,6 +24,54 @@ export type NodeType = {
   params: NodeType[],
 };
 
+// Grammar Nodes
+type BaseNode = {
+  range: Marker[],
+  type: string | null,
+  value: string,
+  meta: MetadataType,
+};
+
+export type Identifier = BaseNode & {
+  Type: 'Identifier',
+  params: [],
+};
+export type Type = BaseNode & {
+  Type: 'Type',
+  params: [],
+};
+export type Constant = BaseNode & {
+  Type: 'Constant',
+  params: [],
+};
+export type IdentifierTypePair = BaseNode & {
+  Type: 'Pair',
+  params: [Identifier, Type],
+};
+export type BlockStatement = NodeType;
+
+export type DefaultArgument = BaseNode & {
+  Type: 'Assignment',
+  params: [IdentifierTypePair, Constant],
+};
+export type FunctionArgument = IdentifierTypePair | DefaultArgument;
+export type FunctionArguments = BaseNode & {
+  Type: 'FunctionArguments',
+  params: FunctionArgument[],
+};
+export type FunctionResult = BaseNode & {
+  Type: 'FunctionResult',
+  params: Type[],
+};
+export type Block = BaseNode & {
+  Type: 'Block',
+  params: BlockStatement[],
+};
+export type FunctionDeclaration = BaseNode & {
+  Type: 'FunctionDeclaration',
+  params: [FunctionArguments, FunctionResult, Block],
+};
+
 export type WebAssemblyModuleType = {
   instance: {
     exports: {
@@ -40,7 +88,7 @@ export type SemanticOptions = {
   fragment: string => NodeType,
 };
 export type Context = {
-  functions: NodeMap,
+  functions: { [string]: FunctionDeclaration },
   types: NodeMap,
   userTypes: NodeMap,
   table: NodeMap,
