@@ -37,7 +37,6 @@ let x: i32;
 // function testBooleans() : bool {
 //   return boolean || true;
 // }
-
 export function testLargeSignedConstant(): i32 {
   return 126;
 }
@@ -66,7 +65,9 @@ export function testExternalImport(): i32 {
   return externalConst;
 }
 
-// Test that escape sequences work
+/**
+ * Test that escape sequences work
+ */
 function testEscapeSequences(char : i32) : i32 {
   if (char == '\b') {
     return true;
@@ -272,4 +273,6 @@ export function run() {
 
   const fnPointer : Func = testFunctionPointer();
   assert("function pointer", fnPointer(), 2);
+
+  assert('Test escape sequences \\n', testEscapeSequences('\n'), true);
 }
