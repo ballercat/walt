@@ -6,9 +6,9 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "lerna bootstrap",
-    "validate": "lerna run validate --stream",
-    "test": "npm run build && lerna run test --stream",
-    "build": "lerna run build --stream",
+    "validate": "lerna run validate",
+    "test": "npm run build && lerna run test",
+    "build": "lerna run build --parallel",
     "coverage": "lerna run coverage",
     "publish": "lerna publish",
     "clean": "lerna clean"
