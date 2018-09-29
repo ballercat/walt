@@ -207,7 +207,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
 
   const tokens = {
     whitespace: /[ \t]+/,
-    comment: [{ match: /\/\/.*?$/ }, { match: /\/\*.*?\*\// }],
+    comment: [{ match: /\/\/.*?$/ }, { match: /\/\*[^]*?\*\//, lineBreaks: true }],
     number: [{ match: /0[xX][0-9a-fA-F]+/ }, { match: /0[oO][0-9]+/ }, { match: /0[bB][01]+/ }, { match: /(?:[0-9]+(?:\.[0-9]+)?e-?[0-9]+)/ }, { match: /[0-9]+\.[0-9]+|[0-9]+/ }],
     char: [{ match: /'(?:\\['\\bfnrtv0]|[^'\\\n])'/, value: x => x.slice(1, -1) }],
     string: [{ match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) }, { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) }, { match: /`(?:\\['\\bfnrtv0]|[^'\\])*?`/, value: x => x.slice(1, -1) }],
@@ -2677,11 +2677,23 @@ function memoryPlugin() {
  *
  *      
  */
+const escapeMap = {
+  ['\\0']: 0x00,
+  ['\\a']: 0x07,
+  ['\\b']: 0x08,
+  ['\\t']: 0x09,
+  ['\\n']: 0x0a,
+  ['\\v']: 0x0b,
+  ['\\f']: 0x0c,
+  ['\\r']: 0x0d,
+  ["\\'"]: 0x27
+};
+
 function Strings() {
   return {
     semantics: () => ({
       [Syntax.CharacterLiteral]: _ => ([node, context], transform) => {
-        const codePoint = node.value.codePointAt(0);
+        const codePoint = escapeMap[node.value] || node.value.codePointAt(0);
 
         return transform([_extends({}, node, {
           Type: 'Constant',
@@ -5577,7 +5589,7 @@ const makeFragment = curry_1((parser, source) => {
 });
 
 //      
-const VERSION = '0.12.0';
+const VERSION = '0.13.0';
 
 // Used for debugging purposes
 const getIR = (source, config) => {
