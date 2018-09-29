@@ -1,12 +1,16 @@
 import test from 'ava';
-import parser from '../../parser';
+import makeParser from '../../parser';
+import { makeFragment } from '../../parser/fragment';
 import semantics from '../../semantics';
 import validate from '..';
 
+const parser = makeParser([]);
+const fragment = makeFragment(parser);
 const parseAndValidate = source =>
-  validate(semantics(parser([], source)), {
+  validate(semantics(parser(source), [], { parser, fragment }), {
     lines: source.split('/n'),
     filename: 'spec.walt',
+    extraSemantics: [],
   });
 
 test('ast must have metadata attached', t => {

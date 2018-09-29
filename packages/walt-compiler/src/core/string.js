@@ -1,7 +1,15 @@
-export default function Strings() {
+/**
+ * String plugin
+ *
+ * @flow
+ */
+import Syntax from 'walt-syntax';
+import type { SemanticPlugin } from '../flow/types';
+
+export default function Strings(): SemanticPlugin {
   return {
     semantics: () => ({
-      CharacterLiteral: _ => ([node, context], transform) => {
+      [Syntax.CharacterLiteral]: _ => ([node, context], transform) => {
         const codePoint = node.value.codePointAt(0);
 
         return transform([
@@ -14,7 +22,7 @@ export default function Strings() {
           context,
         ]);
       },
-      StringLiteral: _ignore => args => {
+      [Syntax.StringLiteral]: _ignore => args => {
         const [stringLiteral, context] = args;
         const { statics } = context;
         const { value } = stringLiteral;

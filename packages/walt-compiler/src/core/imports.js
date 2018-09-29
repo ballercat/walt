@@ -1,3 +1,8 @@
+/**
+ * Imports Plugin
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
 import {
   current,
@@ -7,11 +12,12 @@ import {
 } from 'walt-parser-tools/scope';
 import { mapNode } from 'walt-parser-tools/map-node';
 import { FUNCTION_INDEX, TYPE_INDEX, TYPE_CONST } from '../semantics/metadata';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function Imports() {
+export default function Imports(): SemanticPlugin {
   return {
     semantics: () => ({
-      Import: _next => args => {
+      [Syntax.Import]: _next => args => {
         const [node, context] = args;
         return mapNode({
           [Syntax.BinaryExpression]: (as, transform) => {

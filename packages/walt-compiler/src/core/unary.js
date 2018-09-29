@@ -1,4 +1,10 @@
+/**
+ * Unary operator plugin.
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
+import type { SemanticPlugin } from '../flow/types';
 
 const shifts = {
   i64: 63,
@@ -7,11 +13,11 @@ const shifts = {
   f32: 32,
 };
 // Unary expressions need to be patched so that the LHS type matches the RHS
-export default function() {
+export default function(): SemanticPlugin {
   return {
     semantics({ fragment }) {
       return {
-        UnaryExpression: _ignore => (args, transform) => {
+        [Syntax.UnaryExpression]: _ignore => (args, transform) => {
           const [unaryNode, context] = args;
           // While it's counter-intuitive that an unary operation would have two operands
           // it is simpler to always parse them as pseudo-binary and then simplify them here.

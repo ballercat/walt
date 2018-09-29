@@ -1,12 +1,22 @@
+/**
+ * Default Arguments syntax sugar plugin.
+ *
+ * Converts FUNCTION CALLS with missing arguments to default values
+ *
+ * @flow
+ */
+import Syntax from 'walt-syntax';
+// $FlowFixMe
 import grammar from './default-arguments.ne';
 import walkNode from 'walt-parser-tools/walk-node';
+import type { SemanticPlugin, GrammarPlugin } from '../flow/types';
 
-export default function() {
+export default function(): SemanticPlugin & GrammarPlugin {
   return {
     grammar,
     semantics() {
       return {
-        FunctionDeclaration: next => args => {
+        [Syntax.FunctionDeclaration]: next => args => {
           const [node, context] = args;
           const [argumentsNode] = node.params;
 
@@ -29,27 +39,33 @@ export default function() {
             context,
           ]);
         },
-        Assignment: next => (args, transform) => {
-          const [node, context] = args;
-          // Not inside arguments
-          if (!context.isParsingArguments) {
-            return next(args);
-          }
+        // There isn't a need to parse out the Assignment expressions as they are
+        // not actually compiled/generated into the final binary
+        // [Syntax.Assignment]: next => (args, transform) => {
+        //   const [node, context] = args;
+        //   // Not inside arguments
+        //   const currentScope = current(context.scopes);
 
-          // Assignment has higher precedence than ":" Pair expressions so the
-          // children of this node will be [Pair(id:type), Constant(value)]
-          // remove the constant return the pair.
-          //
-          // A helpful visual of a valid default argument syntax:
-          //
-          //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
-          const [pair] = node.params;
+        //   // Arguments have not been set for scope yet and the current scope is
+        //   // not global
+        //   if (currentScope.arguments == null && context.scopes.length > 1) {
+        //     return next(args);
+        //   }
 
-          // Short circuit the parsers since it does not make sense to process
-          // assignment anymore. Instead parse the Pair, which is the argument.
-          return transform([pair, context]);
-        },
-        FunctionCall: next => args => {
+        //   // Assignment has higher precedence than ":" Pair expressions so the
+        //   // children of this node will be [Pair(id:type), Constant(value)]
+        //   // remove the constant return the pair.
+        //   //
+        //   // A helpful visual of a valid default argument syntax:
+        //   //
+        //   //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
+        //   const [pair] = node.params;
+
+        //   // Short circuit the parsers since it does not make sense to process
+        //   // assignment anymore. Instead parse the Pair, which is the argument.
+        //   return transform([pair, context]);
+        // },
+        [Syntax.FunctionCall]: next => args => {
           const [call, context] = args;
           const { functions } = context;
           const [id, ...fnArgs] = call.params;

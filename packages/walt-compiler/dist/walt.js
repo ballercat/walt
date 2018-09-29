@@ -1971,9 +1971,10 @@ const combineParsers = (sortedParsers = []) => {
  * Normalizes how scope look ups are made
  */
 const namespace$1 = Symbol('scope namespace');
+const signature$1 = Symbol('signature');
 
 function enter$1(scopes, scopeName) {
-  return [...scopes, { [namespace$1]: scopeName }];
+  return [...scopes, { [namespace$1]: scopeName, [signature$1]: { result: null, arguments: null } }];
 }
 
 function exit$1(scopes) {
@@ -2018,7 +2019,8 @@ var scope$2 = {
   find: find$1,
   current: current$1,
   index: index$1,
-  namespace: namespace$1
+  namespace: namespace$1,
+  signature: signature$1
 };
 
 const {
@@ -2028,6 +2030,7 @@ const {
   find,
   current,
   namespace,
+  signature,
   index
 } = scope$2;
 
@@ -2038,7 +2041,8 @@ var scope = {
   find,
   current,
   namespace,
-  index
+  index,
+  signature
 };
 
 var scope_1 = scope.enter;
@@ -2048,6 +2052,7 @@ var scope_4 = scope.find;
 var scope_5 = scope.add;
 var scope_6 = scope.index;
 var scope_7 = scope.namespace;
+var scope_8 = scope.signature;
 
 //      
 const FUNCTION_INDEX = 'function/index';
@@ -2096,6 +2101,8 @@ const typeWeight = typeString => {
  *
  * The parsers in here very closely mirror the underlying WebAssembly structure
  * and are used as the core language for every feature built on top.
+ *
+ *      
  */
 const balanceTypesInMathExpression = expression => {
   // find the heaviest type in the expression
@@ -2153,16 +2160,16 @@ function Core() {
       };
 
       return {
-        Declaration: declaration,
-        ImmutableDeclaration: declaration,
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration,
         // CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),
-        Select: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
+        [Syntax.Select]: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
           params: node.params.map(child => transform([child, context]))
         })),
-        BinaryExpression: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
+        [Syntax.BinaryExpression]: _ => ([node, context], transform) => balanceTypesInMathExpression(_extends({}, node, {
           params: node.params.map(child => transform([child, context]))
         })),
-        Pair: _next => (args, transform) => {
+        [Syntax.Pair]: _next => (args, transform) => {
           const [typeCastMaybe, context] = args;
 
           const params = typeCastMaybe.params.map(p => transform([p, context]));
@@ -2187,7 +2194,7 @@ function Core() {
             params
           });
         },
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           let ref = scope_4(context.scopes, node.value);
           if (ref) {
@@ -2199,13 +2206,13 @@ function Core() {
 
           return next(args);
         },
-        MemoryAssignment: _ignore => (args, transform) => {
+        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
           const [inputNode, context] = args;
           const params = inputNode.params.map(p => transform([p, context]));
           const { type } = params[0];
           return _extends({}, inputNode, { params, type });
         },
-        TernaryExpression: next => ([node, context]) => {
+        [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([balanceTypesInMathExpression(node), context]);
         }
       };
@@ -2230,12 +2237,19 @@ function base() {
   };
 }
 
+/**
+ * Types plugin. Parses all types before the rest of the program
+ *
+ * (Does not handle Generic Types)
+ *
+ *      
+ */
 function typePlugin() {
   return {
     semantics() {
       return {
-        Typedef: _ => ([node]) => node,
-        Program: next => args => {
+        [Syntax.Typedef]: _ => ([node]) => node,
+        [Syntax.Program]: next => args => {
           const [ast, context] = args;
           const { types } = context;
           // Types have to be pre-parsed before the rest of the program
@@ -2285,6 +2299,11 @@ function typePlugin() {
   };
 }
 
+/**
+ * Unary operator plugin.
+ *
+ *      
+ */
 const shifts = {
   i64: 63,
   f64: 63,
@@ -2296,7 +2315,7 @@ function unary () {
   return {
     semantics({ fragment }) {
       return {
-        UnaryExpression: _ignore => (args, transform) => {
+        [Syntax.UnaryExpression]: _ignore => (args, transform) => {
           const [unaryNode, context] = args;
           // While it's counter-intuitive that an unary operation would have two operands
           // it is simpler to always parse them as pseudo-binary and then simplify them here.
@@ -2326,6 +2345,8 @@ function unary () {
 
 /* Core function plugin
  *
+ *      
+ *
  * This plugin only handles the basics of functions like vanilla function calls,
  * arguments and return statements
  */
@@ -2333,70 +2354,66 @@ function coreFunctionPlugin() {
   return {
     semantics() {
       return {
-        FunctionDeclaration: _ignore => ([fun, context], transform) => {
-          context = _extends({}, context, {
-            result: fun.result,
-            locals: {},
-            arguments: [],
-            scopes: scope_1(context.scopes, LOCAL_INDEX)
-          });
+        [Syntax.FunctionDeclaration]: _ignore => ([fun, context], transform) => {
+          // Enter a new scope, where all new declaration will go into
+          context.scopes = scope_1(context.scopes, LOCAL_INDEX);
+          const currentScope = scope_3(context.scopes);
 
-          // first two parameters to a function node are the arguments and result
-          const [argsNode, resultNode, ...rest] = fun.params;
+          const [argsNode, resultNode, block] = fun.params;
           const [args, result] = [argsNode, resultNode].map(p => transform([p, context]));
 
           const ref = _extends({}, fun, {
-            // This is set by the parsers below if necessary
-            type: context.result,
+            // This is set by the parsers below if necessary, defaults to null
+            type: currentScope[scope_8].result,
             meta: _extends({}, fun.meta, {
               [FUNCTION_INDEX]: Object.keys(context.functions).length,
               [FUNCTION_METADATA]: {
-                argumentsCount: context.arguments.length,
+                argumentsCount: currentScope[scope_8].arguments.length,
                 locals: scope_3(context.scopes)
               }
             })
           });
           context.functions[fun.value] = ref;
 
-          // Parse the statements last, so that they can self-reference the function
-          const statements = rest.map(p => transform([p, context]));
-
-          ref.params = [args, result, ...statements];
+          // Parse the block last, so that they can self-reference the function
+          ref.params = [args, result, transform([block, context])];
 
           context.scopes = scope_2(context.scopes);
 
           return ref;
         },
-        FunctionResult: _ignore => ([result, context]) => {
+        [Syntax.FunctionResult]: _next => ([result, context]) => {
           // Function statements are sybligs of FunctionResult so we need to mutate
           // the parent context (FunctionDeclaration)
-          context.result = result.type;
+          const currentScope = scope_3(context.scopes);
+          currentScope[scope_8].result = result.type;
+
           return result;
         },
-        FunctionArguments: next => ([args, context]) => {
-          return next([_extends({}, args, { params: args.params.filter(Boolean) }), _extends({}, context, { isParsingArguments: true })]);
-        },
-        Pair: next => (args, transform) => {
-          const [node, context] = args;
-          if (context.isParsingArguments) {
-            const [identifier, typeNode] = node.params;
+        [Syntax.FunctionArguments]: _next => ([args, context], transform) => {
+          const currentScope = scope_3(context.scopes);
 
-            context.arguments.push(node);
+          currentScope[scope_8].arguments = [];
 
-            transform([_extends({}, node, {
-              value: identifier.value,
-              type: typeNode.value,
-              params: [],
-              Type: Syntax.Declaration
-            }), context]);
+          walkNode({
+            [Syntax.Pair]: node => {
+              const [identifier, typeNode] = node.params;
 
-            return node;
-          }
+              currentScope[scope_8].arguments.push(node);
 
-          return next(args);
+              transform([_extends({}, node, {
+                value: identifier.value,
+                type: typeNode.value,
+                params: [],
+                Type: Syntax.Declaration
+              }), context]);
+            }
+          })(_extends({}, args, { params: args.params.filter(Boolean) }));
+
+          return args;
         },
         // Regular function calls
-        FunctionCall: next => ([call, context]) => {
+        [Syntax.FunctionCall]: next => ([call, context]) => {
           const { functions } = context;
           const index = Object.keys(functions).indexOf(call.value);
 
@@ -2406,9 +2423,11 @@ function coreFunctionPlugin() {
             params: call.params.slice(1)
           }), context]);
         },
-        ReturnStatement: _ignore => ([returnNode, context], transform) => {
+        [Syntax.ReturnStatement]: _next => ([returnNode, context], transform) => {
+          const currentScope = scope_3(context.scopes);
+
           const [expression] = returnNode.params.map(p => transform([p, context]));
-          const { result } = context;
+          const { result } = currentScope[scope_8];
           // Constants as return values need to be assigned a correct type
           // (matching the result expected)
           if (expression != null && expression.Type === Syntax.Constant && typeWeight(expression.type) !== typeWeight(result)) {
@@ -2429,10 +2448,15 @@ function coreFunctionPlugin() {
   };
 }
 
+/**
+ * Imports Plugin
+ *
+ *      
+ */
 function Imports() {
   return {
     semantics: () => ({
-      Import: _next => args => {
+      [Syntax.Import]: _next => args => {
         const [node, context] = args;
         return mapNode_2({
           [Syntax.BinaryExpression]: (as, transform) => {
@@ -2497,6 +2521,13 @@ function Imports() {
   };
 }
 
+/**
+ * Bool plugin.
+ * Converts boolean identifiers to i32 constants, handles declarations with
+ * type "bool".
+ *
+ *      
+ */
 function booleanPlugin() {
   return {
     semantics() {
@@ -2508,7 +2539,7 @@ function booleanPlugin() {
         return next([decl, context]);
       };
       return {
-        Identifier: next => (args, transform) => {
+        [Syntax.Identifier]: next => (args, transform) => {
           const [id, context] = args;
           if (!(id.value === 'true' || id.value === 'false')) {
             return next(args);
@@ -2520,20 +2551,25 @@ function booleanPlugin() {
             type: 'i32'
           }), context]);
         },
-        FunctionResult: next => ([result, context]) => {
+        [Syntax.FunctionResult]: next => ([result, context]) => {
           if (result.type === 'bool') {
             return next([_extends({}, result, { type: 'i32' }), context]);
           }
 
           return next([result, context]);
         },
-        Declaration: declaration,
-        ImmutableDeclaration: declaration
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration
       };
     }
   };
 }
 
+/**
+ * Array Plugin
+ *
+ *      
+ */
 function arrayPlugin() {
   return {
     semantics() {
@@ -2553,9 +2589,9 @@ function arrayPlugin() {
       };
 
       return {
-        Declaration: declaration,
-        ImmutableDeclaration: declaration,
-        Identifier: next => args => {
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration,
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           const ref = scope_4(context.scopes, node.value);
           // Before moving on to the core parser all identifiers need to have
@@ -2569,7 +2605,7 @@ function arrayPlugin() {
 
           return next(args);
         },
-        ArraySubscript: _ignore => (args, transform) => {
+        [Syntax.ArraySubscript]: _ignore => (args, transform) => {
           const [node, context] = args;
 
           // To find out the type of this subscript we first must process it's
@@ -2588,11 +2624,16 @@ function arrayPlugin() {
   };
 }
 
+/**
+ * Handles access to memory and Memory type declaration
+ *
+ *      
+ */
 function memoryPlugin() {
   return {
     semantics() {
       return {
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [identifier] = args;
           if (identifier.value === '__DATA_LENGTH__') {
             return _extends({}, identifier, {
@@ -2612,7 +2653,7 @@ function memoryPlugin() {
 
           return next(args);
         },
-        ImmutableDeclaration: next => args => {
+        [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration
@@ -2631,10 +2672,15 @@ function memoryPlugin() {
   };
 }
 
+/**
+ * String plugin
+ *
+ *      
+ */
 function Strings() {
   return {
     semantics: () => ({
-      CharacterLiteral: _ => ([node, context], transform) => {
+      [Syntax.CharacterLiteral]: _ => ([node, context], transform) => {
         const codePoint = node.value.codePointAt(0);
 
         return transform([_extends({}, node, {
@@ -2643,7 +2689,7 @@ function Strings() {
           value: String(codePoint)
         }), context]);
       },
-      StringLiteral: _ignore => args => {
+      [Syntax.StringLiteral]: _ignore => args => {
         const [stringLiteral, context] = args;
         const { statics } = context;
         const { value } = stringLiteral;
@@ -2662,12 +2708,18 @@ function Strings() {
   };
 }
 
+/**
+ * Function pointer plugin.
+ * Handles function pointer declaration and indirect calls.
+ *
+ *      
+ */
 function functionPointer() {
   return {
     semantics() {
       return {
         // Handle Table definitions
-        ImmutableDeclaration: next => function defineTable(args) {
+        [Syntax.ImmutableDeclaration]: next => function defineTable(args) {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration
@@ -2681,7 +2733,7 @@ function functionPointer() {
 
           return next(args);
         },
-        Identifier: next => function pointer(args) {
+        [Syntax.Identifier]: next => function pointer(args) {
           const [node, context] = args;
           const { functions, table, scopes } = context;
 
@@ -2701,7 +2753,7 @@ function functionPointer() {
             Type: Syntax.FunctionPointer
           });
         },
-        FunctionResult: next => (args, transform) => {
+        [Syntax.FunctionResult]: next => (args, transform) => {
           const [node, context] = args;
           const { types } = context;
           if (!types[node.type]) {
@@ -2714,7 +2766,7 @@ function functionPointer() {
             params: node.params.map(p => transform([p, context]))
           }, node), context]);
         },
-        FunctionCall: next => function indirectCall(args, transform) {
+        [Syntax.FunctionCall]: next => function indirectCall(args, transform) {
           const [call, context] = args;
           const { scopes, types } = context;
           const ref = scope_4(scopes, call.value);
@@ -2745,6 +2797,11 @@ function functionPointer() {
   };
 }
 
+/**
+ * Structs Plugin
+ *
+ *      
+ */
 const getByteOffsetsAndSize = objectLiteralNode => {
   const offsetsByKey = {};
   const keyTypeMap = {};
@@ -2788,7 +2845,7 @@ function Struct() {
   return {
     semantics() {
       return {
-        Struct: _ => ([node, { userTypes }]) => {
+        [Syntax.Struct]: _ => ([node, { userTypes }]) => {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(node.params[0]);
           const struct = _extends({}, node, {
             meta: _extends({}, node.meta, {
@@ -2801,10 +2858,10 @@ function Struct() {
           userTypes[struct.value] = struct;
           return struct;
         },
-        FunctionResult: next => (args, transform) => {
+        [Syntax.FunctionResult]: next => (args, transform) => {
           const [node, context] = args;
           const { userTypes } = context;
-          if (!userTypes[node.type]) {
+          if (!userTypes[String(node.type)]) {
             return next(args);
           }
 
@@ -2814,7 +2871,7 @@ function Struct() {
             params: node.params.map(p => transform([p, context]))
           }, node), context]);
         },
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const ref = scope_4(scopes, node.value);
@@ -2829,7 +2886,7 @@ function Struct() {
             type: 'i32'
           });
         },
-        ArraySubscript: next => (args, transform) => {
+        [Syntax.ArraySubscript]: next => (args, transform) => {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
@@ -2848,7 +2905,7 @@ function Struct() {
 
           return next(args);
         },
-        Assignment: next => (args, transform) => {
+        [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;
           const [lhs, rhs] = node.params;
 
@@ -2910,6 +2967,7 @@ function Struct() {
             }
           })(rhs);
 
+          // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
           const params = Object.values(_extends({}, spreadKeys, individualKeys));
 
           return _extends({}, lhs, {
@@ -2924,11 +2982,16 @@ function Struct() {
   };
 }
 
+/**
+ * Native methods plugin
+ *
+ *      
+ */
 function nativePlugin() {
   return {
     semantics() {
       return {
-        FunctionCall: next => (args, transform) => {
+        [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
           const [id, ...fnArgs] = node.params;
           if (id.Type === Syntax.ArraySubscript && id.params[0] && id.params[0].Type === Syntax.Type) {
@@ -2949,12 +3012,20 @@ function nativePlugin() {
   };
 }
 
+/**
+ * Default Arguments syntax sugar plugin.
+ *
+ * Converts FUNCTION CALLS with missing arguments to default values
+ *
+ *      
+ */
+// $FlowFixMe
 function defaultArguments () {
   return {
     grammar: grammar$1,
     semantics() {
       return {
-        FunctionDeclaration: next => args => {
+        [Syntax.FunctionDeclaration]: next => args => {
           const [node, context] = args;
           const [argumentsNode] = node.params;
 
@@ -2973,27 +3044,33 @@ function defaultArguments () {
             meta: _extends({}, node.meta, { DEFAULT_ARGUMENTS: defaultArguments })
           }), context]);
         },
-        Assignment: next => (args, transform) => {
-          const [node, context] = args;
-          // Not inside arguments
-          if (!context.isParsingArguments) {
-            return next(args);
-          }
+        // There isn't a need to parse out the Assignment expressions as they are
+        // not actually compiled/generated into the final binary
+        // [Syntax.Assignment]: next => (args, transform) => {
+        //   const [node, context] = args;
+        //   // Not inside arguments
+        //   const currentScope = current(context.scopes);
 
-          // Assignment has higher precedence than ":" Pair expressions so the
-          // children of this node will be [Pair(id:type), Constant(value)]
-          // remove the constant return the pair.
-          //
-          // A helpful visual of a valid default argument syntax:
-          //
-          //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
-          const [pair] = node.params;
+        //   // Arguments have not been set for scope yet and the current scope is
+        //   // not global
+        //   if (currentScope.arguments == null && context.scopes.length > 1) {
+        //     return next(args);
+        //   }
 
-          // Short circuit the parsers since it does not make sense to process
-          // assignment anymore. Instead parse the Pair, which is the argument.
-          return transform([pair, context]);
-        },
-        FunctionCall: next => args => {
+        //   // Assignment has higher precedence than ":" Pair expressions so the
+        //   // children of this node will be [Pair(id:type), Constant(value)]
+        //   // remove the constant return the pair.
+        //   //
+        //   // A helpful visual of a valid default argument syntax:
+        //   //
+        //   //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
+        //   const [pair] = node.params;
+
+        //   // Short circuit the parsers since it does not make sense to process
+        //   // assignment anymore. Instead parse the Pair, which is the argument.
+        //   return transform([pair, context]);
+        // },
+        [Syntax.FunctionCall]: next => args => {
           const [call, context] = args;
           const { functions } = context;
           const [id, ...fnArgs] = call.params;
@@ -3021,6 +3098,11 @@ function defaultArguments () {
   };
 }
 
+/**
+ * Sizeof helper plugin. Maps size(<THING>) to a static i32 constant
+ *
+ *      
+ */
 const sizes$1 = {
   i64: 8,
   f64: 8,
@@ -3032,7 +3114,7 @@ function sizeofPlugin() {
   return {
     semantics() {
       return {
-        FunctionCall: next => args => {
+        [Syntax.FunctionCall]: next => args => {
           const [sizeof, context] = args;
 
           if (sizeof.value !== 'sizeof') {
@@ -3060,7 +3142,7 @@ function sizeofPlugin() {
           const node = ref || func;
 
           return _extends({}, sizeof, {
-            value: sizes$1[node ? node.type : target.value] || 4,
+            value: sizes$1[String(node ? node.type : target.value)] || '4',
             type: 'i32',
             params: [],
             Type: Syntax.Constant
@@ -3092,40 +3174,33 @@ const getBuiltInParsers = () => {
 };
 
 // Return AST with full transformations applied
-function semantics(ast, extraSemantics = [], options = {}) {
+function semantics(ast, extraSemantics = [], options) {
   // Generate all the plugin instances with proper options
   const plugins = [...getBuiltInParsers(), ...extraSemantics];
 
   // Here each semantics parser will receive a reference to the parser & fragment
-  // this allows a semantic plugin to utilize the same grammar rules as the rest
+  // this allows a semantic parser to utilize the same grammar rules as the rest
   // of the program.
   const combined = combineParsers(plugins.map(p => p(options)));
 
-  // Create the root context which will be used to parse the AST
-  const functions = {};
-  const globals = {};
-  const types = {};
-  const userTypes = {};
-  const table = {};
-  const hoist = [];
-  const statics = {};
-  const scopes = scope_1([], GLOBAL_INDEX);
-
+  // The context is what we use to transfer state from one parser to another.
+  // Global state like type information and scope chains for example.
   const context = {
-    functions,
-    globals,
-    types,
-    userTypes,
-    table,
-    hoist,
-    statics,
+    functions: {},
+    types: {},
+    userTypes: {},
+    table: {},
+    hoist: [],
+    statics: {},
     path: [],
-    scopes
+    scopes: scope_1([], GLOBAL_INDEX)
   };
-  const patched = mapNode_1(combined)([ast, context]);
+  // Parse the current ast
+  const parsed = mapNode_1(combined)([ast, context]);
 
-  return _extends({}, patched, {
-    meta: _extends({}, patched.meta, {
+  const { functions, scopes, types, userTypes, statics, hoist } = context;
+  return _extends({}, parsed, {
+    meta: _extends({}, parsed.meta, {
       // Attach information collected to the AST
       [AST_METADATA]: {
         functions,
@@ -3135,7 +3210,7 @@ function semantics(ast, extraSemantics = [], options = {}) {
         statics
       }
     }),
-    params: [...patched.params, ...hoist]
+    params: [...parsed.params, ...hoist]
   });
 }
 

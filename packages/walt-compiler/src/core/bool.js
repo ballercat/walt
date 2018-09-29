@@ -1,6 +1,14 @@
+/**
+ * Bool plugin.
+ * Converts boolean identifiers to i32 constants, handles declarations with
+ * type "bool".
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function booleanPlugin() {
+export default function booleanPlugin(): SemanticPlugin {
   return {
     semantics() {
       const declaration = next => ([decl, context]) => {
@@ -11,7 +19,7 @@ export default function booleanPlugin() {
         return next([decl, context]);
       };
       return {
-        Identifier: next => (args, transform) => {
+        [Syntax.Identifier]: next => (args, transform) => {
           const [id, context] = args;
           if (!(id.value === 'true' || id.value === 'false')) {
             return next(args);
@@ -27,15 +35,15 @@ export default function booleanPlugin() {
             context,
           ]);
         },
-        FunctionResult: next => ([result, context]) => {
+        [Syntax.FunctionResult]: next => ([result, context]) => {
           if (result.type === 'bool') {
             return next([{ ...result, type: 'i32' }, context]);
           }
 
           return next([result, context]);
         },
-        Declaration: declaration,
-        ImmutableDeclaration: declaration,
+        [Syntax.Declaration]: declaration,
+        [Syntax.ImmutableDeclaration]: declaration,
       };
     },
   };

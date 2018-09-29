@@ -100,7 +100,6 @@ While many different nodes are possible a strict subset of node `Type` are consi
   Syntax.MemoryAssignment,
   Syntax.Loop,
   Syntax.Break,
-  Syntax.Sequence,
   Syntax.TypeCast,
   Syntax.Noop,
   Syntax.NativeMethod

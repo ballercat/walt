@@ -1,11 +1,17 @@
+/**
+ * Structs Plugin
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 import { extendNode } from '../utils/extend-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
+import type { NodeMap, NodeType, SemanticPlugin } from '../flow/types';
 
-export const getByteOffsetsAndSize = objectLiteralNode => {
+export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
   const keyTypeMap = {};
   let size = 0;
@@ -51,11 +57,11 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
   ];
 };
 
-export default function Struct() {
+export default function Struct(): SemanticPlugin {
   return {
     semantics() {
       return {
-        Struct: _ => ([node, { userTypes }]) => {
+        [Syntax.Struct]: _ => ([node, { userTypes }]) => {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
             node.params[0]
           );
@@ -72,10 +78,10 @@ export default function Struct() {
           userTypes[struct.value] = struct;
           return struct;
         },
-        FunctionResult: next => (args, transform) => {
+        [Syntax.FunctionResult]: next => (args, transform) => {
           const [node, context] = args;
           const { userTypes } = context;
-          if (!userTypes[node.type]) {
+          if (!userTypes[String(node.type)]) {
             return next(args);
           }
 
@@ -91,7 +97,7 @@ export default function Struct() {
             context,
           ]);
         },
-        Identifier: next => args => {
+        [Syntax.Identifier]: next => args => {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const ref = find(scopes, node.value);
@@ -107,7 +113,7 @@ export default function Struct() {
             type: 'i32',
           };
         },
-        ArraySubscript: next => (args, transform) => {
+        [Syntax.ArraySubscript]: next => (args, transform) => {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
@@ -127,15 +133,15 @@ export default function Struct() {
 
           return next(args);
         },
-        Assignment: next => (args, transform) => {
+        [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;
           const [lhs, rhs] = node.params;
 
           if (!(rhs && rhs.Type === Syntax.ObjectLiteral)) {
             return next(args);
           }
-          const individualKeys = {};
-          const spreadKeys = {};
+          const individualKeys: NodeMap = {};
+          const spreadKeys: NodeMap = {};
           // We have to walk the nodes twice, once for regular prop keys and then again
           // for ...(spread)
           walkNode({
@@ -211,14 +217,18 @@ export default function Struct() {
             },
           })(rhs);
 
-          const params = Object.values({ ...spreadKeys, ...individualKeys });
+          // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
+          const params: NodeType[] = Object.values({
+            ...spreadKeys,
+            ...individualKeys,
+          });
 
           return {
             ...lhs,
             Type: Syntax.Block,
             // We just created a bunch of MemoryAssignment nodes, map over them so that
             // the correct metadata is applied to everything
-            params: params.map(p => transform([p, context])),
+            params: params.map((p: NodeType) => transform([p, context])),
           };
         },
       };

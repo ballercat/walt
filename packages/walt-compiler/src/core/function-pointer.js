@@ -1,3 +1,9 @@
+/**
+ * Function pointer plugin.
+ * Handles function pointer declaration and indirect calls.
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
 import { find } from 'walt-parser-tools/scope';
 import { extendNode } from '../utils/extend-node';
@@ -6,13 +12,14 @@ import {
   GLOBAL_INDEX,
   FUNCTION_INDEX,
 } from '../semantics/metadata';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function functionPointer() {
+export default function functionPointer(): SemanticPlugin {
   return {
     semantics() {
       return {
         // Handle Table definitions
-        ImmutableDeclaration: next =>
+        [Syntax.ImmutableDeclaration]: next =>
           function defineTable(args) {
             const [decl, context] = args;
 
@@ -29,7 +36,7 @@ export default function functionPointer() {
 
             return next(args);
           },
-        Identifier: next =>
+        [Syntax.Identifier]: next =>
           function pointer(args) {
             const [node, context] = args;
             const { functions, table, scopes } = context;
@@ -51,7 +58,7 @@ export default function functionPointer() {
               Type: Syntax.FunctionPointer,
             };
           },
-        FunctionResult: next => (args, transform) => {
+        [Syntax.FunctionResult]: next => (args, transform) => {
           const [node, context] = args;
           const { types } = context;
           if (!types[node.type]) {
@@ -70,7 +77,7 @@ export default function functionPointer() {
             context,
           ]);
         },
-        FunctionCall: next =>
+        [Syntax.FunctionCall]: next =>
           function indirectCall(args, transform) {
             const [call, context] = args;
             const { scopes, types } = context;

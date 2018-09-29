@@ -1,7 +1,13 @@
+/**
+ * Sizeof helper plugin. Maps size(<THING>) to a static i32 constant
+ *
+ * @flow
+ */
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import Syntax from 'walt-syntax';
 import { OBJECT_SIZE } from '../semantics/metadata';
+import type { SemanticPlugin } from '../flow/types';
 
 const sizes = {
   i64: 8,
@@ -10,11 +16,11 @@ const sizes = {
   f32: 4,
 };
 
-export default function sizeofPlugin() {
+export default function sizeofPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
-        FunctionCall: next => args => {
+        [Syntax.FunctionCall]: next => args => {
           const [sizeof, context] = args;
 
           if (sizeof.value !== 'sizeof') {
@@ -44,7 +50,7 @@ export default function sizeofPlugin() {
 
           return {
             ...sizeof,
-            value: sizes[node ? node.type : target.value] || 4,
+            value: sizes[String(node ? node.type : target.value)] || '4',
             type: 'i32',
             params: [],
             Type: Syntax.Constant,

@@ -1,11 +1,17 @@
+/**
+ * Native methods plugin
+ *
+ * @flow
+ */
 import Syntax from 'walt-syntax';
 import { extendNode } from '../utils/extend-node';
+import type { SemanticPlugin } from '../flow/types';
 
-export default function nativePlugin() {
+export default function nativePlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
-        FunctionCall: next => (args, transform) => {
+        [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
           const [id, ...fnArgs] = node.params;
           if (
