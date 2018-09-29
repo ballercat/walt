@@ -2359,8 +2359,7 @@ function coreFunctionPlugin() {
           context.scopes = scope_1(context.scopes, LOCAL_INDEX);
           const currentScope = scope_3(context.scopes);
 
-          // first two parameters to a function node are the arguments and result
-          const [argsNode, resultNode, ...rest] = fun.params;
+          const [argsNode, resultNode, block] = fun.params;
           const [args, result] = [argsNode, resultNode].map(p => transform([p, context]));
 
           const ref = _extends({}, fun, {
@@ -2376,10 +2375,8 @@ function coreFunctionPlugin() {
           });
           context.functions[fun.value] = ref;
 
-          // Parse the statements last, so that they can self-reference the function
-          const statements = rest.map(p => transform([p, context]));
-
-          ref.params = [args, result, ...statements];
+          // Parse the block last, so that they can self-reference the function
+          ref.params = [args, result, transform([block, context])];
 
           context.scopes = scope_2(context.scopes);
 
@@ -2393,11 +2390,8 @@ function coreFunctionPlugin() {
 
           return result;
         },
-        [Syntax.FunctionArguments]: next => ([args, context], transform) => {
+        [Syntax.FunctionArguments]: _next => ([args, context], transform) => {
           const currentScope = scope_3(context.scopes);
-          if (currentScope.arguments != null) {
-            return next([args, context]);
-          }
 
           currentScope[scope_8].arguments = [];
 
@@ -3050,30 +3044,32 @@ function defaultArguments () {
             meta: _extends({}, node.meta, { DEFAULT_ARGUMENTS: defaultArguments })
           }), context]);
         },
-        [Syntax.Assignment]: next => (args, transform) => {
-          const [node, context] = args;
-          // Not inside arguments
-          const currentScope = scope_3(context.scopes);
+        // There isn't a need to parse out the Assignment expressions as they are
+        // not actually compiled/generated into the final binary
+        // [Syntax.Assignment]: next => (args, transform) => {
+        //   const [node, context] = args;
+        //   // Not inside arguments
+        //   const currentScope = current(context.scopes);
 
-          // Arguments have not been set for scope yet and the current scope is
-          // not global
-          if (currentScope.arguments == null && context.scopes.length > 1) {
-            return next(args);
-          }
+        //   // Arguments have not been set for scope yet and the current scope is
+        //   // not global
+        //   if (currentScope.arguments == null && context.scopes.length > 1) {
+        //     return next(args);
+        //   }
 
-          // Assignment has higher precedence than ":" Pair expressions so the
-          // children of this node will be [Pair(id:type), Constant(value)]
-          // remove the constant return the pair.
-          //
-          // A helpful visual of a valid default argument syntax:
-          //
-          //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
-          const [pair] = node.params;
+        //   // Assignment has higher precedence than ":" Pair expressions so the
+        //   // children of this node will be [Pair(id:type), Constant(value)]
+        //   // remove the constant return the pair.
+        //   //
+        //   // A helpful visual of a valid default argument syntax:
+        //   //
+        //   //      function fn(x : i32, y : i32, z : i32 = 0) { ... }
+        //   const [pair] = node.params;
 
-          // Short circuit the parsers since it does not make sense to process
-          // assignment anymore. Instead parse the Pair, which is the argument.
-          return transform([pair, context]);
-        },
+        //   // Short circuit the parsers since it does not make sense to process
+        //   // assignment anymore. Instead parse the Pair, which is the argument.
+        //   return transform([pair, context]);
+        // },
         [Syntax.FunctionCall]: next => args => {
           const [call, context] = args;
           const { functions } = context;

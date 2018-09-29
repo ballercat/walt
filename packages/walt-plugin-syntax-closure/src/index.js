@@ -260,7 +260,7 @@ export function plugin() {
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
         const injectedEnv = fragment('const __env_ptr : i32 = 0');
-        const [fnArgs, result, ...rest] = node.params;
+        const [fnArgs, result, block] = node.params;
 
         const closureContext = {
           ...context,
@@ -269,7 +269,14 @@ export function plugin() {
           isParsingClosure: node.value,
         };
         const fun = next([
-          { ...node, params: [fnArgs, result, injectedEnv, ...rest] },
+          {
+            ...node,
+            params: [
+              fnArgs,
+              result,
+              { ...block, params: [injectedEnv, ...block.params] },
+            ],
+          },
           closureContext,
         ]);
 
