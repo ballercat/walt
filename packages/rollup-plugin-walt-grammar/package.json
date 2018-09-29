@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-walt-grammar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rollup plugin for loading .ne grammar files for walt-compiler",
   "main": "index.js",
   "scripts": {
