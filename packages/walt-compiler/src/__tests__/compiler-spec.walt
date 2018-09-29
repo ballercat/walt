@@ -33,10 +33,9 @@ let foo: i32 = 3;
 let baz: i32 = 0;
 let x: i32;
 
-// const boolean : bool = false;
-// function testBooleans() : bool {
-//   return boolean || true;
-// }
+// Top level/global strings
+const globalString: i32 = "Global String";
+
 export function testLargeSignedConstant(): i32 {
   return 126;
 }
@@ -275,4 +274,7 @@ export function run() {
   assert("function pointer", fnPointer(), 2);
 
   assert('Test escape sequences \\n', testEscapeSequences('\n'), true);
+
+  // Confirms global strings work, fail spec for string value
+  assert(globalString, true, true);
 }
