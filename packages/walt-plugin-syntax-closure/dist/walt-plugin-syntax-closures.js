@@ -276,9 +276,10 @@ var waltSyntax_8 = waltSyntax.f64;
  * Normalizes how scope look ups are made
  */
 const namespace$1 = Symbol('scope namespace');
+const signature$1 = Symbol('signature');
 
 function enter$1(scopes, scopeName) {
-  return [...scopes, { [namespace$1]: scopeName }];
+  return [...scopes, { [namespace$1]: scopeName, [signature$1]: { result: null, arguments: null } }];
 }
 
 function exit$1(scopes) {
@@ -323,7 +324,8 @@ var scope$2 = {
   find: find$1,
   current: current$1,
   index: index$1,
-  namespace: namespace$1
+  namespace: namespace$1,
+  signature: signature$1
 };
 
 const {
@@ -333,6 +335,7 @@ const {
   find,
   current,
   namespace,
+  signature,
   index
 } = scope$2;
 
@@ -343,7 +346,8 @@ var scope = {
   find,
   current,
   namespace,
-  index
+  index,
+  signature
 };
 
 var scope_1 = scope.enter;
@@ -643,7 +647,7 @@ function plugin() {
       },
       FunctionDeclaration: next => (args, transform) => {
         const [node, context] = args;
-        const { globals } = context;
+        const globals = context.scopes[0];
         if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {
           return next(args);
         }
@@ -680,14 +684,16 @@ function plugin() {
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
         const injectedEnv = fragment('const __env_ptr : i32 = 0');
-        const [fnArgs, result, ...rest] = node.params;
+        const [fnArgs, result, block] = node.params;
 
         const closureContext = _extends({}, context, {
           environment,
           envSize,
           isParsingClosure: node.value
         });
-        const fun = next([_extends({}, node, { params: [fnArgs, result, injectedEnv, ...rest] }), closureContext]);
+        const fun = next([_extends({}, node, {
+          params: [fnArgs, result, _extends({}, block, { params: [injectedEnv, ...block.params] })]
+        }), closureContext]);
 
         fun.params = fun.params.map(p => {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
