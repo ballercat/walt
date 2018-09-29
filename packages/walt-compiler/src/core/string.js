@@ -6,11 +6,23 @@
 import Syntax from 'walt-syntax';
 import type { SemanticPlugin } from '../flow/types';
 
+const escapeMap = {
+  ['\\0']: 0x00,
+  ['\\a']: 0x07,
+  ['\\b']: 0x08,
+  ['\\t']: 0x09,
+  ['\\n']: 0x0a,
+  ['\\v']: 0x0b,
+  ['\\f']: 0x0c,
+  ['\\r']: 0x0d,
+  ["\\'"]: 0x27,
+};
+
 export default function Strings(): SemanticPlugin {
   return {
     semantics: () => ({
       [Syntax.CharacterLiteral]: _ => ([node, context], transform) => {
-        const codePoint = node.value.codePointAt(0);
+        const codePoint = escapeMap[node.value] || node.value.codePointAt(0);
 
         return transform([
           {

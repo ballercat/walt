@@ -69,23 +69,23 @@ export function testExternalImport(): i32 {
  */
 function testEscapeSequences(char : i32) : i32 {
   if (char == '\b') {
-    return true;
+    return 0x08;
   } else if (char == '\f') {
-    return true;
+    return 0x0c;
   } else if (char == '\n') {
-    return true;
+    return 0x0a;
   } else if (char == '\r') {
-    return true;
+    return 0x0d;
   } else if (char == '\t') {
-    return true;
+    return 0x09;
   } else if (char == '\v') {
-    return true;
+    return 0x0b;
   } else if (char == '\0') {
-    return true;
+    return 0x00;
   } else if (char == '\'') {
-    return true;
+    return 0x27;
   }
-  return false;
+  return -1;
 }
 
 export function testNumberLiterals(): i32 {
@@ -273,7 +273,13 @@ export function run() {
   const fnPointer : Func = testFunctionPointer();
   assert("function pointer", fnPointer(), 2);
 
-  assert('Test escape sequences \\n', testEscapeSequences('\n'), true);
+  assert('Test escape sequences \\0', testEscapeSequences('\0'), 0x00);
+  assert('Test escape sequences \b', testEscapeSequences('\b'), 0x08);
+  assert('Test escape sequences \t', testEscapeSequences('\t'), 0x09);
+  assert('Test escape sequences \n', testEscapeSequences('\n'), 0x0a);
+  assert('Test escape sequences \v', testEscapeSequences('\v'), 0x0b);
+  assert('Test escape sequences \f', testEscapeSequences('\f'), 0x0c);
+  assert('Test escape sequences \r', testEscapeSequences('\r'), 0x0d);
 
   // Confirms global strings work, fail spec for string value
   assert(globalString, true, true);
