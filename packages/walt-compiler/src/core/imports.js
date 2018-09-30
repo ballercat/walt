@@ -84,6 +84,10 @@ export default function Imports(): SemanticPlugin {
                 meta: { [scope[namespace]]: index, [TYPE_CONST]: true },
                 type: typeNode.type,
               });
+            } else {
+              const bucket =
+                typeNode.value === 'Memory' ? 'memories' : 'tables';
+              context[bucket].push(identifierNode);
             }
 
             return pairNode;

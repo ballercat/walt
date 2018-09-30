@@ -39,19 +39,56 @@ export default function memoryPlugin(): SemanticPlugin {
         },
         [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
+          const { scopes, memories } = context;
 
           // Short circuit since memory is a special type of declaration
-          if (!context.locals && decl.type === 'Memory') {
-            return {
+          if (
+            !scopes.length < 2 &&
+            decl.type === 'Memory' &&
+            !memories.length
+          ) {
+            memories.push({
               ...decl,
               meta: {
                 ...decl.meta,
                 [GLOBAL_INDEX]: -1,
               },
-            };
+            });
+            return memories[0];
           }
 
           return next(args);
+        },
+        [Syntax.ArraySubscript]: next => (args, transform) => {
+          const [node, context] = args;
+          const params = node.params.map(p => transform([p, context]));
+          const [identifier, field] = params;
+          const memory = context.memories[0];
+          const name = identifier.value;
+
+          if (!(memory.value === name && field.value === 'dataSize')) {
+            return next(args);
+          }
+
+          return {
+            ...identifier,
+            type: 'i32',
+            Type: Syntax.ArraySubscript,
+            params: [
+              {
+                ...identifier,
+                type: 'i32',
+                value: '0',
+                Type: Syntax.Constant,
+              },
+              {
+                ...identifier,
+                type: 'i32',
+                value: '0',
+                Type: Syntax.Constant,
+              },
+            ],
+          };
         },
       };
     },
