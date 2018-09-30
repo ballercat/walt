@@ -24,6 +24,8 @@ test(
   })
 );
 
+test('statics', harness(path.resolve(__dirname, './statics-spec.walt')));
+
 test('import as', t => {
   const parser = makeParser([]);
   const fragment = makeFragment(parser);
