@@ -24,6 +24,8 @@ export const GenericType = 'GenericType';
 export const UserType = 'UserType';
 export const FunctionType = 'FunctionType';
 export const Declaration = 'Declaration';
+export const StaticDeclaration = 'StaticDeclaration';
+export const StaticValueList = 'StaticValueList';
 export const ImmutableDeclaration = 'ImmutableDeclaration';
 export const FunctionDeclaration = 'FunctionDeclaration';
 export const ArrayDeclaration = 'ArrayDeclaration';
@@ -135,6 +137,8 @@ export default {
   ImmutableDeclaration,
   FunctionDeclaration,
   ArrayDeclaration,
+  StaticDeclaration,
+  StaticValueList,
   IndirectFunctionCall,
   FunctionCall,
   Loop,

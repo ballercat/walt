@@ -49,13 +49,14 @@ SourceElementList ->
   | SourceElement _ SourceElementList  {% compose(drop, flatten, flatten) %}
 
 SourceElement ->
-    Function  {% id %}
+    Function              {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
-  | Struct    {% id %}
-  | TypeDef   {% id %}
-  | Export    {% id %}
-  | Import    {% id %}
+  | StaticDeclaration     {% id %}
+  | Struct                {% id %}
+  | TypeDef               {% id %}
+  | Export                {% id %}
+  | Import                {% id %}
 
 Statement ->
     ExpressionStatement   {% id %}
@@ -82,7 +83,7 @@ Function ->
 
 FunctionParameters ->
     LB _ RB                  {% node(Syntax.FunctionArguments) %}
-  | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten) %}
+  | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten, flatten) %}
 
 ParameterList ->
     PropertyNameAndType {% id %}
@@ -101,6 +102,12 @@ ImmutableDeclaration ->
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
 
+StaticDeclaration ->
+    CONST _ PropertyNameAndType _ EQUALS _ LSB _ RSB _ SEPARATOR {% declaration(Syntax.StaticDeclaration) %}
+  | CONST _ PropertyNameAndType _ EQUALS _ LSB _ StaticValueList _ RSB _ SEPARATOR {% compose(declaration(Syntax.StaticDeclaration), flatten) %}
+StaticValueList ->
+    Atom                           {% id %}
+  | Atom _ COMMA _ StaticValueList {% flatten %}
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
