@@ -40,7 +40,6 @@ export const harness = (filepath, env) => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const view = new DataView(memory.buffer);
   const decodeText = getText(view);
-
   const parser = makeParser([]);
   const fragment = makeFragment(parser);
 
@@ -51,18 +50,20 @@ export const harness = (filepath, env) => t => {
     walkNode,
     parser,
     semantics(ast) {
-      return semantics(ast, [], { parser, fragment });
+      const sast = semantics(ast, [], { parser, fragment });
+      return sast;
     },
     validate,
     emitter,
     generator,
     prettyPrintNode,
   });
+  const { log } = console;
   return build({
     env: {
       memory,
       MEMORY_OFFSET: 0,
-      log: console.log,
+      log,
       assert(strPointer, value, expected) {
         const text = decodeText(strPointer);
 

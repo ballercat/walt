@@ -132,6 +132,8 @@
   const UserType = 'UserType';
   const FunctionType = 'FunctionType';
   const Declaration = 'Declaration';
+  const StaticDeclaration = 'StaticDeclaration';
+  const StaticValueList = 'StaticValueList';
   const ImmutableDeclaration = 'ImmutableDeclaration';
   const FunctionDeclaration = 'FunctionDeclaration';
   const ArrayDeclaration = 'ArrayDeclaration';
@@ -243,6 +245,8 @@
     ImmutableDeclaration,
     FunctionDeclaration,
     ArrayDeclaration,
+    StaticDeclaration,
+    StaticValueList,
     IndirectFunctionCall,
     FunctionCall,
     Loop,
@@ -302,6 +306,8 @@
   exports.UserType = UserType;
   exports.FunctionType = FunctionType;
   exports.Declaration = Declaration;
+  exports.StaticDeclaration = StaticDeclaration;
+  exports.StaticValueList = StaticValueList;
   exports.ImmutableDeclaration = ImmutableDeclaration;
   exports.FunctionDeclaration = FunctionDeclaration;
   exports.ArrayDeclaration = ArrayDeclaration;
