@@ -5690,7 +5690,7 @@ const makeFragment = curry_1((parser, source) => {
 });
 
 //      
-const VERSION = '0.14.0';
+const VERSION = '0.15.0';
 
 // Used for debugging purposes
 const getIR = (source, config) => {

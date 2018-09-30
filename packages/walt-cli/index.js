@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 
 const path = require("path");
@@ -48,14 +49,22 @@ const options = {
 };
 
 if (cli.flags.wrap) {
-  const output = wrap(path.resolve(__dirname, filepath), options);
-  fs.writeFileSync(path.resolve(__dirname, cli.flags.output), output, "utf8");
+  const output = wrap(path.resolve(process.cwd(), filepath), options);
+  fs.writeFileSync(
+    path.resolve(process.cwd(), cli.flags.output),
+    output,
+    "utf8"
+  );
   process.exit();
 }
 
-const wasm = compiler.default(
-  fs.readFileSync(path.resolve(__dirname, filepath), "utf8")
+const wasm = compiler.compile(
+  fs.readFileSync(path.resolve(process.cwd(), filepath), "utf8")
 );
 // Hot take - node writeFile should just accept an ArrayBuffer
-const buffer = new Uint8Array(wasm);
-fs.writeFileSync(path.resolve(__dirname, cli.flags.output), buffer, "binary");
+const buffer = new Uint8Array(wasm.buffer());
+fs.writeFileSync(
+  path.resolve(process.cwd(), cli.flags.output),
+  buffer,
+  "binary"
+);

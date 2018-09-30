@@ -3,6 +3,9 @@
   "version": "0.3.1",
   "description": "CLI for Walt",
   "main": "index.js",
+  "bin": {
+    "walt": "index.js"
+  },
   "scripts": {
     "test": "ava",
     "debug": "node --inspect-brk node_modules/ava/profile.js"
@@ -16,15 +19,20 @@
   ],
   "author": "Arthur Buldauskas",
   "license": "MIT",
+  "peerDependencies": {
+    "walt-compiler": "^0.13.0",
+    "walt-link": "^0.4.1",
+    "walt-buildtools": "^0.1.0"
+  },
   "dependencies": {
-    "meow": "^4.0.0",
-    "walt-buildtools": "^0.1.0",
-    "walt-compiler": "^0.4.3",
-    "walt-link": "^0.4.1"
+    "meow": "^4.0.0"
   },
   "devDependencies": {
     "ava": "^0.25.0",
-    "prettier": "^1.11.1"
+    "prettier": "^1.11.1",
+    "walt-buildtools": "^0.1.0",
+    "walt-compiler": "^0.13.0",
+    "walt-link": "^0.4.1"
   },
   "ava": {
     "files": [
