@@ -49,14 +49,14 @@ SourceElementList ->
   | SourceElement _ SourceElementList  {% compose(drop, flatten, flatten) %}
 
 SourceElement ->
-    Function              {% id %}
-  | Declaration           {% id %}
-  | ImmutableDeclaration  {% id %}
-  | StaticDeclaration     {% id %}
-  | Struct                {% id %}
-  | TypeDef               {% id %}
-  | Export                {% id %}
-  | Import                {% id %}
+    Function                    {% id %}
+  | GlobalDeclaration           {% id %}
+  | GlobalImmutableDeclaration  {% id %}
+  | StaticDeclaration           {% id %}
+  | Struct                      {% id %}
+  | TypeDef                     {% id %}
+  | Export                      {% id %}
+  | Import                      {% id %}
 
 Statement ->
     ExpressionStatement   {% id %}
@@ -90,6 +90,18 @@ ParameterList ->
   | PropertyNameAndType _ COMMA _ ParameterList {% flatten  %}
 
 FunctionResult -> COLON _ Type {% compose(result, drop) %}
+
+GlobalDeclaration ->
+    LET _ PropertyNameAndType _ SEPARATOR {% declaration(Syntax.Declaration) %}
+  | LET _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+      {% declaration(Syntax.Declaration) %}
+
+GlobalImmutableDeclaration ->
+    CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
+  | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
+      {% declaration(Syntax.ImmutableDeclaration) %}
+  | CONST _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+      {% declaration(Syntax.ImmutableDeclaration) %}
 
 Declaration ->
     LET _ PropertyNameAndType _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
