@@ -24,7 +24,13 @@ test(
   })
 );
 
-test('statics', harness(path.resolve(__dirname, './statics-spec.walt')));
+test(
+  'statics',
+  harness(path.resolve(__dirname, './statics-spec.walt'), null, {
+    printBinary: false,
+    printNode: false,
+  })
+);
 
 test('import as', t => {
   const parser = makeParser([]);
