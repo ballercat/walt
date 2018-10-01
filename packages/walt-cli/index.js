@@ -59,12 +59,18 @@ if (cli.flags.wrap) {
 }
 
 const wasm = compiler.compile(
-  fs.readFileSync(path.resolve(process.cwd(), filepath), "utf8")
+  fs.readFileSync(path.resolve(process.cwd(), filepath), "utf8"),
+  {
+    encodeNames: false
+  }
 );
-// Hot take - node writeFile should just accept an ArrayBuffer
-const buffer = new Uint8Array(wasm.buffer());
-fs.writeFileSync(
-  path.resolve(process.cwd(), cli.flags.output),
-  buffer,
-  "binary"
-);
+const view = new Uint8Array(wasm.buffer());
+const buffer = Buffer.from(view);
+
+fs.open(path.resolve(process.cwd(), cli.flags.output), "w", (err, fd) => {
+  if (err) console.log(err);
+  fs.write(fd, buffer, 0, buffer.length, 0, () => {
+    if (err) console.error(err);
+    else console.log("Compiled Walt.");
+  });
+});
