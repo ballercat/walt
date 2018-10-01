@@ -7,6 +7,11 @@ import Syntax from 'walt-syntax';
 import { GLOBAL_INDEX } from '../semantics/metadata';
 import type { SemanticPlugin } from '../flow/types';
 
+const isMemoryIdentifier = (context, id) => {
+  const memory = context.memories[0];
+  return memory && memory.value === id.value;
+};
+
 export default function memoryPlugin(): SemanticPlugin {
   return {
     semantics() {
@@ -59,30 +64,34 @@ export default function memoryPlugin(): SemanticPlugin {
 
           return next(args);
         },
-        [Syntax.ArraySubscript]: next => (args, transform) => {
+        [Syntax.FunctionCall]: next => args => {
           const [node, context] = args;
-          const params = node.params.map(p => transform([p, context]));
-          const [identifier, field] = params;
-          const memory = context.memories[0];
-          const name = identifier.value;
+          const [subscript] = node.params;
+          const [id, field] = subscript.params;
 
-          if (!(memory.value === name && field.value === 'dataSize')) {
+          if (
+            !(
+              subscript.Type === Syntax.ArraySubscript &&
+              isMemoryIdentifier(context, id) &&
+              field.value === 'dataSize'
+            )
+          ) {
             return next(args);
           }
 
           return {
-            ...identifier,
+            ...id,
             type: 'i32',
             Type: Syntax.ArraySubscript,
             params: [
               {
-                ...identifier,
+                ...id,
                 type: 'i32',
                 value: '0',
                 Type: Syntax.Constant,
               },
               {
-                ...identifier,
+                ...id,
                 type: 'i32',
                 value: '0',
                 Type: Syntax.Constant,

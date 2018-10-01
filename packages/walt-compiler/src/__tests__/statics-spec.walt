@@ -3,6 +3,6 @@ const memory: Memory = { initial: 1 };
 const array: i32[] = ['<', 'a', 'b'];
 
 export function run(): i32 {
-  return array[0];
+  return memory.dataSize();
 }
 
