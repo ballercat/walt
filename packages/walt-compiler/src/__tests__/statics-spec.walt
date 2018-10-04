@@ -1,4 +1,4 @@
-const memory: Memory = { initial: 1 };
+export const memory: Memory = { initial: 1 };
 
 const array: i32[] = ['<', 'a', 'b'];
 

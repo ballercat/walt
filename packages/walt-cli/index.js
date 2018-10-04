@@ -6,6 +6,8 @@ const fs = require("fs");
 const compiler = require("walt-compiler");
 const meow = require("meow");
 const wrap = require("./src/wrap");
+const write = require("./src/write");
+const compileFromFile = require("./src/compile-from-file");
 
 const cli = meow(
   `
@@ -58,19 +60,14 @@ if (cli.flags.wrap) {
   process.exit();
 }
 
-const wasm = compiler.compile(
-  fs.readFileSync(path.resolve(process.cwd(), filepath), "utf8"),
-  {
-    encodeNames: false
-  }
-);
-const view = new Uint8Array(wasm.buffer());
-const buffer = Buffer.from(view);
+compileFromFile(path.resolve(process.cwd(), filepath), compiler.compile, fs)
+  .then(wasm => {
+    const view = new Uint8Array(wasm.buffer());
+    const buffer = Buffer.from(view);
 
-fs.open(path.resolve(process.cwd(), cli.flags.output), "w", (err, fd) => {
-  if (err) console.log(err);
-  fs.write(fd, buffer, 0, buffer.length, 0, () => {
-    if (err) console.error(err);
-    else console.log("Compiled Walt.");
-  });
-});
+    return write(buffer, path.resolve(process.cwd(), cli.flags.output), fs);
+  })
+  .then(() => {
+    console.log(`Compiled to ${cli.flags.output}`);
+  })
+  .catch(err => console.warn("Compile failed", err));
