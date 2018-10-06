@@ -59,7 +59,7 @@ export function fibonacci(n: i32): i32 {
 ```
 
 
-When this code is ran through the walt compiler you end up with a buffer which can be used to create a WebAssembly module with a `fibonacci` export just as you would expect. All done with familiar JS syntax and without any external binary toolkits! A working demo of this exists in the `fibonacci-spec.js` [unit test file](https://github.com/ballercat/walt/blob/master/src/__tests__/fibonacci-spec.js).
+When this code is ran through the walt compiler you end up with a buffer which can be used to create a WebAssembly module with a `fibonacci` export just as you would expect. All done with familiar JS syntax and without any external binary toolkits! A working demo of this exists in the `fibonacci-spec.js` [unit test file](https://github.com/ballercat/walt/blob/master/packages/walt-compiler/src/__tests__/fibonacci-spec.js).
 
 # Project Goals
 
