@@ -64,40 +64,57 @@ export default function memoryPlugin(): SemanticPlugin {
 
           return next(args);
         },
-        [Syntax.FunctionCall]: next => args => {
+        [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
-          const [subscript] = node.params;
-          const [id, field] = subscript.params;
+          const [subscript, ...rest] = node.params;
+          const [id, field = {}] = subscript.params;
 
+          const callMap = {
+            dataSize: {
+              ...id,
+              type: 'i32',
+              Type: Syntax.ArraySubscript,
+              params: [
+                {
+                  ...id,
+                  type: 'i32',
+                  value: '0',
+                  Type: Syntax.Constant,
+                },
+                {
+                  ...id,
+                  type: 'i32',
+                  value: '0',
+                  Type: Syntax.Constant,
+                },
+              ],
+            },
+            grow: {
+              ...id,
+              value: 'grow_memory',
+              params: rest.map(p => transform([p, context])),
+              Type: Syntax.NativeMethod,
+            },
+            size: {
+              ...id,
+              value: 'current_memory',
+              params: [],
+              Type: Syntax.NativeMethod,
+            },
+          };
+
+          const mapped = callMap[field.value];
           if (
             !(
               subscript.Type === Syntax.ArraySubscript &&
               isMemoryIdentifier(context, id) &&
-              field.value === 'dataSize'
+              mapped
             )
           ) {
             return next(args);
           }
 
-          return {
-            ...id,
-            type: 'i32',
-            Type: Syntax.ArraySubscript,
-            params: [
-              {
-                ...id,
-                type: 'i32',
-                value: '0',
-                Type: Syntax.Constant,
-              },
-              {
-                ...id,
-                type: 'i32',
-                value: '0',
-                Type: Syntax.Constant,
-              },
-            ],
-          };
+          return mapped;
         },
       };
     },
