@@ -1,6 +1,6 @@
 {
   "name": "walt-docs",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "WAlt documentation",
   "main": "index.js",
   "scripts": {
@@ -69,7 +69,7 @@
     "react-dom": "15.6.1",
     "semantic-ui-css": "2.2.12",
     "semantic-ui-react": "0.73.1",
-    "walt-compiler": "^0.13.0",
-    "walt-plugin-syntax-closure": "^0.2.1"
+    "walt-compiler": "^0.15.0",
+    "walt-plugin-syntax-closure": "^0.2.2"
   }
 }
