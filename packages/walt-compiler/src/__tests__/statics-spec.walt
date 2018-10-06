@@ -1,8 +1,23 @@
-export const memory: Memory = { initial: 1 };
+import { memory: Memory, assert: Assert } from 'env';
+
+type String = {
+  length: i32,
+  chars: i32[]
+};
+type Assert = (String, i32, i32) => void;
 
 const array: i32[] = ['<', 'a', 'b'];
 
-export function run(): i32 {
-  return memory.dataSize();
+export function run() {
+  assert("memory size, baseline value", memory.size(), 1);
+  // FIXME: this is a semi-bug. Memory.grow() returns a value so that is why we
+  // assign it to something, otherwise there will be a dangling value on the
+  // stack and run() returns zero values. So WASM compilining will fail
+  //
+  // statements which return values but don't assign to anything lhs should probably
+  // be compiled to an operation + drop opcode pair.
+  const previous: i32 = memory.grow(1);
+  assert("memory grow, returns previous", previous, 1);
+  assert("memory size, grown", memory.size(), 2);
 }
 
