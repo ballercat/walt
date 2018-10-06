@@ -116,6 +116,7 @@
     "cache": true,
     "exclude": [
       "src/**/print-node.js",
+      "src/**/test-utils.js",
       "src/**/__tests__/*.js",
       "src/**/grammar.js",
       "src/parser/grammar/generator.js",

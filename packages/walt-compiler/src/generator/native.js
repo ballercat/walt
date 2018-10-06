@@ -18,13 +18,18 @@ const alignCodes = {
   load: 2,
 };
 
+const immediates = {
+  grow_memory: 0,
+  current_memory: 0,
+};
+
 const generateNative: GeneratorType = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
   const operation = node.value.split('.').pop();
 
   if (alignCodes[operation] == null) {
-    block.push({ kind: textMap[node.value], params: [] });
+    block.push({ kind: textMap[node.value], params: [immediates[node.value]] });
   } else {
     const alignment = alignCodes[operation];
 

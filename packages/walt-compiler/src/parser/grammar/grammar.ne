@@ -49,13 +49,14 @@ SourceElementList ->
   | SourceElement _ SourceElementList  {% compose(drop, flatten, flatten) %}
 
 SourceElement ->
-    Function  {% id %}
-  | Declaration           {% id %}
-  | ImmutableDeclaration  {% id %}
-  | Struct    {% id %}
-  | TypeDef   {% id %}
-  | Export    {% id %}
-  | Import    {% id %}
+    Function                    {% id %}
+  | GlobalDeclaration           {% id %}
+  | GlobalImmutableDeclaration  {% id %}
+  | StaticDeclaration           {% id %}
+  | Struct                      {% id %}
+  | TypeDef                     {% id %}
+  | Export                      {% id %}
+  | Import                      {% id %}
 
 Statement ->
     ExpressionStatement   {% id %}
@@ -82,13 +83,25 @@ Function ->
 
 FunctionParameters ->
     LB _ RB                  {% node(Syntax.FunctionArguments) %}
-  | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten) %}
+  | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten, flatten) %}
 
 ParameterList ->
     PropertyNameAndType {% id %}
   | PropertyNameAndType _ COMMA _ ParameterList {% flatten  %}
 
 FunctionResult -> COLON _ Type {% compose(result, drop) %}
+
+GlobalDeclaration ->
+    LET _ PropertyNameAndType _ SEPARATOR {% declaration(Syntax.Declaration) %}
+  | LET _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+      {% declaration(Syntax.Declaration) %}
+
+GlobalImmutableDeclaration ->
+    CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
+  | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
+      {% declaration(Syntax.ImmutableDeclaration) %}
+  | CONST _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+      {% declaration(Syntax.ImmutableDeclaration) %}
 
 Declaration ->
     LET _ PropertyNameAndType _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
@@ -101,6 +114,12 @@ ImmutableDeclaration ->
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
 
+StaticDeclaration ->
+    CONST _ PropertyNameAndType _ EQUALS _ LSB _ RSB _ SEPARATOR {% declaration(Syntax.StaticDeclaration) %}
+  | CONST _ PropertyNameAndType _ EQUALS _ LSB _ StaticValueList _ RSB _ SEPARATOR {% compose(declaration(Syntax.StaticDeclaration), flatten) %}
+StaticValueList ->
+    Atom                           {% id %}
+  | Atom _ COMMA _ StaticValueList {% flatten %}
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}

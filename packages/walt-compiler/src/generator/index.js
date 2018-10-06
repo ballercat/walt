@@ -152,6 +152,14 @@ function generator(ast: NodeType, config: GeneratorOptions): ProgramType {
           Type: Syntax.Constant,
         };
       },
+      [Syntax.StaticValueList]: node => {
+        const { value } = node;
+        return {
+          ...node,
+          value: String(staticsMap[value]),
+          Type: Syntax.Constant,
+        };
+      },
     })(ast)
   );
 

@@ -95,6 +95,8 @@ export type Context = {
   hoist: NodeType[],
   statics: { [string]: null },
   scopes: NodeMap[],
+  memories: NodeType[],
+  tables: NodeType[],
 };
 export type Transform = ([NodeType, Context]) => NodeType;
 export type NodeParser = NodeParser => (

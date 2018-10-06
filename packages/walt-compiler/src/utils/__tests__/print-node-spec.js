@@ -10,6 +10,7 @@ const getAST = src => semantics(parser(src), [], { parser, fragment });
 
 test('full ast printer', t => {
   const node = getAST(`
+    const memory: Memory = { initial: 1 };
     function simple(): i32 {
       const x: i32 = 1 + 1;
       const y: i32 = 2;

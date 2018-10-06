@@ -42,8 +42,8 @@ const getFileContents = resolver => (file, parent, mode) => {
 function link(file, options = { logger: console }, api) {
   api = api || compiler;
 
-  const parser = compiler.makeParser([]);
-  const fragment = compiler.makeFragment(parser);
+  const parser = api.makeParser([]);
+  const fragment = api.makeFragment(parser);
   const { semantics } = api;
 
   api = Object.assign({}, api, {

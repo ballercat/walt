@@ -11,6 +11,13 @@ import { extendNode } from '../utils/extend-node';
 import { ALIAS, TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
 import type { NodeMap, NodeType, SemanticPlugin } from '../flow/types';
 
+const sizeMap = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
+
 export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
   const keyTypeMap = {};
@@ -26,16 +33,7 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
 
       keyTypeMap[key] = typeString;
       offsetsByKey[key] = size;
-      switch (typeString) {
-        case 'i64':
-        case 'f64':
-          size += 8;
-          break;
-        case 'i32':
-        case 'f32':
-        default:
-          size += 4;
-      }
+      size += sizeMap[typeString] || 4;
     },
   })(objectLiteralNode);
 

@@ -26,12 +26,12 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
     }
 
     // map over all params, if any and encode each on
-    params.forEach(p => {
+    params.filter(p => typeof p !== 'undefined').forEach(p => {
       let type = varuint32;
       let stringType = 'i32.literal';
 
       // Memory opcode?
-      if (kind.code >= 0x28 && kind.code <= 0x3e) {
+      if (kind.code >= 0x28 && kind.code <= 0x40) {
         type = varuint32;
         stringType = 'memory_immediate';
       } else {

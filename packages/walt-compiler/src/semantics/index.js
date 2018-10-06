@@ -25,7 +25,7 @@ import _imports from '../core/imports';
 import booleans from '../core/bool';
 import array from '../core/array';
 import memory from '../core/memory';
-import string from '../core/string';
+import statics from '../core/statics';
 import functionPointer from '../core/function-pointer';
 import struct from '../core/struct';
 import native from '../core/native';
@@ -49,7 +49,7 @@ export const builtinSemantics = [
   booleans,
   array,
   memory,
-  string,
+  statics,
   functionPointer,
   struct,
   native,
@@ -68,7 +68,7 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
     booleans().semantics,
     array().semantics,
     memory().semantics,
-    string().semantics,
+    statics().semantics,
     functionPointer().semantics,
     struct().semantics,
     native().semantics,
@@ -102,6 +102,8 @@ function semantics(
     statics: {},
     path: [],
     scopes: enterScope([], GLOBAL_INDEX),
+    memories: [],
+    tables: [],
   };
   // Parse the current ast
   const parsed = map(combined)([ast, context]);

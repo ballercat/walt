@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 
 const path = require("path");
@@ -5,6 +6,8 @@ const fs = require("fs");
 const compiler = require("walt-compiler");
 const meow = require("meow");
 const wrap = require("./src/wrap");
+const write = require("./src/write");
+const compileFromFile = require("./src/compile-from-file");
 
 const cli = meow(
   `
@@ -48,14 +51,23 @@ const options = {
 };
 
 if (cli.flags.wrap) {
-  const output = wrap(path.resolve(__dirname, filepath), options);
-  fs.writeFileSync(path.resolve(__dirname, cli.flags.output), output, "utf8");
+  const output = wrap(path.resolve(process.cwd(), filepath), options);
+  fs.writeFileSync(
+    path.resolve(process.cwd(), cli.flags.output),
+    output,
+    "utf8"
+  );
   process.exit();
 }
 
-const wasm = compiler.default(
-  fs.readFileSync(path.resolve(__dirname, filepath), "utf8")
-);
-// Hot take - node writeFile should just accept an ArrayBuffer
-const buffer = new Uint8Array(wasm);
-fs.writeFileSync(path.resolve(__dirname, cli.flags.output), buffer, "binary");
+compileFromFile(path.resolve(process.cwd(), filepath), compiler.compile, fs)
+  .then(wasm => {
+    const view = new Uint8Array(wasm.buffer());
+    const buffer = Buffer.from(view);
+
+    return write(buffer, path.resolve(process.cwd(), cli.flags.output), fs);
+  })
+  .then(() => {
+    console.log(`Compiled to ${cli.flags.output}`);
+  })
+  .catch(err => console.warn("Compile failed", err));
