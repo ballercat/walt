@@ -2683,28 +2683,43 @@ function memoryPlugin() {
 
           return next(args);
         },
-        [Syntax.FunctionCall]: next => args => {
+        [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
-          const [subscript] = node.params;
-          const [id, field] = subscript.params;
+          const [subscript, ...rest] = node.params;
+          const [id, field = {}] = subscript.params;
 
-          if (!(subscript.Type === Syntax.ArraySubscript && isMemoryIdentifier(context, id) && field.value === 'dataSize')) {
+          const callMap = {
+            dataSize: _extends({}, id, {
+              type: 'i32',
+              Type: Syntax.ArraySubscript,
+              params: [_extends({}, id, {
+                type: 'i32',
+                value: '0',
+                Type: Syntax.Constant
+              }), _extends({}, id, {
+                type: 'i32',
+                value: '0',
+                Type: Syntax.Constant
+              })]
+            }),
+            grow: _extends({}, id, {
+              value: 'grow_memory',
+              params: rest.map(p => transform([p, context])),
+              Type: Syntax.NativeMethod
+            }),
+            size: _extends({}, id, {
+              value: 'current_memory',
+              params: [],
+              Type: Syntax.NativeMethod
+            })
+          };
+
+          const mapped = callMap[field.value];
+          if (!(subscript.Type === Syntax.ArraySubscript && isMemoryIdentifier(context, id) && mapped)) {
             return next(args);
           }
 
-          return _extends({}, id, {
-            type: 'i32',
-            Type: Syntax.ArraySubscript,
-            params: [_extends({}, id, {
-              type: 'i32',
-              value: '0',
-              Type: Syntax.Constant
-            }), _extends({}, id, {
-              type: 'i32',
-              value: '0',
-              Type: Syntax.Constant
-            })]
-          });
+          return mapped;
         }
       };
     }
@@ -4432,13 +4447,18 @@ const alignCodes = {
   load: 2
 };
 
+const immediates = {
+  grow_memory: 0,
+  current_memory: 0
+};
+
 const generateNative = (node, parent) => {
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
   const operation = node.value.split('.').pop();
 
   if (alignCodes[operation] == null) {
-    block.push({ kind: textMap[node.value], params: [] });
+    block.push({ kind: textMap[node.value], params: [immediates[node.value]] });
   } else {
     const alignment = alignCodes[operation];
 
@@ -5171,12 +5191,12 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
     }
 
     // map over all params, if any and encode each on
-    params.forEach(p => {
+    params.filter(p => typeof p !== 'undefined').forEach(p => {
       let type = varuint32;
       let stringType = 'i32.literal';
 
       // Memory opcode?
-      if (kind.code >= 0x28 && kind.code <= 0x3e) {
+      if (kind.code >= 0x28 && kind.code <= 0x40) {
         type = varuint32;
         stringType = 'memory_immediate';
       } else {
