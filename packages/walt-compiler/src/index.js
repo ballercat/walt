@@ -89,7 +89,7 @@ export const compile = (source: string, config: ConfigType) => {
     (acc, plugin) => {
       // Default plugins to a specific to ensure correctness
       const instance = {
-        semantics: () => ({}),
+        semantics: _ => ({}),
         grammar: () => ({ ParserRules: [] }),
         ...plugin(options),
       };
