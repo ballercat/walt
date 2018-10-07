@@ -23,6 +23,7 @@
     'continue',
     'do',
     'while',
+    'throw',
     'function',
 
     // s-expression
@@ -166,6 +167,7 @@
   const FunctionResult = 'FunctionResult';
   const FunctionLocals = 'FunctionLocals';
   const NativeMethod = 'NativeMethod';
+  const Unreachable = 'Unreachable';
 
   const i32 = 'i32';
   const f32 = 'f32';
@@ -213,6 +215,7 @@
     Spread,
     Noop,
     Block,
+    Unreachable,
   };
 
   var index = {
@@ -281,6 +284,7 @@
 
     // Natives
     NativeMethod,
+    Unreachable,
   };
 
   exports.Program = Program;
@@ -340,6 +344,7 @@
   exports.FunctionResult = FunctionResult;
   exports.FunctionLocals = FunctionLocals;
   exports.NativeMethod = NativeMethod;
+  exports.Unreachable = Unreachable;
   exports.i32 = i32;
   exports.f32 = f32;
   exports.i64 = i64;

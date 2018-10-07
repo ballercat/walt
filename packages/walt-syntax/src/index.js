@@ -58,6 +58,7 @@ export const FunctionArguments = 'FunctionArguments';
 export const FunctionResult = 'FunctionResult';
 export const FunctionLocals = 'FunctionLocals';
 export const NativeMethod = 'NativeMethod';
+export const Unreachable = 'Unreachable';
 
 export const i32 = 'i32';
 export const f32 = 'f32';
@@ -105,6 +106,7 @@ export const statements = {
   Spread,
   Noop,
   Block,
+  Unreachable,
 };
 
 export default {
@@ -173,4 +175,5 @@ export default {
 
   // Natives
   NativeMethod,
+  Unreachable,
 };

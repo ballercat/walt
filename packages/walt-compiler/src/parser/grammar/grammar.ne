@@ -67,6 +67,7 @@ Statement ->
   | For                   {% id %}
   | While                 {% id %}
   | Break                 {% id %}
+  | Unreachable           {% id %}
   | ReturnStatement       {% id %}
 
 Block ->
@@ -124,6 +125,10 @@ StaticDeclaration ->
 StaticValueList ->
     Atom                           {% id %}
   | Atom _ COMMA _ StaticValueList {% flatten %}
+
+Unreachable ->
+    THROW _ SEPARATOR              {% node(Syntax.Unreachable) %}
+  | THROW _ Expression _ SEPARATOR {% node(Syntax.Unreachable) %}
 
 Pair -> Identifier _ COLON _ Identifier
 {% node(Syntax.Pair) %}
@@ -319,4 +324,5 @@ FOR       -> "for"      {% nuller %}
 WHILE     -> "while"    {% nuller %}
 SWITCH    -> "switch"   {% nuller %}
 DO        -> "do"       {% nuller %}
+THROW     -> "throw"    {% nuller %}
 BREAK     -> "break"    {% nuller %}

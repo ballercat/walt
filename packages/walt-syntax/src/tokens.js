@@ -17,6 +17,7 @@ const keyword = [
   'continue',
   'do',
   'while',
+  'throw',
   'function',
 
   // s-expression
