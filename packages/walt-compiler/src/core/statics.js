@@ -6,7 +6,7 @@
 import Syntax from 'walt-syntax';
 import { stringEncoder } from '../utils/string';
 import OutputStream from '../utils/output-stream';
-import { i32 } from 'wasm-types';
+import wasmTypes from 'wasm-types';
 import type { SemanticPlugin } from '../flow/types';
 
 const escapeMap = {
@@ -28,10 +28,11 @@ const sizeMap = {
   f32: 4,
 };
 
-function encodeArray(array) {
+function encodeArray(array, type) {
   const stream = new OutputStream();
+  const encodeType = wasmTypes[type];
   array.forEach(v => {
-    stream.push(i32, v, String(v));
+    stream.push(encodeType, v, String(v));
   });
 
   return stream;
@@ -43,8 +44,10 @@ export default function Strings(): SemanticPlugin {
     semantics: () => ({
       [Syntax.StaticDeclaration]: _next => ([node, context], transform) => {
         const { userTypes, statics } = context;
+
         const bareType = String(node.type).slice(0, -2);
-        const typeSize = sizeMap[bareType] || 4;
+        const typeSize = sizeMap[bareType];
+
         const meta = node.params.reduce(
           (acc, v, i) => {
             const n = transform([v, context]);
@@ -73,7 +76,7 @@ export default function Strings(): SemanticPlugin {
           params: [],
         };
 
-        statics[uid] = encodeArray(meta.VALUES);
+        statics[uid] = encodeArray(meta.VALUES, bareType);
 
         // Short circuit the middleware and instead transform a declaration
         return transform([
