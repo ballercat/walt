@@ -114,9 +114,13 @@ ImmutableDeclaration ->
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
 
+StaticNameAndType ->
+    Identifier _ COLON _ ArrayType {% node(Syntax.Pair) %}
+
 StaticDeclaration ->
-    CONST _ PropertyNameAndType _ EQUALS _ LSB _ RSB _ SEPARATOR {% declaration(Syntax.StaticDeclaration) %}
-  | CONST _ PropertyNameAndType _ EQUALS _ LSB _ StaticValueList _ RSB _ SEPARATOR {% compose(declaration(Syntax.StaticDeclaration), flatten) %}
+    CONST _ StaticNameAndType _ EQUALS _ LSB _ RSB _ SEPARATOR {% declaration(Syntax.StaticDeclaration) %}
+  | CONST _ StaticNameAndType _ EQUALS _ LSB _ StaticValueList _ RSB _ SEPARATOR {% compose(declaration(Syntax.StaticDeclaration), flatten) %}
+
 StaticValueList ->
     Atom                           {% id %}
   | Atom _ COMMA _ StaticValueList {% flatten %}
@@ -224,7 +228,8 @@ Call ->
 
 ArgumentList ->
     Expression                        {% id %}
-  | NativeType                              {% id %}
+  # Support for sizeof(i32) etc.,
+  | NativeType                        {% id %}
   | Expression _ COMMA _ ArgumentList {% flatten %}
 
 Access ->
@@ -243,14 +248,18 @@ Atom ->
   | CharacterLiteral {% id %}
   | Number           {% id %}
 
-Type ->
-    _Type               {% id %}
-  | _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
-
 _Type ->
     NativeType  {% id %}
   | GenericType {% id %}
   | Identifier  {% id %}
+
+ArrayType ->
+  _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
+
+Type ->
+    _Type               {% id %}
+  | ArrayType           {% id %}
+
 
 NativeType -> %type {% type %}
 
