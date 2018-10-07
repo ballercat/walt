@@ -25,7 +25,7 @@ import _imports from '../core/imports';
 import booleans from '../core/bool';
 import array from '../core/array';
 import memory from '../core/memory';
-import statics from '../core/statics';
+import _statics from '../core/statics';
 import functionPointer from '../core/function-pointer';
 import struct from '../core/struct';
 import native from '../core/native';
@@ -49,7 +49,7 @@ export const builtinSemantics = [
   booleans,
   array,
   memory,
-  statics,
+  _statics,
   functionPointer,
   struct,
   native,
@@ -68,7 +68,7 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
     booleans().semantics,
     array().semantics,
     memory().semantics,
-    statics().semantics,
+    _statics().semantics,
     functionPointer().semantics,
     struct().semantics,
     native().semantics,
@@ -80,7 +80,7 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
 // Return AST with full transformations applied
 function semantics(
   ast: NodeType,
-  extraSemantics: SemanticsFactory[] = [],
+  extraSemantics: SemanticsFactory[],
   options: SemanticOptions
 ): NodeType {
   // Generate all the plugin instances with proper options

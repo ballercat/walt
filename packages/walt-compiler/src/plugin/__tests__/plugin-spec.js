@@ -127,20 +127,21 @@ test('compiler extensions use', t => {
   const plugin = (...args) => {
     calls.push(['plugin', args]);
     return {
-      semantics(...args) {
-        calls.push(['semantics', args]);
+      semantics(..._args) {
+        calls.push(['semantics', _args]);
         return {};
       },
-      grammar(...args) {
-        calls.push(['grammar', args]);
+      grammar(..._args) {
+        calls.push(['grammar', _args]);
         return {
           ParserRules: {},
         };
       },
     };
   };
+  const plugin2 = () => ({});
 
-  compile('const x: i32 = 0;', { extensions: [plugin] });
+  compile('const x: i32 = 0;', { extensions: [plugin, plugin2] });
 
   t.snapshot(calls);
 });

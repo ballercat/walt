@@ -27,10 +27,10 @@ let view: i32[] = 0;
 const HEADER: i32 = 0x00;
 const H1_OPEN: i32[] = ['<', 'h', '1', '>'];
 const H1_CLOSE: i32[] = ['<', '/', 'h', '1', '>'];
-const UL_OPEN: i32 = ['<', 'u', 'l', '>'];
-const UL_CLOSE: i32 = ['<', '/', 'u', 'l', '>'];
-const LI_OPEN: i32 = ['<', 'l', 'i', '>'];
-const LI_CLOSE: i32 = ['<', '/', 'l', 'i', '>'];
+const UL_OPEN: i32[] = ['<', 'u', 'l', '>'];
+const UL_CLOSE: i32[] = ['<', '/', 'u', 'l', '>'];
+const LI_OPEN: i32[] = ['<', 'l', 'i', '>'];
+const LI_CLOSE: i32[] = ['<', '/', 'l', 'i', '>'];
 
 export function run(): i32 {
   return 42;

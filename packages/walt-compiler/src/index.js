@@ -37,7 +37,7 @@ export const getIR = (source: string, config: ConfigType) => {
   const {
     version = VERSION_1,
     encodeNames = false,
-    lines = source ? source.split('\n') : [],
+    lines = source.split('\n'),
     filename = 'unknown',
     extensions = [],
   } =
@@ -87,15 +87,15 @@ export const compile = (source: string, config: ConfigType) => {
   // Generate plugin instances and sort them by the extended compiler phase
   const plugins = extensions.reduce(
     (acc, plugin) => {
-      const instance = plugin(options);
+      // Default plugins to a specific to ensure correctness
+      const instance = {
+        semantics: _ => ({}),
+        grammar: () => ({ ParserRules: [] }),
+        ...plugin(options),
+      };
 
-      if (typeof instance.grammar === 'function') {
-        acc.grammar.push(instance.grammar);
-      }
-
-      if (typeof instance.semantics === 'function') {
-        acc.semantics.push(instance.semantics);
-      }
+      acc.grammar.push(instance.grammar);
+      acc.semantics.push(instance.semantics);
 
       return acc;
     },
