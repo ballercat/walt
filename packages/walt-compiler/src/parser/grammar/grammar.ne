@@ -224,6 +224,7 @@ Call ->
 
 ArgumentList ->
     Expression                        {% id %}
+  | NativeType                              {% id %}
   | Expression _ COMMA _ ArgumentList {% flatten %}
 
 Access ->
