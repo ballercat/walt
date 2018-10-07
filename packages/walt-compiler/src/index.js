@@ -37,7 +37,7 @@ export const getIR = (source: string, config: ConfigType) => {
   const {
     version = VERSION_1,
     encodeNames = false,
-    lines = source ? source.split('\n') : [],
+    lines = source.split('\n'),
     filename = 'unknown',
     extensions = [],
   } =
