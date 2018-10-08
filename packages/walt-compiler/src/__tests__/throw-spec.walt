@@ -1,0 +1,8 @@
+export function run(input: i32): i32 {
+  if (input == 0) {
+    // Expression are allowed, but are ignored
+    throw -1;
+  }
+
+  return input * 2;
+}

@@ -34,6 +34,16 @@ export default function nativePlugin(): SemanticPlugin {
 
           return next(args);
         },
+        [Syntax.Unreachable]: _ => ([node]) => {
+          return extendNode(
+            {
+              value: 'unreachable',
+              params: [],
+              Type: Syntax.NativeMethod,
+            },
+            node
+          );
+        },
       };
     },
   };
