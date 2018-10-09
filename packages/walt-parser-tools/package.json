@@ -1,6 +1,6 @@
 {
   "name": "walt-parser-tools",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "lint-staged": "6.0.0",
     "pirates": "^3.0.2",
     "prettier": "1.9.2",
-    "walt-syntax": "^0.3.2"
+    "walt-syntax": "^0.3.3"
   },
   "prettier": {
     "trailingComma": "es5",
