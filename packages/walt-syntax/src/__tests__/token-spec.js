@@ -6,6 +6,7 @@ const src = `
 // comment test
 // const foo: i32 = 0;
 const a = 15; // ''
+lf\ncr\rcrlf\r\n
 `;
 test.only('tokens', () => {
   const lexer = moo.compile(tokens);
