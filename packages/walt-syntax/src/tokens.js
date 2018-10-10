@@ -99,5 +99,5 @@ export const tokens = {
     keywords: { keyword, type },
   },
   punctuator,
-  newline: { match: /\n/, lineBreaks: true },
+  newline: { match: /(?:\r\n|\r|\n)/, lineBreaks: true },
 };
