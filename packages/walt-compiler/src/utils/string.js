@@ -47,9 +47,9 @@ export function stringEncoder(value) {
   return resultStream;
 }
 
-export const getText = view => ptr => {
+export const getText = memory => ptr => {
   let text = '';
-  const decoder = stringDecoder(view, ptr);
+  const decoder = stringDecoder(new DataView(memory.buffer), ptr);
   let iterator = decoder.next();
   while (!iterator.done) {
     text += String.fromCodePoint(iterator.value);
