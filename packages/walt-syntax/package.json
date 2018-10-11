@@ -1,6 +1,6 @@
 {
   "name": "walt-syntax",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Walt Syntax",
   "main": "dist/walt-syntax.js",
   "scripts": {
