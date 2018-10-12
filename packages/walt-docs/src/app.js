@@ -110,7 +110,10 @@ class Explorer extends React.Component {
   };
 
   handleUpdate = code => {
-    this.setState({ code, ast: getAST(code) });
+    this.setState({
+      code,
+      ast: compile(code, { extensions: this.state.extensions }).ast
+    });
   };
 
   handleMenuClick = (e, { name: activeItem }) => {
