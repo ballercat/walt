@@ -29,7 +29,7 @@ body.docs {
   h3 {
     font-size: 28px;
     letter-spacing: -1px;
-    color: #424242;
+    color: #654ff0;
   }
 
   hr {
@@ -38,5 +38,25 @@ body.docs {
     border-bottom: 2px dashed #424242;
     margin: auto auto 2em;
     padding-top: 1em;
+  }
+
+  table {
+    thead {
+      border-bottom: 1px solid black;
+      background: #f1c232;
+      color: #000;
+    }
+    th {
+      padding: 5px;
+    }
+    td {
+      text-align: center;
+    }
+  }
+
+  .parameters {
+    margin-top: 2em;
+    font-size: 16px;
+    text-align: center;
   }
 }

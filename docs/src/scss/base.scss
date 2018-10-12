@@ -75,6 +75,16 @@ header {
   }
 }
 
+table {
+  margin-bottom: 50px;
+  border-spacing: 0;
+  width: 100%;
+
+  tr {
+    vertical-align: middle;
+  }
+}
+
 footer {
   background: #f1c232 linear-gradient(to top right,#f1c232,#f9c21a);
   width: 100vw;
@@ -88,9 +98,6 @@ footer {
   }
 
   table {
-    margin-bottom: 50px;
-    border-spacing: 0;
-
     tr {
       vertical-align: middle;
       text-align: left;
@@ -100,7 +107,7 @@ footer {
       margin:0;
       padding: 1em;
     }
-
+    
     th:nth-child(2),
     td:nth-child(2){
       border: 4px solid black;
