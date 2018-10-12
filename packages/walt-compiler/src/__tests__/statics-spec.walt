@@ -24,3 +24,11 @@ export function run() {
   assert("ints in data", array[2], 'b');
 }
 
+export function testStringsInsideReturn(): i32 {
+  return "Hello World!";
+}
+
+export function emptyReturn() {
+  return;
+}
+
