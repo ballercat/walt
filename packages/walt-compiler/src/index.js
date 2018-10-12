@@ -30,7 +30,7 @@ export {
   walkNode,
   mapNode,
 };
-export const VERSION = '0.16.0';
+export const VERSION = '0.16.3';
 
 // Used for debugging purposes
 export const getIR = (source: string, config: ConfigType) => {
