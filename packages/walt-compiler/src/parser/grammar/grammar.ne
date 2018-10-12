@@ -140,8 +140,8 @@ Export ->
   | EXPORT __ Struct               {% node(Syntax.Export, { value: 'export' }) %}
 
 ReturnStatement ->
-    RETURN __ ExpressionStatement {% node(Syntax.ReturnStatement) %}
-  | RETURN _ SEPARATOR            {% node(Syntax.ReturnStatement) %}
+    RETURN __ Expression _ SEPARATOR   {% node(Syntax.ReturnStatement) %}
+  | RETURN (";" {% nuller %})          {% node(Syntax.ReturnStatement) %}
 
 Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
 TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
@@ -267,13 +267,12 @@ Type ->
 
 
 NativeType -> %type {% type %}
-
 GenericType -> Identifier LT _ StaticObjectLiteral _ GT {% typeGeneric %}
 
-Identifier -> %identifier      {% identifier %}
-Number -> %number                {% constant %}
-StringLiteral -> %string       {% string %}
-CharacterLiteral -> %char      {% char %}
+Identifier        -> %identifier  {% identifier %}
+Number            -> %number      {% constant %}
+StringLiteral     -> %string      {% string %}
+CharacterLiteral  -> %char        {% char %}
 # Boolean ->
 #     "true"  {% boolean %}
 #   | "false" {% boolean %}

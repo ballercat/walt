@@ -6,7 +6,10 @@ import type { GeneratorType } from './flow/types';
 
 const generateReturn: GeneratorType = node => {
   // Postfix in return statement should be a no-op UNLESS it's editing globals
-  const block = node.params.map(mapSyntax(null)).reduce(mergeBlock, []);
+  const block = node.params
+    .filter(Boolean)
+    .map(mapSyntax(null))
+    .reduce(mergeBlock, []);
   block.push({ kind: opcode.Return, params: [] });
 
   return block;
