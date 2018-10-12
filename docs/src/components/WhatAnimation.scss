@@ -1,0 +1,49 @@
+.what-animation {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 4em;
+    > span {
+        display: block;
+        text-align: center;
+        width: 10%;
+        float: left;
+        font-size: 58px;
+        opacity: 0.75;
+        padding-top: 23%;
+    }
+    .code {
+        width: 22.5%;
+        float: left;
+        text-align: center;
+        padding-top: 18.5%;
+        img {
+            max-width: 85%;
+        }
+        figcaption {
+            display: inline-block;
+            padding: 10px;
+            background-color: #f9c21a;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 400;
+            font-size: 22px;
+
+            @media (max-width: 780px) {
+                padding: 6px;
+                font-size: 18px;
+            }
+        }
+    }
+    .chemistry {
+        width: 35%;
+        float: left;
+        text-align: center;
+        img {
+            max-width: 70%;
+            animation: bounce-3px 1s ease-in-out infinite;
+        }
+        img.lightning {
+            animation: what-lightning-animation 2s ease-in-out infinite;
+        }
+    }
+}

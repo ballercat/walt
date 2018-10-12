@@ -1,0 +1,99 @@
+import {
+  setFillColor: FillType,
+  fillRect: FillType,
+  getCanvasWidth: GetSizeType,
+  getCanvasHeight: GetSizeType,
+  log: LogType
+} from 'env';
+type FillType = (i32, i32, i32, i32) => void;
+type LogType = (f32) => void;
+type GetSizeType = () => i32;
+type ParticleType = {
+  x: f32,
+  y: f32,
+  vx: f32,
+  vy: f32
+};
+
+const memory: Memory<{ initial: 1 }>;
+const particleByteSize: i32 = 16;
+
+let total: i32 = 0;
+let width: i32 = 0;
+let height: i32 = 0;
+export function onInit(totalParticles: i32) {
+  width = getCanvasWidth();
+  height = getCanvasHeight();
+  total = totalParticles;
+
+  let particle: ParticleType = 0;
+  let i: i32 = 0;
+
+  for (i = 0; i < total; i += 1) {
+    particle = i * particleByteSize;
+    particle = {
+      x: width / 2.0,
+      y: height / 2.0,
+      vx: ((i * 7 % 200) - 100) / 100.0,
+      vy: ((i * 19 % 200) - 100) / 100.0
+    };
+  }
+}
+
+function bounce(particle: ParticleType, min: f32) {
+  const maxHeight: f32 = height - min;
+  const maxWidth: f32 = width - min;
+  // destructuring assignment is WIP
+  let y: f32 = particle.y;
+  let vy: f32 = particle.vy;
+  let x: f32 = particle.x;
+  let vx: f32 = particle.vx;
+
+  if (y > maxHeight) {
+    y -= y - maxHeight;
+    vy = -vy;
+  } else if (y < min) {
+    y = min + (min - y);
+    vy = -vy;
+  }
+
+  if (x > maxWidth) {
+    x -= x - maxWidth;
+    vx = -vx;
+  } else if (x < min) {
+    x = min + (min - x);
+    vx = -vx;
+  }
+
+  // Object assign syntax sugar, NOTE: this does not create a new object
+  particle = { y, vy, x, vx };
+}
+
+let previous: i32 = 0;
+export function onAnimationFrame(timestamp: i32): i32 {
+  const delta: i32 = previous ? timestamp - previous : 0;
+  previous = timestamp;
+
+  setFillColor(64, 64, 64, 255);
+  fillRect(0, 0, width, height);
+
+  let particle: ParticleType = 0;
+
+  setFillColor(255, 0, 0, 255);
+
+  let i: i32 = 0;
+  for (i = 0; i < total; i += 1) {
+    particle = i * particleByteSize;
+    particle.vy += 0.001 * delta;
+    particle.vx += 0.001 * delta;
+    particle.x += particle.vx * delta;
+    particle.y += particle.vy * delta;
+
+    bounce(particle, 10.0);
+
+    fillRect((particle.x + 0.5) : i32, (particle.y + 0.5): i32, 10, 10);
+  }
+
+  return 42;
+}
+

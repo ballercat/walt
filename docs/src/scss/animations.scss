@@ -1,0 +1,25 @@
+@keyframes bounce-3px {
+    0% { transform: translate(0px, 0px) };
+    50% { transform: translate(0px, 3px) };
+    100% { transform: translate(0px, 0px) };
+}
+
+@keyframes bounce-5px {
+    0% { transform: translate(0px, 0px) };
+    50% { transform: translate(0px, 5px) };
+    100% { transform: translate(0px, 0px) };
+}
+
+/* Header animation : change in height + animated border radius (curtain effect) */
+@keyframes intro-init {
+  0% { height: 100vh; };
+  100% { height: 87vh; };
+}
+
+@keyframes what-lightning-animation {
+  0% { opacity: 0; };
+  65% { opacity: 0; };
+  75% { opacity: 1; };
+  85% { opacity: 0; };
+  95% { opacity: 1; };
+}

@@ -1,0 +1,42 @@
+body.docs {
+  header {
+    nav {
+      right: 1em;
+    }
+    h1 {
+      margin: 20px;
+      img {
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+    }
+  }
+
+  h1, h2, h3, p {
+    padding: 10px;
+    margin: 0;
+  }
+
+  h1, h2, h3 {
+    font-weight: 700;
+  }
+  
+  h2 {
+    font-size: 46px;
+    color: #1f1f1f;
+  }
+
+  h3 {
+    font-size: 28px;
+    letter-spacing: -1px;
+    color: #424242;
+  }
+
+  hr {
+    width: 70%;
+    border: none;
+    border-bottom: 2px dashed #424242;
+    margin: auto auto 2em;
+    padding-top: 1em;
+  }
+}

@@ -1,0 +1,143 @@
+
+$color-primary: #EFDF6B;
+$color-primary--light: #f7efbb;
+$color-secondary: #FF9933;
+$color-secondary--light: #c1f8d5;
+$color-tree-text: #A7CEB4;
+$color-black: #343530;
+$color-white: #fff;
+html,
+body {
+  box-sizing: border-box;
+  font-family: sans-serif;
+  height: 100%;
+  width: 100%;
+}
+*,
+  *:before,
+  *:after {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+  }
+
+  .App {
+    padding: 1rem;
+  }
+
+  .Header {
+    height: 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding: 0.5rem;
+  }
+
+  .Main {
+    display: flex;
+    height: 80vh;
+
+    &-compile {
+      margin-right: 5rem;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: .5rem 1.5rem;
+      border: solid 1px;
+      width: 100%;
+      font-size: 1.5rem;
+      color: $color-white;
+      border-color: $color-primary;
+      background-color: $color-secondary;
+      transition: color .5s ease-in-out, background-color .5s ease-in-out;
+    }
+
+    &-compile:focus,
+    &-compile:hover {
+      color: $color-secondary;
+      background-color: $color-white;
+      border-color: $color-primary;
+    }
+
+    &-editor,
+    &-binary {
+      height: 100%;
+    }
+
+    &-leftContainer,
+    &-rightContainer {
+      height: 50vh;
+      width: 40vw;
+    }
+  }
+
+  .Footer {
+    overflow: scroll;
+    background-color: $color-secondary--light;
+    padding: 1rem;
+  }
+
+  .CodeMirror {
+    height: 100%;
+    width: 100%;
+  }
+
+  .Tree {
+    font-family: monospace;
+    user-select: none;
+    background-color: #F1F0F8;
+    overflow-y: auto;
+    width: 100%;
+
+    li {
+      margin: 0;
+      list-style: none;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    ul {
+    }
+  }
+
+  .Node {
+    padding-left: 10px;
+    margin: 0;
+
+    .is-open {
+      &::before {
+        content: "-";
+        left: -10px;
+      }
+    }
+
+    &::before {
+      content: "+";
+      left: -10px;
+    }
+
+    &-param {
+      li {
+        padding-left: 20px;
+      }
+    }
+
+    &-preview {
+      padding-left: 10px;
+      font-style: italic;
+      color: #b4b4b4;
+    }
+
+    &-expand {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    &-key {
+      color: #F4982C;
+    }
+
+    &-value {
+      color: #054D92;
+    }
+  }
