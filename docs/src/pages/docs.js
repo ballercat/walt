@@ -1,5 +1,7 @@
 /**
  * List all markdown pages that are not "/"
+ *
+ * This is a demo-lister, and eventually will probly be a markdown document that is hand-edited.
  */
 import React from 'react'
 import { Link, graphql } from 'gatsby'
@@ -16,6 +18,9 @@ const DocsPage = ({ data: { allMarkdownRemark: { edges } } }) => {
         <section className='content'>
           <h2>Index</h2>
           <ul>
+            <li>
+              <Link to='/api' title='API Documentation'>API</Link>
+            </li>
             {
               pages.map(({ title, path, id }) => (
                 <li key={id} >
@@ -32,6 +37,7 @@ const DocsPage = ({ data: { allMarkdownRemark: { edges } } }) => {
 
 export default DocsPage
 
+// TODO: add filter to query, instead of in component
 export const pageQuery = graphql`
 query {
   allMarkdownRemark {
