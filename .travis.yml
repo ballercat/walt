@@ -1,7 +1,8 @@
 sudo: false
 language: node_js
 node_js:
-  - "lts/*"
+  - "8"
+  - "10"
 install:
   - npm install
 script: "npm run $TEST_SUITE"

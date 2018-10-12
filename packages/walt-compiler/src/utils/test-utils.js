@@ -43,8 +43,7 @@ export const harness = (
   { printNode = false, printBinary = false } = {}
 ) => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
-  const view = new DataView(memory.buffer);
-  const decodeText = getText(view);
+  const decodeText = getText(memory);
   const parser = makeParser([]);
   const fragment = makeFragment(parser);
 
