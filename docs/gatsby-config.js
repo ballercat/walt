@@ -1,6 +1,6 @@
 module.exports = {
   // hack to make gatsby work on GHP
-  pathPrefix: '/walt-docs',
+  pathPrefix: '/walt',
 
   siteMetadata: {
     title: 'Walt',

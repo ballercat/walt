@@ -1,5 +1,8 @@
 Documentation site for [walt](https://github.com/ballercat/walt).
 
+Currently running [here](http://konsumer.js.org/walt/).
+
+
 ## DEVELOPMENT
 
 ```
