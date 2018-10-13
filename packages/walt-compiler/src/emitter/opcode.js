@@ -3,7 +3,7 @@ import { i32, i64, f32, f64 } from 'wasm-types';
 import type { RawOpcodeType } from '../generator/flow/types';
 
 /**
- * Ported from https://github.com/WebAssembly/wabt/blob/master/src/opcode.def
+ * Ported from [opcode.def](https://github.com/WebAssembly/wabt/blob/master/src/opcode.def)
  */
 const def: { [string]: RawOpcodeType } = {};
 export const opcodeMap = [];

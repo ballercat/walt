@@ -44,7 +44,6 @@ const APIPage = ({ data: { allDocumentationJs: { edges } } }) => {
                   </table>
                 </div>
               )}
-              <hr />
             </article>
           ))}
         </section>
