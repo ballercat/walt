@@ -47,7 +47,7 @@ const APIPage = ({ data: { allDocumentationJs: { edges } } }) => {
               {examples && !!examples.length && (
                 <div className="examples">
                   <h4>Example{examples.length > 1 && <span>s</span>}</h4>
-                  {examples.map(({ highlighted }) => (<pre dangerouslySetInnerHTML={{ __html: highlighted }}></pre>))}
+                  {examples.map(({ highlighted }, ei) => (<pre key={ei} dangerouslySetInnerHTML={{ __html: highlighted }}></pre>))}
                 </div>
               )}
             </article>
