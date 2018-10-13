@@ -87,6 +87,9 @@ export const getIR = (source: string, config: ConfigType) => {
  *   console.log(`First invocation: ${result.instance.exports.count()}`);
  *   console.log(`Second invocation: ${result.instance.exports.count()}`);
  * });
+ *
+ * @param {string} source     Your walt sourcecode
+ * @param {ConfigType} config The configuration for this compilation
  */
 export const compile = (source: string, config: ConfigType) => {
   const {
