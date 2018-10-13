@@ -24,7 +24,7 @@ In a new empty folder create a simple folder structure for your new project
 
 ## Create a `package.json` file
 
-```
+```bash
 npm init -y
 ```
 
@@ -32,7 +32,7 @@ This will create a new package.json file. npm will prefill it with the most usef
 
 ## Install Webpack
 
-```
+```bash
 npm install --save-dev webpack
 ```
 
@@ -40,7 +40,7 @@ While it is possible to create a Walt project without Webpack, this will make yo
 
 ## Install the Walt compiler and Webpack loader
 
-```
+```bash
 npm install --save-dev walt-compiler walt-loader
 ```
 
@@ -102,7 +102,7 @@ makeCounter().then(wasmModule => {
 
 Create a new file in the src/walt folder of your project and save it as counter.walt
 
-```walt
+```js
 let counter: i32 = 0;
 
 export function decrement(): i32 {
@@ -139,7 +139,7 @@ At this point you should have files in directories arranged like this
 
 Use Webpack to create the `bundle.js` file in the `dist` folder
 
-```
+```bash
 npx webpack --config webpack.config.js
 ```
 
