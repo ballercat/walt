@@ -1,5 +1,5 @@
 // @flow
-/**
+/*
  * A very basic trie with functional,recursive search
  */
 const fsearch = node => {

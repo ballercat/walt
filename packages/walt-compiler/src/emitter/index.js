@@ -5,6 +5,11 @@ import OutputStream from '../utils/output-stream';
 import type { ProgramType } from '../generator/flow/types';
 import type { BaseOptions } from '../flow/types';
 
+/**
+ * emitter description?
+ *
+ * @name emitter
+ */
 function emit(program: ProgramType, config: BaseOptions) {
   const stream = new OutputStream();
 

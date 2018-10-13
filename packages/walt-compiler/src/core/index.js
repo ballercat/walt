@@ -1,4 +1,4 @@
-/**
+/*
  * Core language plugin
  *
  * The parsers in here very closely mirror the underlying WebAssembly structure

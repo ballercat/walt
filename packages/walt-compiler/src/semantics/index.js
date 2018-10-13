@@ -1,4 +1,4 @@
-/**
+/*
  * Semantic Analysis
  *
  * The semantic analyzer below accepts a Walt AST and maps it, returning a new
@@ -77,7 +77,10 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
   ];
 };
 
-// Return AST with full transformations applied
+/**
+ * Return AST with full transformations applied
+ *
+ */
 function semantics(
   ast: NodeType,
   extraSemantics: SemanticsFactory[],

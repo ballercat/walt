@@ -10,8 +10,10 @@ import type { NodeType } from '../flow/types';
 
 const GLOBAL_LABEL = 'global';
 
-// We walk the the entire tree and perform syntax validation before we continue
-// onto the generator. This may throw sometimes
+/**
+ * We walk the the entire tree and perform syntax validation before we continue
+ * onto the generator. This may throw sometimes
+ */
 export default function validate(
   ast: NodeType,
   {

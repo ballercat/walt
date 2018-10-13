@@ -1,4 +1,4 @@
-/**
+/*
  * Static value plugin
  *
  * @flow

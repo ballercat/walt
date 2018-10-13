@@ -64,7 +64,7 @@ export function testExternalImport(): i32 {
   return externalConst;
 }
 
-/**
+/*
  * Test that escape sequences work
  */
 function testEscapeSequences(char : i32) : i32 {

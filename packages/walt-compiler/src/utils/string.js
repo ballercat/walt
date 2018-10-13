@@ -1,5 +1,8 @@
 import OutputStream from './output-stream';
 
+/**
+ * stringDecoder description?
+ */
 export function* stringDecoder(view, start) {
   let length = 0;
   let index = 0;
@@ -33,6 +36,11 @@ export function* stringDecoder(view, start) {
   }
 }
 
+/**
+ * stringEncoder description?
+ * @param  {string} value
+ * @return {string}
+ */
 export function stringEncoder(value) {
   const resultStream = new OutputStream();
   const characterStream = new OutputStream();

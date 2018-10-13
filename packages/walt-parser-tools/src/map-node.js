@@ -32,7 +32,9 @@ function map(visitors) {
   return mapper;
 }
 
-// This should maybe be it's own module.
+/**
+ * This should maybe be it's own module.
+ */
 function mapNode(visitor) {
   const nodeMapper = node => {
     if (node == null) {

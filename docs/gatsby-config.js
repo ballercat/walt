@@ -42,8 +42,15 @@ module.exports = {
     {
       resolve: 'gatsby-source-filesystem',
       options: {
-        name: 'source',
+        name: 'source-compiler',
         path: `${__dirname}/../packages/walt-compiler/src/`
+      }
+    },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
+        name: 'source-tools',
+        path: `${__dirname}/../packages/walt-parser-tools/src/`
       }
     },
     'gatsby-plugin-sass',

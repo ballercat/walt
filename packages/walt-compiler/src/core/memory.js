@@ -1,4 +1,4 @@
-/**
+/*
  * Handles access to memory and Memory type declaration
  *
  * @flow

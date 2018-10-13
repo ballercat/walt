@@ -63,11 +63,15 @@ body.docs {
       border-bottom: none;
     }
 
-    .parameters {
+    .parameters, .examples {
       margin-top: 2em;
       font-size: 16px;
-      text-align: center;
+
+      h4 {
+        text-align: center;
+      }
     }
+    
     a {
       text-decoration: underline;
     }

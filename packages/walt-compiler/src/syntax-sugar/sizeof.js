@@ -1,4 +1,4 @@
-/**
+/*
  * Sizeof helper plugin. Maps size(<THING>) to a static i32 constant
  *
  * @flow

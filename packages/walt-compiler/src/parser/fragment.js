@@ -1,4 +1,4 @@
-/**
+/*
  * Syntax Analysis
  *
  * The parser below creates the "bare" Abstract Syntax Tree.
@@ -8,6 +8,12 @@
 import curry from 'curry';
 import type { NodeType } from '../flow/types';
 
+/**
+ * Creates the "bare" Abstract Syntax Tree.
+ *
+ * @param {string} parser
+ * @param {string} source
+ */
 export const makeFragment = curry(
   (parser: string => NodeType, source: string): NodeType => {
     // For fragments we must wrap the source in a function

@@ -1,5 +1,10 @@
-// Dead simple AST walker, takes a visitor object and calls all methods for
-// appropriate node Types.
+/**
+ * Dead simple AST walker, takes a visitor object and calls all methods for
+ * appropriate node Types.
+ *
+ * @name  walkNode
+ * @param visitor
+ */
 module.exports = function walker(visitor) {
   const walkNode = node => {
     if (node == null) {

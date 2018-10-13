@@ -1,4 +1,4 @@
-/**
+/*
  * Test JavaScript [arithmetic operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators)
  *
  */

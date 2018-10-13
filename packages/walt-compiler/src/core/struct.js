@@ -1,4 +1,4 @@
-/**
+/*
  * Structs Plugin
  *
  * @flow

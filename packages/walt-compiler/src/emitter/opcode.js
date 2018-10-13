@@ -2,7 +2,7 @@
 import { i32, i64, f32, f64 } from 'wasm-types';
 import type { RawOpcodeType } from '../generator/flow/types';
 
-/**
+/*
  * Ported from [opcode.def](https://github.com/WebAssembly/wabt/blob/master/src/opcode.def)
  */
 const def: { [string]: RawOpcodeType } = {};
@@ -10,7 +10,7 @@ export const opcodeMap = [];
 export const textMap = {};
 const ___ = null;
 
-/**
+/*
  * Convert Opcode definiton to usable object(s)
  **/
 const opcode = (
@@ -238,7 +238,7 @@ export const getTypecastOpcode = (to: string, from: string): RawOpcodeType => {
   return def[to + conversion + from];
 };
 
-/**
+/*
  * Return opcode mapping to the operator. Signed result is always preferred
  */
 export const opcodeFromOperator = ({

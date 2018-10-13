@@ -1,4 +1,4 @@
-/**
+/*
  * Function pointer plugin.
  * Handles function pointer declaration and indirect calls.
  *

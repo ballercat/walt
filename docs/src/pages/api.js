@@ -18,7 +18,7 @@ const APIPage = ({ data: { allDocumentationJs: { edges } } }) => {
       <div id='api'>
         <section className='content'>
           <h2>API</h2>
-          {docs.map(({ name, kind, returns, params, description: { childMarkdownRemark: { html } } }, di) => (
+          {docs.map(({ name, kind, returns, params, examples, description: { childMarkdownRemark: { html } } }, di) => (
             <article key={di}>
               <h3>{name}</h3>
               <div dangerouslySetInnerHTML={{ __html: html }} />
@@ -44,6 +44,12 @@ const APIPage = ({ data: { allDocumentationJs: { edges } } }) => {
                   </table>
                 </div>
               )}
+              {examples && !!examples.length && (
+                <div className="examples">
+                  <h4>Example{examples.length > 1 && <span>s</span>}</h4>
+                  {examples.map(({ highlighted }) => (<pre dangerouslySetInnerHTML={{ __html: highlighted }}></pre>))}
+                </div>
+              )}
             </article>
           ))}
         </section>
@@ -56,15 +62,30 @@ export default APIPage
 
 export const pageQuery = graphql`
 query {
-  allDocumentationJs(filter: {name: {ne: "Syntax"} }) {
+  allDocumentationJs(filter: { name: { ne: "Syntax" } }) {
     edges {
       node {
+        examples {
+          highlighted
+        }
         name
         kind
-        returns { type { type name} }
-        params { name type {  name } }
+        returns {
+            type {
+            type
+            name
+          }
+        }
+        params {
+          name
+          type {
+            name
+          }
+        }
         description {
-          childMarkdownRemark { html }
+          childMarkdownRemark {
+            html
+          }
         }
       }
     }
