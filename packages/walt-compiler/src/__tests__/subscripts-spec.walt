@@ -1,0 +1,9 @@
+const memory: Memory = { initial: 1 };
+
+type Struct = { x: i32, list: i32[] };
+
+export function run() {
+  const s: Struct = 0;
+  s.list[0] = 1;
+}
+

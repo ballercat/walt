@@ -32,6 +32,14 @@ test(
   })
 );
 
+test.only(
+  'subscripts',
+  harness(path.resolve(__dirname, './subscripts-spec.walt'), null, {
+    printBinary: false,
+    printNode: false,
+  })
+);
+
 test('throws', t => {
   const run = harness(path.resolve(__dirname, './throw-spec.walt'), null, {
     printBinary: false,
