@@ -132,7 +132,7 @@ export default function Struct(): SemanticPlugin {
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
 
             let type = objectKeyTypeMap[field.value];
-            if (type.includes('[]')) {
+            if (String(type).includes('[]')) {
               type = type.slice(0, -2);
             }
             return {
