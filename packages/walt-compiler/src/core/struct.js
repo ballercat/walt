@@ -115,16 +115,29 @@ export default function Struct(): SemanticPlugin {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
-          const [identifier, field] = params;
-          const ref = find(scopes, identifier.value);
-          const userType = ref && userTypes[ref.type];
+          const [lookup, field] = params;
+
+          let userType = null;
+          // If ArraySubscript is the lookup source then we need to use the type
+          // resulting from the lookup not the identifier value
+          if (lookup.Type === Syntax.ArraySubscript) {
+            userType = userTypes[lookup.type];
+          } else {
+            const ref = find(scopes, lookup.value);
+            userType = ref && userTypes[ref.type];
+          }
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+
+            let type = objectKeyTypeMap[field.value];
+            if (type.includes('[]')) {
+              type = type.slice(0, -2);
+            }
             return {
               ...node,
-              type: objectKeyTypeMap[field.value],
+              type,
               params: patchStringSubscript(metaObject, params),
             };
           }

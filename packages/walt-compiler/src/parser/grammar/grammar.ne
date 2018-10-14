@@ -240,7 +240,7 @@ ArgumentList ->
 Access ->
     Identifier DOT Identifier         {% subscript %}
   | NativeType DOT Identifier         {% subscript %}
-  | Identifier LSB _ Ternary _ RSB    {% subscript %}
+  | Access LSB _ Ternary _ RSB    {% subscript %}
   | Grouping                          {% id %}
 
 Grouping ->
