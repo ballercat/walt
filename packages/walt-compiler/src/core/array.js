@@ -60,7 +60,7 @@ export default function arrayPlugin(): SemanticPlugin {
 
           const [identifier] = params;
 
-          const type = identifier.meta[TYPE_ARRAY] || identifier.type;
+          const type = identifier.meta[TYPE_ARRAY];
 
           return {
             ...node,

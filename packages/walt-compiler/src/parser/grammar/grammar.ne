@@ -16,6 +16,7 @@
     unary,
     ternary,
     subscript,
+    access,
     fun,
     declaration,
     call,
@@ -238,9 +239,9 @@ ArgumentList ->
   | Expression _ COMMA _ ArgumentList {% flatten %}
 
 Access ->
-    Identifier DOT Identifier         {% subscript %}
-  | NativeType DOT Identifier         {% subscript %}
-  | Access LSB _ Ternary _ RSB    {% subscript %}
+    Identifier DOT Identifier         {% access %}
+  | NativeType DOT Identifier         {% access %}
+  | Access LSB _ Ternary _ RSB        {% subscript %}
   | Grouping                          {% id %}
 
 Grouping ->

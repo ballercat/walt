@@ -211,6 +211,11 @@ export default function factory(lexer) {
     unary,
     ternary,
     subscript,
+    access(d) {
+      const n = subscript(d);
+      n.Type = 'Access';
+      return n;
+    },
     fun,
     declaration,
     call,
@@ -251,7 +256,10 @@ export default function factory(lexer) {
     voidFun,
     assignment(d, value) {
       let Type = Syntax.Assignment;
-      if (d[0] && d[0].Type === Syntax.ArraySubscript) {
+      if (
+        d[0] &&
+        (d[0].Type === Syntax.ArraySubscript || d[0].Type === 'Access')
+      ) {
         Type = Syntax.MemoryAssignment;
       }
 

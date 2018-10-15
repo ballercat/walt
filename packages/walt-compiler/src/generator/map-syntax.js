@@ -18,6 +18,7 @@ import generateBlock from './block';
 import generateElse from './else';
 import generateSelect from './select';
 import generateNative from './native';
+import generateAccess from './access';
 
 import Syntax from 'walt-syntax';
 import { getInScope, getConstOpcode } from './utils';
@@ -26,6 +27,7 @@ import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
 
 export const syntaxMap: { [string]: GeneratorType } = {
+  ['Access']: generateAccess,
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary

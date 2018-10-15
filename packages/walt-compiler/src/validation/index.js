@@ -135,7 +135,7 @@ export default function validate(
             );
           }
         },
-        [Syntax.ArraySubscript]: (node, _validator) => {
+        ['Access']: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
           if (offset.value == null) {

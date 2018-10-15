@@ -117,27 +117,58 @@ export default function Struct(): SemanticPlugin {
           const params = node.params.map(p => transform([p, context]));
           const [lookup, field] = params;
 
+          const ref = find(scopes, lookup.value);
+          const userType = ref && userTypes[ref.type];
+
+          if (userType != null) {
+            const metaObject = userType.meta[TYPE_OBJECT];
+            const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+            const type = objectKeyTypeMap[field.value];
+
+            return {
+              ...node,
+              Type: 'Access',
+              value: `${lookup.value}.${field.value}`,
+              type,
+              params: patchStringSubscript(metaObject, params),
+            };
+          }
+
+          return next(args);
+        },
+        ['Access']: next => (args, transform) => {
+          const [node, context] = args;
+          const { userTypes, scopes } = context;
+          const params = node.params.map(p => transform([p, context]));
+          const [lookup, field] = params;
+
           let userType = null;
-          // If ArraySubscript is the lookup source then we need to use the type
-          // resulting from the lookup not the identifier value
-          if (lookup.Type === Syntax.ArraySubscript) {
-            userType = userTypes[lookup.type];
+          if (lookup.Type === Syntax.Identifier) {
+            if (!find(scopes, lookup.value)) {
+              return next(args);
+            }
+            userType = userTypes[find(scopes, lookup.value).type];
           } else {
-            const ref = find(scopes, lookup.value);
-            userType = ref && userTypes[ref.type];
+            // If ArraySubscript is the lookup source then we need to use the type
+            // resulting from the lookup not the identifier value
+            userType = userTypes[String(lookup.type)];
           }
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+            const type = objectKeyTypeMap[field.value];
 
-            let type = objectKeyTypeMap[field.value];
-            if (String(type).includes('[]')) {
-              type = type.slice(0, -2);
-            }
             return {
               ...node,
-              type,
+              value: `${lookup.value}.${field.value}`,
+              meta: {
+                ...node.meta,
+                TYPE_ARRAY: String(type).includes('[]')
+                  ? type.slice(0, -2)
+                  : null,
+              },
+              type: String(type).replace('[]', ''),
               params: patchStringSubscript(metaObject, params),
             };
           }
