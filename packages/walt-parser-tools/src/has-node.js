@@ -1,4 +1,4 @@
-/**
+/*
  * Check if an AST has a specific Node Type, return boolean
  *
  */

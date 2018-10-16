@@ -1,4 +1,4 @@
-/**
+/*
  * Bool plugin.
  * Converts boolean identifiers to i32 constants, handles declarations with
  * type "bool".

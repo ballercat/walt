@@ -1,7 +1,6 @@
-/**
- * Test JavaScript arithmetic operators
+/*
+ * Test JavaScript [arithmetic operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators)
  *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators
  */
 import test from 'ava';
 import { compile } from '..';

@@ -4,7 +4,7 @@ import mergeBlock from './merge-block';
 import { opcodeFromOperator } from '../emitter/opcode';
 import type { GeneratorType } from './flow/types';
 
-/**
+/*
  * Transform a binary expression node into a list of opcodes
  */
 const generateBinaryExpression: GeneratorType = (node, parent) => {

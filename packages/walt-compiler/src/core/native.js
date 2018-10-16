@@ -1,4 +1,4 @@
-/**
+/*
  * Native methods plugin
  *
  * @flow

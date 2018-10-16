@@ -208,6 +208,11 @@ const getPrinters = add => ({
   [Syntax.ObjectLiteral]: (_, __) => {},
 });
 
+/**
+ * printNode description?
+ *
+ * @name prettyPrintNode
+ */
 const printNode = (node?: NodeType): string => {
   if (node == null) {
     return '';

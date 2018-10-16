@@ -1,4 +1,4 @@
-/**
+/*
  * Scope helpers.
  *
  * Normalizes how scope look ups are made

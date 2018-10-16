@@ -1,4 +1,4 @@
-/**
+/*
  * Array Plugin
  *
  * @flow

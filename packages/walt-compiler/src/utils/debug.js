@@ -2,6 +2,14 @@
 import { sizeof } from 'wasm-types';
 import OutputStream from './output-stream';
 
+/**
+ * debug description?
+ *
+ * @name  debug
+ * @param {OutputStream} stream
+ * @param {number} begin
+ * @param {number} end
+ */
 const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
   let pc = 0;
   return (

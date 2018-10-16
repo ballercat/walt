@@ -1,4 +1,4 @@
-/**
+/*
  * Types plugin. Parses all types before the rest of the program
  *
  * (Does not handle Generic Types)

@@ -1,4 +1,4 @@
-/**
+/*
  * Syntax Analysis
  *
  * The parser below creates the "bare" Abstract Syntax Tree.
@@ -25,7 +25,7 @@ type GrammarType = {
 };
 type MakeGrammar = () => GrammarType;
 
-/**
+/*
  * Returns a custom lexer. This wrapper API is necessary to ignore comments
  * in all of the subsequent compiler phases, unfortunately.
  *
@@ -70,6 +70,13 @@ function makeLexer() {
   };
 }
 
+/**
+ * Creates the "bare" Abstract Syntax Tree.
+ *
+ * @name makeParser
+ * @param {MakeGrammar[]} extraGrammar
+ * @param {string}        source
+ */
 export default curry(function parse(
   extraGrammar: MakeGrammar[],
   source: string

@@ -62,6 +62,9 @@ export const generateCode = (
   return block;
 };
 
+/**
+ * generator description?
+ */
 function generator(ast: NodeType, config: GeneratorOptions): ProgramType {
   const program: ProgramType = {
     Version: config.version,

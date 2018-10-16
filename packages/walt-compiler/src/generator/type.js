@@ -1,5 +1,5 @@
 // @flow
-/**
+/*
  * Generate an Intermediate version for a WebAssembly function type
  **/
 import invariant from 'invariant';

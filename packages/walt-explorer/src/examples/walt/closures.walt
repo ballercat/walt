@@ -1,0 +1,31 @@
+const table: Table = { element: 'anyfunc', initial: 1 };
+// lambda keyword is used to indicate a function type which is used as a lambda/closure
+type Fun = () => i32;
+type Type = Lambda<Fun>;
+
+function getClosure(): Type {
+  // close over two locals
+  let x: i32 = 1;
+  let y: i32 = 1;
+  // Closures/Lambdas are defined as annonymous arrow functions
+  return (): i32 => {
+    x += y;
+    return x;
+  };
+}
+
+export function test(): i32 {
+  const closure: Type = getClosure();
+  closure();
+  closure();
+  closure();
+  // should be 5
+  const x: i32 = closure();
+  const closure2: Type = getClosure();
+  // should be 2
+  const y: i32 = closure2();
+
+  // should be 7
+  return x + y;
+}
+

@@ -32,7 +32,9 @@ export {
 };
 export const VERSION = '0.16.3';
 
-// Used for debugging purposes
+/**
+ * Used for debugging purposes
+ */
 export const getIR = (source: string, config: ConfigType) => {
   const {
     version = VERSION_1,
@@ -67,7 +69,28 @@ export const getIR = (source: string, config: ConfigType) => {
   return wasm;
 };
 
-// Compile with plugins, future default export
+/**
+ * Compile with plugins, future default export
+ * 
+ * @example
+ * import { compile } from 'walt-compiler';
+ *
+ *  const buffer = compile(`
+ *    let counter: i32 = 0;
+ *    export function count(): i32 {
+ *      counter += 1;
+ *      return counter;
+ *    }
+ * `).buffer();
+ *
+ * WebAssembly.instantiate(buffer).then(result => {
+ *   console.log(`First invocation: ${result.instance.exports.count()}`);
+ *   console.log(`Second invocation: ${result.instance.exports.count()}`);
+ * });
+ *
+ * @param {string} source     Your walt sourcecode
+ * @param {ConfigType} config The configuration for this compilation
+ */
 export const compile = (source: string, config: ConfigType) => {
   const {
     filename = 'unknown.walt',

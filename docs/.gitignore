@@ -1,0 +1,8 @@
+# Project dependencies
+.cache
+node_modules
+*.log
+
+# Build directory
+public
+.DS_Store

@@ -1,4 +1,4 @@
-/**
+/*
  * Default Arguments syntax sugar plugin.
  *
  * Converts FUNCTION CALLS with missing arguments to default values
