@@ -60,7 +60,7 @@ type Result = {
 
 #### buffer()
 
-Unique (accross function calls) `ArrayBuffer` instance.
+Unique (across function calls) `ArrayBuffer` instance.
 
 #### ast
 
