@@ -73,6 +73,7 @@ export default function memoryPlugin(): SemanticPlugin {
             dataSize: {
               ...id,
               type: 'i32',
+              meta: { ALIAS: 'Memory' },
               Type: Syntax.Access,
               params: [
                 {
