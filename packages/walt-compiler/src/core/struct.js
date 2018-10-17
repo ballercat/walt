@@ -127,7 +127,7 @@ export default function Struct(): SemanticPlugin {
 
             return {
               ...node,
-              Type: 'Access',
+              Type: Syntax.Access,
               value: `${lookup.value}.${field.value}`,
               type,
               params: patchStringSubscript(metaObject, params),
@@ -136,7 +136,7 @@ export default function Struct(): SemanticPlugin {
 
           return next(args);
         },
-        ['Access']: next => (args, transform) => {
+        [Syntax.Access]: next => (args, transform) => {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));

@@ -27,7 +27,7 @@ import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
 
 export const syntaxMap: { [string]: GeneratorType } = {
-  ['Access']: generateAccess,
+  [Syntax.Access]: generateAccess,
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary

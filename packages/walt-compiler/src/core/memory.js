@@ -22,7 +22,7 @@ export default function memoryPlugin(): SemanticPlugin {
             return {
               ...identifier,
               type: 'i32',
-              Type: 'Access',
+              Type: Syntax.Access,
               params: [
                 {
                   ...identifier,
@@ -73,7 +73,7 @@ export default function memoryPlugin(): SemanticPlugin {
             dataSize: {
               ...id,
               type: 'i32',
-              Type: 'Access',
+              Type: Syntax.Access,
               params: [
                 {
                   ...id,
@@ -106,7 +106,7 @@ export default function memoryPlugin(): SemanticPlugin {
           const mapped = callMap[field.value];
           if (
             !(
-              subscript.Type === 'Access' &&
+              subscript.Type === Syntax.Access &&
               isMemoryIdentifier(context, id) &&
               mapped
             )
