@@ -16,32 +16,6 @@ export default function memoryPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
-        [Syntax.Identifier]: next => args => {
-          const [identifier] = args;
-          if (identifier.value === '__DATA_LENGTH__') {
-            return {
-              ...identifier,
-              type: 'i32',
-              Type: Syntax.Access,
-              params: [
-                {
-                  ...identifier,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-                {
-                  ...identifier,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-              ],
-            };
-          }
-
-          return next(args);
-        },
         [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
           const { scopes, memories } = context;
