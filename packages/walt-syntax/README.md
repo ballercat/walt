@@ -70,7 +70,7 @@ export type NodeType = {
 
 `params` are the children of the node.
 
-`meta` is used to hold information about the node which is not present in the source program and is either inferred or implied. For example a struct type definition may contain the key value offsets which are used to compile it's property look ups. 
+`meta` is used to hold information about the node which is not present in the source program and is either inferred or implied. For example a struct type definition may contain the key value offsets which are used to compile it's property look ups.
 
 ## Compile-able AST Types
 
@@ -96,6 +96,7 @@ While many different nodes are possible a strict subset of node `Type` are consi
   Syntax.ReturnStatement,
   Syntax.Declaration,
   Syntax.ArraySubscript,
+  Syntax.Access,
   Syntax.Assignment,
   Syntax.MemoryAssignment,
   Syntax.Loop,

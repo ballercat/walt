@@ -13,7 +13,7 @@ function testGlobali64(): i32 {
 }
 
 function testArraySubscript(): i32 {
-  const arr: i32[] = __DATA_LENGTH__;
+  const arr: i32[] = memory.dataSize();
   arr[1] = 2;
   arr[2] = 2;
   return arr[1] + arr[2];
@@ -21,7 +21,7 @@ function testArraySubscript(): i32 {
 
 let gArray: i32[] = 0;
 export function testGlobalArray(): i32 {
-  gArray = __DATA_LENGTH__ + 8;
+  gArray = memory.dataSize() + 8;
   gArray[0] = 2;
   gArray[1] = 2;
   return gArray[0] + gArray[1];

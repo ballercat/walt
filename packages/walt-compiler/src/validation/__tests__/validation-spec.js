@@ -86,6 +86,16 @@ test('undefined object properties', t => {
   t.snapshot(error);
 });
 
+test('access on undefined objects', t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test() {
+      obj.y = 5;
+    }`)
+  );
+  t.snapshot(error);
+});
+
 test('functions must have consistent returns', t => {
   const error = t.throws(() =>
     parseAndValidate(`

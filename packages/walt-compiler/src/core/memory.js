@@ -16,32 +16,6 @@ export default function memoryPlugin(): SemanticPlugin {
   return {
     semantics() {
       return {
-        [Syntax.Identifier]: next => args => {
-          const [identifier] = args;
-          if (identifier.value === '__DATA_LENGTH__') {
-            return {
-              ...identifier,
-              type: 'i32',
-              Type: Syntax.ArraySubscript,
-              params: [
-                {
-                  ...identifier,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-                {
-                  ...identifier,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-              ],
-            };
-          }
-
-          return next(args);
-        },
         [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
           const { scopes, memories } = context;
@@ -73,7 +47,8 @@ export default function memoryPlugin(): SemanticPlugin {
             dataSize: {
               ...id,
               type: 'i32',
-              Type: Syntax.ArraySubscript,
+              meta: { ALIAS: 'Memory' },
+              Type: Syntax.Access,
               params: [
                 {
                   ...id,
@@ -106,7 +81,7 @@ export default function memoryPlugin(): SemanticPlugin {
           const mapped = callMap[field.value];
           if (
             !(
-              subscript.Type === Syntax.ArraySubscript &&
+              subscript.Type === Syntax.Access &&
               isMemoryIdentifier(context, id) &&
               mapped
             )

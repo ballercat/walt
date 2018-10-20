@@ -15,7 +15,7 @@ export default function nativePlugin(): SemanticPlugin {
           const [node, context] = args;
           const [id, ...fnArgs] = node.params;
           if (
-            id.Type === Syntax.ArraySubscript &&
+            id.Type === Syntax.Access &&
             id.params[0] &&
             id.params[0].Type === Syntax.Type
           ) {
