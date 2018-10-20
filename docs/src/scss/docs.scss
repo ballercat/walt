@@ -1,12 +1,15 @@
 body.docs {
   header {
+    background: #654ff0 linear-gradient(to bottom left,#654ff0,#4733bd);
+    color: #fff;
+    border-bottom: 1px solid white;
+    padding: 10px;
     nav {
       right: 1em;
-      padding: 30px 0;
+      font-size: 1.15em;
+      padding: 25px 0;
     }
     h1 {
-      padding: 0;
-      margin: 20px;
       img {
         vertical-align: middle;
         margin-right: 10px;
@@ -46,10 +49,6 @@ body.docs {
       p {
         padding: 0;
       }
-    }
-
-    a {
-      text-decoration: underline;
     }
   }
 }
