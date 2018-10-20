@@ -12,7 +12,7 @@ html {
 }
 
 body {
-  background-color: $color-main-bg;
+  background-color: $color-white;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -38,7 +38,7 @@ li {
 pre[class*="language-"] {
   font-size: 0.8em;
   margin-bottom: 1em;
-  background: #fff;
+  background: $color-grey;
   border: 1px solid #eee;
 }
 

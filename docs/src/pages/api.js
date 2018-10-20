@@ -38,7 +38,7 @@ const APIPage = ({
               <article key={name}>
                 <h3>{name}</h3>
                 <div dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
-                <div className="parameters">
+                <div className="info">
                   <h4>Parameters</h4>
                   <ul>
                     {params.map(param => (
@@ -51,7 +51,7 @@ const APIPage = ({
                     ))}
                   </ul>
                 </div>
-                <div className="returns">
+                <div className="info">
                   <h4>Returns</h4>
                   <div>
                     <pre>{returns[0].type.name}</pre>
@@ -59,13 +59,14 @@ const APIPage = ({
                 </div>
                 {examples &&
                   !!examples.length && (
-                    <div className="examples">
+                    <div className="info">
                       <h4>
                         Example
                         {examples.length > 1 && <span>s</span>}
                       </h4>
                       {examples.map(({ highlighted }, ei) => (
                         <pre
+                          className="language-javascript"
                           key={ei}
                           dangerouslySetInnerHTML={{ __html: highlighted }}
                         />
