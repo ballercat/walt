@@ -1,4 +1,5 @@
 @import 'partials/colors';
+@import 'partials/headers';
 
 html {
   box-sizing: border-box;
@@ -13,7 +14,8 @@ html {
 
 body {
   background-color: $color-white;
-  font-family: 'Roboto', sans-serif;
+  font-family: Helvetica,Arial,sans-serif;
+  font-size: 16px;
 }
 
 a {
@@ -46,11 +48,12 @@ main {
   max-width: 700px;
   width: 100%;
   margin: auto;
-  font-size: 26px;
   @media (max-width: 780px){
     font-size: 20px;
   }
 }
+
+
 
 header {
   h1 {
@@ -62,8 +65,8 @@ header {
   }
 
   nav {
-    padding: 1em;
-    font-size: 22px;
+    padding: 2.25em;
+    font-size: 1em;
     position: absolute;
     top: 0;
 

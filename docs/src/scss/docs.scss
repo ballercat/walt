@@ -2,8 +2,10 @@ body.docs {
   header {
     nav {
       right: 1em;
+      padding: 30px 0;
     }
     h1 {
+      padding: 0;
       margin: 20px;
       img {
         vertical-align: middle;
@@ -12,24 +14,8 @@ body.docs {
     }
   }
 
-  h1, h2, h3, p {
-    padding: 10px 0;
-    margin: 0;
-  }
-
-  h1, h2, h3 {
-    font-weight: 700;
-  }
-
   h2 {
-    font-size: 46px;
-    color: #1f1f1f;
-  }
-
-  h3 {
-    font-size: 28px;
-    letter-spacing: -1px;
-    color: #654ff0;
+    padding: 0 10px;
   }
 
   hr {
@@ -40,35 +26,25 @@ body.docs {
     padding-top: 1em;
   }
 
-  table {
-    thead {
-      border-bottom: 1px solid black;
-      background: #f1c232;
-      color: #000;
-    }
-    th {
-      padding: 5px;
-    }
-    td {
-      text-align: center;
-    }
-  }
-
   article {
     margin-bottom: 20px;
-    padding-bottom: 20px;
+    padding: 0 10px 20px;
 
+    h2 {
+      color: #1f1f1f;
+    }
 
-    &:last-child {
-      border-bottom: none;
+    h3 {
+      color: #654ff0;
     }
 
     .info {
       margin-top: 2em;
-      font-size: 16px;
-
       h4 {
         margin: 10px 0;
+      }
+      p {
+        padding: 0;
       }
     }
 
