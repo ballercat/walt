@@ -4,91 +4,114 @@
  * This is an example of how to generate a page with documentjs query
  * It will eventually be seversal pages that link to each other (built in gatsby-node)
  */
-import React from 'react'
-import { graphql } from 'gatsby'
+import React from 'react';
+import { graphql } from 'gatsby';
 
-import Page from '../components/LayoutBasic'
+import Page from '../components/LayoutBasic';
 
-const APIPage = ({ data: { allDocumentationJs: { edges } } }) => {
-  const docs = edges.map(e => e.node)
-  // alphabatize by name
-  docs.sort((a, b) => ((a.name > b.name) ? 1 : ((b.name > a.name)) ? -1 : 0))
+const normalize = ({
+  node: { description = { childMarkdownRemark: { html: '' } }, ...rest },
+}) => {
+  console.log(rest);
+  return {
+    ...rest,
+    returns: rest.returns.length ? rest.returns : [{ type: { name: 'void' } }],
+    descriptionHTML: description.childMarkdownRemark.html,
+  };
+};
+// alphabatize by name
+const byName = (a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0);
+
+const APIPage = ({
+  data: {
+    allDocumentationJs: { edges },
+  },
+}) => {
+  const docs = edges.map(normalize).sort(byName);
   return (
     <Page>
-      <div id='api'>
-        <section className='content'>
-          <h2>API</h2>
-          {docs.map(({ name, kind, returns, params, examples, description: { childMarkdownRemark: { html } } }, di) => (
-            <article key={di}>
-              <h3>{name}</h3>
-              <div dangerouslySetInnerHTML={{ __html: html }} />
-              {!!returns.length && <div>returns {returns[0].type.name}</div>}
-              {!!params.length && (
-                <div className='parameters'>
+      <div id="api">
+        <section className="content">
+          <h2>API Reference</h2>
+          {docs.map(
+            ({ name, kind, returns, params, examples, descriptionHTML }) => (
+              <article key={name}>
+                <h3>{name}</h3>
+                <div dangerouslySetInnerHTML={{ __html: descriptionHTML }} />
+                <div className="parameters">
                   <h4>Parameters</h4>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {params.map((param, pi) => (
-                        <tr key={pi}>
-                          <td>{param.name}</td>
-                          <td>{param.type && param.type.name ? param.type.name : 'Unknown'}</td>
-                        </tr>
+                  <ul>
+                    {params.map(param => (
+                      <li key={param.name}>
+                        {param.name}:{' '}
+                        {param.type && param.type.name
+                          ? param.type.name
+                          : 'any'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="returns">
+                  <h4>Returns</h4>
+                  <div>
+                    <pre>{returns[0].type.name}</pre>
+                  </div>
+                </div>
+                {examples &&
+                  !!examples.length && (
+                    <div className="examples">
+                      <h4>
+                        Example
+                        {examples.length > 1 && <span>s</span>}
+                      </h4>
+                      {examples.map(({ highlighted }, ei) => (
+                        <pre
+                          key={ei}
+                          dangerouslySetInnerHTML={{ __html: highlighted }}
+                        />
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {examples && !!examples.length && (
-                <div className="examples">
-                  <h4>Example{examples.length > 1 && <span>s</span>}</h4>
-                  {examples.map(({ highlighted }, ei) => (<pre key={ei} dangerouslySetInnerHTML={{ __html: highlighted }}></pre>))}
-                </div>
-              )}
-            </article>
-          ))}
+                    </div>
+                  )}
+              </article>
+            )
+          )}
         </section>
       </div>
     </Page>
-  )
-}
+  );
+};
 
-export default APIPage
+export default APIPage;
 
 export const pageQuery = graphql`
-query {
-  allDocumentationJs(filter: { name: { ne: "Syntax" } }) {
-    edges {
-      node {
-        examples {
-          highlighted
-        }
-        name
-        kind
-        returns {
-            type {
-            type
-            name
+  query {
+    allDocumentationJs(filter: { name: { ne: "Syntax" } }) {
+      edges {
+        node {
+          examples {
+            highlighted
           }
-        }
-        params {
           name
-          type {
-            name
+          kind
+          returns {
+            type {
+              type
+              name
+            }
           }
-        }
-        description {
-          childMarkdownRemark {
-            html
+          params {
+            name
+            type {
+              name
+            }
+          }
+          description {
+            childMarkdownRemark {
+              html
+            }
           }
         }
       }
     }
   }
-}
-`
+`;

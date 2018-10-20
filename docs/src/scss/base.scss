@@ -1,3 +1,5 @@
+@import 'partials/colors';
+
 html {
   box-sizing: border-box;
 }
@@ -10,7 +12,7 @@ html {
 }
 
 body {
-  background-color: #fcfcfc;
+  background-color: $color-main-bg;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -53,7 +55,7 @@ main {
 header {
   h1 {
     font-weight: 700;
-    
+
     a:hover {
       color: inherit;
     }
@@ -102,12 +104,12 @@ footer {
       vertical-align: middle;
       text-align: left;
     }
-    
+
     th, td {
       margin:0;
       padding: 1em;
     }
-    
+
     th:nth-child(2),
     td:nth-child(2){
       border: 4px solid black;
