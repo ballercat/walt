@@ -86,6 +86,16 @@ test('undefined object properties', t => {
   t.snapshot(error);
 });
 
+test('access on undefined objects', t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+    function test() {
+      obj.y = 5;
+    }`)
+  );
+  t.snapshot(error);
+});
+
 test('functions must have consistent returns', t => {
   const error = t.throws(() =>
     parseAndValidate(`
@@ -145,6 +155,25 @@ test('unknown user types at global scope, error', t => {
       let k: unknown = 0;
     }
     `)
+  );
+  t.snapshot(error);
+});
+
+test('invalid sucbscript target', t => {
+  const error = t.throws(() =>
+    parseAndValidate(`
+const memory: Memory = {initial: 1};
+const table: Table = { initial: 10, element: 'anyfunc' };
+
+type ResultFnType = (i32) => void;
+
+export function fn(a: i32, l: i32, f: ResultFnType): i32 {
+	let v: i32 = 0;
+	let i: i32 = 0;
+	for(i; i < l; i+=1)
+		v += a[i];
+	f(v);
+}`)
   );
   t.snapshot(error);
 });

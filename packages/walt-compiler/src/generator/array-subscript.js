@@ -7,18 +7,14 @@ import mapSyntax from './map-syntax';
 
 const generateArraySubscript: GeneratorType = (node, parent) => {
   const identifier = node.params[0];
-  const isArray = identifier.meta[TYPE_ARRAY];
+  const type = identifier.meta[TYPE_ARRAY];
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  let type = node.type;
 
-  if (isArray != null) {
-    // For array types, the index is multiplied by the contained object size
-    block.push.apply(block, [
-      { kind: opcode.i32Const, params: [2] },
-      { kind: opcode.i32Shl, params: [] },
-    ]);
-    type = isArray;
-  }
+  // For array types, the index is multiplied by the contained object size
+  block.push.apply(block, [
+    { kind: opcode.i32Const, params: [2] },
+    { kind: opcode.i32Shl, params: [] },
+  ]);
 
   // The sequence of opcodes to perfrom a memory load is
   // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
@@ -32,6 +28,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
       // Memory. Always 0 in the WASM MVP
       0,
     ],
+    debug: `${identifier.value} : ${JSON.stringify(identifier.type)}`,
   });
 
   return block;

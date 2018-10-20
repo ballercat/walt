@@ -115,21 +115,57 @@ export default function Struct(): SemanticPlugin {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
-          const [identifier, field] = params;
-          const ref = find(scopes, identifier.value);
+          const [lookup, field] = params;
+
+          const ref = find(scopes, lookup.value);
           const userType = ref && userTypes[ref.type];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+            const type = objectKeyTypeMap[field.value];
+
             return {
               ...node,
-              type: objectKeyTypeMap[field.value],
+              value: `${lookup.value}.${field.value}`,
+              type,
+              meta: { ...node.meta, ALIAS: userType.value },
+              Type: Syntax.Access,
               params: patchStringSubscript(metaObject, params),
             };
           }
 
           return next(args);
+        },
+        [Syntax.Access]: next => (args, transform) => {
+          const [node, context] = args;
+          const { userTypes, scopes } = context;
+          const params = node.params.map(p => transform([p, context]));
+          const [lookup, field] = params;
+          const ref = find(scopes, lookup.value);
+          const userType = userTypes[String((ref || lookup).type)];
+
+          if (userType == null) {
+            return next(args);
+          }
+
+          const metaObject = userType.meta[TYPE_OBJECT];
+          const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+          const type = objectKeyTypeMap[field.value];
+
+          return {
+            ...node,
+            value: `${lookup.value}.${field.value}`,
+            meta: {
+              ...node.meta,
+              ALIAS: userType.value,
+              TYPE_ARRAY: String(type).includes('[]')
+                ? type.slice(0, -2)
+                : null,
+            },
+            type: String(type).replace('[]', ''),
+            params: patchStringSubscript(metaObject, params),
+          };
         },
         [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;

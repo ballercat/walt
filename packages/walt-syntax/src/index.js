@@ -59,6 +59,7 @@ export const FunctionResult = 'FunctionResult';
 export const FunctionLocals = 'FunctionLocals';
 export const NativeMethod = 'NativeMethod';
 export const Unreachable = 'Unreachable';
+export const Access = 'Access';
 
 export const i32 = 'i32';
 export const f32 = 'f32';
@@ -159,7 +160,7 @@ export default {
   Sizeof,
   Spread,
   Closure,
-
+  Access,
   Noop,
 
   // Semantic Nodes

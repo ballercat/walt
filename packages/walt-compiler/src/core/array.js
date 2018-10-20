@@ -60,10 +60,12 @@ export default function arrayPlugin(): SemanticPlugin {
 
           const [identifier] = params;
 
+          const type = identifier.meta[TYPE_ARRAY];
+
           return {
             ...node,
             params,
-            type: identifier.meta[TYPE_ARRAY],
+            type,
           };
         },
       };

@@ -1,4 +1,5 @@
 // @flow
+import invariant from 'invariant';
 import { u8, i32, f32, f64, i64 } from 'wasm-types';
 import { varint32, varuint32, varint7, varint64 } from '../numbers';
 import { getTypeString } from '../value_type';
@@ -17,6 +18,12 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
   const body = new OutputStream();
 
   code.forEach(({ kind, params, valueType, debug }) => {
+    invariant(
+      typeof kind !== 'undefined',
+      `Fatal error! Generated undefined opcode. debug code: ${JSON.stringify(
+        debug
+      )}`
+    );
     // There is a much nicer way of doing this
     body.push(u8, kind.code, `${kind.text}  ${debug ? debug : ''}`);
 

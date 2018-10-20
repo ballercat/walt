@@ -137,14 +137,43 @@ export default function validate(
             );
           }
         },
-        [Syntax.ArraySubscript]: (node, _validator) => {
+        [Syntax.ArraySubscript]: node => {
+          const [target] = node.params;
+          if (target.meta.TYPE_ARRAY == null) {
+            const [start, end] = node.range;
+            problems.push(
+              error(
+                'Invalid subscript target',
+                `Expected array type for ${target.value}, received ${
+                  target.type
+                }`,
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+        },
+        [Syntax.Access]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
+          if (!node.meta.ALIAS) {
+            problems.push(
+              error(
+                'Cannot generate property access',
+                `Target ${identifier.value} does not appear to be a struct.`,
+                { start, end },
+                filename,
+                functionName
+              )
+            );
+          }
+
           if (offset.value == null) {
             const alias = offset.meta[ALIAS];
             problems.push(
               error(
-                'Cannot generate memory offset',
+                'Cannot generate property access',
                 `Undefined key ${
                   alias != null ? alias : offset.value
                 } for type ${String(identifier.meta.ALIAS)}`,
