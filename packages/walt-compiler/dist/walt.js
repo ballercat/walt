@@ -279,6 +279,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
   const FunctionLocals = 'FunctionLocals';
   const NativeMethod = 'NativeMethod';
   const Unreachable = 'Unreachable';
+  const Access = 'Access';
 
   const i32 = 'i32';
   const f32 = 'f32';
@@ -379,7 +380,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     Sizeof,
     Spread,
     Closure,
-
+    Access,
     Noop,
 
     // Semantic Nodes
@@ -456,6 +457,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
   exports.FunctionLocals = FunctionLocals;
   exports.NativeMethod = NativeMethod;
   exports.Unreachable = Unreachable;
+  exports.Access = Access;
   exports.i32 = i32;
   exports.f32 = f32;
   exports.i64 = i64;
@@ -1144,6 +1146,7 @@ function grammar() {
     unary,
     ternary,
     subscript,
+    access,
     fun,
     declaration,
     call,
@@ -1172,7 +1175,7 @@ function grammar() {
         return d[0].concat([d[1]]);
       } }, { "name": "__", "symbols": ["__$ebnf$1"], "postprocess": function (d) {
         return null;
-      } }, { "name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral)) }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "StaticPropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "StaticPropertyValue", "symbols": ["Number"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["Boolean"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "StaticProperty", "symbols": ["Identifier", "_", "COLON", "_", "StaticPropertyValue"], "postprocess": node(Syntax.Pair) }, { "name": "StaticPropertyList", "symbols": ["StaticProperty"], "postprocess": id }, { "name": "StaticPropertyList", "symbols": ["StaticProperty", "_", "COMMA", "_", "StaticPropertyList"], "postprocess": flatten }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.ObjectLiteral) }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "PropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyList", "symbols": ["Property"], "postprocess": id }, { "name": "PropertyList", "symbols": ["Property", "_", "COMMA", "_", "PropertyList"], "postprocess": flatten }, { "name": "Property", "symbols": ["Identifier", "_", "COLON", "_", "Ternary"], "postprocess": node(Syntax.Pair) }, { "name": "Property", "symbols": ["SPREAD", "Identifier"], "postprocess": spread }, { "name": "Property", "symbols": ["Identifier"], "postprocess": id }, { "name": "StructDefinition", "symbols": ["LCB", "_", "PropertyNameAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "PropertyNameAndTypeList"], "postprocess": flatten }, { "name": "PropertyNameAndType", "symbols": ["PropertyName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "TypeDefinition", "symbols": ["LB", "_", "TypeList", "_", "RB"], "postprocess": flatten }, { "name": "TypeDefinition", "symbols": ["LB", "_", "RB"], "postprocess": flatten }, { "name": "TypeList", "symbols": ["Type"], "postprocess": id }, { "name": "TypeList", "symbols": ["Type", "_", "COMMA", "_", "TypeList"], "postprocess": flatten }, { "name": "PropertyName", "symbols": ["Identifier"], "postprocess": id }, { "name": "Import", "symbols": ["IMPORT", "_", "ImportDefinition", "__", "FROM", "__", "StringLiteral", "_", "SEPARATOR"], "postprocess": node(Syntax.Import) }, { "name": "ImportDefinition", "symbols": ["LCB", "_", "ImportAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "ImportAndTypeList", "symbols": ["ImportName"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportName", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportAndType", "symbols": ["ImportAndType", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportName", "symbols": ["Identifier"], "postprocess": id }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": node(Syntax.IfThenElse) }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody", "_", "Else"], "postprocess": node(Syntax.IfThenElse) }, { "name": "Else", "symbols": ["ELSE", "_", "BranchBody"], "postprocess": node(Syntax.Else) }, { "name": "BranchBody", "symbols": ["Statement"], "postprocess": id }, { "name": "BranchBody", "symbols": ["Block"], "postprocess": id }, { "name": "For", "symbols": ["FOR", "_", "LB", "_", "LoopArgument", "_", "SEPARATOR", "_", "Expression", "_", "SEPARATOR", "_", "LoopArgument", "_", "RB", "_", "BranchBody"], "postprocess": forLoop }, { "name": "LoopArgument", "symbols": ["Expression"], "postprocess": id }, { "name": "LoopArgument", "symbols": ["AssignmentExpression"], "postprocess": id }, { "name": "While", "symbols": ["WHILE", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": whileLoop }, { "name": "Break", "symbols": ["BREAK", "_", "SEPARATOR"], "postprocess": node(Syntax.Break) }, { "name": "Program", "symbols": ["_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "Program", "symbols": ["_", "SourceElementList", "_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "SourceElementList", "symbols": ["SourceElement"], "postprocess": flatten }, { "name": "SourceElementList", "symbols": ["SourceElement", "_", "SourceElementList"], "postprocess": compose(drop, flatten, flatten) }, { "name": "SourceElement", "symbols": ["Function"], "postprocess": id }, { "name": "SourceElement", "symbols": ["GlobalDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["GlobalImmutableDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["StaticDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Struct"], "postprocess": id }, { "name": "SourceElement", "symbols": ["TypeDef"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Export"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Import"], "postprocess": id }, { "name": "Statement", "symbols": ["ExpressionStatement"], "postprocess": id }, { "name": "Statement", "symbols": ["Declaration"], "postprocess": id }, { "name": "Statement", "symbols": ["ImmutableDeclaration"], "postprocess": id }, { "name": "Statement", "symbols": ["Assignment"], "postprocess": id }, { "name": "Statement", "symbols": ["If"], "postprocess": id }, { "name": "Statement", "symbols": ["For"], "postprocess": id }, { "name": "Statement", "symbols": ["While"], "postprocess": id }, { "name": "Statement", "symbols": ["Break"], "postprocess": id }, { "name": "Statement", "symbols": ["Unreachable"], "postprocess": id }, { "name": "Statement", "symbols": ["ReturnStatement"], "postprocess": id }, { "name": "Block", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.Block) }, { "name": "Block", "symbols": ["LCB", "_", "StatementList", "_", "RCB"], "postprocess": compose(node(Syntax.Block), flatten) }, { "name": "StatementList", "symbols": ["Statement"], "postprocess": drop }, { "name": "StatementList", "symbols": ["Statement", "_", "StatementList"], "postprocess": flatten }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "Block"], "postprocess": voidFun }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "FunctionResult", "_", "Block"], "postprocess": fun }, { "name": "FunctionParameters", "symbols": ["LB", "_", "RB"], "postprocess": node(Syntax.FunctionArguments) }, { "name": "FunctionParameters", "symbols": ["LB", "_", "ParameterList", "_", "RB"], "postprocess": compose(node(Syntax.FunctionArguments), flatten, flatten) }, { "name": "ParameterList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "ParameterList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "ParameterList"], "postprocess": flatten }, { "name": "FunctionResult", "symbols": ["COLON", "_", "Type"], "postprocess": compose(result, drop) }, { "name": "GlobalDeclaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "GlobalDeclaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "EQUALS", "_", "Atom", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "Identifier", "_", "COLON", "_", "GenericType", "_", "SEPARATOR"], "postprocess": builtinDecl }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ObjectLiteral", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "Atom", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.Declaration) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ObjectLiteral", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "Identifier", "_", "COLON", "_", "GenericType", "_", "SEPARATOR"], "postprocess": builtinDecl }, { "name": "StaticNameAndType", "symbols": ["Identifier", "_", "COLON", "_", "ArrayType"], "postprocess": node(Syntax.Pair) }, { "name": "StaticDeclaration", "symbols": ["CONST", "_", "StaticNameAndType", "_", "EQUALS", "_", "LSB", "_", "RSB", "_", "SEPARATOR"], "postprocess": declaration(Syntax.StaticDeclaration) }, { "name": "StaticDeclaration", "symbols": ["CONST", "_", "StaticNameAndType", "_", "EQUALS", "_", "LSB", "_", "StaticValueList", "_", "RSB", "_", "SEPARATOR"], "postprocess": compose(declaration(Syntax.StaticDeclaration), flatten) }, { "name": "StaticValueList", "symbols": ["Atom"], "postprocess": id }, { "name": "StaticValueList", "symbols": ["Atom", "_", "COMMA", "_", "StaticValueList"], "postprocess": flatten }, { "name": "Unreachable", "symbols": ["THROW", "_", "SEPARATOR"], "postprocess": node(Syntax.Unreachable) }, { "name": "Unreachable", "symbols": ["THROW", "_", "Expression", "_", "SEPARATOR"], "postprocess": node(Syntax.Unreachable) }, { "name": "Pair", "symbols": ["Identifier", "_", "COLON", "_", "Identifier"], "postprocess": node(Syntax.Pair) }, { "name": "Export", "symbols": ["EXPORT", "__", "ImmutableDeclaration"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Function"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "TypeDef"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Struct"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "ReturnStatement", "symbols": ["RETURN", "__", "Expression", "_", "SEPARATOR"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "ReturnStatement$subexpression$1", "symbols": [{ "literal": ";" }], "postprocess": nuller }, { "name": "ReturnStatement", "symbols": ["RETURN", "ReturnStatement$subexpression$1"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "Struct", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "StructDefinition", "SEPARATOR"], "postprocess": struct }, { "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "TypeDefinition", "_", "FATARROW", "_", "Type", "_", "SEPARATOR"], "postprocess": compose(typedef) }, { "name": "Assignment", "symbols": ["AssignmentExpression", "_", "SEPARATOR"], "postprocess": id }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "Expression"], "postprocess": d => assignment(d, '=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "PLSEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '+=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "MINEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '-=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "ObjectLiteral"], "postprocess": d => assignment(d, '=') }, { "name": "ExpressionStatement", "symbols": ["Expression", "SEPARATOR"], "postprocess": id }, { "name": "Expression", "symbols": ["Ternary"], "postprocess": id }, { "name": "Ternary", "symbols": ["Ternary", "_", "QUESTION", "_", "TernaryPair"], "postprocess": ternary }, { "name": "Ternary", "symbols": ["Binary"], "postprocess": id }, { "name": "TernaryPair", "symbols": ["Expression", "_", "COLON", "_", "Expression"], "postprocess": node(Syntax.Pair) }, { "name": "Binary", "symbols": ["Logical"], "postprocess": id }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "||" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "&&" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Bitwise"], "postprocess": id }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "|" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "^" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "&" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Equality"], "postprocess": id }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "==" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "!=" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Comparison"], "postprocess": id }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Shift"], "postprocess": id }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": "<<" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Sum"], "postprocess": id }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "+" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "-" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Product"], "postprocess": id }, { "name": "Product", "symbols": ["Product", "_", { "literal": "*" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "/" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "%" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Typecast"], "postprocess": id }, { "name": "Typecast", "symbols": ["Expression", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Expression", "_", "AS", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Unary"], "postprocess": id }, { "name": "Unary", "symbols": [{ "literal": "!" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "~" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "-" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "+" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "++" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "--" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": ["Call"], "postprocess": id }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "ArgumentList", "_", "RB"], "postprocess": compose(call, flatten) }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "RB"], "postprocess": call }, { "name": "Call", "symbols": ["Access"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["NativeType"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression", "_", "COMMA", "_", "ArgumentList"], "postprocess": flatten }, { "name": "Access", "symbols": ["Identifier", "DOT", "Identifier"], "postprocess": subscript }, { "name": "Access", "symbols": ["NativeType", "DOT", "Identifier"], "postprocess": subscript }, { "name": "Access", "symbols": ["Identifier", "LSB", "_", "Ternary", "_", "RSB"], "postprocess": subscript }, { "name": "Access", "symbols": ["Grouping"], "postprocess": id }, { "name": "Grouping", "symbols": ["LB", "_", "Expression", "_", "RB"], "postprocess": nth(2) }, { "name": "Grouping", "symbols": ["Atom"], "postprocess": id }, { "name": "Atom", "symbols": ["Identifier"], "postprocess": id }, { "name": "Atom", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["CharacterLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["Number"], "postprocess": id }, { "name": "_Type", "symbols": ["NativeType"], "postprocess": id }, { "name": "_Type", "symbols": ["GenericType"], "postprocess": id }, { "name": "_Type", "symbols": ["Identifier"], "postprocess": id }, { "name": "ArrayType", "symbols": ["_Type", "_", "LSB", "_", "RSB"], "postprocess": d => _extends({}, d[0], { value: d[0].value + "[]", type: d[0].type + "[]" }) }, { "name": "Type", "symbols": ["_Type"], "postprocess": id }, { "name": "Type", "symbols": ["ArrayType"], "postprocess": id }, { "name": "NativeType", "symbols": [lexer.has("type") ? { type: "type" } : type], "postprocess": type }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "StaticObjectLiteral", "_", "GT"], "postprocess": typeGeneric }, { "name": "Identifier", "symbols": [lexer.has("identifier") ? { type: "identifier" } : identifier], "postprocess": identifier }, { "name": "Number", "symbols": [lexer.has("number") ? { type: "number" } : number], "postprocess": constant }, { "name": "StringLiteral", "symbols": [lexer.has("string") ? { type: "string" } : string], "postprocess": string }, { "name": "CharacterLiteral", "symbols": [lexer.has("char") ? { type: "char" } : char], "postprocess": char }, { "name": "word", "symbols": [/[a-zA-Z_]/], "postprocess": id }, { "name": "word", "symbols": ["word", /[a-zA-Z0-9_]/], "postprocess": add }, { "name": "digit", "symbols": [/[0-9]/], "postprocess": id }, { "name": "digit", "symbols": ["digit", /[0-9]/], "postprocess": add }, { "name": "SEPARATOR", "symbols": ["_", { "literal": ";" }], "postprocess": nuller }, { "name": "QUESTION", "symbols": [{ "literal": "?" }], "postprocess": nuller }, { "name": "COMMA", "symbols": [{ "literal": "," }], "postprocess": nuller }, { "name": "DOT", "symbols": [{ "literal": "." }], "postprocess": nuller }, { "name": "LB", "symbols": [{ "literal": "(" }], "postprocess": nuller }, { "name": "RB", "symbols": [{ "literal": ")" }], "postprocess": nuller }, { "name": "LSB", "symbols": [{ "literal": "[" }], "postprocess": nuller }, { "name": "RSB", "symbols": [{ "literal": "]" }], "postprocess": nuller }, { "name": "LCB", "symbols": [{ "literal": "{" }], "postprocess": nuller }, { "name": "RCB", "symbols": [{ "literal": "}" }], "postprocess": nuller }, { "name": "COLON", "symbols": [{ "literal": ":" }], "postprocess": nuller }, { "name": "EQUALS", "symbols": [{ "literal": "=" }], "postprocess": nuller }, { "name": "PLSEQUALS", "symbols": [{ "literal": "+=" }], "postprocess": nuller }, { "name": "MINEQUALS", "symbols": [{ "literal": "-=" }], "postprocess": nuller }, { "name": "GT", "symbols": [{ "literal": ">" }], "postprocess": nuller }, { "name": "LT", "symbols": [{ "literal": "<" }], "postprocess": nuller }, { "name": "FATARROW", "symbols": [{ "literal": "=>" }], "postprocess": nuller }, { "name": "SPREAD", "symbols": [{ "literal": "..." }], "postprocess": nuller }, { "name": "FUNCTION", "symbols": [{ "literal": "function" }], "postprocess": nuller }, { "name": "LET", "symbols": [{ "literal": "let" }], "postprocess": nuller }, { "name": "CONST", "symbols": [{ "literal": "const" }], "postprocess": nuller }, { "name": "EXPORT", "symbols": [{ "literal": "export" }], "postprocess": nuller }, { "name": "IMPORT", "symbols": [{ "literal": "import" }], "postprocess": nuller }, { "name": "AS", "symbols": [{ "literal": "as" }], "postprocess": nuller }, { "name": "FROM", "symbols": [{ "literal": "from" }], "postprocess": nuller }, { "name": "RETURN", "symbols": [{ "literal": "return" }], "postprocess": nuller }, { "name": "TYPE", "symbols": [{ "literal": "type" }], "postprocess": nuller }, { "name": "IF", "symbols": [{ "literal": "if" }], "postprocess": nuller }, { "name": "ELSE", "symbols": [{ "literal": "else" }], "postprocess": nuller }, { "name": "FOR", "symbols": [{ "literal": "for" }], "postprocess": nuller }, { "name": "WHILE", "symbols": [{ "literal": "while" }], "postprocess": nuller }, { "name": "SWITCH", "symbols": [{ "literal": "switch" }], "postprocess": nuller }, { "name": "DO", "symbols": [{ "literal": "do" }], "postprocess": nuller }, { "name": "THROW", "symbols": [{ "literal": "throw" }], "postprocess": nuller }, { "name": "BREAK", "symbols": [{ "literal": "break" }], "postprocess": nuller }],
+      } }, { "name": "wschar", "symbols": [/[ \t\n\v\f]/], "postprocess": id }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral)) }, { "name": "StaticObjectLiteral", "symbols": ["LCB", "_", "StaticPropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "StaticPropertyValue", "symbols": ["Number"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["Boolean"], "postprocess": id }, { "name": "StaticPropertyValue", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "StaticProperty", "symbols": ["Identifier", "_", "COLON", "_", "StaticPropertyValue"], "postprocess": node(Syntax.Pair) }, { "name": "StaticPropertyList", "symbols": ["StaticProperty"], "postprocess": id }, { "name": "StaticPropertyList", "symbols": ["StaticProperty", "_", "COMMA", "_", "StaticPropertyList"], "postprocess": flatten }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.ObjectLiteral) }, { "name": "ObjectLiteral", "symbols": ["LCB", "_", "PropertyList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyList", "symbols": ["Property"], "postprocess": id }, { "name": "PropertyList", "symbols": ["Property", "_", "COMMA", "_", "PropertyList"], "postprocess": flatten }, { "name": "Property", "symbols": ["Identifier", "_", "COLON", "_", "Ternary"], "postprocess": node(Syntax.Pair) }, { "name": "Property", "symbols": ["SPREAD", "Identifier"], "postprocess": spread }, { "name": "Property", "symbols": ["Identifier"], "postprocess": id }, { "name": "StructDefinition", "symbols": ["LCB", "_", "PropertyNameAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "PropertyNameAndTypeList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "PropertyNameAndTypeList"], "postprocess": flatten }, { "name": "PropertyNameAndType", "symbols": ["PropertyName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "TypeDefinition", "symbols": ["LB", "_", "TypeList", "_", "RB"], "postprocess": flatten }, { "name": "TypeDefinition", "symbols": ["LB", "_", "RB"], "postprocess": flatten }, { "name": "TypeList", "symbols": ["Type"], "postprocess": id }, { "name": "TypeList", "symbols": ["Type", "_", "COMMA", "_", "TypeList"], "postprocess": flatten }, { "name": "PropertyName", "symbols": ["Identifier"], "postprocess": id }, { "name": "Import", "symbols": ["IMPORT", "_", "ImportDefinition", "__", "FROM", "__", "StringLiteral", "_", "SEPARATOR"], "postprocess": node(Syntax.Import) }, { "name": "ImportDefinition", "symbols": ["LCB", "_", "ImportAndTypeList", "_", "RCB"], "postprocess": compose(node(Syntax.ObjectLiteral), flatten) }, { "name": "ImportAndTypeList", "symbols": ["ImportName"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType"], "postprocess": id }, { "name": "ImportAndTypeList", "symbols": ["ImportName", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndTypeList", "symbols": ["ImportAndType", "_", "COMMA", "_", "ImportAndTypeList"], "postprocess": flatten }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "ImportAndType", "symbols": ["ImportName", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportAndType", "symbols": ["ImportAndType", "_", "AS", "_", "Identifier"], "postprocess": node(Syntax.BinaryExpression, { value: 'as' }) }, { "name": "ImportName", "symbols": ["Identifier"], "postprocess": id }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": node(Syntax.IfThenElse) }, { "name": "If", "symbols": ["IF", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody", "_", "Else"], "postprocess": node(Syntax.IfThenElse) }, { "name": "Else", "symbols": ["ELSE", "_", "BranchBody"], "postprocess": node(Syntax.Else) }, { "name": "BranchBody", "symbols": ["Statement"], "postprocess": id }, { "name": "BranchBody", "symbols": ["Block"], "postprocess": id }, { "name": "For", "symbols": ["FOR", "_", "LB", "_", "LoopArgument", "_", "SEPARATOR", "_", "Expression", "_", "SEPARATOR", "_", "LoopArgument", "_", "RB", "_", "BranchBody"], "postprocess": forLoop }, { "name": "LoopArgument", "symbols": ["Expression"], "postprocess": id }, { "name": "LoopArgument", "symbols": ["AssignmentExpression"], "postprocess": id }, { "name": "While", "symbols": ["WHILE", "_", "LB", "_", "Expression", "_", "RB", "_", "BranchBody"], "postprocess": whileLoop }, { "name": "Break", "symbols": ["BREAK", "_", "SEPARATOR"], "postprocess": node(Syntax.Break) }, { "name": "Program", "symbols": ["_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "Program", "symbols": ["_", "SourceElementList", "_"], "postprocess": compose(node('Program', { value: 'ROOT_NODE' }), flatten) }, { "name": "SourceElementList", "symbols": ["SourceElement"], "postprocess": flatten }, { "name": "SourceElementList", "symbols": ["SourceElement", "_", "SourceElementList"], "postprocess": compose(drop, flatten, flatten) }, { "name": "SourceElement", "symbols": ["Function"], "postprocess": id }, { "name": "SourceElement", "symbols": ["GlobalDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["GlobalImmutableDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["StaticDeclaration"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Struct"], "postprocess": id }, { "name": "SourceElement", "symbols": ["TypeDef"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Export"], "postprocess": id }, { "name": "SourceElement", "symbols": ["Import"], "postprocess": id }, { "name": "Statement", "symbols": ["ExpressionStatement"], "postprocess": id }, { "name": "Statement", "symbols": ["Declaration"], "postprocess": id }, { "name": "Statement", "symbols": ["ImmutableDeclaration"], "postprocess": id }, { "name": "Statement", "symbols": ["Assignment"], "postprocess": id }, { "name": "Statement", "symbols": ["If"], "postprocess": id }, { "name": "Statement", "symbols": ["For"], "postprocess": id }, { "name": "Statement", "symbols": ["While"], "postprocess": id }, { "name": "Statement", "symbols": ["Break"], "postprocess": id }, { "name": "Statement", "symbols": ["Unreachable"], "postprocess": id }, { "name": "Statement", "symbols": ["ReturnStatement"], "postprocess": id }, { "name": "Block", "symbols": ["LCB", "_", "RCB"], "postprocess": node(Syntax.Block) }, { "name": "Block", "symbols": ["LCB", "_", "StatementList", "_", "RCB"], "postprocess": compose(node(Syntax.Block), flatten) }, { "name": "StatementList", "symbols": ["Statement"], "postprocess": drop }, { "name": "StatementList", "symbols": ["Statement", "_", "StatementList"], "postprocess": flatten }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "Block"], "postprocess": voidFun }, { "name": "Function", "symbols": ["FUNCTION", "__", "Identifier", "_", "FunctionParameters", "_", "FunctionResult", "_", "Block"], "postprocess": fun }, { "name": "FunctionParameters", "symbols": ["LB", "_", "RB"], "postprocess": node(Syntax.FunctionArguments) }, { "name": "FunctionParameters", "symbols": ["LB", "_", "ParameterList", "_", "RB"], "postprocess": compose(node(Syntax.FunctionArguments), flatten, flatten) }, { "name": "ParameterList", "symbols": ["PropertyNameAndType"], "postprocess": id }, { "name": "ParameterList", "symbols": ["PropertyNameAndType", "_", "COMMA", "_", "ParameterList"], "postprocess": flatten }, { "name": "FunctionResult", "symbols": ["COLON", "_", "Type"], "postprocess": compose(result, drop) }, { "name": "GlobalDeclaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "GlobalDeclaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "EQUALS", "_", "Atom", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "Identifier", "_", "COLON", "_", "GenericType", "_", "SEPARATOR"], "postprocess": builtinDecl }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ObjectLiteral", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "GlobalImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "Atom", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.Declaration) }, { "name": "Declaration", "symbols": ["LET", "_", "PropertyNameAndType", "_", "SEPARATOR"], "postprocess": declaration(Syntax.Declaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ExpressionStatement"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "PropertyNameAndType", "_", "EQUALS", "_", "ObjectLiteral", "_", "SEPARATOR"], "postprocess": declaration(Syntax.ImmutableDeclaration) }, { "name": "ImmutableDeclaration", "symbols": ["CONST", "_", "Identifier", "_", "COLON", "_", "GenericType", "_", "SEPARATOR"], "postprocess": builtinDecl }, { "name": "StaticNameAndType", "symbols": ["Identifier", "_", "COLON", "_", "ArrayType"], "postprocess": node(Syntax.Pair) }, { "name": "StaticDeclaration", "symbols": ["CONST", "_", "StaticNameAndType", "_", "EQUALS", "_", "LSB", "_", "RSB", "_", "SEPARATOR"], "postprocess": declaration(Syntax.StaticDeclaration) }, { "name": "StaticDeclaration", "symbols": ["CONST", "_", "StaticNameAndType", "_", "EQUALS", "_", "LSB", "_", "StaticValueList", "_", "RSB", "_", "SEPARATOR"], "postprocess": compose(declaration(Syntax.StaticDeclaration), flatten) }, { "name": "StaticValueList", "symbols": ["Atom"], "postprocess": id }, { "name": "StaticValueList", "symbols": ["Atom", "_", "COMMA", "_", "StaticValueList"], "postprocess": flatten }, { "name": "Unreachable", "symbols": ["THROW", "_", "SEPARATOR"], "postprocess": node(Syntax.Unreachable) }, { "name": "Unreachable", "symbols": ["THROW", "_", "Expression", "_", "SEPARATOR"], "postprocess": node(Syntax.Unreachable) }, { "name": "Pair", "symbols": ["Identifier", "_", "COLON", "_", "Identifier"], "postprocess": node(Syntax.Pair) }, { "name": "Export", "symbols": ["EXPORT", "__", "ImmutableDeclaration"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Function"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "TypeDef"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "Export", "symbols": ["EXPORT", "__", "Struct"], "postprocess": node(Syntax.Export, { value: 'export' }) }, { "name": "ReturnStatement", "symbols": ["RETURN", "__", "Expression", "_", "SEPARATOR"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "ReturnStatement$subexpression$1", "symbols": [{ "literal": ";" }], "postprocess": nuller }, { "name": "ReturnStatement", "symbols": ["RETURN", "ReturnStatement$subexpression$1"], "postprocess": node(Syntax.ReturnStatement) }, { "name": "Struct", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "StructDefinition", "SEPARATOR"], "postprocess": struct }, { "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "TypeDefinition", "_", "FATARROW", "_", "Type", "_", "SEPARATOR"], "postprocess": compose(typedef) }, { "name": "Assignment", "symbols": ["AssignmentExpression", "_", "SEPARATOR"], "postprocess": id }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "Expression"], "postprocess": d => assignment(d, '=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "PLSEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '+=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "MINEQUALS", "_", "Expression"], "postprocess": d => assignment(d, '-=') }, { "name": "AssignmentExpression", "symbols": ["Access", "_", "EQUALS", "_", "ObjectLiteral"], "postprocess": d => assignment(d, '=') }, { "name": "ExpressionStatement", "symbols": ["Expression", "SEPARATOR"], "postprocess": id }, { "name": "Expression", "symbols": ["Ternary"], "postprocess": id }, { "name": "Ternary", "symbols": ["Ternary", "_", "QUESTION", "_", "TernaryPair"], "postprocess": ternary }, { "name": "Ternary", "symbols": ["Binary"], "postprocess": id }, { "name": "TernaryPair", "symbols": ["Expression", "_", "COLON", "_", "Expression"], "postprocess": node(Syntax.Pair) }, { "name": "Binary", "symbols": ["Logical"], "postprocess": id }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "||" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Logical", "_", { "literal": "&&" }, "_", "Bitwise"], "postprocess": binary }, { "name": "Logical", "symbols": ["Bitwise"], "postprocess": id }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "|" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "^" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Bitwise", "_", { "literal": "&" }, "_", "Sum"], "postprocess": binary }, { "name": "Bitwise", "symbols": ["Equality"], "postprocess": id }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "==" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Equality", "_", { "literal": "!=" }, "_", "Comparison"], "postprocess": binary }, { "name": "Equality", "symbols": ["Comparison"], "postprocess": id }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": "<=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Comparison", "_", { "literal": ">=" }, "_", "Shift"], "postprocess": binary }, { "name": "Comparison", "symbols": ["Shift"], "postprocess": id }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": "<<" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Shift", "_", { "literal": ">>>" }, "_", "Sum"], "postprocess": binary }, { "name": "Shift", "symbols": ["Sum"], "postprocess": id }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "+" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Sum", "_", { "literal": "-" }, "_", "Product"], "postprocess": binary }, { "name": "Sum", "symbols": ["Product"], "postprocess": id }, { "name": "Product", "symbols": ["Product", "_", { "literal": "*" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "/" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Product", "_", { "literal": "%" }, "_", "Typecast"], "postprocess": binary }, { "name": "Product", "symbols": ["Typecast"], "postprocess": id }, { "name": "Typecast", "symbols": ["Expression", "_", "COLON", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Expression", "_", "AS", "_", "Type"], "postprocess": node(Syntax.Pair) }, { "name": "Typecast", "symbols": ["Unary"], "postprocess": id }, { "name": "Unary", "symbols": [{ "literal": "!" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "~" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "-" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "+" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "++" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": [{ "literal": "--" }, "Call"], "postprocess": unary }, { "name": "Unary", "symbols": ["Call"], "postprocess": id }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "ArgumentList", "_", "RB"], "postprocess": compose(call, flatten) }, { "name": "Call", "symbols": ["Access", "_", "LB", "_", "RB"], "postprocess": call }, { "name": "Call", "symbols": ["Access"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["NativeType"], "postprocess": id }, { "name": "ArgumentList", "symbols": ["Expression", "_", "COMMA", "_", "ArgumentList"], "postprocess": flatten }, { "name": "Access", "symbols": ["Identifier", "DOT", "Identifier"], "postprocess": access }, { "name": "Access", "symbols": ["NativeType", "DOT", "Identifier"], "postprocess": access }, { "name": "Access", "symbols": ["Access", "LSB", "_", "Ternary", "_", "RSB"], "postprocess": subscript }, { "name": "Access", "symbols": ["Grouping"], "postprocess": id }, { "name": "Grouping", "symbols": ["LB", "_", "Expression", "_", "RB"], "postprocess": nth(2) }, { "name": "Grouping", "symbols": ["Atom"], "postprocess": id }, { "name": "Atom", "symbols": ["Identifier"], "postprocess": id }, { "name": "Atom", "symbols": ["StringLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["CharacterLiteral"], "postprocess": id }, { "name": "Atom", "symbols": ["Number"], "postprocess": id }, { "name": "_Type", "symbols": ["NativeType"], "postprocess": id }, { "name": "_Type", "symbols": ["GenericType"], "postprocess": id }, { "name": "_Type", "symbols": ["Identifier"], "postprocess": id }, { "name": "ArrayType", "symbols": ["_Type", "_", "LSB", "_", "RSB"], "postprocess": d => _extends({}, d[0], { value: d[0].value + "[]", type: d[0].type + "[]" }) }, { "name": "Type", "symbols": ["_Type"], "postprocess": id }, { "name": "Type", "symbols": ["ArrayType"], "postprocess": id }, { "name": "NativeType", "symbols": [lexer.has("type") ? { type: "type" } : type], "postprocess": type }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "StaticObjectLiteral", "_", "GT"], "postprocess": typeGeneric }, { "name": "Identifier", "symbols": [lexer.has("identifier") ? { type: "identifier" } : identifier], "postprocess": identifier }, { "name": "Number", "symbols": [lexer.has("number") ? { type: "number" } : number], "postprocess": constant }, { "name": "StringLiteral", "symbols": [lexer.has("string") ? { type: "string" } : string], "postprocess": string }, { "name": "CharacterLiteral", "symbols": [lexer.has("char") ? { type: "char" } : char], "postprocess": char }, { "name": "word", "symbols": [/[a-zA-Z_]/], "postprocess": id }, { "name": "word", "symbols": ["word", /[a-zA-Z0-9_]/], "postprocess": add }, { "name": "digit", "symbols": [/[0-9]/], "postprocess": id }, { "name": "digit", "symbols": ["digit", /[0-9]/], "postprocess": add }, { "name": "SEPARATOR", "symbols": ["_", { "literal": ";" }], "postprocess": nuller }, { "name": "QUESTION", "symbols": [{ "literal": "?" }], "postprocess": nuller }, { "name": "COMMA", "symbols": [{ "literal": "," }], "postprocess": nuller }, { "name": "DOT", "symbols": [{ "literal": "." }], "postprocess": nuller }, { "name": "LB", "symbols": [{ "literal": "(" }], "postprocess": nuller }, { "name": "RB", "symbols": [{ "literal": ")" }], "postprocess": nuller }, { "name": "LSB", "symbols": [{ "literal": "[" }], "postprocess": nuller }, { "name": "RSB", "symbols": [{ "literal": "]" }], "postprocess": nuller }, { "name": "LCB", "symbols": [{ "literal": "{" }], "postprocess": nuller }, { "name": "RCB", "symbols": [{ "literal": "}" }], "postprocess": nuller }, { "name": "COLON", "symbols": [{ "literal": ":" }], "postprocess": nuller }, { "name": "EQUALS", "symbols": [{ "literal": "=" }], "postprocess": nuller }, { "name": "PLSEQUALS", "symbols": [{ "literal": "+=" }], "postprocess": nuller }, { "name": "MINEQUALS", "symbols": [{ "literal": "-=" }], "postprocess": nuller }, { "name": "GT", "symbols": [{ "literal": ">" }], "postprocess": nuller }, { "name": "LT", "symbols": [{ "literal": "<" }], "postprocess": nuller }, { "name": "FATARROW", "symbols": [{ "literal": "=>" }], "postprocess": nuller }, { "name": "SPREAD", "symbols": [{ "literal": "..." }], "postprocess": nuller }, { "name": "FUNCTION", "symbols": [{ "literal": "function" }], "postprocess": nuller }, { "name": "LET", "symbols": [{ "literal": "let" }], "postprocess": nuller }, { "name": "CONST", "symbols": [{ "literal": "const" }], "postprocess": nuller }, { "name": "EXPORT", "symbols": [{ "literal": "export" }], "postprocess": nuller }, { "name": "IMPORT", "symbols": [{ "literal": "import" }], "postprocess": nuller }, { "name": "AS", "symbols": [{ "literal": "as" }], "postprocess": nuller }, { "name": "FROM", "symbols": [{ "literal": "from" }], "postprocess": nuller }, { "name": "RETURN", "symbols": [{ "literal": "return" }], "postprocess": nuller }, { "name": "TYPE", "symbols": [{ "literal": "type" }], "postprocess": nuller }, { "name": "IF", "symbols": [{ "literal": "if" }], "postprocess": nuller }, { "name": "ELSE", "symbols": [{ "literal": "else" }], "postprocess": nuller }, { "name": "FOR", "symbols": [{ "literal": "for" }], "postprocess": nuller }, { "name": "WHILE", "symbols": [{ "literal": "while" }], "postprocess": nuller }, { "name": "SWITCH", "symbols": [{ "literal": "switch" }], "postprocess": nuller }, { "name": "DO", "symbols": [{ "literal": "do" }], "postprocess": nuller }, { "name": "THROW", "symbols": [{ "literal": "throw" }], "postprocess": nuller }, { "name": "BREAK", "symbols": [{ "literal": "break" }], "postprocess": nuller }],
     ParserStart: "Program"
   };
 }
@@ -1783,6 +1786,11 @@ function factory(lexer) {
     unary,
     ternary,
     subscript,
+    access(d) {
+      const n = subscript(d);
+      n.Type = 'Access';
+      return n;
+    },
     fun,
     declaration,
     call,
@@ -1814,7 +1822,7 @@ function factory(lexer) {
     voidFun,
     assignment(d, value) {
       let Type = Syntax.Assignment;
-      if (d[0] && d[0].Type === Syntax.ArraySubscript) {
+      if (d[0] && (d[0].Type === Syntax.ArraySubscript || d[0].Type === 'Access')) {
         Type = Syntax.MemoryAssignment;
       }
 
@@ -2086,7 +2094,7 @@ const LOCAL_INDEX = 'local/index';
 const GLOBAL_INDEX = 'global/index';
 
 const TYPE_CONST = 'type/const';
-const TYPE_ARRAY = 'type/array';
+const TYPE_ARRAY = 'TYPE_ARRAY';
 
 const TYPE_OBJECT = 'TYPE_OBJECT';
 const TYPE_INDEX = 'TYPE_INDEX';
@@ -2640,9 +2648,11 @@ function arrayPlugin() {
 
           const [identifier] = params;
 
+          const type = identifier.meta[TYPE_ARRAY];
+
           return _extends({}, node, {
             params,
-            type: identifier.meta[TYPE_ARRAY]
+            type
           });
         }
       };
@@ -2664,26 +2674,6 @@ function memoryPlugin() {
   return {
     semantics() {
       return {
-        [Syntax.Identifier]: next => args => {
-          const [identifier] = args;
-          if (identifier.value === '__DATA_LENGTH__') {
-            return _extends({}, identifier, {
-              type: 'i32',
-              Type: Syntax.ArraySubscript,
-              params: [_extends({}, identifier, {
-                type: 'i32',
-                value: '0',
-                Type: Syntax.Constant
-              }), _extends({}, identifier, {
-                type: 'i32',
-                value: '0',
-                Type: Syntax.Constant
-              })]
-            });
-          }
-
-          return next(args);
-        },
         [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
           const { scopes, memories } = context;
@@ -2708,7 +2698,8 @@ function memoryPlugin() {
           const callMap = {
             dataSize: _extends({}, id, {
               type: 'i32',
-              Type: Syntax.ArraySubscript,
+              meta: { ALIAS: 'Memory' },
+              Type: Syntax.Access,
               params: [_extends({}, id, {
                 type: 'i32',
                 value: '0',
@@ -2732,7 +2723,7 @@ function memoryPlugin() {
           };
 
           const mapped = callMap[field.value];
-          if (!(subscript.Type === Syntax.ArraySubscript && isMemoryIdentifier(context, id) && mapped)) {
+          if (!(subscript.Type === Syntax.Access && isMemoryIdentifier(context, id) && mapped)) {
             return next(args);
           }
 
@@ -3331,20 +3322,52 @@ function Struct() {
           const [node, context] = args;
           const { userTypes, scopes } = context;
           const params = node.params.map(p => transform([p, context]));
-          const [identifier, field] = params;
-          const ref = scope_4(scopes, identifier.value);
+          const [lookup, field] = params;
+
+          const ref = scope_4(scopes, lookup.value);
           const userType = ref && userTypes[ref.type];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+            const type = objectKeyTypeMap[field.value];
+
             return _extends({}, node, {
-              type: objectKeyTypeMap[field.value],
+              value: `${lookup.value}.${field.value}`,
+              type,
+              meta: _extends({}, node.meta, { ALIAS: userType.value }),
+              Type: Syntax.Access,
               params: patchStringSubscript(metaObject, params)
             });
           }
 
           return next(args);
+        },
+        [Syntax.Access]: next => (args, transform) => {
+          const [node, context] = args;
+          const { userTypes, scopes } = context;
+          const params = node.params.map(p => transform([p, context]));
+          const [lookup, field] = params;
+          const ref = scope_4(scopes, lookup.value);
+          const userType = userTypes[String((ref || lookup).type)];
+
+          if (userType == null) {
+            return next(args);
+          }
+
+          const metaObject = userType.meta[TYPE_OBJECT];
+          const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
+          const type = objectKeyTypeMap[field.value];
+
+          return _extends({}, node, {
+            value: `${lookup.value}.${field.value}`,
+            meta: _extends({}, node.meta, {
+              ALIAS: userType.value,
+              TYPE_ARRAY: String(type).includes('[]') ? type.slice(0, -2) : null
+            }),
+            type: String(type).replace('[]', ''),
+            params: patchStringSubscript(metaObject, params)
+          });
         },
         [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;
@@ -3435,7 +3458,7 @@ function nativePlugin() {
         [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
           const [id, ...fnArgs] = node.params;
-          if (id.Type === Syntax.ArraySubscript && id.params[0] && id.params[0].Type === Syntax.Type) {
+          if (id.Type === Syntax.Access && id.params[0] && id.params[0].Type === Syntax.Type) {
             const [type, method] = id.params;
 
             return extendNode({
@@ -4093,12 +4116,16 @@ function validate(ast, {
             problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, 'const variables cannot be reassigned, use let instead.', { start, end }, filename, functionName));
           }
         },
-        [Syntax.ArraySubscript]: (node, _validator) => {
+        [Syntax.Access]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
+          if (!node.meta.ALIAS) {
+            problems.push(generateErrorString('Cannot generate property access', `Target ${identifier.value} does not appear to be a struct.`, { start, end }, filename, functionName));
+          }
+
           if (offset.value == null) {
             const alias = offset.meta[ALIAS];
-            problems.push(generateErrorString('Cannot generate memory offset', `Undefined key ${alias != null ? alias : offset.value} for type ${String(identifier.meta.ALIAS)}`, { start, end }, filename, functionName));
+            problems.push(generateErrorString('Cannot generate property access', `Undefined key ${alias != null ? alias : offset.value} for type ${String(identifier.meta.ALIAS)}`, { start, end }, filename, functionName));
           }
         },
         [Syntax.ReturnStatement]: (node, validator) => {
@@ -4306,15 +4333,11 @@ const generateDeclaration = (node, parent) => {
 //      
 const generateArraySubscript = (node, parent) => {
   const identifier = node.params[0];
-  const isArray = identifier.meta[TYPE_ARRAY];
+  const type = identifier.meta[TYPE_ARRAY];
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
-  let type = node.type;
 
-  if (isArray != null) {
-    // For array types, the index is multiplied by the contained object size
-    block.push.apply(block, [{ kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
-    type = isArray;
-  }
+  // For array types, the index is multiplied by the contained object size
+  block.push.apply(block, [{ kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
 
   // The sequence of opcodes to perfrom a memory load is
   // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
@@ -4326,7 +4349,8 @@ const generateArraySubscript = (node, parent) => {
     // Alignment
     2,
     // Memory. Always 0 in the WASM MVP
-    0]
+    0],
+    debug: `${identifier.value} : ${JSON.stringify(identifier.type)}`
   });
 
   return block;
@@ -4498,7 +4522,27 @@ const generateNative = (node, parent) => {
 };
 
 //      
+const generateAccess = (node, parent) => {
+  const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
+  // The sequence of opcodes to perfrom a memory load is
+  // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
+  block.push({ kind: def.i32Add, params: [] });
+
+  block.push({
+    kind: def[String(node.type) + 'Load'],
+    params: [
+    // Alignment
+    2,
+    // Memory. Always 0 in the WASM MVP
+    0]
+  });
+
+  return block;
+};
+
+//      
 const syntaxMap = {
+  [Syntax.Access]: generateAccess,
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
@@ -5209,6 +5253,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
   const body = new OutputStream();
 
   code.forEach(({ kind, params, valueType, debug }) => {
+    invariant_1(typeof kind !== 'undefined', `Fatal error! Generated undefined opcode. debug code: ${JSON.stringify(debug)}`);
     // There is a much nicer way of doing this
     body.push(index_9, kind.code, `${kind.text}  ${debug ? debug : ''}`);
 
@@ -5740,7 +5785,7 @@ const makeFragment = curry_1((parser, source) => {
 });
 
 //      
-const VERSION = '0.16.3';
+const VERSION = '0.17.0';
 
 // Used for debugging purposes
 const getIR = (source, config) => {
