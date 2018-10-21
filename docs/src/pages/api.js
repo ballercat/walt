@@ -4,31 +4,46 @@
  * This is an example of how to generate a page with documentjs query
  * It will eventually be seversal pages that link to each other (built in gatsby-node)
  */
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'gatsby';
-import Interface from '../components/Interface';
-import Page from '../components/LayoutBasic';
+import Interface from '../components/interface';
+import ReferencePage from '../components/ReferencePage';
+import TableOfContents from '../components/toc';
 
-const normalize = ({
-  node: { description = { childMarkdownRemark: { html: '' } }, ...rest },
-}) => {
+const selectMarkdown = node => {
+  if (node.description == null) {
+    return null;
+  }
+  return node.description.childMarkdownRemark.htmlAst;
+};
+const normalize = ({ node }) => {
   return {
-    name: rest.name,
-    examples: rest.examples.map((example, i) => ({
+    name: node.name,
+    examples: node.examples.map((example, i) => ({
       what: i,
       html: example.highlighted,
     })),
-    parameters: rest.params.map(p => {
+    parameters: node.params.map(p => {
       return {
         ...p,
         type: (p.type && p.type.name) || 'any',
+        description: selectMarkdown(p),
       };
     }),
-    returns: rest.returns.length
-      ? rest.returns.map(r => ({ type: r.type.name, name: r.name }))
-      : [{ name: 'none', type: 'undefined' }],
-    descriptionHTML: description.childMarkdownRemark.html,
+    returns: node.returns.length
+      ? node.returns.map(r => ({
+          type: r.type.name,
+          name: r.name,
+          id: `${String(r.type.name)}${r.name}`,
+          description: selectMarkdown(r),
+        }))
+      : [{ name: 'none', type: 'undefined', id: 'none_undefined' }],
+    description: selectMarkdown(node),
+    // Title and path for relative ToC links
+    title: node.name,
+    path: `#${node.name}`,
+    isNative: true,
   };
 };
 // alphabatize by name
@@ -42,43 +57,36 @@ const byName = (a, b) => {
   return 0;
 };
 
-const APIPage = ({
-  data: {
-    allDocumentationJs: { edges },
-  },
-}) => {
-  const apis = edges.map(normalize).sort(byName);
-  return (
-    <Page>
-      <div id="api" className="Api">
-        <div className="TableOfContents">
-          <p className="TableOfContents-title">Table of Contents</p>
-          <ul>
-            <li>Test</li>
-          </ul>
-        </div>
-        <section className="content">
-          <h2>API Reference</h2>
-          {apis.map(api => (
-            <Interface
-              key={api.name}
-              name={api.name}
-              returns={api.returns}
-              parameters={api.parameters}
-              examples={api.examples}
-              descriptionHTML={api.descriptionHTML}
-            />
-          ))}
-        </section>
-      </div>
-    </Page>
-  );
-};
+class APIReference extends Component {
+  state = {
+    selected: null,
+    apis: this.props.data.allDocumentationJs.edges.map(normalize).sort(byName),
+  };
 
-APIPage.propTypes = {
+  render() {
+    console.log(this.state.apis);
+    return (
+      <ReferencePage pages={this.state.apis} onNavigation={this.handleClick}>
+        <TableOfContents pages={this.state.apis} />
+        {this.state.apis.map(api => (
+          <Interface
+            key={api.name}
+            name={api.name}
+            returns={api.returns}
+            parameters={api.parameters}
+            examples={api.examples}
+            description={api.description}
+          />
+        ))}
+      </ReferencePage>
+    );
+  }
+}
+
+APIReference.propTypes = {
   data: PropTypes.object.isRequired,
 };
-export default APIPage;
+export default APIReference;
 
 export const pageQuery = graphql`
   query {
@@ -95,16 +103,26 @@ export const pageQuery = graphql`
               type
               name
             }
+            description {
+              childMarkdownRemark {
+                htmlAst
+              }
+            }
           }
           params {
             name
             type {
               name
             }
+            description {
+              childMarkdownRemark {
+                htmlAst
+              }
+            }
           }
           description {
             childMarkdownRemark {
-              html
+              htmlAst
             }
           }
         }

@@ -8,7 +8,7 @@ import '../scss/main.scss';
 const LayoutBasic = ({ children, landing, title }) => (
   <Fragment>
     <Header title={title} landing={landing} />
-    <main className={landing ? 'Landing' : ''}>{children}</main>
+    <main>{children}</main>
   </Fragment>
 );
 

@@ -4,11 +4,11 @@ body.docs {
     background: #654ff0 linear-gradient(to bottom left,#654ff0,#4733bd);
     color: #fff;
     border-bottom: 1px solid white;
-    padding: 10px;
+    padding: 0 10px;
     nav {
       right: 1em;
       font-size: 1.15em;
-      padding: 25px 0;
+      padding: 20px 0;
     }
     h1 {
       img {
@@ -42,13 +42,19 @@ body.docs {
       color: #654ff0;
     }
 
-    .info {
+    .Info {
       margin-top: 2em;
       h4 {
         margin: 10px 0;
       }
       p {
         padding: 0;
+      }
+
+      &--params {
+        p {
+          display: inline-block;
+        }
       }
     }
   }
@@ -59,37 +65,76 @@ body.docs {
     transition: all .35s ease-in-out;
 
     @include header2-font(hamburger);
-  }
 
-  .Api {
-    display: flex;
-    width: 100vw;
+    &--nav {
+      padding: 0;
+    }
   }
 
   .Content {
-    flex-basis: 100%;
     &--prose {
+      h1, h2, h3, h4 {
+        font-weight: 300;
+        color: rgba(0, 0, 0, 0.8);
+      }
       h1, h2, h3 {
         padding: 0.5rem 0;
+        border-bottom: 1px solid #eaecef;
+      }
+      h1 {
+        margin-bottom: 2rem;
+      }
+      h2, h3 {
+        margin: 1rem 0;
       }
       h4 {
         padding: 0.25rem 0;
+      }
+
+      p {
+        color: #24292e;
+        margin-bottom: 1rem;
+      }
+
+      ul {
+        list-style: square;
+        padding-left: 2em;
+        margin-bottom: 1rem;
+      }
+      li {
+        margin-bottom: 0;
+        margin-top: 0.25em;
       }
     }
   }
 
   .TableOfContents {
     flex-basis: 33%;
-    background: $color-grey-beige none repeat scroll 0 0;
-    display: block;
+    background: transparent;
+    position: absolute;
+    right: 0;
+    height: 100vh;
+    max-width: 33vw;
     padding: 20px;
+    font-size: 0.9em;
+
+    @media (max-width: 60em) {
+      display: none;
+    }
+
+    &--sticky {
+      position: fixed;
+      top: 0;
+    }
 
     &-title {
-      // font-weight: 700;
       text-align: center;
-      ul, li {
-        list-style: outside none none !important;
-      }
+    }
+    &-list {
+      margin-top: 20px;
+    }
+    ul, li {
+      list-style: outside none none !important;
     }
   }
 }
