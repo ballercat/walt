@@ -31,14 +31,11 @@ const normalize = ({ node }) => {
         description: selectMarkdown(p),
       };
     }),
-    returns: node.returns.length
-      ? node.returns.map(r => ({
-          type: r.type.name,
-          name: r.name,
-          id: `${String(r.type.name)}${r.name}`,
-          description: selectMarkdown(r),
-        }))
-      : [{ name: 'none', type: 'undefined', id: 'none_undefined' }],
+    returns: node.returns.map(r => ({
+      type: r.type.name,
+      id: String(r.type.name),
+      description: selectMarkdown(r),
+    })),
     description: selectMarkdown(node),
     // Title and path for relative ToC links
     title: node.name,

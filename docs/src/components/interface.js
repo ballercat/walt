@@ -25,30 +25,33 @@ const Interface = props => {
           />
         ))}
       </div>
-      <div className="Info Info--params">
-        <h4>Parameters</h4>
-        <ol>
-          {props.parameters.map(param => (
-            <li key={param.name}>
-              <code className="Language">{param.name}</code>: (
-              <code className="Language">{param.type || 'any'}</code>
-              ): {param.description && renderAst(param.description)}
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className="Info">
-        <h4>Returns</h4>
-        <ul>
-          {props.returns.map(ret => (
-            <li key={ret.name}>
-              <code className="Language">{ret.name}</code>:{' '}
-              <code className="Language">{ret.type}</code>
-              {ret.descripton && renderAst(ret.description)}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {props.parameters.length ? (
+        <div className="Info Info--params">
+          <h4>Parameters</h4>
+          <ol>
+            {props.parameters.map(param => (
+              <li key={param.name}>
+                <code className="Language">{param.name}</code>: (
+                <code className="Language">{param.type || 'any'}</code>
+                ): {param.description && renderAst(param.description)}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+      {props.returns.length ? (
+        <div className="Info Info--returns">
+          <h4>Returns</h4>
+          <ul>
+            {props.returns.map(ret => (
+              <li key={ret.name}>
+                <code className="Language">{ret.type}</code>:{' '}
+                {ret.description && renderAst(ret.description)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </article>
   );
 };

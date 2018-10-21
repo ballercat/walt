@@ -69,8 +69,36 @@ export const getIR = (source: string, config: ConfigType) => {
   return wasm;
 };
 
+type Walt = {
+  buffer: () => ArrayBuffer,
+  ast: Node,
+  semanticAST: Node,
+};
 /**
- * Compile with plugins, future default export
+ * @typedef {function} wasm-factory
+ * @returns {ArrayBuffer} WebAssembly ArrayBuffer
+ */
+/**
+ * Compiler result object. Generated from the compile() method. Contains a buffer
+ * factory method and the ast representations used to generate WASM output. The
+ * result of `.buffer()` is intented to be used with WebAssembly.instantiate method.
+ *
+ * @example
+ * type Walt = {
+ *   buffer: () => ArrayBuffer,
+ *   ast: Node,
+ *   semanticAST: Node,
+ * };
+ *
+ * @typedef {Object} walt
+ *
+ * @property {wasm-factory} buffer      Factory method for WASM output
+ * @property {Object}       ast         Bare AST version (pre semantic analysis)
+ * @property {Object}       semanticAST AST post semantic analysis
+ */
+
+/**
+ * Compiles walt source code into an output object.
  *
  * @example
  * import { compile } from 'walt-compiler';
@@ -88,10 +116,12 @@ export const getIR = (source: string, config: ConfigType) => {
  *   console.log(`Second invocation: ${result.instance.exports.count()}`);
  * });
  *
- * @param {string} source     Your walt sourcecode
+ * @param {string}     source Your walt sourcecode
  * @param {ConfigType} config The configuration for this compilation
+ *
+ * @return {walt} Walt result object
  */
-export const compile = (source: string, config: ConfigType) => {
+export const compile = (source: string, config: ConfigType): Walt => {
   const {
     filename = 'unknown.walt',
     extensions = [],
