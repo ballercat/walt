@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('path');
 
 const GET_MARKDOWN = `
 {
@@ -12,27 +12,32 @@ const GET_MARKDOWN = `
     }
   }
 }
-`
+`;
 
 exports.createPages = ({ actions, graphql }) => {
-  const { createPage } = actions
+  const { createPage } = actions;
 
   return graphql(GET_MARKDOWN).then(result => {
     if (result.errors) {
-      return Promise.reject(result.errors)
+      return Promise.reject(result.errors);
     }
 
     result.data.allMarkdownRemark.edges.forEach(({ node }) => {
-      if (node && node.frontmatter && node.frontmatter.path && node.frontmatter.path !== '/') {
+      if (
+        node &&
+        node.frontmatter &&
+        node.frontmatter.path &&
+        node.frontmatter.path !== '/'
+      ) {
         createPage({
           path: node.frontmatter.path,
-          component: path.resolve(`src/components/DocsTemplate.js`),
-          context: {}
-        })
+          component: path.resolve('src/components/DocsTemplate.js'),
+          context: {},
+        });
       }
-    })
-  })
-}
+    });
+  });
+};
 
 // exports.onCreateWebpackConfig = ({
 //   stage,

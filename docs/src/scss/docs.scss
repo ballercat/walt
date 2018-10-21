@@ -1,4 +1,5 @@
 body.docs {
+
   header {
     background: #654ff0 linear-gradient(to bottom left,#654ff0,#4733bd);
     color: #fff;
@@ -48,6 +49,46 @@ body.docs {
       }
       p {
         padding: 0;
+      }
+    }
+  }
+
+  .Button {
+    font-size: 2em;
+    padding: 0.2em;
+    transition: all .35s ease-in-out;
+
+    @include header2-font(hamburger);
+  }
+
+  .Api {
+    display: flex;
+    width: 100vw;
+  }
+
+  .Content {
+    flex-basis: 100%;
+    &--prose {
+      h1, h2, h3 {
+        padding: 0.5rem 0;
+      }
+      h4 {
+        padding: 0.25rem 0;
+      }
+    }
+  }
+
+  .TableOfContents {
+    flex-basis: 33%;
+    background: $color-grey-beige none repeat scroll 0 0;
+    display: block;
+    padding: 20px;
+
+    &-title {
+      // font-weight: 700;
+      text-align: center;
+      ul, li {
+        list-style: outside none none !important;
       }
     }
   }

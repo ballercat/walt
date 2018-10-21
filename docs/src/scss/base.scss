@@ -30,32 +30,61 @@ a {
 
 ul {
   list-style-position: inside;
-  list-style-type: square;
+  list-style-type: circle;
+}
+
+ol {
+  list-style-position: inside;
 }
 
 li {
   margin-bottom: .5em;
 }
 
-pre[class*="language-"] {
+pre[class*="language-"], .Language {
   font-size: 0.8em;
+  padding: 0 2px;
   margin-bottom: 1em;
   background: $color-grey;
   border: 1px solid #eee;
 }
 
+.token {
+  .operator {
+    background: transparent;
+  }
+}
+
 main {
-  max-width: 700px;
   width: 100%;
+}
+.Landing {
+  max-width: 700px;
   margin: auto;
+  width: 100%;
   @media (max-width: 780px){
     font-size: 20px;
   }
 }
 
+button {
+  display: inline-block;
+  background: transparent;
+  border: none;
+  padding: 1rem 2rem;
+  margin: 0;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+  color: inherit;
+  transition: background 250ms ease-in-out, transform 150ms ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
 
 
 header {
+  display: flex;
   h1 {
     font-weight: 700;
 
@@ -138,3 +167,4 @@ footer {
     }
   }
 }
+

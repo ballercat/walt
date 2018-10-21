@@ -55,9 +55,14 @@ const Header = ({ title, landing }) => (
         </Helmet>
         <header>
           {!landing && (
-            <h1>
-              <Link to="/">Docs</Link>
-            </h1>
+            <Fragment>
+              <button type="button" className="Button Button--hamburger">
+                &#9776;
+              </button>
+              <h1>
+                <Link to="/">Docs</Link>
+              </h1>
+            </Fragment>
           )}
           {landing && (
             <div>

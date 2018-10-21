@@ -20,20 +20,21 @@ const Interface = props => {
         {props.examples.map(example => (
           <pre
             key={example.what}
-            className="language-javascript"
+            className="Language"
             dangerouslySetInnerHTML={{ __html: example.html }}
           />
         ))}
       </div>
       <div className="info">
         <h4>Parameters</h4>
-        <ul>
+        <ol>
           {props.parameters.map(param => (
             <li key={param.name}>
-              {param.name}: {param.type || 'any'}
+              <code className="Language">{param.name}</code>:{' '}
+              {param.type || 'any'}
             </li>
           ))}
-        </ul>
+        </ol>
       </div>
       <div className="info">
         <h4>Returns</h4>

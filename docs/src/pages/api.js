@@ -50,7 +50,13 @@ const APIPage = ({
   const apis = edges.map(normalize).sort(byName);
   return (
     <Page>
-      <div id="api">
+      <div id="api" className="Api">
+        <div className="TableOfContents">
+          <p className="TableOfContents-title">Table of Contents</p>
+          <ul>
+            <li>Test</li>
+          </ul>
+        </div>
         <section className="content">
           <h2>API Reference</h2>
           {apis.map(api => (
