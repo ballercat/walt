@@ -6,9 +6,14 @@ import type { ProgramType } from '../generator/flow/types';
 import type { BaseOptions } from '../flow/types';
 
 /**
- * emitter description?
+ * Final chain of the compiler. Emits binary for a WebAssembly program.
  *
+ * @kind function
  * @name emitter
+ *
+ * @param {ProgramType} program A program object generated from AST
+ *
+ * @returns {OutputStream} Output
  */
 function emit(program: ProgramType, config: BaseOptions) {
   const stream = new OutputStream();

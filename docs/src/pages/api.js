@@ -1,6 +1,5 @@
 /**
- * Get API docs mega-list
- *
+ * Get API docs mega-list *
  * This is an example of how to generate a page with documentjs query
  * It will eventually be seversal pages that link to each other (built in gatsby-node)
  */
@@ -20,6 +19,7 @@ const selectMarkdown = node => {
 const normalize = ({ node }) => {
   return {
     name: node.name,
+    kind: node.kind,
     examples: node.examples.map((example, i) => ({
       what: i,
       html: example.highlighted,
@@ -68,6 +68,7 @@ class APIReference extends Component {
         {this.state.apis.map(api => (
           <Interface
             key={api.name}
+            kind={api.kind}
             name={api.name}
             returns={api.returns}
             parameters={api.parameters}

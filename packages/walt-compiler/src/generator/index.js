@@ -63,7 +63,16 @@ export const generateCode = (
 };
 
 /**
- * generator description?
+ * Generator accepts a semantic AST and outputs an intermediate representation for
+ * the WebAssembly program. The IR is a flat representation of the earlier ast
+ * with nodes transformed to matching instructions.
+ *
+ * @kind function
+ *
+ * @param {Node}   ast    Semantically analyzed AST. [See semantics](#semantics)
+ * @param {Object} config Internal config
+ *
+ * @return {ProgramType} Intermediate Representation of the WebAssembly program.
  */
 function generator(ast: NodeType, config: GeneratorOptions): ProgramType {
   const program: ProgramType = {

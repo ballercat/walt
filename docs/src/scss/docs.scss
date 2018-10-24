@@ -51,6 +51,13 @@ body.docs {
         padding: 0;
       }
 
+      code {
+        font-size: 0.8em;
+        padding: 0 2px;
+        margin-bottom: 1em;
+        background: $color-grey;
+        border: 1px solid #eee;
+      }
       &--params, &--returns {
         p {
           display: inline-block;

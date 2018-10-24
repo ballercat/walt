@@ -13,6 +13,9 @@ const Interface = props => {
       <h3 name={props.name}>
         <a href={`#${props.name}`}>{props.name}</a>
       </h3>
+      <h4>
+        (<code className="Language">{props.kind}</code>)
+      </h4>
       <div className="Info">
         {props.description && renderAst(props.description)}
       </div>
@@ -27,7 +30,7 @@ const Interface = props => {
       </div>
       {props.parameters.length ? (
         <div className="Info Info--params">
-          <h4>Parameters</h4>
+          <h4>{props.kind === 'typedef' ? 'Properties' : 'Parameters'}</h4>
           <ol>
             {props.parameters.map(param => (
               <li key={param.name}>
@@ -58,6 +61,7 @@ const Interface = props => {
 
 Interface.propTypes = {
   name: PropTypes.string.isRequired,
+  kind: PropTypes.string.isRequired,
   description: PropTypes.object.isRequired,
   parameters: PropTypes.arrayOf(
     PropTypes.shape({

@@ -3,14 +3,17 @@ import { sizeof } from 'wasm-types';
 import OutputStream from './output-stream';
 
 /**
- * debug description?
+ * Debug internal OutputStream object. Prints binary (hex) of the wasm binary
+ * along with any additional debug information.
  *
+ * @kind function
  * @name  debug
- * @param {OutputStream} stream
- * @param {number} begin
- * @param {number} end
+ *
+ * @param {OutputStream} stream OutputStream instance.
+ * @param {number} begin Where to begin printing from. Useful for large binaries (default: `0`)
+ * @param {number} end   Where to end pritning. Useful for large binaries.
  */
-const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
+const debug = (stream: OutputStream, begin: number = 0, end?: number) => {
   let pc = 0;
   return (
     stream.data
@@ -37,4 +40,4 @@ const _debug = (stream: OutputStream, begin: number = 0, end?: number) => {
   );
 };
 
-export default _debug;
+export default debug;
