@@ -27,7 +27,9 @@ export {
 export const VERSION = '0.17.0';
 
 /**
- * Used for debugging purposes
+ * Deprecated method, no longer maintained.
+ *
+ * @kind function
  */
 export const getIR = (source: string, config: ConfigType) => {
   const {

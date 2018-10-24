@@ -1,7 +1,12 @@
 import OutputStream from './output-stream';
 
 /**
- * stringDecoder description?
+ * Decode a LEB128 encoded string from a WebAssembly buffer
+ *
+ * @param {ArrayBuffer} view  ArrayBuffer to decode from
+ * @param {Number}      start Where to start decoding
+ *
+ * @return {Generator} Returns a generator
  */
 export function* stringDecoder(view, start) {
   let length = 0;
@@ -37,9 +42,11 @@ export function* stringDecoder(view, start) {
 }
 
 /**
- * stringEncoder description?
- * @param  {string} value
- * @return {string}
+ * Encode a string into LEB128
+ *
+ * @param  {string} value Text to encode
+ *
+ * @return {OutputStream} A stream object
  */
 export function stringEncoder(value) {
   const resultStream = new OutputStream();

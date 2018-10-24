@@ -78,8 +78,15 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
 };
 
 /**
- * Return AST with full transformations applied
+ * Semantic analysis. Takes a node, returns a mapped node with all transformations
+ * applied and concrete types added. The resulting object is used in the generator.
  *
+ * @param {NodeType} ast            Node to analyze
+ * @param {Array}    extraSemantics Extra semantic parser factories, usually external
+ *                                  semantic plugins.
+ * @param {Object}   options        Internal compiler options and compiler state.
+ *
+ * @return {NodeType} Transformed ast.
  */
 function semantics(
   ast: NodeType,

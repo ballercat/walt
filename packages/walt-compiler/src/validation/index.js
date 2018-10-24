@@ -12,7 +12,13 @@ const GLOBAL_LABEL = 'global';
 
 /**
  * We walk the the entire tree and perform syntax validation before we continue
- * onto the generator. This may throw sometimes
+ * onto the generator. Throws any errors encountered, does not short circuit.
+ *
+ * @kind function
+ * @throws
+ * @param {NodeType} ast AST with types
+ * @param {Object} options Options
+ *
  */
 export default function validate(
   ast: NodeType,

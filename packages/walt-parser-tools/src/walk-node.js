@@ -1,9 +1,12 @@
 /**
- * Dead simple AST walker, takes a visitor object and calls all methods for
- * appropriate node Types.
+ * Walks over every node in the tree, applying the approriate visitor callback to
+ * each specified node Type. Similar to mapNode() method, but without the mapping.
  *
+ * @kind function
  * @name  walkNode
- * @param visitor
+ * @param {Object} visitor Key value map of visitors
+ *
+ * @returns {NodeType} Original Node
  */
 module.exports = function walker(visitor) {
   const walkNode = node => {

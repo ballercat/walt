@@ -209,9 +209,31 @@ const getPrinters = add => ({
 });
 
 /**
- * printNode description?
+ * Utility for printing any given node to a .wat like representation. Note that
+ * non standard data is also included, like custom types.
+ *
+ * @kind function
+ * @example
+ *  `(type Type (func param(i32 f32) (result i32)))    ;␊
+ *  (func simple param(y i32) (result i32)            ;␊
+ *    (local x i32                                    ; immutable␊
+ *      (i32.const 2)                                 ;␊
+ *    )                                               ;␊
+ *    (return                                         ;␊
+ *      (??.add                                       ;␊
+ *        (get_local x)                               ;␊
+ *        (get_local y)                               ;␊
+ *      )                                             ;␊
+ *    )                                               ;␊
+ *  )                                                 ;␊
+ *  `
  *
  * @name prettyPrintNode
+ *
+ * @param {NodeType} node Node to print. Can be any node
+ *
+ * @returns {String} .wat like result. Note that the result is not guaranteed to
+ *                   be valid text format, for example unkown types are encoded as ??
  */
 const printNode = (node?: NodeType): string => {
   if (node == null) {

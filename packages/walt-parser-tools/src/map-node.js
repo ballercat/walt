@@ -33,7 +33,26 @@ function map(visitors) {
 }
 
 /**
- * This should maybe be it's own module.
+ * Create a function from a visitor object. The function returned can map the
+ * input node recursively until all nested children are visited, applying the
+ * visitor mapping at each matching node Type.
+ *
+ * @example
+ * const result = mapNode({
+ *   // Change all constants in a program to have a value of zero
+ *   [Syntax.Constant]: (node) => {
+ *     return {
+ *       ...node,
+ *       value: '0'
+ *     };
+ *   }
+ * })(program);
+ *
+ * @param {Object} visitor The visitor object, where each key is a node Type and
+ *                         value is a map function to apply to the node.
+ *
+ * @returns {Function} The generated function, apply to a node to map all nodes
+ *                     in the tree. Results in a new node.
  */
 function mapNode(visitor) {
   const nodeMapper = node => {

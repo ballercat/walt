@@ -71,11 +71,19 @@ function makeLexer() {
 }
 
 /**
- * Creates the "bare" Abstract Syntax Tree.
+ * Curried earley parser. This is the default parser for walt syntax.
  *
  * @name makeParser
- * @param {MakeGrammar[]} extraGrammar
- * @param {string}        source
+ * @kind function
+ * @example
+ * const Program = makeParser([])(`const x: i32 = 0;`);
+ * // or
+ * const Program = makeParser([], `const x: i32 = 0;`);
+ *
+ * @param {Array}  extraGrammar Array of grammar factory functions to be used in the parser.
+ * @param {string} soure        Walt source string to parse.
+ *
+ * @return {NodeType} The node tree of the program, contains no type information.
  */
 export default curry(function parse(
   extraGrammar: MakeGrammar[],
