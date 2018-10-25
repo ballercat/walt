@@ -9,7 +9,6 @@ import { graphql } from 'gatsby';
 import Interface from '../components/interface';
 import ReferencePage from '../components/ReferencePage';
 import TableOfContents from '../components/toc';
-
 const selectMarkdown = node => {
   if (node.description == null) {
     return null;
@@ -21,7 +20,7 @@ const normalize = ({ node }) => {
     name: node.name,
     kind: node.kind,
     examples: node.examples.map((example, i) => ({
-      what: i,
+      what: String(i),
       html: example.highlighted,
     })),
     parameters: node.params.map(p => {
@@ -61,7 +60,6 @@ class APIReference extends Component {
   };
 
   render() {
-    console.log(this.state.apis);
     return (
       <ReferencePage pages={this.state.apis} onNavigation={this.handleClick}>
         <TableOfContents pages={this.state.apis} />

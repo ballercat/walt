@@ -47,7 +47,7 @@ const Interface = props => {
           <h4>Returns</h4>
           <ul>
             {props.returns.map(ret => (
-              <li key={ret.name}>
+              <li key={ret.type}>
                 <code className="Language">{ret.type}</code>:{' '}
                 {ret.description && renderAst(ret.description)}
               </li>
