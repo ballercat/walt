@@ -74,14 +74,14 @@ const Header = ({ title, landing }) => (
             </div>
           )}
           <nav>
-            <Link to="/demo" title="Live DEMO of Walt">
-              demo
-            </Link>
             <Link to="/docs" title="Dive in WALT's documentation">
-              docs
+              Docs
+            </Link>
+            <Link to="/demo" title="Live DEMO of Walt">
+              Try
             </Link>
             <a href={data.site.siteMetadata.github} title="WALT on GitHub">
-              github
+              GitHub
             </a>
           </nav>
         </header>
