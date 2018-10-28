@@ -1,4 +1,7 @@
 const path = require("path");
+const webpack=require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+
 
 module.exports = {
   context: __dirname + "/src",
@@ -16,6 +19,9 @@ module.exports = {
   resolve: {
     extensions: [".js", ".jsx", ".json", ".scss", ".css", ".walt"]
   },
+
+  plugins: [
+  ],
 
   module: {
     loaders: [
@@ -48,3 +54,21 @@ module.exports = {
     ]
   }
 };
+
+if (process.env.NODE_ENV === "production") {
+  module.exports.plugins.push(
+
+    new UglifyJsPlugin({
+      sourceMap: true,
+      cache: true,
+      parallel: true,
+    }),
+
+    new webpack.DefinePlugin({
+      "process.env": {
+        NODE_ENV: JSON.stringify('production'),
+      }
+    }),
+
+  );
+}
