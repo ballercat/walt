@@ -1,85 +1,19 @@
-body.landing {
-  background: linear-gradient(to bottom, #f3f3f3, #e4e4e4);
-  background-attachment: fixed;
+.AnimatedLogo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-  hr {
-    width: 45%;
-    border: none;
-    border-bottom: 6px solid #424242;
-    margin: auto auto 1.5em;
+  img {
+    width: 38vh;
   }
 
-  h3 {
-    text-align:center;
-    font-size: 58px;
-    letter-spacing: -2px;
-    padding: 25px 0;
+  .hat {
+    animation: bounce-3px 1s ease infinite;
   }
 
-  strong {
-    padding: 25px 0;
-    display: block;
-  }
-
-  header {
-    height: 100vh;
-    display:flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    flex-direction: column;
-    color: #fff;
-    background: #654ff0 linear-gradient(to bottom left,#654ff0,#4733bd);
-    font-weight: 400;
-    text-shadow: 2px 1px 0 #4733bd;
-
-    @media (max-width: 780px){
-      animation: intro-init 1s ease forwards;
-      animation-delay: 1s;
-
-      h1 {
-        font-size: 70px;
-        letter-spacing: -2px;
-      }
-      h2 {
-        font-size: 22px;
-        letter-spacing: 0;
-      }
-    }
-
-    h1 {
-      font-size: 15vh;
-      letter-spacing: -.5vh;
-    }
-
-    h2 {
-      font-size: 34px;
-      letter-spacing: -2px;
-      font-weight: 400;
-    }
-
-    figure {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-
-      img {
-        width: 38vh;
-      }
-
-      .hat {
-        animation: bounce-3px 1s ease infinite;
-      }
-
-      .glasses {
-        animation: bounce-5px 1s ease infinite;
-      }
-    }
-
-    nav {
-      width: 100%;
-      border-bottom: 1px solid white;
-    }
+  .glasses {
+    animation: bounce-5px 1s ease infinite;
   }
 }
+

@@ -4,7 +4,7 @@ import Layout from './LayoutBasic';
 const ReferencePage = props => {
   return (
     <Layout>
-      <div id="docs" className="Api">
+      <div className="Documentation">
         <section className="content">{props.children}</section>
       </div>
     </Layout>

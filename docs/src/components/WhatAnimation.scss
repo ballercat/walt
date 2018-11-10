@@ -1,7 +1,10 @@
+@import '../scss/mixins/media-queries.scss';
+
 .what-animation {
     position: relative;
     overflow: hidden;
-    padding-bottom: 4em;
+    padding-bottom: 3em;
+    max-width: 500px;
     > span {
         display: block;
         text-align: center;
@@ -28,9 +31,9 @@
             font-weight: 400;
             font-size: 22px;
 
-            @media (max-width: 780px) {
-                padding: 6px;
-                font-size: 18px;
+            @include for-phone-only {
+              padding: 6px;
+              font-size: 18px;
             }
         }
     }

@@ -3,12 +3,12 @@
  */
 
 import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { StaticQuery, graphql, Link } from 'gatsby';
+import { StaticQuery, graphql } from 'gatsby';
 import facebookImage from '../images/facebook.jpg';
 import favIcon from '../images/favicon.png';
-import hatImage from '../images/walt-hat-450x.png';
-import glassesImage from '../images/walt-glasses-450x.png';
+import { Header } from './header';
 // import waltImage from '../images/walt-black-170x.png';
 
 const SITE_META = graphql`
@@ -24,7 +24,7 @@ const SITE_META = graphql`
   }
 `;
 
-const Header = ({ title, landing }) => (
+const HeaderContainer = ({ title }) => (
   <StaticQuery
     query={SITE_META}
     render={data => (
@@ -37,7 +37,6 @@ const Header = ({ title, landing }) => (
           defaultTitle={`${data.site.siteMetadata.title} - ${
             data.site.siteMetadata.subtitle
           }`}
-          bodyAttributes={{ class: landing ? 'landing' : 'docs' }}
         >
           <html lang="en" />
           <meta
@@ -50,44 +49,21 @@ const Header = ({ title, landing }) => (
             href="https://fonts.googleapis.com/css?family=Roboto:400,700"
             rel="stylesheet"
           />
+          <link
+            href="https://fonts.googleapis.com/css?family=Open+Sans|Titillium+Web"
+            rel="stylesheet"
+          />
           <meta property="og:image" content={facebookImage} />
           <link href={favIcon} rel="icon" type="image/png" />
         </Helmet>
-        <header>
-          {!landing && (
-            <Fragment>
-              <h1>
-                <Link to="/">Walt</Link>
-              </h1>
-            </Fragment>
-          )}
-          {landing && (
-            <div>
-              <figure>
-                <img src={hatImage} alt="" className="hat" />
-                <img src={glassesImage} alt="" className="glasses" />
-              </figure>
-              <h1>
-                <Link to="/">{data.site.siteMetadata.title}</Link>
-              </h1>
-              <h2>{data.site.siteMetadata.subtitle}</h2>
-            </div>
-          )}
-          <nav>
-            <Link to="/docs" title="Dive in WALT's documentation">
-              Docs
-            </Link>
-            <Link to="/demo" title="Live DEMO of Walt">
-              Try
-            </Link>
-            <a href={data.site.siteMetadata.github} title="WALT on GitHub">
-              GitHub
-            </a>
-          </nav>
-        </header>
+        <Header />
       </Fragment>
     )}
   />
 );
 
-export default Header;
+HeaderContainer.propTypes = {
+  title: PropTypes.string.isRequired,
+};
+
+export default HeaderContainer;

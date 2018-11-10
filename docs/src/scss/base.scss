@@ -1,5 +1,4 @@
-@import 'partials/colors';
-@import 'partials/headers';
+$header-size: 34px;
 
 html {
   box-sizing: border-box;
@@ -14,7 +13,8 @@ html {
 
 body {
   background-color: $color-white;
-  font-family: Helvetica,Arial,sans-serif;
+  // font-family: Helvetica,Arial,sans-serif;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
 
@@ -41,12 +41,20 @@ li {
   margin-bottom: .5em;
 }
 
-pre[class*="language-"], .Language {
+h1, h2, h3, h4 {
+  font-family: 'Titillium Web', sans-serif;
+}
+
+code[class*="language-"], pre[class*="language-"], .Language {
   font-size: 0.8em;
   padding: 0 2px;
   margin-bottom: 1em;
-  background: $color-grey;
-  border: 1px solid #eee;
+  background-color: $color-grey;
+  font-family: SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;
+  // Prism has strange operator highlight rules
+  * {
+    background-color: $color-grey !important;
+  }
 }
 
 .token {
@@ -55,12 +63,184 @@ pre[class*="language-"], .Language {
   }
 }
 
-main {
-  max-width: 700px;
+.Header {
+  background-color: $color-wasm-blue;
+  color: #fff;
+  padding: 8px 0;
+  min-height: 50px;
   width: 100%;
-  margin: auto;
-  @media (max-width: 780px){
-    font-size: 20px;
+
+  &-icon {
+    height: $header-size;
+    width: auto;
+  }
+
+  &-wrapper {
+    margin: 0 auto;
+    max-width: 1100px;
+    padding-right: 10px;
+  }
+
+  .Navbar {
+    font-size: 1.15em;
+    height: $header-size;
+    margin-left: auto;
+
+    &-wrapper {
+      position: relative;
+      padding: 0;
+      left: 0;
+
+      ul {
+        display: flex;
+        flex-flow: row nowrap;
+        margin: 0;
+        padding: 0;
+        width: auto;
+        list-style: none;
+
+        a {
+          height: 34px;
+          display: flex;
+          align-items: center;
+        }
+      }
+    }
+  }
+
+  header {
+    display: flex;
+    flex-flow: row wrap;
+    text-align: left;
+  }
+}
+
+.Root {
+  left: 0;
+  min-height: 100%;
+}
+
+.Intro, .Promo {
+  padding: 20px 0;
+}
+
+.Intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: $color-yellow;
+  background-color: $color-wasm-blue;
+  border-bottom: 3px solid black;
+
+  &-tagline {
+    font-size: 1.5em;
+    font-weight: 300;
+    margin-top: 10px;
+    text-align: center;
+  }
+}
+
+.Promo {
+  background-color: $color-grey;
+  background-attachment: fixed;
+  padding: 10px;
+
+  &-title {
+    margin: auto;
+    text-align: center;
+  }
+
+  &-content {
+    display: flex;
+    align-items: baseline;
+    padding-top: 10vh;
+    flex-flow: column nowrap;
+    align-items: center;
+
+    @include for-tablet-landscape-up {
+      flex-flow: row nowrap;
+      justify-content: center;
+      align-items: baseline;
+    }
+
+    pre {
+      padding-top: 20px;
+      font-size: 0.7em;
+      padding: 0 2px;
+
+      @include for-tablet-landscape-up {
+        font-size: 1em;
+      }
+    }
+  }
+
+  &-tagline, &-features {
+    color: $color-blackish;
+    text-align: center;
+    padding: 20px 0;
+    max-width: 650px;
+  }
+
+  &-flare, &-features {
+    font-size: 0.8em;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+
+    @include for-tablet-landscape-up {
+      font-size: 1em;
+    }
+  }
+
+  &-tagline {
+    font-weight: 300;
+    font-size: 1.2em;
+  }
+
+  &-features {
+    &-copy {
+      margin: 10px 0;
+    }
+
+    ul {
+      display: flex;
+      flex-flow: column nowrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      list-style: disc outside none;
+      margin-top: 10px;
+      text-align: initial;
+    }
+  }
+}
+
+.CallToAction {
+  background-color: $color-white;
+  display: flex;
+  flex-direction: column;
+  margin: 50px 0;
+
+  &-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    padding: 0 10vw;
+
+    &-button {
+      display: inline-block;
+      border: 3px solid $color-wasm-blue;
+      border-radius: 3px;
+      line-height: 1.2;
+      color: $color-blackish;
+      text-transform: uppercase;
+      padding: 10px;
+
+      &:hover {
+        background-color: $color-wasm-blue;
+        color: $color-white;
+      }
+    }
   }
 }
 
@@ -113,55 +293,6 @@ table {
 
   tr {
     vertical-align: middle;
-  }
-}
-
-footer {
-  background: #f1c232 linear-gradient(to top right,#f1c232,#f9c21a);
-  width: 100vw;
-  position: absolute;
-  left: 0;
-
-  & > * {
-    max-width: 700px;
-    width: 100%;
-    margin: auto;
-  }
-
-  table {
-    tr {
-      vertical-align: middle;
-      text-align: left;
-    }
-
-    th, td {
-      margin:0;
-      padding: 1em;
-    }
-
-    th:nth-child(2),
-    td:nth-child(2){
-      border: 4px solid black;
-      border-bottom: none;
-      border-top: none;
-    }
-
-    a {
-      display: block;
-      background-color: #654ff0;
-      color: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 22px;
-      font-weight: 700;
-      border-bottom: 4px solid #1f1f1f;
-
-      &:hover {
-        background-color: #000;
-        color: #fff;
-      }
-    }
   }
 }
 

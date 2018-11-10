@@ -7,8 +7,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'gatsby';
 import Interface from '../components/interface';
-import ReferencePage from '../components/ReferencePage';
-import TableOfContents from '../components/toc';
+import Layout from '../components/LayoutBasic';
+
 const selectMarkdown = node => {
   if (node.description == null) {
     return null;
@@ -61,20 +61,23 @@ class APIReference extends Component {
 
   render() {
     return (
-      <ReferencePage pages={this.state.apis} onNavigation={this.handleClick}>
-        <TableOfContents pages={this.state.apis} />
-        {this.state.apis.map(api => (
-          <Interface
-            key={api.name}
-            kind={api.kind}
-            name={api.name}
-            returns={api.returns}
-            parameters={api.parameters}
-            examples={api.examples}
-            description={api.description}
-          />
-        ))}
-      </ReferencePage>
+      <Layout title="API">
+        <div className="Documentation">
+          <section className="content">
+            {this.state.apis.map(api => (
+              <Interface
+                key={api.name}
+                kind={api.kind}
+                name={api.name}
+                returns={api.returns}
+                parameters={api.parameters}
+                examples={api.examples}
+                description={api.description}
+              />
+            ))}
+          </section>
+        </div>
+      </Layout>
     );
   }
 }

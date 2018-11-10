@@ -5,16 +5,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'gatsby';
-import Page from './LayoutBasic';
+import Layout from './LayoutBasic';
 import { renderAst } from '../render-ast';
 
 function DocsTemplate({ data }) {
   const { markdownRemark } = data;
   const { frontmatter, htmlAst } = markdownRemark;
   return (
-    <Page title={frontmatter.title}>
-      <section className="Content Content--prose">{renderAst(htmlAst)}</section>
-    </Page>
+    <Layout title={frontmatter.title}>
+      <Layout.Content className="Documentation">
+        <section className="Content Content--prose">
+          {renderAst(htmlAst)}
+        </section>
+      </Layout.Content>
+    </Layout>
   );
 }
 

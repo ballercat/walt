@@ -1,0 +1,17 @@
+@import '../partials/sizes';
+
+@mixin for-phone-only {
+  @media (max-width: $size-phone--max) { @content; }
+}
+@mixin for-tablet-portrait-up {
+  @media (min-width: $size-phablet--min) { @content; }
+}
+@mixin for-tablet-landscape-up {
+  @media (min-width: $size-tablet--min) { @content; }
+}
+@mixin for-desktop-up {
+  @media (min-width: $size-desktop--min) { @content; }
+}
+@mixin for-big-desktop-up {
+  @media (min-width: $size-tv--min) { @content; }
+}

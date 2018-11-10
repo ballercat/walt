@@ -1,8 +1,11 @@
 import React from 'react';
 import RehypeReact from 'rehype-react';
-import WhatAnimation from './components/WhatAnimation';
+import { AnimatedLogo } from './components/animated-logo';
 
 export const renderAst = new RehypeReact({
   createElement: React.createElement,
-  components: { 'what-animation': WhatAnimation, footer: 'footer' },
+  components: {
+    'animated-logo': AnimatedLogo,
+    footer: 'footer', // eslint-disable-line
+  },
 }).Compiler;

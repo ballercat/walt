@@ -27,13 +27,13 @@ const DocsPage = ({
   ];
 
   return (
-    <Layout>
-      <div id="docs" className="Api">
+    <Layout title="Documentation">
+      <Layout.Content className="Documentation">
         <TableOfContents pages={pages} title="Pages" />
         <section className="Content Content--prose">
           {renderAst(pages[0].htmlAst)}
         </section>
-      </div>
+      </Layout.Content>
     </Layout>
   );
 };
