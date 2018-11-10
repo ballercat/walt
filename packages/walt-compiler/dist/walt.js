@@ -4116,6 +4116,13 @@ function validate(ast, {
             problems.push(generateErrorString(`Cannot reassign a const variable ${identifier.value}`, 'const variables cannot be reassigned, use let instead.', { start, end }, filename, functionName));
           }
         },
+        [Syntax.ArraySubscript]: node => {
+          const [target] = node.params;
+          if (target.meta.TYPE_ARRAY == null) {
+            const [start, end] = node.range;
+            problems.push(generateErrorString('Invalid subscript target', `Expected array type for ${target.value}, received ${target.type}`, { start, end }, filename, functionName));
+          }
+        },
         [Syntax.Access]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
@@ -4331,13 +4338,19 @@ const generateDeclaration = (node, parent) => {
 };
 
 //      
+const shiftAmount = {
+  i32: 2,
+  f32: 2,
+  i64: 3,
+  f64: 3
+};
 const generateArraySubscript = (node, parent) => {
   const identifier = node.params[0];
   const type = identifier.meta[TYPE_ARRAY];
   const block = node.params.map(mapSyntax(parent)).reduce(mergeBlock, []);
 
   // For array types, the index is multiplied by the contained object size
-  block.push.apply(block, [{ kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
+  block.push.apply(block, [{ kind: def.i32Const, params: [shiftAmount[type]] }, { kind: def.i32Shl, params: [] }]);
 
   // The sequence of opcodes to perfrom a memory load is
   // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
@@ -4367,6 +4380,13 @@ const generateAssignment = node => {
 };
 
 //      
+const shiftAmount$1 = {
+  i32: 2,
+  f32: 2,
+  i64: 3,
+  f64: 3
+};
+
 const generateMemoryAssignment = (node, parent) => {
   const targetNode = node.params[0];
   const isArray = targetNode.params[0].meta[TYPE_ARRAY];
@@ -4378,7 +4398,7 @@ const generateMemoryAssignment = (node, parent) => {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
     // TODO: fix this for user-defined types
-    { kind: def.i32Const, params: [2] }, { kind: def.i32Shl, params: [] }]);
+    { kind: def.i32Const, params: [shiftAmount$1[isArray]] }, { kind: def.i32Shl, params: [] }]);
     type = isArray;
   }
 
@@ -5785,7 +5805,7 @@ const makeFragment = curry_1((parser, source) => {
 });
 
 //      
-const VERSION = '0.17.0';
+const VERSION = '0.18.0';
 
 // Used for debugging purposes
 const getIR = (source, config) => {
