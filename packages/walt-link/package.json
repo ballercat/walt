@@ -1,6 +1,6 @@
 {
   "name": "walt-link",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Links .walt WebAssembly programs",
   "main": "src/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "dependencies": {
     "invariant": "^2.2.4",
     "walt-buildtools": "^0.1.0",
-    "walt-compiler": "^0.17.0"
+    "walt-compiler": "^0.18.0"
   },
   "devDependencies": {
     "ava": "^0.25.0",

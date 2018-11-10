@@ -1,6 +1,6 @@
 {
   "name": "walt-loader",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Webpack loader for Walt(WebAssembly)",
   "main": "index.js",
   "scripts": {
@@ -53,7 +53,7 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "prettier": "^1.9.2",
-    "walt-compiler": "^0.17.0"
+    "walt-compiler": "^0.18.0"
   },
   "dependencies": {
     "wasm-loader": "^1.1.0"

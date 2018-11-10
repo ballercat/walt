@@ -1,6 +1,6 @@
 {
   "name": "walt-plugin-syntax-closure",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Walt Syntax Closures",
   "main": "dist/walt-plugin-syntax-closures.js",
   "scripts": {
@@ -57,7 +57,7 @@
     "rollup-plugin-uglify": "2.0.1",
     "rollup-plugin-walt-grammar": "^0.1.1",
     "uglify-es": "3.0.17",
-    "walt-compiler": "^0.17.0"
+    "walt-compiler": "^0.18.0"
   },
   "prettier": {
     "trailingComma": "es5",

@@ -1,6 +1,6 @@
 {
   "name": "walt-cli",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "CLI for Walt",
   "main": "index.js",
   "bin": {
@@ -31,8 +31,8 @@
     "ava": "^0.25.0",
     "prettier": "^1.11.1",
     "walt-buildtools": "^0.1.0",
-    "walt-compiler": "^0.17.0",
-    "walt-link": "^0.4.8"
+    "walt-compiler": "^0.18.0",
+    "walt-link": "^0.4.9"
   },
   "ava": {
     "files": [

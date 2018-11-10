@@ -1,6 +1,6 @@
 {
   "name": "walt-compiler",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Alternative syntax for WebAssembly text format",
   "main": "dist/walt.js",
   "scripts": {
