@@ -5,6 +5,12 @@ import type { GeneratorType } from './flow/types';
 import { TYPE_ARRAY } from '../semantics/metadata';
 import mapSyntax from './map-syntax';
 
+const shiftAmount = {
+  i32: 2,
+  f32: 2,
+  i64: 3,
+  f64: 3,
+};
 const generateArraySubscript: GeneratorType = (node, parent) => {
   const identifier = node.params[0];
   const type = identifier.meta[TYPE_ARRAY];
@@ -12,7 +18,7 @@ const generateArraySubscript: GeneratorType = (node, parent) => {
 
   // For array types, the index is multiplied by the contained object size
   block.push.apply(block, [
-    { kind: opcode.i32Const, params: [2] },
+    { kind: opcode.i32Const, params: [shiftAmount[type]] },
     { kind: opcode.i32Shl, params: [] },
   ]);
 
