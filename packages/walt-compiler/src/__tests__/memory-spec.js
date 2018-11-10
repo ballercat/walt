@@ -45,3 +45,32 @@ test('memory of any shape can be imported', t => {
     { env: { memory } }
   ).then(outputIs(t, 42));
 });
+
+test('wide array offsets', t => {
+  const SAFE_OFFSET = 65536;
+  return WebAssembly.instantiate(
+    compile(`
+      export const memory: Memory<{initial: ${1 + (SAFE_OFFSET >> 16)}}>;
+      export function populateArray(): f64 {
+        const array: f64[] = ${SAFE_OFFSET};
+        array[0] = 10 :f64;
+        array[2] = 20 :f64;
+        array[4] = 30 :f64;
+        array[6] = 40 :f64;
+        array[8] = 50 :f64;
+
+        return array[4];
+      }
+  `).buffer(),
+    {}
+  ).then(({ instance }) => {
+    const typedArray = new Float64Array(
+      instance.exports.memory.buffer,
+      SAFE_OFFSET,
+      10
+    ).fill(42);
+    const result = instance.exports.populateArray();
+    t.is(result, 30);
+    t.snapshot(typedArray.toString());
+  });
+});
