@@ -56,7 +56,7 @@ const HeaderContainer = ({ title }) => (
           <meta property="og:image" content={facebookImage} />
           <link href={favIcon} rel="icon" type="image/png" />
         </Helmet>
-        <Header />
+        <Header github="https://github.com/ballercat/walt" />
       </Fragment>
     )}
   />

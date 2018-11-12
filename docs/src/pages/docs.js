@@ -43,8 +43,11 @@ const DocsPage = ({
           Below you will find the documentation for Walt WebAssembly Syntax.
           This documentation is still a work in progress, if you see issues or
           would like to see missing information, please open an issue{' '}
-          <a href="">on the GitHub repository</a>
+          <a href="https://github.com/ballercat/walt">
+            on the Walt repository.
+          </a>
         </div>
+        <h2>Pages</h2>
         <div className="Documentation-overview">
           <ul>
             {pages.map(page => (
