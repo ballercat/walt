@@ -69,7 +69,12 @@ class Explorer extends React.Component {
   };
 
   handleRun = debounce(() => {
-    this.setState({ compiling: true }, () => {
+    const diff = { compiling: true };
+    const { output } = examples[this.state.example];
+    if (output) {
+      diff.activeItem = output;
+    }
+    this.setState(diff, () => {
       // raf after callback because we want to allow the UI to indicate (with a
       // spinner) that we are compiling things.
       requestAnimationFrame(() => {
