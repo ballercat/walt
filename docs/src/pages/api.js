@@ -6,6 +6,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'gatsby';
+import TableOfContents from '../components/toc';
 import Interface from '../components/interface';
 import Layout from '../components/LayoutBasic';
 
@@ -63,6 +64,7 @@ class APIReference extends Component {
     return (
       <Layout title="API">
         <div className="Documentation">
+          <TableOfContents pages={this.state.apis} />
           <section className="content">
             {this.state.apis.map(api => (
               <Interface

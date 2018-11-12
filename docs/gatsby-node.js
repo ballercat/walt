@@ -31,7 +31,7 @@ exports.createPages = ({ actions, graphql }) => {
       ) {
         createPage({
           path: node.frontmatter.path,
-          component: path.resolve('src/components/DocsTemplate.js'),
+          component: path.resolve('src/components/doc-template.js'),
           context: {},
         });
       }

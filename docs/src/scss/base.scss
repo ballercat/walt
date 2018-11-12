@@ -13,14 +13,12 @@ html {
 
 body {
   background-color: $color-white;
-  // font-family: Helvetica,Arial,sans-serif;
   font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
 
 a {
   text-decoration: none;
-  color: inherit;
   transition: all .35s ease-in-out;
 
   &:hover {
@@ -102,7 +100,11 @@ code[class*="language-"], pre[class*="language-"], .Language {
         a {
           height: 34px;
           display: flex;
+          color: inherit;
           align-items: center;
+          &:hover {
+            font-weight: 700;
+          }
         }
       }
     }

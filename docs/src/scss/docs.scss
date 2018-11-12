@@ -69,6 +69,37 @@ article {
     flex-flow: row nowrap;
     max-width: $size-desktop--min;
   }
+
+  ul {
+    list-style: disc;
+    padding-left: 2em;
+    margin-bottom: 1rem;
+  }
+  li {
+    margin-bottom: 0;
+    margin-top: 0.25em;
+  }
+
+  &--landing {
+    flex-flow: column nowrap;
+    max-width: $size-phablet--min;
+
+    h1 {
+      font-weight: normal;
+    }
+  }
+
+  &-overview, &-intro {
+    padding: 20px 0;
+  }
+
+  &-overview {
+
+  }
+
+  &-intro {
+
+  }
 }
 
 .Content {
@@ -98,18 +129,10 @@ article {
       margin-bottom: 1rem;
     }
 
-    ul {
-      list-style: square;
-      padding-left: 2em;
-      margin-bottom: 1rem;
-    }
-    li {
-      margin-bottom: 0;
-      margin-top: 0.25em;
-    }
   }
 }
 
+// Shared ToC used on all doc pages
 .TableOfContents {
   background: transparent;
   padding: 20px 0;
@@ -123,7 +146,11 @@ article {
   &-list {
     margin-top: 20px;
   }
+  ul {
+    padding: 0;
+  }
   ul, li {
     list-style: outside none none !important;
   }
 }
+
