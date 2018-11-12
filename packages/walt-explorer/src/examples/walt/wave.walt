@@ -18,9 +18,9 @@ function applyCap(x: i32) {
 function toRGB(x: i32) {
   const val: i32 = x >> 22;
   if (val < 0) {
-    return -(val + 1) | 0xFF0000; // red
+    return (-(val + 1)) | 0xFF000000;
   }
-  return (val << 8) | (val << 16) | 0xFF0000; // cyan
+  return (val << 8) | (val << 16) | 0xFF000000; // cyan
 }
 
 export function step() {
@@ -65,7 +65,7 @@ export function step() {
     }
   }
   for (i = 0; i < wh; i += 1) {
-    if (status[i] == 0) {
+    if (status[i] == 1) {
       image[i] = 0;
     } else {
       image[i] = toRGB(u[i]);

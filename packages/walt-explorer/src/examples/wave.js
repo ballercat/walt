@@ -19,6 +19,7 @@ function compile(buffer) {
   };
   return WebAssembly.instantiate(buffer, { env }).then(result => {
 
+    debugger;
     const exports = result.instance.exports;
     const memory = exports.memory;
 
