@@ -18,7 +18,6 @@ function compile(buffer) {
     }
   };
 
-
   const brushMatrix = [];
   const brushMatrixRadius = 28;
   for (let p = -brushMatrixRadius; p <= brushMatrixRadius; p++) {
@@ -44,9 +43,6 @@ function compile(buffer) {
 
     const imageArray = new Uint8ClampedArray(heap, HEAP_START, 4 * wh);
     const forceArray = new Int32Array(heap, HEAP_START + 4 * wh, wh);
-    const statusArray = new Int32Array(heap, HEAP_START + 8 * wh, wh);
-    const uArray = new Int32Array(heap, HEAP_START + 12 * wh, wh);
-    const velArray = new Int32Array(heap, HEAP_START + 16 * wh, wh);
 
     let lastMouseX = null;
     let lastMouseY = null;
@@ -110,8 +106,11 @@ function compile(buffer) {
 
     const stepJS = () => {
 
-      console.log('width', width);
-      console.log('height', height);
+      const statusArray = new Int32Array(heap, HEAP_START + 8 * wh, wh);
+      const uArray = new Int32Array(heap, HEAP_START + 12 * wh, wh);
+      const velArray = new Int32Array(heap, HEAP_START + 16 * wh, wh);
+
+      const image32Array = new Uint32Array(heap, HEAP_START, wh);
 
       const applyCap = (x) => (x < -0x40000000 ? -0x40000000 : (x > 0x3FFFFFFF ? 0x3FFFFFFF : x));
 
@@ -130,6 +129,7 @@ function compile(buffer) {
           }
         }
       }
+
       for (let i = 0; i < wh; i += 1) {
         if (statusArray[i] === 0) {
           const uCen = uArray[i];
@@ -149,21 +149,38 @@ function compile(buffer) {
           forceArray[i] = f >> 1;
         }
       }
+
       for (let i = 0; i < wh; i += 1) {
         if (statusArray[i] === 1) {
-          imageArray[i] = 0xFFFF0000;
+          image32Array[i] = 0xFFFF0000;
         } else {
-          imageArray[i] = toRGB(uArray[i]);
+          image32Array[i] = toRGB(uArray[i]);
         }
       }
     };
 
     let stopped = false;
+    let useJS = false;
+
+    document.body.addEventListener('keydown', () => {
+      useJS = true;
+    });
+
+    document.body.addEventListener('keyup', () => {
+      useJS = false;
+    });
 
     function step() {
       if (!stopped) {
-        exports.step();
-        // stepJS();
+        if (useJS) {
+          console.time('JS');
+          stepJS();
+          console.timeEnd('JS');
+        } else {
+          console.time('WALT');
+          exports.step();
+          console.timeEnd('WALT');
+        }
         imgData.data.set(imageArray);
         ctx.putImageData(imgData, 0, 0);
         setTimeout(step, 0);
