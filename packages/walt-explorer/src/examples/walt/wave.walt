@@ -1,8 +1,7 @@
 import {
   getCanvasWidth: GetSizeType,
   getCanvasHeight: GetSizeType,
-  log: LogType,
-  log16: LogType
+  log: LogType
 } from 'env';
 
 type LogType = (i32) => void;
@@ -23,7 +22,7 @@ function applyCap(x: i32) : i32 {
 }
 
 function toRGB(x: i32) : i32 {
-  const val: i32 = x >> 16;  // Find out why 22 does not work...
+  const val: i32 = x >> 22;
   if (val < 0) {
     return ((-(val + 1)) | 0xFF000000);
   }
@@ -78,9 +77,4 @@ export function step(): void {
       image[i] = toRGB(u[i]);
     }
   }
-  /*
-  log(u[width + 1]);
-  log(vel[width + 1]);
-  log16(image[width + 1]);
-  */
 }
