@@ -17,9 +17,9 @@ function compile(buffer) {
       console.log(val);
     }
   };
+  console.log('Calling instantiate...');
   return WebAssembly.instantiate(buffer, { env }).then(result => {
 
-    debugger;
     const exports = result.instance.exports;
     const memory = exports.memory;
 
@@ -27,16 +27,19 @@ function compile(buffer) {
     const pages = 1 + ((20 * wh) >> 16);
     memory.grow(pages);
     const heap = memory.buffer;
+    const HEAP_START = 65536;
 
-    const imageArray = new UInt8ClampedArray(heap, HEAP_START, 4 * wh);
-    const forceArray = new Int32Array(heap, HEAP_START + 8 * wh, wh);
-    const statusArray = new Int32Array(heap, HEAP_START + 4 * wh, wh);
+    const imageArray = new Uint8ClampedArray(heap, HEAP_START, 4 * wh);
+    const forceArray = new Int32Array(heap, HEAP_START + 4 * wh, wh);
+    // const statusArray = new Int32Array(heap, HEAP_START + 8 * wh, wh);
 
     let lastMouseX = null;
     let lastMouseY = null;
 
     canvas.onmousedown = (e) => {
       e.preventDefault();
+      console.log('clientX', e.clientX);
+      console.log('clientY', e.clientY);
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
       forceArray[lastMouseY * canvas.width + lastMouseX] = 0x3FFFFFFF;
@@ -68,7 +71,7 @@ function compile(buffer) {
       if (!stopped) {
         exports.step();
         imgData.data.set(imageArray);
-        context.putImageData(imgData, 0, 0);
+        ctx.putImageData(imgData, 0, 0);
         window.requestAnimationFrame(step);
       }
     }
