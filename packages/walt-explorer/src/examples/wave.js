@@ -17,7 +17,6 @@ function compile(buffer) {
       console.log(val);
     }
   };
-  console.log('Calling instantiate...');
   return WebAssembly.instantiate(buffer, { env }).then(result => {
 
     const exports = result.instance.exports;
@@ -38,20 +37,25 @@ function compile(buffer) {
 
     canvas.onmousedown = (e) => {
       e.preventDefault();
-      console.log('clientX', e.clientX);
-      console.log('clientY', e.clientY);
-      lastMouseX = e.clientX;
-      lastMouseY = e.clientY;
-      forceArray[lastMouseY * canvas.width + lastMouseX] = 0x3FFFFFFF;
+      let bbox = canvas.getBoundingClientRect();
+      const mouseX = Math.round(e.clientX - bbox.left * (canvas.width / bbox.width));
+      const mouseY = Math.round(e.clientY - bbox.top * (canvas.height / bbox.height));
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+      const targetIndex = lastMouseY * canvas.width + lastMouseX;
+      forceArray[targetIndex] = 0x3FFFFFFF;
     };
 
     canvas.omousemove = (e) => {
       e.preventDefault();
+      let bbox = canvas.getBoundingClientRect();
+      const mouseX = Math.round(e.clientX - bbox.left * (canvas.width / bbox.width));
+      const mouseY = canvas.height - (Math.round(e.clientY - bbox.top * (canvas.height / bbox.height)));
       if (lastMouseX !== null && lastMouseY !== null) {
-        const r = Math.sqrt((e.clientX - lastMouseX) * (e.clientX - lastMouseX) + (e.clientY - lastMouseY) * (e.clientY - lastMouseY));
+        const r = Math.sqrt((mouseX - lastMouseX) * (mouseX - lastMouseX) + (mouseY - lastMouseY) * (mouseY - lastMouseY));
         for (let t = 0; t <= r; t++) {
-          const currX = Math.round(lastMouseX + ((e.clientX - lastMouseX) * (t / r)));
-          const currY = Math.round(lastMouseY + ((e.clientY - lastMouseY) * (t / r)));
+          const currX = Math.round(lastMouseX + ((mouseX - lastMouseX) * (t / r)));
+          const currY = Math.round(lastMouseY + ((mouseY - lastMouseY) * (t / r)));
           forceArray[currY * canvas.width + currX] = 0x3FFFFFFF;
         }
         lastMouseX = e.clientX;

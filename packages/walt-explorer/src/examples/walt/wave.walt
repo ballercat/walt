@@ -4,7 +4,7 @@ import {
   log: LogType
 } from 'env';
 
-type LogType = (f32) => void;
+type LogType = (i32) => void;
 type GetSizeType = () => i32;
 
 export const memory: Memory<{initial: 1}>;
@@ -12,15 +12,21 @@ export const memory: Memory<{initial: 1}>;
 const HEAP_START: i32 = 65536;
 
 function applyCap(x: i32) : i32 {
-    return x; //  < -0x40000000 ? -0x40000000 : (x > 0x3FFFFFFF ? 0x3FFFFFFF : x);
+  if (x < -0x40000000) {
+    return -0x40000000;
+  }
+  if (x > 0x3FFFFFFF) {
+    return 0x3FFFFFFF;
+  }
+  return x;
 }
 
 function toRGB(x: i32) : i32 {
   const val: i32 = x >> 22;
   if (val < 0) {
-    return (-(val + 1)) | 0xFF000000;
+    return ((-(val + 1)) | 0xFF000000);
   }
-  return (val << 8) | (val << 16) | 0xFF000000; // cyan
+  return (((val << 8) | (val << 16)) | 0xFF000000); // cyan
 }
 
 export function step(): void {
@@ -66,7 +72,7 @@ export function step(): void {
   }
   for (i = 0; i < wh; i += 1) {
     if (status[i] == 1) {
-      image[i] = 0xFF00FF00;
+      image[i] = 0xFFFF0000;
     } else {
       image[i] = toRGB(u[i]);
     }
