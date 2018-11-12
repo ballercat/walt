@@ -15,6 +15,12 @@ function compile(buffer) {
     getCanvasHeight,
     log: (val) => {
       console.log(val);
+    },
+    log16: (val) => {
+      if (val < 0) {
+        val = 0x100000000 + val;
+      }
+      console.log(val.toString(16));
     }
   };
   return WebAssembly.instantiate(buffer, { env }).then(result => {
