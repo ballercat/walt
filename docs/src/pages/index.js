@@ -58,7 +58,7 @@ const IndexPage = () => (
           <a href="/demo" className="CallToAction-container-button">
             Demo
           </a>
-          <a href="" className="CallToAction-container-button">
+          <a href="https://github.com/ballercat/walt" className="CallToAction-container-button">
             GitHub
           </a>
           <a href="/docs" className="CallToAction-container-button">

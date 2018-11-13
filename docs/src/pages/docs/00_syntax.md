@@ -3,7 +3,10 @@ title: Syntax
 path: /syntax
 ---
 
-## Basic Types
+## Numbers
+
+Walt exposes the four native WebAssembly types directly: `i32`, `f32`, `i64`,
+`f64`;
 
 | Syntax | s-expression | Native? |
 | :----: | :----------: | :-----: |
