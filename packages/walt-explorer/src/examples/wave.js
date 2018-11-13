@@ -117,17 +117,19 @@ function compile(buffer) {
       const toRGB = (x) => {
         const val = x >> 22;
         if (val < 0) {
-          return ((-(val + 1)) | 0xFF000000);
+          return ((-(val + 1)) | 0xFF000000); // red
         }
         return (((val << 8) | (val << 16)) | 0xFF000000); // cyan
       };
 
-      for (let i = 0; i < height; i += 1) {
-        for (let j = 0; j < width; j += 1) {
-          if (i === 0 || j === 0 || i === height - 1 || j === width - 1) {
-            statusArray[i * width + j] = 1;
-          }
-        }
+      // Draw walls
+      for (let i = 0; i < height; i++) {
+        statusArray[i * width] = 1;
+        statusArray[i * width + width - 1] = 1;
+      }
+      for (let i = 0; i < width; i++) {
+        statusArray[i] = 1;
+        statusArray[width * height - width + i] = 1;
       }
 
       for (let i = 0; i < wh; i += 1) {
@@ -135,8 +137,8 @@ function compile(buffer) {
           const uCen = uArray[i];
           const uNorth = uArray[i - width];
           const uSouth = uArray[i + width];
-          const uEast = uArray[i - 1];
-          const uWest = uArray[i + 1];
+          const uEast = uArray[i + 1];
+          const uWest = uArray[i - 1];
           const uxx = (((uWest + uEast) >> 1) - uCen);
           const uyy = (((uNorth + uSouth) >> 1) - uCen);
           velArray[i] = applyCap(velArray[i] + (uxx >> 1) + (uyy >> 1));
