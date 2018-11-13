@@ -5,6 +5,7 @@ import fibonacci from "./fibonacci";
 import objectLiteral from "./object-literal";
 import animation from "./animation";
 import closures from "./closures";
+import wave from './wave';
 
 const examples = {
   Default: _default,
@@ -13,7 +14,8 @@ const examples = {
   Fibonacci: fibonacci,
   "Object Literal": objectLiteral,
   Animation: animation,
-  Closures: closures
+  Closures: closures,
+  Wave: wave,
 };
 
 export default examples;

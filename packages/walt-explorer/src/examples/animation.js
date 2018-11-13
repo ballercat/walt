@@ -1,6 +1,7 @@
 import code from "./walt/animation";
 
 const label = "Bounce (canvas)";
+const output = 'Canvas';
 
 function compile(buffer) {
   const canvas = document.getElementById("canvas");
@@ -44,6 +45,7 @@ function compile(buffer) {
 const example = {
   code,
   label,
+  output,
   compile,
   js: compile.toString()
 };
