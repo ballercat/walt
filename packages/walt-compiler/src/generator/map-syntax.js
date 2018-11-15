@@ -9,6 +9,7 @@ import generateReturn from './return-statement';
 import generateDeclaration from './declaration';
 import generateArraySubscript from './array-subscript';
 import generateAssignment from './assignment';
+import generateAssignmentExpression from './assignment-expression';
 import generateMemoryAssignment from './memory-assignment';
 import generateLoop from './loop';
 import generateTypecast from './typecast';
@@ -46,6 +47,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.Declaration]: generateDeclaration,
   [Syntax.ArraySubscript]: generateArraySubscript,
   [Syntax.Assignment]: generateAssignment,
+  [Syntax.AssignmentExpression]: generateAssignmentExpression,
   // Memory
   [Syntax.MemoryAssignment]: generateMemoryAssignment,
   // Loops

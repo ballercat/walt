@@ -11,11 +11,14 @@ import generator from '../generator';
 import { compile, mapNode, walkNode, prettyPrintNode, debug } from '..';
 import print from 'walt-buildtools/print';
 
-export const compileAndRun = (src, imports) =>
-  WebAssembly.instantiate(
-    compile(src, { encodeNames: true }).buffer(),
-    imports
-  );
+export const compileAndRun = (src, imports, options = {}) => {
+  const output = compile(src, { encodeNames: true });
+  if (options.debug) {
+    // eslint-disable-next-line
+    console.log(debug(output.wasm));
+  }
+  return WebAssembly.instantiate(output.buffer(), imports);
+};
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;
@@ -78,6 +81,7 @@ export const harness = (
       MEMORY_OFFSET: 0,
       log,
       assert(strPointer, value, expected) {
+        console.log(memory.buffer.byteLength, strPointer);
         const text = decodeText(strPointer);
 
         t.is(value, expected, text);

@@ -29,6 +29,7 @@ import _statics from '../core/statics';
 import functionPointer from '../core/function-pointer';
 import struct from '../core/struct';
 import native from '../core/native';
+import assignmentExpression from '../core/assignment-expression';
 import defaultArguments from '../syntax-sugar/default-arguments';
 import sizeof from '../syntax-sugar/sizeof';
 import { GLOBAL_INDEX } from './metadata.js';
@@ -55,6 +56,7 @@ export const builtinSemantics = [
   native,
   sizeof,
   defaultArguments,
+  assignmentExpression,
 ];
 
 const getBuiltInParsers = (): SemanticsFactory[] => {
@@ -74,6 +76,7 @@ const getBuiltInParsers = (): SemanticsFactory[] => {
     native().semantics,
     sizeof().semantics,
     defaultArguments().semantics,
+    assignmentExpression().semantics,
   ];
 };
 

@@ -24,6 +24,7 @@ export const scopeOperation = curry((op, node) => {
     )} node: ${JSON.stringify(node, null, 2)}`
   );
 
+  op = local != null && op === 'Set' ? 'Tee' : op;
   const kind = local != null ? op + 'Local' : op + 'Global';
   const params = [Number(index)];
 

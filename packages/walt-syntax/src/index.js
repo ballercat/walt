@@ -34,6 +34,7 @@ export const FunctionCall = 'FunctionCall';
 export const Loop = 'Loop';
 export const MemoryAssignment = 'MemoryAssignment';
 export const Assignment = 'Assignment';
+export const AssignmentExpression = 'AssignmentExpression';
 export const Param = 'Param';
 export const Typedef = 'Typedef';
 export const Struct = 'Struct';
@@ -147,6 +148,7 @@ export default {
   Loop,
   MemoryAssignment,
   Assignment,
+  AssignmentExpression,
   Param,
   Typedef,
   Struct,

@@ -63,7 +63,7 @@ Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
-  | Assignment            {% id %}
+  # | Assignment            {% id %}
   | If                    {% id %}
   | For                   {% id %}
   | While                 {% id %}
@@ -148,7 +148,7 @@ Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
 TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
 
 # Assignment is NOT a valid expression in Walt/Wasm. Assignment in WebAssembly
-# Does not yield the value assigned, it creates to values on the stack.
+# Does not yield the value assigned, it creates two values on the stack.
 Assignment -> AssignmentExpression _ SEPARATOR {% id %}
 
 AssignmentExpression ->
@@ -159,9 +159,15 @@ AssignmentExpression ->
 
 # Expression
 ExpressionStatement -> Expression SEPARATOR {% id %}
-Expression -> Ternary       {% id %}
+Expression -> InlineAssignment              {% id %}
 
 # Operators, ordered by precedence asc
+InlineAssignment ->
+    Access _ EQUALS _ Ternary    {% d => assignment(d, '=') %}
+  | Access _ PLSEQUALS _ Ternary {% d => assignment(d, '+=') %}
+  | Access _ MINEQUALS _ Ternary {% d => assignment(d, '-=') %}
+  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
+  | Ternary                      {% id %}
 
 # Conditionals
 Ternary ->

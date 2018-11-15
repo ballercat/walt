@@ -103,3 +103,18 @@ test('memory & table exports', t => {
     t.is(instance.exports.table instanceof WebAssembly.Table, true);
   });
 });
+
+test('tee-local', t => {
+  const source = `
+  export function run(iterations: i32) : i32 {
+    iterations += 1;
+    let counter : i32 = 0;
+    while (iterations -= 1) {
+      counter += 1;
+    }
+    return counter;
+  }`;
+  return compileAndRun(source).then(({ instance }) => {
+    t.is(instance.exports.run(10), 10);
+  });
+});
