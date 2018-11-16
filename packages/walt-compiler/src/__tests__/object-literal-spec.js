@@ -1,5 +1,5 @@
 import test from 'ava';
-import { getIR, debug } from '..';
+import { getIR } from '..';
 
 test('objects', t => {
   const walt = `
