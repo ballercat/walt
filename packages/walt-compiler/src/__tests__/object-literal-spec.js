@@ -55,7 +55,7 @@ test('objects', t => {
 `;
 
   const wasm = getIR(walt);
-  t.snapshot(debug(wasm));
+
   return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
 

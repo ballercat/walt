@@ -41,10 +41,6 @@ test('type parsing', t => {
     }).then(result => {
       const { run } = result.instance.exports;
 
-      // snapshot both
-      t.snapshot(debug(importWASM));
-      t.snapshot(debug(sourceWASM));
-
       t.is(run(), 2);
     });
   });
