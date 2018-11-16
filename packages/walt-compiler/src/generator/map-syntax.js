@@ -63,7 +63,7 @@ const mapSyntax: MapSyntaxType = curry((parent, operand) => {
   const mapping = syntaxMap[operand.Type];
   invariant(
     mapping,
-    `Unexpected Syntax Token. ${operand.Type} "${operand.value}"`
+    `Unsupported Syntax Token. ${operand.Type} "${operand.value}"`
   );
 
   return mapping(operand, parent);
