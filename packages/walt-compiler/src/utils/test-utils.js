@@ -81,7 +81,6 @@ export const harness = (
       MEMORY_OFFSET: 0,
       log,
       assert(strPointer, value, expected) {
-        console.log(memory.buffer.byteLength, strPointer);
         const text = decodeText(strPointer);
 
         t.is(value, expected, text);
