@@ -87,9 +87,9 @@ test('plugin system', t => {
   const plugins = [base, plugin1, plugin2];
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
-  const ast = fragment('x + 2');
+  const binaryExpression = fragment('(x + 2)');
 
-  const node = map(parsers)([ast]);
+  const node = map(parsers)([binaryExpression]);
 
   t.deepEqual(
     calls,
@@ -116,10 +116,10 @@ test('plugin invariants', t => {
     }),
   });
 
-  const ast = fragment('x + 2');
+  const binaryExpression = fragment('(x + 2)');
   const parsers = combineParsers([plugin].map(p => p().semantics()));
 
-  t.throws(() => map(parsers)([ast]));
+  t.throws(() => map(parsers)([binaryExpression]));
 });
 
 test('compiler extensions use', t => {
