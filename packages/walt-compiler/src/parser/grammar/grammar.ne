@@ -33,6 +33,7 @@
     typeGeneric,
     spread,
     builtinDecl,
+    assignmentExpr,
   } = this.nodes(lexer);
 %}
 
@@ -63,7 +64,7 @@ Statement ->
     ExpressionStatement   {% id %}
   | Declaration           {% id %}
   | ImmutableDeclaration  {% id %}
-  # | Assignment            {% id %}
+  | Assignment            {% id %}
   | If                    {% id %}
   | For                   {% id %}
   | While                 {% id %}
@@ -106,11 +107,11 @@ GlobalImmutableDeclaration ->
       {% declaration(Syntax.ImmutableDeclaration) %}
 
 Declaration ->
-    LET _ PropertyNameAndType _ EQUALS _ ExpressionStatement {% declaration(Syntax.Declaration) %}
+    LET _ PropertyNameAndType _ EQUALS _ Expression _ SEPARATOR {% declaration(Syntax.Declaration) %}
   | LET _ PropertyNameAndType _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
 
 ImmutableDeclaration ->
-    CONST _ PropertyNameAndType _ EQUALS _ ExpressionStatement
+    CONST _ PropertyNameAndType _ EQUALS _ Expression _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
@@ -149,25 +150,24 @@ TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPA
 
 # Assignment is NOT a valid expression in Walt/Wasm. Assignment in WebAssembly
 # Does not yield the value assigned, it creates two values on the stack.
-Assignment -> AssignmentExpression _ SEPARATOR {% id %}
+Assignment -> _Assignment _ SEPARATOR {% id %}
 
-AssignmentExpression ->
+_Assignment ->
     Access _ EQUALS _ Expression    {% d => assignment(d, '=') %}
   | Access _ PLSEQUALS _ Expression {% d => assignment(d, '+=') %}
   | Access _ MINEQUALS _ Expression {% d => assignment(d, '-=') %}
   | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
 
 # Expression
-ExpressionStatement -> Expression SEPARATOR {% id %}
-Expression -> InlineAssignment              {% id %}
+ExpressionStatement -> Call _ SEPARATOR {% id %}
+Expression -> AssignmentExpression              {% id %}
 
 # Operators, ordered by precedence asc
-InlineAssignment ->
-    Access _ EQUALS _ Ternary    {% d => assignment(d, '=') %}
-  | Access _ PLSEQUALS _ Ternary {% d => assignment(d, '+=') %}
-  | Access _ MINEQUALS _ Ternary {% d => assignment(d, '-=') %}
-  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
-  | Ternary                      {% id %}
+AssignmentExpression ->
+    Identifier _ EQUALS _ Ternary     {% d => assignmentExpr(d, '=') %}
+  | Identifier _ PLSEQUALS _ Ternary  {% d => assignmentExpr(d, '+=') %}
+  | Identifier _ MINEQUALS _ Ternary  {% d => assignmentExpr(d, '-=') %}
+  | Ternary                           {% id %}
 
 # Conditionals
 Ternary ->
