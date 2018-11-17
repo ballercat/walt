@@ -144,7 +144,14 @@ export default function Core(): SemanticPlugin {
           return { ...inputNode, params, type };
         },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
-          return next([balanceTypesInMathExpression(node), context]);
+          return next([
+            balanceTypesInMathExpression({
+              ...node,
+              // Flatten out the parameters, put the condition node last
+              params: [...node.params[1].params, node.params[0]],
+            }),
+            context,
+          ]);
         },
       };
     },

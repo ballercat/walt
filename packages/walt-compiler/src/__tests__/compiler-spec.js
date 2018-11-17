@@ -118,3 +118,24 @@ test('tee-local', t => {
     t.is(instance.exports.run(10), 10);
   });
 });
+
+test('ternary', t => {
+  const source = `
+    function getY() : i32 {
+      return 10;
+    }
+    function getZ() : i32 {
+      return -10;
+    }
+    export function run(x : i32) : i32 {
+      // FIXME: using a ternary inside a return currently fails validation,
+      //        looks like the type info is lost (result of the select)
+      const result : i32 = x ? getY() : getZ();
+      return result;
+    }
+  `;
+  return compileAndRun(source, {}, { debug: false }).then(({ instance }) => {
+    t.is(instance.exports.run(1), 10);
+    t.is(instance.exports.run(0), -10);
+  });
+});

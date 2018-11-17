@@ -11,8 +11,12 @@ import generator from '../generator';
 import { compile, mapNode, walkNode, prettyPrintNode, debug } from '..';
 import print from 'walt-buildtools/print';
 
-export const compileAndRun = (src, imports, options = {}) => {
-  const output = compile(src, { encodeNames: true });
+export const compileAndRun = (
+  src,
+  imports,
+  options = { encodeNames: true }
+) => {
+  const output = compile(src, options);
   if (options.debug) {
     // eslint-disable-next-line
     console.log(debug(output.wasm));

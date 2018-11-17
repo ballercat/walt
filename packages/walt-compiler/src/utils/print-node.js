@@ -185,9 +185,10 @@ const getPrinters = add => ({
     add(')', 0, -2);
   },
   [Syntax.TernaryExpression]: (node, print) => {
-    const [condition, options] = node.params;
+    const [lhs, rhs, condition] = node.params;
     add('(select', 2);
-    print(options);
+    print(lhs);
+    print(rhs);
     print(condition);
     add(')', 0, -2);
   },
