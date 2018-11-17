@@ -1,4 +1,9 @@
-// @flow
+/**
+ * This module contains all the general purpose mappings of Node Type to
+ * generator functions.
+ *
+ * @flow
+ */
 import generateFunctionCall from './function-call';
 import generateIndirectFunctionCall from './indirect-function-call';
 import generateBinaryExpression from './binary-expression';
@@ -20,9 +25,10 @@ import generateElse from './else';
 import generateSelect from './select';
 import generateNative from './native';
 import generateAccess from './access';
+import generateConstant from './constant';
 
 import Syntax from 'walt-syntax';
-import { getInScope, getConstOpcode } from './utils';
+import { getInScope } from './utils';
 import curry from 'curry';
 import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
@@ -32,7 +38,7 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
-  [Syntax.Constant]: getConstOpcode,
+  [Syntax.Constant]: generateConstant,
   [Syntax.BinaryExpression]: generateBinaryExpression,
   [Syntax.TernaryExpression]: generateTernary,
   [Syntax.IfThenElse]: generateIf,
