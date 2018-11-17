@@ -17,7 +17,7 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
   // write bytecode into a clean buffer
   const body = new OutputStream();
 
-  code.forEach(({ kind, params, valueType, debug }) => {
+  code.forEach(({ kind, params, debug }) => {
     invariant(
       typeof kind !== 'undefined',
       `Fatal error! Generated undefined opcode. debug code: ${JSON.stringify(
@@ -26,11 +26,6 @@ const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
     );
     // There is a much nicer way of doing this
     body.push(u8, kind.code, `${kind.text}  ${debug ? debug : ''}`);
-
-    if (valueType) {
-      body.push(u8, valueType.type, 'result type');
-      body.push(u8, valueType.mutable, 'mutable');
-    }
 
     // map over all params, if any and encode each on
     params.filter(p => typeof p !== 'undefined').forEach(p => {

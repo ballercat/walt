@@ -59,10 +59,13 @@ test('increment', t =>
 // Unary negation is not supported. Workaround: "return 0 - x;"
 test('unary negation', t =>
   compileAndRun(`
+  function getNegative() : i32 {
+    return -2;
+  }
   export function test(): i32 {
-    let x: i32 = 2;
+    let x: i32 = getNegative();
     return -x;
-  }`).then(outputIs(t, -2)));
+  }`).then(outputIs(t, 2)));
 
 test('uses precedence correctly', t =>
   compileAndRun(`

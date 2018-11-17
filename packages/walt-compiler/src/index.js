@@ -120,6 +120,7 @@ export const compile = (source: string, config: ConfigType) => {
   const wasm = emitter(intermediateCode, options);
 
   return {
+    wasm,
     buffer() {
       return wasm.buffer();
     },

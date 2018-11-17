@@ -1,6 +1,6 @@
 import test from 'ava';
 import debug from '../debug';
-import { getIR } from '../..';
+import { compile } from '../..';
 
 const DEFAULT_EXAMPLE = `const x: i32 = 2;
 export function echo(): i32 {
@@ -9,5 +9,6 @@ export function echo(): i32 {
 }`;
 
 test('debug prints web-assembly opcodes', t => {
-  t.snapshot(debug(getIR(DEFAULT_EXAMPLE)));
+  // TODO: Change the input to debug to be a static value instead
+  t.snapshot(debug(compile(DEFAULT_EXAMPLE).wasm));
 });

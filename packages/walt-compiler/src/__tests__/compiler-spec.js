@@ -103,3 +103,39 @@ test('memory & table exports', t => {
     t.is(instance.exports.table instanceof WebAssembly.Table, true);
   });
 });
+
+test('tee-local', t => {
+  const source = `
+  export function run(iterations: i32) : i32 {
+    iterations += 1;
+    let counter : i32 = 0;
+    while (iterations -= 1) {
+      counter += 1;
+    }
+    return counter;
+  }`;
+  return compileAndRun(source).then(({ instance }) => {
+    t.is(instance.exports.run(10), 10);
+  });
+});
+
+test('ternary', t => {
+  const source = `
+    function getY() : i32 {
+      return 10;
+    }
+    function getZ() : i32 {
+      return -10;
+    }
+    export function run(x : i32) : i32 {
+      // FIXME: using a ternary inside a return currently fails validation,
+      //        looks like the type info is lost (result of the select)
+      const result : i32 = x ? getY() : getZ();
+      return result;
+    }
+  `;
+  return compileAndRun(source, {}, { debug: false }).then(({ instance }) => {
+    t.is(instance.exports.run(1), 10);
+    t.is(instance.exports.run(0), -10);
+  });
+});

@@ -274,6 +274,18 @@ export default function factory(lexer) {
 
       return node(Type, { value })(d);
     },
+    assignmentExpr(d, value) {
+      if (['-=', '+='].includes(value)) {
+        const operator = value[0];
+        const [target, amount] = drop(d);
+        const b = binary([target, { value: operator }, amount]);
+        return node(Syntax.AssignmentExpression, {
+          value: '=',
+        })([target, b]);
+      }
+
+      return node(Syntax.AssignmentExpression, { value })(d);
+    },
     forLoop(d) {
       const [initializer, condition, afterthought, ...body] = drop(d);
       return node(Syntax.Loop)([initializer, condition, ...body, afterthought]);

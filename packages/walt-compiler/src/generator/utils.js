@@ -5,11 +5,7 @@ import curry from 'curry';
 import invariant from 'invariant';
 import { I32, I64, F32, F64 } from '../emitter/value_type';
 import { LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from '../semantics/metadata';
-import type {
-  IntermediateVariableType,
-  IntermediateOpcodeType,
-  RawOpcodeType,
-} from './flow/types';
+import type { IntermediateVariableType } from './flow/types';
 import type { NodeType } from '../flow/types';
 
 export const scopeOperation = curry((op, node) => {
@@ -33,20 +29,6 @@ export const scopeOperation = curry((op, node) => {
     debug: `${node.value}<${node.meta.ALIAS || node.type}>`,
   };
 });
-
-export const getConstOpcode = (node: NodeType): IntermediateOpcodeType[] => {
-  const nodeType = node.type || builtinTypes.i32;
-
-  const kind: RawOpcodeType = opcode[nodeType + 'Const'];
-  const params = [Number(node.value)];
-
-  return [
-    {
-      kind,
-      params,
-    },
-  ];
-};
 
 // clean this up
 export const getType = (str: ?string): number => {
