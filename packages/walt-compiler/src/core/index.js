@@ -98,30 +98,21 @@ export default function Core(): SemanticPlugin {
             params: node.params.map(child => transform([child, context])),
           }),
         [Syntax.Pair]: _next => (args, transform) => {
-          const [typeCastMaybe, context] = args;
+          const [typeCast, context] = args;
 
-          const params = typeCastMaybe.params.map(p => transform([p, context]));
+          const params = typeCast.params.map(p => transform([p, context]));
           const [targetNode, typeNode] = params;
           const { type: from } = targetNode;
           const { value: to } = typeNode;
 
-          if (typeNode.Type === Syntax.Type && !!from && !!to) {
-            return {
-              ...typeCastMaybe,
-              type: to,
-              value: targetNode.value,
-              Type: Syntax.TypeCast,
-              meta: { ...typeCastMaybe.meta, [TYPE_CAST]: { to, from } },
-              // We need to drop the typeNode here, because it's not something we can generate
-              params: [targetNode],
-            };
-          }
-
-          // If both sides of a pair don't have types then it's not a typecast,
-          // more likely a string: value pair in an object for example
           return {
-            ...typeCastMaybe,
-            params,
+            ...typeCast,
+            type: to,
+            value: targetNode.value,
+            Type: Syntax.TypeCast,
+            meta: { ...typeCast.meta, [TYPE_CAST]: { to, from } },
+            // We need to drop the typeNode here, because it's not something we can generate
+            params: [targetNode],
           };
         },
         [Syntax.Identifier]: next => args => {
@@ -144,7 +135,14 @@ export default function Core(): SemanticPlugin {
           return { ...inputNode, params, type };
         },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
-          return next([balanceTypesInMathExpression(node), context]);
+          return next([
+            balanceTypesInMathExpression({
+              ...node,
+              // Flatten out the parameters, put the condition node last
+              params: [...node.params[1].params, node.params[0]],
+            }),
+            context,
+          ]);
         },
       };
     },

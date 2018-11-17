@@ -11,11 +11,18 @@ import generator from '../generator';
 import { compile, mapNode, walkNode, prettyPrintNode, debug } from '..';
 import print from 'walt-buildtools/print';
 
-export const compileAndRun = (src, imports) =>
-  WebAssembly.instantiate(
-    compile(src, { encodeNames: true }).buffer(),
-    imports
-  );
+export const compileAndRun = (
+  src,
+  imports,
+  options = { encodeNames: true }
+) => {
+  const output = compile(src, options);
+  if (options.debug) {
+    // eslint-disable-next-line
+    console.log(debug(output.wasm));
+  }
+  return WebAssembly.instantiate(output.buffer(), imports);
+};
 
 function resolve(file, parent) {
   const root = parent ? path.dirname(parent) : __dirname;

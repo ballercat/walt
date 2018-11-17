@@ -19,9 +19,8 @@ const debug = (stream: OutputStream, begin: number = 0, end?: number) => {
     stream.data
       .slice(begin, end)
       .map(({ type, value, debug }) => {
-        const pcString = pc
-          .toString(16)
-          .padStart(8, '0')
+        const pcString = `${pc.toString()} 0x${pc.toString(16)}`
+          .padStart(6, ' ')
           .padEnd(stream.data.length.toString().length + 1);
         let valueString;
         if (Array.isArray(value)) {

@@ -5,6 +5,13 @@ import opcode from '../emitter/opcode';
 import { TYPE_ARRAY } from '../semantics/metadata';
 import type { GeneratorType } from './flow/types';
 
+const shiftAmount = {
+  i32: 2,
+  f32: 2,
+  i64: 3,
+  f64: 3,
+};
+
 const generateMemoryAssignment: GeneratorType = (node, parent) => {
   const targetNode = node.params[0];
   const isArray = targetNode.params[0].meta[TYPE_ARRAY];
@@ -18,7 +25,7 @@ const generateMemoryAssignment: GeneratorType = (node, parent) => {
     // For array types, the index is multiplied by the contained object size
     block.push.apply(block, [
       // TODO: fix this for user-defined types
-      { kind: opcode.i32Const, params: [2] },
+      { kind: opcode.i32Const, params: [shiftAmount[isArray]] },
       { kind: opcode.i32Shl, params: [] },
     ]);
     type = isArray;

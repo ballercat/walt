@@ -44,6 +44,21 @@ export default function(): SemanticPlugin {
                 fragment(`(${String(lhs.value)} ^ ${mask})`),
                 context,
               ]);
+            case '-':
+              // Fold negation into a single opcode (a negative constant).
+              // The parser _currently_ generates 0 - <const> node pairs instead
+              if (rhs.Type === Syntax.Constant) {
+                return {
+                  ...rhs,
+                  meta: {
+                    ...rhs.meta,
+                    // Hint for generator
+                    SIGN: -1,
+                  },
+                };
+              }
+            // fallthrough
+            // eslint-disable-next-line
             default:
               return transform([
                 {

@@ -143,6 +143,7 @@
   const Loop = 'Loop';
   const MemoryAssignment = 'MemoryAssignment';
   const Assignment = 'Assignment';
+  const AssignmentExpression = 'AssignmentExpression';
   const Param = 'Param';
   const Typedef = 'Typedef';
   const Struct = 'Struct';
@@ -256,6 +257,7 @@
     Loop,
     MemoryAssignment,
     Assignment,
+    AssignmentExpression,
     Param,
     Typedef,
     Struct,
@@ -321,6 +323,7 @@
   exports.Loop = Loop;
   exports.MemoryAssignment = MemoryAssignment;
   exports.Assignment = Assignment;
+  exports.AssignmentExpression = AssignmentExpression;
   exports.Param = Param;
   exports.Typedef = Typedef;
   exports.Struct = Struct;

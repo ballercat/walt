@@ -1,5 +1,5 @@
 import test from 'ava';
-import { compile, debug, getIR } from '../..';
+import { compile, getIR } from '../..';
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
@@ -40,10 +40,6 @@ test('type parsing', t => {
       env: { ...deps.instance.exports },
     }).then(result => {
       const { run } = result.instance.exports;
-
-      // snapshot both
-      t.snapshot(debug(importWASM));
-      t.snapshot(debug(sourceWASM));
 
       t.is(run(), 2);
     });

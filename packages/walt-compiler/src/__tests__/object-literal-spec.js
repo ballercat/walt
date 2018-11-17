@@ -1,5 +1,5 @@
 import test from 'ava';
-import { getIR, debug } from '..';
+import { getIR } from '..';
 
 test('objects', t => {
   const walt = `
@@ -55,7 +55,7 @@ test('objects', t => {
 `;
 
   const wasm = getIR(walt);
-  t.snapshot(debug(wasm));
+
   return WebAssembly.instantiate(wasm.buffer()).then(result => {
     const exports = result.instance.exports;
 

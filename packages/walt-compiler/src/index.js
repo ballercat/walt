@@ -24,7 +24,7 @@ export {
   stringDecoder,
 };
 
-export const VERSION = '0.17.0';
+export const VERSION = '0.19.0';
 
 /**
  * Deprecated method, no longer maintained.
@@ -198,6 +198,7 @@ export const compile = (source: string, config: ConfigType): Walt => {
   const wasm = emitter(intermediateCode, options);
 
   return {
+    wasm,
     buffer() {
       return wasm.buffer();
     },
