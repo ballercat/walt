@@ -62,12 +62,12 @@ article {
   display: flex;
   flex-flow: column nowrap;
   padding: 20px;
-  max-width: $size-phablet--min;
+  max-width: $size-desktop--min;
   margin: auto;
 
-  @include for-tablet-landscape-up {
+  @include for-desktop-up {
     flex-flow: row nowrap;
-    max-width: $size-desktop--min;
+    max-width: $size-tv--min;
   }
 
   ul {
@@ -130,12 +130,13 @@ article {
 // Shared ToC used on all doc pages
 .TableOfContents {
   background: transparent;
-  padding: 20px 0;
+  padding: 20px;
   font-size: 0.9em;
   overflow-y: scroll;
 
-  @include for-tablet-landscape-up {
+  @include for-desktop-up {
     flex-basis: 60%;
+    padding: 20px 0;
     height: 100vh;
   }
   &-list {
@@ -146,6 +147,44 @@ article {
   }
   ul, li {
     list-style: outside none none !important;
+  }
+}
+
+
+.Sandbox {
+  display: flex;
+  flex-flow: column nowrap;
+
+  @include for-tablet-landscape-up {
+    flex-flow: row nowrap;
+  }
+
+  .CodeMirror, &-output {
+    height: 30vh;
+    border-radius: 10px;
+  }
+
+  .CodeMirror-code, &-output {
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;
+  }
+
+  &-editor, &-output {
+    width: 100%;
+    font-size: 1em;
+    margin-bottom: 0.5em;
+
+    @include for-tablet-landscape-up {
+      width: 50%;
+    }
+  }
+
+  &-output {
+    padding: 10px;
+    white-space: pre;
+    background-color: #272822;
+    color: #f8f8f2;
+    border-left: 1px solid;
+    overflow: scroll;
   }
 }
 

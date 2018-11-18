@@ -17,11 +17,12 @@ function DocsTemplate({ data }) {
     <Layout title={frontmatter.title}>
       <Layout.Content className="Documentation">
         <TableOfContents
-          pages={headings.map(({ value }) => ({
+          pages={headings.map(({ value, depth }) => ({
             path: '#' + value.toLowerCase().replace(/\s/g, '-'),
             title: value,
             id: value,
             isNative: true,
+            depth,
           }))}
         />
         <section className="Content Content--prose">
@@ -43,6 +44,7 @@ export const pageQuery = graphql`
       htmlAst
       headings {
         value
+        depth
       }
       frontmatter {
         path

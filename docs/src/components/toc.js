@@ -58,7 +58,10 @@ class TableOfContents extends Component {
         <section className="TableOfContents-list">
           <ul>
             {this.props.pages.map(page => (
-              <li key={page.title}>
+              <li
+                key={page.title}
+                style={{ paddingLeft: `${(Number(page.depth) - 1) * 15}px` }}
+              >
                 {page.isNative ? (
                   <a href={page.path}>{page.title}</a>
                 ) : (

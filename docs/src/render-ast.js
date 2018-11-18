@@ -1,5 +1,6 @@
 import React from 'react';
 import RehypeReact from 'rehype-react';
+import Sandbox from './components/sandbox';
 
 // We need to do some creative use of react to attach name attributes to all of
 // our headers.
@@ -20,5 +21,6 @@ export const renderAst = new RehypeReact({
     h1: header(<h1 />),
     h2: header(<h2 />),
     h3: header(<h3 />),
+    sandbox: Sandbox,
   },
 }).Compiler;
