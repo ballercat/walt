@@ -24,36 +24,9 @@ class TableOfContents extends Component {
     title: 'Table of Contents',
   };
 
-  constructor() {
-    super();
-    this.state = {
-      sticky: window.scrollY >= 70,
-    };
-    this.handleScroll = this.handleScroll.bind(this);
-    document.addEventListener('scroll', this.handleScroll);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('scroll', this.handleScroll);
-  }
-
-  shouldComponentUpdate(nextProps, nextState = {}) {
-    return nextState.sticky !== this.state.sticky;
-  }
-
-  handleScroll() {
-    this.setState({
-      sticky: window.scrollY >= 70,
-    });
-  }
-
   render() {
     return (
-      <div
-        className={`TableOfContents ${
-          this.state.sticky ? 'TableOfContents--sticky' : ''
-        }`}
-      >
+      <div className="TableOfContents">
         <h4 className="TableOfContents-title">{this.props.title}</h4>
         <section className="TableOfContents-list">
           <ul>

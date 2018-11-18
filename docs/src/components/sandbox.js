@@ -35,7 +35,18 @@ class Editor extends React.PureComponent {
     const source = decodeURI(props.children)
       .replace(/```/g, '')
       .trim();
-    const result = compile(source);
+    let result = 'Syntax Error.';
+    try {
+      result = compile(source);
+    } catch (e) {
+      // eslint-disable-next-line
+      console.error(`${e.message}
+Error compiling
+
+${source}
+`);
+      console.log(props.children);
+    }
     this.state = {
       wasm: prettyPrintNode(result.semanticAST),
       source,

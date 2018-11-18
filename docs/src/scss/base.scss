@@ -44,7 +44,7 @@ h1, h2, h3, h4 {
 }
 
 code[class*="language-"], pre[class*="language-"], .Language {
-  font-size: 0.8em;
+  font-size: 0.9em;
   padding: 0 2px;
   margin-bottom: 1em;
   background-color: $color-grey;
@@ -168,7 +168,7 @@ code[class*="language-"], pre[class*="language-"], .Language {
 
     pre {
       padding-top: 20px;
-      font-size: 0.7em;
+      font-size: 0.9em;
       padding: 0 2px;
 
       @include for-tablet-landscape-up {
