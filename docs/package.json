@@ -11,13 +11,14 @@
     "rehype-react": "^3.0.3",
     "semantic-ui-css": "^2.4.0",
     "semantic-ui-react": "^0.82.5",
-    "walt-compiler": "^0.16.2",
+    "walt-compiler": "^0.19.0",
     "walt-plugin-syntax-closure": "^0.2.6"
   },
   "scripts": {
     "build": "gatsby build --no-cache --prefix-paths",
     "deploy": "gatsby build --prefix-paths && gh-pages -d public",
     "start": "gatsby develop",
+    "start-container": "gatsby develop --host=$(hostname -I | xargs)",
     "format": "prettier --write '**/*.js'"
   },
   "devDependencies": {
