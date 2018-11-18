@@ -65,11 +65,6 @@ article {
   max-width: $size-desktop--min;
   margin: auto;
 
-  @include for-desktop-up {
-    flex-flow: row nowrap;
-    max-width: $size-tv--min;
-  }
-
   ul {
     list-style: disc;
     padding-left: 2em;
@@ -135,11 +130,6 @@ article {
   font-size: 0.9em;
   overflow-y: scroll;
 
-  @include for-desktop-up {
-    flex-basis: 60%;
-    padding: 20px 0;
-    height: 100vh;
-  }
   &-list {
     margin-top: 20px;
   }
