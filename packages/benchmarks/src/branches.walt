@@ -1,0 +1,58 @@
+/**
+ * Compare selects with if/thens
+ *
+ * The little bit of math and input variables are necessary
+ * otherwise any JIT worth it's salt will optimize away our loops/branches.
+ */
+
+function getX() : i32 {
+  return -100;
+}
+function getY() : i32 {
+  return 100;
+}
+function getZ() : i32 {
+  return 1;
+}
+
+export function select_simple(c: i32) {
+  let r: i32;
+  while(c -= 1) {
+    r = c % 2 ? getX() : getY();
+  }
+}
+
+export function ifthen_simple(c: i32) {
+  let r : i32;
+  while(c -= 1) {
+    if (c % 2) {
+      r = getX();
+    } else {
+      r = getY();
+    }
+  }
+}
+
+export function select_nested(c: i32) {
+  let r : i32;
+  while(c -= 1) {
+    // NOTE: The extra params _are_ necessary
+    r = c % 2 ? getX() : (c % 3 ? getZ() : getY());
+  }
+}
+
+
+export function ifthen_nested(c: i32) {
+  let r : i32;
+  while(c -= 1) {
+    if (c % 2) {
+      r = getX();
+    } else {
+      if (c % 3) {
+        r = getY();
+      } else {
+        r = getZ();
+      }
+    }
+  }
+}
