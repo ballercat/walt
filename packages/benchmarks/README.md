@@ -1,6 +1,6 @@
 # Benchmarks
 
-Simple benchmarks for the language constructs.
+Simple benchmarks for language constructs.
 
 ## Install
 
@@ -13,6 +13,11 @@ npm install
 ```
 npm run bench
 ```
+
+## Tips
+
+- Test inner loops within WASM
+- Use inputs & math in tests to avoid aggressive JIT for simple branches
 
 ## Notes
 
