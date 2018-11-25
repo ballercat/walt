@@ -140,7 +140,7 @@ test('ternary', t => {
   });
 });
 
-test('correct struct types parsed', t => {
+test('struct types in binary expr with nulls', () => {
   const source = `
   const memory : Memory = { initial: 1 };
   type Node = {
@@ -159,5 +159,5 @@ test('correct struct types parsed', t => {
   }
   `;
 
-  return compileAndRun(source, {}, { debug: false }).then(({ instance }) => {});
+  return compileAndRun(source, {}, { debug: false });
 });
