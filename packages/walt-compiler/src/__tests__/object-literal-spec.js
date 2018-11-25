@@ -1,5 +1,5 @@
 import test from 'ava';
-import { getIR } from '..';
+import { compile } from '..';
 
 test('objects', t => {
   const walt = `
@@ -54,9 +54,9 @@ test('objects', t => {
   }
 `;
 
-  const wasm = getIR(walt);
+  const buffer = compile(walt, { encodeNames: true }).buffer();
 
-  return WebAssembly.instantiate(wasm.buffer()).then(result => {
+  return WebAssembly.instantiate(buffer).then(result => {
     const exports = result.instance.exports;
 
     t.is(exports.testSubscript(), 4, 'Regular old string subscripts');

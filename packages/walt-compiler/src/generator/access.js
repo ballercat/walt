@@ -12,7 +12,7 @@ const generateAccess: GeneratorType = (node, parent) => {
   block.push({ kind: opcode.i32Add, params: [] });
 
   block.push({
-    kind: opcode[String(field.type) + 'Load'],
+    kind: opcode[String(node.type) + 'Load'],
     params: [
       // Alignment
       2,

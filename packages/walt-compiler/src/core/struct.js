@@ -17,6 +17,7 @@ const sizeMap = {
   i32: 4,
   f32: 4,
 };
+const STRUCT_NATIVE_TYPE = 'i32';
 
 export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
@@ -49,7 +50,7 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
       ...field,
       meta: { [ALIAS]: field.value },
       value: absoluteByteOffset,
-      type: 'i32',
+      type: STRUCT_NATIVE_TYPE,
       Type: Syntax.Constant,
     },
   ];
@@ -86,7 +87,7 @@ export default function Struct(): SemanticPlugin {
           return next([
             extendNode(
               {
-                type: 'i32',
+                type: STRUCT_NATIVE_TYPE,
                 meta: { ALIAS: node.type },
                 params: node.params.map(p => transform([p, context])),
               },
@@ -104,11 +105,11 @@ export default function Struct(): SemanticPlugin {
             return next(args);
           }
 
-          // Convert all struct uses to i32 types
+          // Convert all struct uses to STRUCT_NATIVE_TYPE types
           return {
             ...node,
             meta: { ...node.meta, ...ref.meta, ALIAS: ref.type },
-            type: 'i32',
+            type: STRUCT_NATIVE_TYPE,
           };
         },
         [Syntax.ArraySubscript]: next => (args, transform) => {
@@ -151,7 +152,14 @@ export default function Struct(): SemanticPlugin {
 
           const metaObject = userType.meta[TYPE_OBJECT];
           const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
-          const type = objectKeyTypeMap[field.value];
+          const type = (() => {
+            const ft = objectKeyTypeMap[field.value];
+            if (userTypes[ft]) {
+              return STRUCT_NATIVE_TYPE;
+            }
+
+            return ft;
+          })();
 
           return {
             ...node,
