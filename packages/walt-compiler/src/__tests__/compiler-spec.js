@@ -139,3 +139,25 @@ test('ternary', t => {
     t.is(instance.exports.run(0), -10);
   });
 });
+
+test('struct types in binary expr with nulls', () => {
+  const source = `
+  const memory : Memory = { initial: 1 };
+  type Node = {
+    data: i32,
+    left: Node,
+    right: Node
+  };
+  export function run() {
+    let node : Node = 0;
+
+    if (node.left != null) {
+      node = node.left;
+    } else if (node.left != null) {
+      node = node.right;
+    }
+  }
+  `;
+
+  return compileAndRun(source, {}, { debug: false });
+});

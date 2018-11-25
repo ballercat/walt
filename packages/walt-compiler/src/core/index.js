@@ -126,6 +126,16 @@ export default function Core(): SemanticPlugin {
             };
           }
 
+          // null-expr
+          if (node.value === 'null') {
+            return {
+              ...node,
+              value: '0',
+              type: 'i32',
+              Type: Syntax.Constant,
+            };
+          }
+
           return next(args);
         },
         [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
