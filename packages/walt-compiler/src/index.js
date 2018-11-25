@@ -16,6 +16,9 @@ import type { ConfigType } from './flow/types';
 import { stringEncoder, stringDecoder } from './utils/string';
 import { makeFragment } from './parser/fragment';
 
+// EXPERIMENTAl
+import { plugin as ARCPlugin, imports as ARCImports } from './arc';
+
 export {
   makeParser,
   makeFragment,
@@ -74,6 +77,7 @@ export const compile = (source: string, config: ConfigType) => {
     extensions = [],
     linker,
     encodeNames = false,
+    EXPERIMENTAL_ARC = false,
   } =
     config || {};
 
@@ -83,6 +87,11 @@ export const compile = (source: string, config: ConfigType) => {
     version: VERSION_1,
     encodeNames,
   };
+
+  if (EXPERIMENTAL_ARC) {
+    options.EXPERIMENTAL_ARC = true;
+    extensions.push(ARCPlugin);
+  }
 
   // Generate plugin instances and sort them by the extended compiler phase
   const plugins = extensions.reduce(

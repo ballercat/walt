@@ -124,7 +124,14 @@ export default function Struct(): SemanticPlugin {
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
             const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
-            const type = objectKeyTypeMap[field.value];
+            const type = (() => {
+              const ft = objectKeyTypeMap[field.value];
+              if (userTypes[ft]) {
+                return STRUCT_NATIVE_TYPE;
+              }
+
+              return ft;
+            })();
 
             return {
               ...node,
