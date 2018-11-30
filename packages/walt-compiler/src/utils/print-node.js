@@ -82,6 +82,11 @@ const getPrinters = add => ({
   [Syntax.GenericType]: (node, _print) => {
     add('(type-generic ' + node.value + ')', 0, 0, ' pseudo type');
   },
+  [Syntax.Block]: (node, print) => {
+    add('(block', 2);
+    node.params.forEach(print);
+    add('end)', 0, -2);
+  },
   [Syntax.FunctionCall]: (node, print) => {
     if (node.params.length > 0) {
       add(`(call ${node.value}`, 2);

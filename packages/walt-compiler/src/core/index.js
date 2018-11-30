@@ -18,6 +18,19 @@ import { TYPE_CAST, TYPE_CONST } from '../semantics/metadata';
 import { typeWeight } from '../types';
 import type { SemanticPlugin } from '../flow/types';
 
+const sizeMap = {
+  i64: 8,
+  f64: 8,
+  i32: 4,
+  f32: 4,
+};
+const toLHSType = (lhs, rhs) => {
+  if (sizeMap[lhs.type] && rhs.Type === Syntax.Constant) {
+    return { ...rhs, type: lhs.type };
+  }
+
+  return rhs;
+};
 const balanceTypesInMathExpression = expression => {
   // find the heaviest type in the expression
   const type = expression.params.reduce((acc, { type: childType }) => {
@@ -141,8 +154,9 @@ export default function Core(): SemanticPlugin {
         [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
           const [inputNode, context] = args;
           const params = inputNode.params.map(p => transform([p, context]));
-          const { type } = params[0];
-          return { ...inputNode, params, type };
+          const [lhs, rhs] = params;
+          const { type } = lhs;
+          return { ...inputNode, params: [lhs, toLHSType(lhs, rhs)], type };
         },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([

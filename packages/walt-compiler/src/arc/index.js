@@ -8,11 +8,13 @@ import { extendNode } from '../utils/extend-node';
 import hasNode from 'walt-parser-tools/has-node';
 import grammar from './arc.ne';
 
+const ARC_POINTER_TYPE = 'i64';
 const ARC_IMPORTS = `
   import { __arc_allocate : ARC_ALLOCATE } from 'ARC';
 
-  type ARC_ALLOCATE = (i32) => i32;
+  type ARC_ALLOCATE = (i32) => ${ARC_POINTER_TYPE};
 `;
+
 export function imports(_options, _compile) {}
 
 export function plugin() {
@@ -54,6 +56,7 @@ export function plugin() {
             {
               params: [allocate],
               Type: Syntax.Declaration,
+              meta: { ARC: true },
             },
             node
           );

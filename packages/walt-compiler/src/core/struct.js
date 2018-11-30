@@ -17,7 +17,7 @@ const sizeMap = {
   i32: 4,
   f32: 4,
 };
-const STRUCT_NATIVE_TYPE = 'i32';
+const STRUCT_NATIVE_TYPE = 'i64';
 
 export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
