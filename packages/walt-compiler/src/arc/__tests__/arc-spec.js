@@ -1,8 +1,8 @@
 import test from 'ava';
 import { compile, prettyPrintNode } from '../../';
-import { plugin } from '..';
+// import { plugin } from '..';
 
-test('ARC plugin', t => {
+test('ARC plugin', _t => {
   const source = `
   const memory : Memory = { initia: 1 };
 
@@ -15,17 +15,33 @@ test('ARC plugin', t => {
   function add(root : Node, data: i32) {
   }
 
-  function test(): i32 {
-    let node : Node = {
-      data: 0,
-      left: null,
-      right: null
-    };
+  export function test(): i32 {
+    // let node : Node = {
+    //   data: 0,
+    //   left: null,
+    //   right: null
+    // };
+    let node : Node = {};
 
-    add(node, 5);
+    // add(node, 5);
+
+    // return node.data;
+    return (node : i32);
   }
   `;
 
-  const walt = compile(source, { EXPERIMENTAL_ARC: true });
+  const walt = compile(source, { encodeNames: true, EXPERIMENTAL_ARC: true });
+  // console.log(debug(walt.wasm));
   console.log(prettyPrintNode(walt.semanticAST));
+
+  return WebAssembly.instantiate(walt.buffer(), {
+    ARC: {
+      __arc_allocate: size => {
+        return size;
+      },
+    },
+  }).then(({ instance }) => {
+    console.log(instance.exports);
+    console.log(instance.exports.test());
+  });
 });

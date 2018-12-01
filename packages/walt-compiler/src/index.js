@@ -17,7 +17,10 @@ import { stringEncoder, stringDecoder } from './utils/string';
 import { makeFragment } from './parser/fragment';
 
 // EXPERIMENTAl
-import { plugin as ARCPlugin, imports as ARCImports } from './arc';
+import {
+  plugin as UnstableARCPlugin,
+  imports as UnstableARCImports,
+} from './arc';
 
 export {
   makeParser,
@@ -32,6 +35,8 @@ export {
   stringDecoder,
   walkNode,
   mapNode,
+  UnstableARCPlugin,
+  UnstableARCImports,
 };
 export const VERSION = '0.20.0';
 
@@ -89,8 +94,10 @@ export const compile = (source: string, config: ConfigType) => {
   };
 
   if (EXPERIMENTAL_ARC) {
+    /* $FlowFixMe */
     options.EXPERIMENTAL_ARC = true;
-    extensions.push(ARCPlugin);
+    /* $FlowFixMe */
+    extensions.push(UnstableARCPlugin);
   }
 
   // Generate plugin instances and sort them by the extended compiler phase

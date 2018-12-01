@@ -41,16 +41,17 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const patchStringSubscript = (byteOffsetsByKey, params) => {
+const patchStringSubscript = (fragment, byteOffsetsByKey, params) => {
   const field = params[1];
   const absoluteByteOffset = byteOffsetsByKey[field.value];
+  const cast = fragment(`(${params[0].value} : i32)`);
   return [
-    params[0],
+    cast,
     {
       ...field,
       meta: { [ALIAS]: field.value },
       value: absoluteByteOffset,
-      type: STRUCT_NATIVE_TYPE,
+      type: 'i32',
       Type: Syntax.Constant,
     },
   ];
@@ -58,8 +59,25 @@ const patchStringSubscript = (byteOffsetsByKey, params) => {
 
 export default function Struct(): SemanticPlugin {
   return {
-    semantics() {
+    semantics({ fragment }) {
       return {
+        [Syntax.Declaration]: next => ([node, context]) => {
+          // Convert the type of declaration down to a proper NATIVE type
+          if (context.userTypes[node.type]) {
+            return next([
+              extendNode(
+                {
+                  type: STRUCT_NATIVE_TYPE,
+                  meta: { ALIAS: node.type },
+                },
+                node
+              ),
+              context,
+            ]);
+          }
+
+          return next([node, context]);
+        },
         [Syntax.Struct]: _ => ([node, { userTypes }]) => {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
             node.params[0]
@@ -98,17 +116,17 @@ export default function Struct(): SemanticPlugin {
         },
         [Syntax.Identifier]: next => args => {
           const [node, context] = args;
-          const { userTypes, scopes } = context;
+          const { scopes } = context;
           const ref = find(scopes, node.value);
           // Ignore anything not typed as a struct
-          if (!(ref && userTypes[ref.type])) {
+          if (!(ref && ref.meta.ALIAS)) {
             return next(args);
           }
 
           // Convert all struct uses to STRUCT_NATIVE_TYPE types
           return {
             ...node,
-            meta: { ...node.meta, ...ref.meta, ALIAS: ref.type },
+            meta: { ...node.meta, ...ref.meta },
             type: STRUCT_NATIVE_TYPE,
           };
         },
@@ -119,7 +137,7 @@ export default function Struct(): SemanticPlugin {
           const [lookup, field] = params;
 
           const ref = find(scopes, lookup.value);
-          const userType = ref && userTypes[ref.type];
+          const userType = ref && userTypes[ref.meta.ALIAS];
 
           if (userType != null) {
             const metaObject = userType.meta[TYPE_OBJECT];
@@ -139,7 +157,9 @@ export default function Struct(): SemanticPlugin {
               type,
               meta: { ...node.meta, ALIAS: userType.value },
               Type: Syntax.Access,
-              params: patchStringSubscript(metaObject, params),
+              params: patchStringSubscript(fragment, metaObject, params).map(
+                p => transform([p, context])
+              ),
             };
           }
 
@@ -151,11 +171,11 @@ export default function Struct(): SemanticPlugin {
           const params = node.params.map(p => transform([p, context]));
           const [lookup, field] = params;
           const ref = find(scopes, lookup.value);
-          const userType = userTypes[String((ref || lookup).type)];
 
-          if (userType == null) {
+          if (!(ref && ref.meta.ALIAS)) {
             return next(args);
           }
+          const userType = userTypes[String((ref || lookup).meta.ALIAS)];
 
           const metaObject = userType.meta[TYPE_OBJECT];
           const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
@@ -179,7 +199,9 @@ export default function Struct(): SemanticPlugin {
                 : null,
             },
             type: String(type).replace('[]', ''),
-            params: patchStringSubscript(metaObject, params),
+            params: patchStringSubscript(fragment, metaObject, params).map(p =>
+              transform([p, context])
+            ),
           };
         },
         [Syntax.Assignment]: next => (args, transform) => {

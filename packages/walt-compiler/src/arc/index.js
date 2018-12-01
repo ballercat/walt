@@ -8,11 +8,11 @@ import { extendNode } from '../utils/extend-node';
 import hasNode from 'walt-parser-tools/has-node';
 import grammar from './arc.ne';
 
-const ARC_POINTER_TYPE = 'i64';
+// const ARC_POINTER_TYPE = 'i64';
 const ARC_IMPORTS = `
   import { __arc_allocate : ARC_ALLOCATE } from 'ARC';
 
-  type ARC_ALLOCATE = (i32) => ${ARC_POINTER_TYPE};
+  type ARC_ALLOCATE = (i32) => i32;
 `;
 
 export function imports(_options, _compile) {}
@@ -48,7 +48,9 @@ export function plugin() {
 
           // we are going to expand the declaration into two statements
           // First, create an allocation
-          const allocate = fragment(`__arc_allocate(sizeof(${node.type}))`);
+          const allocate = fragment(
+            `(__arc_allocate(sizeof(${node.type})) : i64)`
+          );
 
           // Then move the original initializer to a stand-alone assignment statement
           const [initializer] = node.params;
@@ -56,7 +58,6 @@ export function plugin() {
             {
               params: [allocate],
               Type: Syntax.Declaration,
-              meta: { ARC: true },
             },
             node
           );
