@@ -96,6 +96,11 @@ const getPrinters = add => ({
       add(`(call ${node.value})`);
     }
   },
+  [Syntax.NativeMethod]: (node, print) => {
+    add('(' + node.value, 2);
+    node.params.forEach(print);
+    add(')', 0, -2);
+  },
   [Syntax.BinaryExpression]: (node: NodeType, print) => {
     const text = getText(node);
     add('(' + text, 2);
@@ -222,10 +227,8 @@ const printNode = (node?: NodeType): string => {
   let depth = 0;
   const offsets = [];
   const pieces = [];
-  const comments = [];
-  const add = (piece, post = 0, pre = 0, comment = '') => {
+  const add = (piece, post = 0, pre = 0) => {
     depth += pre;
-    comments.push(comment);
     pieces.push(piece);
     offsets.push(depth + piece.length);
     depth += post;
@@ -233,15 +236,8 @@ const printNode = (node?: NodeType): string => {
 
   walkNode(getPrinters(add))(node);
 
-  const max = Math.max(...offsets);
-  const edge = max + 4;
   const result = pieces.reduce((acc, val, i) => {
-    acc +=
-      val.padStart(offsets[i], ' ').padEnd(edge, ' ') +
-      ';' +
-      comments[i] +
-      '\n';
-    return acc;
+    return (acc += val.padStart(offsets[i], ' ') + '\n');
   }, '');
 
   return result;

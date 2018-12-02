@@ -1,10 +1,10 @@
 import test from 'ava';
-import { compile, prettyPrintNode } from '../../';
+import { compile, prettyPrintNode, debug } from '../../';
 // import { plugin } from '..';
 
-test('ARC plugin', _t => {
+test('ARC plugin', t => {
   const source = `
-  const memory : Memory = { initia: 1 };
+  const memory : Memory = { initial: 1 };
 
   type Node = {
     data: i32,
@@ -16,32 +16,36 @@ test('ARC plugin', _t => {
   }
 
   export function test(): i32 {
-    // let node : Node = {
-    //   data: 0,
-    //   left: null,
-    //   right: null
-    // };
-    let node : Node = {};
+    let node : Node = {
+      data: 0,
+      left: null,
+      right: null
+    };
 
     // add(node, 5);
 
     // return node.data;
-    return (node : i32);
+    return node.data;
   }
   `;
 
   const walt = compile(source, { encodeNames: true, EXPERIMENTAL_ARC: true });
-  // console.log(debug(walt.wasm));
+  // console.log(_debug(walt.wasm));
   console.log(prettyPrintNode(walt.semanticAST));
 
+  const calls = [];
   return WebAssembly.instantiate(walt.buffer(), {
     ARC: {
       __arc_allocate: size => {
-        return size;
+        calls.push(`__arc_allocate( ${size} )`);
+        return 1024;
+      },
+      __arc_free: pointer => {
+        calls.push(`__arc_free( ${pointer} )`);
       },
     },
   }).then(({ instance }) => {
-    console.log(instance.exports);
-    console.log(instance.exports.test());
+    instance.exports.test();
+    t.snapshot(calls);
   });
 });

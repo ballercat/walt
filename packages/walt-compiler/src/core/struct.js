@@ -17,7 +17,7 @@ const sizeMap = {
   i32: 4,
   f32: 4,
 };
-const STRUCT_NATIVE_TYPE = 'i64';
+const STRUCT_NATIVE_TYPE = 'i32';
 
 export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
@@ -41,12 +41,45 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const patchStringSubscript = (fragment, byteOffsetsByKey, params) => {
+const accessToNative = ({ target, offset, type, fragment }) => {
+  let base = target;
+  const load = fragment(`(${type}.load())`);
+  // if (target.type !== 'i32') {
+  //   base = fragment(`(${target.value} : i32)`);
+  // } else {
+  //   base = target;
+  // }
+
+  if (!offset) {
+    return extendNode(
+      {
+        params: [load.params[0], base],
+      },
+      load
+    );
+  }
+
+  return extendNode(
+    {
+      params: [
+        load.params[0],
+        (() => {
+          const add = fragment(`(0 + ${offset})`);
+          add.params[0] = base;
+          return add;
+        })(),
+      ],
+    },
+    load
+  );
+};
+
+const patchStringSubscript = ({ fragment, byteOffsetsByKey, params }) => {
   const field = params[1];
   const absoluteByteOffset = byteOffsetsByKey[field.value];
-  const cast = fragment(`(${params[0].value} : i32)`);
+  // const cast = fragment(`(${params[0].value} : i32)`);
   return [
-    cast,
+    params[0],
     {
       ...field,
       meta: { [ALIAS]: field.value },
@@ -157,9 +190,12 @@ export default function Struct(): SemanticPlugin {
               type,
               meta: { ...node.meta, ALIAS: userType.value },
               Type: Syntax.Access,
-              params: patchStringSubscript(fragment, metaObject, params).map(
-                p => transform([p, context])
-              ),
+              params: patchStringSubscript({
+                fragment,
+                byteOffsetsByKey: metaObject,
+                params,
+                context,
+              }).map(p => transform([p, context])),
             };
           }
 
@@ -188,21 +224,33 @@ export default function Struct(): SemanticPlugin {
             return ft;
           })();
 
-          return {
-            ...node,
-            value: `${lookup.value}.${field.value}`,
-            meta: {
-              ...node.meta,
-              ALIAS: userType.value,
-              TYPE_ARRAY: String(type).includes('[]')
-                ? type.slice(0, -2)
-                : null,
-            },
-            type: String(type).replace('[]', ''),
-            params: patchStringSubscript(fragment, metaObject, params).map(p =>
-              transform([p, context])
-            ),
-          };
+          const native = accessToNative({
+            type,
+            target: lookup,
+            offset: metaObject[field.value],
+            fragment,
+          });
+
+          return transform([native, context]);
+
+          // return {
+          //   ...node,
+          //   value: `${lookup.value}.${field.value}`,
+          //   meta: {
+          //     ...node.meta,
+          //     ALIAS: userType.value,
+          //     TYPE_ARRAY: String(type).includes('[]')
+          //       ? type.slice(0, -2)
+          //       : null,
+          //   },
+          //   type: String(type).replace('[]', ''),
+          //   params: patchStringSubscript({
+          //     fragment,
+          //     byteOffsetsByKey: metaObject,
+          //     params,
+          //     context,
+          //   }).map(p => transform([p, context])),
+          // };
         },
         [Syntax.Assignment]: next => (args, transform) => {
           const [node, context] = args;

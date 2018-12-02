@@ -123,6 +123,33 @@ export const compile = (source: string, config: ConfigType) => {
 
   const parser = makeParser(plugins.grammar);
   const fragment = makeFragment(parser);
+  // The tagged template literal allows for using nodes directly in the source
+  fragment.tag = (input, ...replacements) => {
+    const string = input.reduce((a, v, i) => {
+      const rep = replacements[i];
+      if (rep && typeof rep === 'string') {
+        return (a += v + rep);
+      }
+
+      if (rep) {
+        return (a += v + `$$rep_${i}`);
+      }
+
+      return (a += v);
+    }, '');
+
+    const node = fragment(string);
+
+    return mapNode({
+      Identifier(id) {
+        if (id.value.includes('$$rep_')) {
+          return replacements[Number(id.value.replace('$$rep_', ''))];
+        }
+        return id;
+      },
+    })(node);
+  };
+
   const ast = parser(source);
 
   const semanticAST = semantics(ast, plugins.semantics, {
@@ -130,7 +157,7 @@ export const compile = (source: string, config: ConfigType) => {
     fragment,
   });
 
-  validate(semanticAST, options);
+  // validate(semanticAST, options);
 
   const intermediateCode = generator(semanticAST, { ...options, linker });
   const wasm = emitter(intermediateCode, options);

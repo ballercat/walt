@@ -54,7 +54,14 @@ export default function coreFunctionPlugin(): SemanticPlugin {
           context.functions[fun.value] = ref;
 
           // Parse the block last, so that they can self-reference the function
-          ref.params = [args, result, transform([block, context])];
+          const parsedBlock = transform([block, context]);
+          // const last = parsedBlock.params[parsedBlock.params.length - 1];
+
+          // if (last && last.Type === Syntax.ReturnStatement) {
+          //   parsedBlock.params[parsedBlock.params.length - 1] = last.params[0];
+          // }
+
+          ref.params = [args, result, parsedBlock];
 
           context.scopes = exit(context.scopes);
 

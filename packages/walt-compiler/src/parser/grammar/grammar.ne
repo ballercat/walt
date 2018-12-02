@@ -71,6 +71,7 @@ Statement ->
   | Break                 {% id %}
   | Unreachable           {% id %}
   | ReturnStatement       {% id %}
+  | Block                 {% id %}
 
 Block ->
      LCB _ RCB                 {% node(Syntax.Block) %}
