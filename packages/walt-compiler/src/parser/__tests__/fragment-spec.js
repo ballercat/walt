@@ -25,3 +25,12 @@ test('multiple node replacements', t => {
   const node = stmt`const x : i32 = ${a} + ${b};`;
   t.snapshot(print(node));
 });
+
+test('mixed replacements', t => {
+  const stmt = makeFragment(makeParser([]));
+  const a = '__fcall(2, 4, 5 + 5)';
+  const b = 42;
+  const c = stmt`(x + y);`;
+  const node = stmt`const x : i32 = ${a} + ${b} + ${c};`;
+  t.snapshot(print(node));
+});

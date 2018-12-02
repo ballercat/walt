@@ -35,12 +35,11 @@ export const makeFragment = (parser: Parser) => {
 
   return (template: string[], ...replacements: Array<string | NodeType>) => {
     let expandNodes = false;
-
     // Build out a placeholder source string which will be compiled
     const source = template.reduce((a, v, i) => {
       const rep = replacements[i];
-      if (rep && typeof rep === 'string') {
-        return (a += v + rep);
+      if (rep != null && typeof rep !== 'object') {
+        return (a += v + String(rep));
       }
 
       if (rep != null) {
