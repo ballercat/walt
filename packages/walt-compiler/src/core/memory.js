@@ -41,7 +41,7 @@ export default function memoryPlugin(): SemanticPlugin {
         [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
           const [subscript, ...rest] = node.params;
-          const [id, field = {}] = subscript.params;
+          const [id = {}, field = {}] = subscript.params;
 
           const callMap = {
             dataSize: transform([stmt`i32.load(0);`, context]),

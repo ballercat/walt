@@ -58,15 +58,23 @@ const toStruct = node => {
     offsetMap,
     typeMap,
     field(field: { value: string, type?: string }) {
-      const type = typeMap[field.value] || field.type;
+      let type = typeMap[field.value] || field.type;
       const offset = offsetMap[field.value];
+      let STRUCT_TYPE = null;
+      let TYPE_ARRAY = null;
 
       // Nested stuct type access
       if (type != null && typeof type === 'object') {
-        return { offset, type: STRUCT_NATIVE_TYPE, STRUCT_TYPE: type };
+        STRUCT_TYPE = type;
+        type = STRUCT_NATIVE_TYPE;
       }
 
-      return { offset, type };
+      if (String(type).endsWith('[]')) {
+        TYPE_ARRAY = type.slice(0, -2);
+        type = 'i32';
+      }
+
+      return { offset, type, STRUCT_TYPE, TYPE_ARRAY };
     },
   };
 };
@@ -96,7 +104,10 @@ export default function Struct(): SemanticPlugin {
 
           return extendNode(
             {
-              meta: { STRUCT_TYPE: field.STRUCT_TYPE },
+              meta: {
+                STRUCT_TYPE: field.STRUCT_TYPE,
+                TYPE_ARRAY: field.TYPE_ARRAY,
+              },
             },
             transform([
               stmt`${field.type}.load(${structOffset(lookup, field.offset)});`,

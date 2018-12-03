@@ -6,12 +6,15 @@ type Struct = { x: i32, y: i32, list: i32[] };
 const memory: Memory = { initial: 1 };
 
 export function run() {
+  // const x : i32[] = 0;
+  // x[0] = 1;
+  // x[1] = 2;
   const s: Struct = 0;
-  s.list = 1024;
-  // s.list[0] = 0xff;
+  s.list = memory.dataSize();
+  // // s.list[0] = 0xff;
   s.list[1] = 'x';
   s.list[2] = 0x0f;
 
-  // assert('chained subscripts', 'x', s.list[1]);
+  assert('chained subscripts', 'x', s.list[1]);
 }
 

@@ -6,105 +6,99 @@
 import Syntax from 'walt-syntax';
 import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
-import { TYPE_ARRAY } from '../semantics/metadata';
+import { extendNode } from '../utils/extend-node';
+import withContext from '../utils/transform-with-context';
+import pick from '../utils/pick';
 import type { SemanticPlugin } from '../flow/types';
 import print from '../utils/print-node';
 
-const shiftAmount = {
-  i32: 2,
-  f32: 2,
-  i64: 3,
-  f64: 3,
-};
-export default function arrayPlugin(): SemanticPlugin {
+const shifts = { i32: 2, f32: 2, i64: 3, f64: 3 };
+const NATIVE_ARRAY_TYPE = 'i32';
+
+function semantics({ stmt }) {
+  const declaration = next => args => {
+    const [node, context] = args;
+
+    // For every declaration of array types we will strip the declaration type
+    // to a core type (i32) and attach the original type reference as metadata
+    if (!String(node.type).endsWith('[]')) {
+      return next(args);
+    }
+
+    const decl = extendNode(
+      {
+        type: NATIVE_ARRAY_TYPE,
+        meta: { TYPE_ARRAY: node.type.slice(0, -2) },
+      },
+      node
+    );
+    return next([decl, context]);
+  };
+
+  function arrayOffset(base, offset) {
+    const shift = shifts[base.meta.TYPE_ARRAY];
+
+    return Number(offset.value)
+      ? stmt`(${base} + (${offset} << ${shift}));`
+      : stmt`(${base});`;
+  }
+
+  function sanityCheck(type, node) {
+    invariant(type, `PANIC - Undefined type for memory access: ${print(node)}`);
+  }
+
+  function produceSubscript([base, offset]) {
+    const type = base.meta.TYPE_ARRAY;
+    const index = arrayOffset(base, offset);
+
+    return { type, index, TYPE_ARRAY: base.meta.TYPE_ARRAY };
+  }
+
   return {
-    semantics({ stmt }) {
-      const declaration = next => args => {
-        const [node, context] = args;
-
-        // For every declaration of array types we will strip the declaration type
-        // to a core type (i32) and attach the original type reference as metadata
-        if (node.type && node.type.endsWith('[]')) {
-          return next([
-            {
-              ...node,
-              type: 'i32',
-              meta: { ...node.meta, [TYPE_ARRAY]: node.type.slice(0, -2) },
-            },
-            context,
-          ]);
-        }
-
+    [Syntax.Declaration]: declaration,
+    [Syntax.ImmutableDeclaration]: declaration,
+    [Syntax.Identifier]: next => args => {
+      const [node, context] = args;
+      const ref = find(context.scopes, node.value);
+      if (!(ref && ref.meta.TYPE_ARRAY)) {
         return next(args);
-      };
+      }
 
-      const arrayOffset = (base, offset) => {
-        const shift = shiftAmount[base.meta[TYPE_ARRAY]];
+      // Before moving on to the core parser all identifiers need to have
+      // concrete basic types
+      return next([extendNode(pick(['type', 'meta'], ref), node), context]);
+    },
+    [Syntax.Assignment]: next => (args, t) => {
+      const [node, context] = args;
+      const [lhs, rhs] = node.params;
 
-        return offset
-          ? stmt`(${base} + (${offset} << ${shift}));`
-          : stmt`(${base});`;
-      };
+      if (lhs.Type !== Syntax.ArraySubscript) {
+        return next(args);
+      }
 
-      return {
-        [Syntax.Declaration]: declaration,
-        [Syntax.ImmutableDeclaration]: declaration,
-        [Syntax.Identifier]: next => args => {
-          const [node, context] = args;
-          const ref = find(context.scopes, node.value);
-          // Before moving on to the core parser all identifiers need to have
-          // concrete basic types
-          if (ref && ref.meta[TYPE_ARRAY]) {
-            return next([
-              {
-                ...node,
-                type: ref.type,
-                meta: { ...node.meta, ...ref.meta },
-              },
-              context,
-            ]);
-          }
+      const transform = withContext(t, context);
+      const { type, index } = produceSubscript(lhs.params.map(transform));
 
-          return next(args);
-        },
-        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
-          const [node, context] = args;
-          const [location, value] = node.params;
-          const type = transform([value, context]).type;
-          let index = location;
-          if (location.Type === Syntax.ArraySubscript) {
-            const [id, offset] = location.params.map(p =>
-              transform([p, context])
-            );
-            index = arrayOffset(id, offset);
-          }
+      sanityCheck(type);
 
-          invariant(
-            type,
-            `PANIC - Undefined type for memory access: ${print(node)}`
-          );
+      return transform(stmt`${type}.store(${index}, ${rhs});`);
+    },
+    [Syntax.ArraySubscript]: _ => (args, t) => {
+      const [node, context] = args;
+      const transform = withContext(t, context);
+      const { type, index, TYPE_ARRAY } = produceSubscript(
+        node.params.map(transform)
+      );
 
-          return transform([stmt`${type}.store(${index}, ${value});`, context]);
-        },
-        [Syntax.ArraySubscript]: _ignore => (args, transform) => {
-          const [node, context] = args;
-          // To find out the type of this subscript we first must process it's
-          // parameters <identifier, field>
-          const params = node.params.map(p => transform([p, context]));
-          const [identifier, offset] = params;
-          const type = identifier.meta[TYPE_ARRAY];
+      sanityCheck(type);
 
-          invariant(
-            type,
-            `PANIC - Undefined type for memory access: ${print(node)}`
-          );
-
-          return transform([
-            stmt`${type}.load(${arrayOffset(identifier, offset)});`,
-            context,
-          ]);
-        },
-      };
+      return extendNode(
+        { meta: { TYPE_ARRAY } },
+        transform(stmt`${type}.load(${index});`)
+      );
     },
   };
+}
+export default function arrayPlugin(): SemanticPlugin {
+  return { semantics };
 }
