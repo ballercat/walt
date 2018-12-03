@@ -22,7 +22,6 @@ import generateBlock from './block';
 import generateElse from './else';
 import generateSelect from './select';
 import generateNative from './native';
-import generateAccess from './access';
 import generateConstant from './constant';
 
 import Syntax from 'walt-syntax';
@@ -32,7 +31,6 @@ import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
 
 export const syntaxMap: { [string]: GeneratorType } = {
-  [Syntax.Access]: generateAccess,
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary

@@ -58,7 +58,7 @@ const toStruct = node => {
     offsetMap,
     typeMap,
     field(field: { value: string, type?: string }) {
-      if (!offsetMap[field.value]) {
+      if (offsetMap[field.value] == null) {
         return null;
       }
       let type = typeMap[field.value] || field.type;
