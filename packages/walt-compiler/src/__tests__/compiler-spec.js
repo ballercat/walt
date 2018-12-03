@@ -40,12 +40,6 @@ test('chained subscripts', t => {
   })(t);
 });
 
-test.skip('string compile', t => {
-  return harness(path.resolve(__dirname, './test.walt'), null, {
-    prettyPrint: true,
-  })(t);
-});
-
 test('throws', t => {
   const run = harness(path.resolve(__dirname, './throw-spec.walt'), null, {
     printBinary: false,
