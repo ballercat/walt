@@ -4,13 +4,11 @@
  * @flow
  */
 import Syntax from 'walt-syntax';
-import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import { extendNode } from '../utils/extend-node';
 import withContext from '../utils/transform-with-context';
 import pick from '../utils/pick';
 import type { SemanticPlugin } from '../flow/types';
-import print from '../utils/print-node';
 
 const shifts = { i32: 2, f32: 2, i64: 3, f64: 3 };
 const NATIVE_ARRAY_TYPE = 'i32';
