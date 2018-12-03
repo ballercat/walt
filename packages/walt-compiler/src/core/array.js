@@ -38,7 +38,7 @@ function semantics({ stmt }) {
   function arrayOffset(base, offset) {
     const shift = shifts[base.meta.TYPE_ARRAY];
 
-    return Number(offset.value)
+    return offset.Type !== Syntax.Constant || Number(offset.value)
       ? stmt`(${base} + (${offset} << ${shift}));`
       : stmt`(${base});`;
   }
