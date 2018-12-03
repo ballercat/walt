@@ -244,8 +244,8 @@ ArgumentList ->
   | Expression _ COMMA _ ArgumentList {% flatten %}
 
 Subscript ->
-    Access LSB _ Access _ RSB Subscript {% subscript %}
-  | Access LSB _ Access _ RSB           {% subscript %}
+    Access LSB _ Expression _ RSB Subscript {% subscript %}
+  | Access LSB _ Expression _ RSB           {% subscript %}
   | Access                              {% id %}
 
 Access ->
