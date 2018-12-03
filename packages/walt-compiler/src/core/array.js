@@ -87,7 +87,6 @@ export default function arrayPlugin(): SemanticPlugin {
           return transform([stmt`${type}.store(${index}, ${value});`, context]);
         },
         [Syntax.ArraySubscript]: _ignore => (args, transform) => {
-          console.log('ARRAY');
           const [node, context] = args;
           // To find out the type of this subscript we first must process it's
           // parameters <identifier, field>

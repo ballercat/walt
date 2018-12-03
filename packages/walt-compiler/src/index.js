@@ -44,7 +44,7 @@ export const getIR = (source: string, config: ConfigType) => {
     config || {};
 
   const parser = makeParser([]);
-  const fragment = makeFragment(parser);
+  const stmt = makeFragment(parser);
 
   const options = {
     version,
@@ -55,7 +55,7 @@ export const getIR = (source: string, config: ConfigType) => {
   };
 
   const ast = parser(source);
-  const semanticAST = semantics(ast, [], { ...options, parser, fragment });
+  const semanticAST = semantics(ast, [], { ...options, parser, stmt });
   validate(semanticAST, { lines, filename });
   const intermediateCode = generator(semanticAST, options);
   const wasm = emitter(intermediateCode, {

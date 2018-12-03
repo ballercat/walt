@@ -8,7 +8,6 @@ import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 import { extendNode } from '../utils/extend-node';
-import { TYPE_OBJECT, OBJECT_KEY_TYPES } from '../semantics/metadata';
 import print from '../utils/print-node';
 import type { NodeMap, NodeType, SemanticPlugin } from '../flow/types';
 
@@ -42,37 +41,30 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const toStruct = (context, node) => {
-  const { userTypes, scopes } = context;
-  const base = find(scopes, node.value);
-
-  if (base == null || userTypes[base.type] == null) {
+const toStruct = node => {
+  // Lookup the Struct Type so that any expression returning a struct
+  // works as a base offset
+  if (node.meta.STRUCT_TYPE == null) {
     return null;
   }
 
-  const userType = userTypes[base.type];
-
-  const objectKeyTypeMap = userType.meta[OBJECT_KEY_TYPES];
-  const offsetMap = userType.meta[TYPE_OBJECT];
+  const typedef = node.meta.STRUCT_TYPE;
+  const offsetMap = typedef.meta.TYPE_OBJECT;
+  const typeMap = typedef.meta.OBJECT_KEY_TYPES;
 
   return {
-    offsetMap,
     base: node,
-    field(field) {
-      const type = (() => {
-        const ft = objectKeyTypeMap[field.value];
-        console.log(objectKeyTypeMap, ft, field.value);
-        if (userTypes[ft]) {
-          return STRUCT_NATIVE_TYPE;
-        }
-
-        if (ft && ft.indexOf('[]') > -1) {
-          return ft.slice(0, -2);
-        }
-
-        return ft;
-      })();
+    typedef,
+    offsetMap,
+    typeMap,
+    field(field: { value: string, type?: string }) {
+      const type = typeMap[field.value] || field.type;
       const offset = offsetMap[field.value];
+
+      // Nested stuct type access
+      if (type != null && typeof type === 'object') {
+        return { offset, type: STRUCT_NATIVE_TYPE, STRUCT_TYPE: type };
+      }
 
       return { offset, type };
     },
@@ -86,6 +78,121 @@ export default function Struct(): SemanticPlugin {
         return offset ? stmt`(${base} + ${offset});` : stmt`(${base});`;
       };
 
+      function access(next) {
+        return (args, transform) => {
+          const [node, context] = args;
+          const [lookup, key] = node.params;
+          const struct = toStruct(transform([lookup, context]));
+
+          if (struct == null) {
+            return next(args);
+          }
+          const field = struct.field(key);
+
+          invariant(
+            field.type,
+            'PANIC - Undefined type for memory access' + `\n${print(node)}`
+          );
+
+          return extendNode(
+            {
+              meta: { STRUCT_TYPE: field.STRUCT_TYPE },
+            },
+            transform([
+              stmt`${field.type}.load(${structOffset(lookup, field.offset)});`,
+              context,
+            ])
+          );
+        };
+      }
+
+      function fieldAssignment(args, transform) {
+        const [node, context] = args;
+        const [lhs, rhs] = node.params;
+        const [root, key] = lhs.params;
+        const struct = toStruct(transform([root, context]));
+
+        if (struct == null) {
+          return node;
+        }
+
+        const field = struct.field(key);
+
+        invariant(
+          field.type,
+          'PANIC - Undefined type for memory access' + `\n${print(node)}`
+        );
+
+        return transform([
+          stmt`${field.type}.store(
+            ${structOffset(struct.base, field.offset)},
+            ${rhs}
+          );`,
+          context,
+        ]);
+      }
+
+      function objectAssignment(args, transform) {
+        const [node, context] = args;
+        const [lhs, rhs] = node.params;
+        const struct = toStruct(transform([lhs, context]));
+
+        if (struct == null) {
+          return node;
+        }
+
+        const individualKeys: NodeMap = {};
+        const spreadKeys: NodeMap = {};
+
+        // We have to walk the nodes twice, once for regular prop keys and then again
+        // for ...(spread)
+        walkNode({
+          // Top level Identifiers _inside_ an object literal === shorthand
+          // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
+          // only way this is hit is if the identifier is TOP LEVEL
+          [Syntax.Identifier]: (identifier, _) => {
+            const field = struct.field(identifier);
+            individualKeys[identifier.value] = stmt`${field.type}.store(
+                ${structOffset(lhs, field.offset)},
+                ${identifier}
+              );`;
+          },
+          [Syntax.Pair]: (pair, _) => {
+            const [property, value] = pair.params;
+            const field = struct.field(property);
+
+            individualKeys[property.value] = stmt`${field.type}.store(
+                ${structOffset(lhs, field.offset)},
+                ${value}
+              );`;
+          },
+          [Syntax.Spread]: (spread, _) => {
+            // find userType
+            const [target] = spread.params;
+            // map over the keys
+            Object.keys(struct.offsetMap).forEach(key => {
+              const field = struct.field({ value: key });
+              spreadKeys[key] = stmt`${field.type}.store(
+                  ${structOffset(lhs, field.offset)},
+                  ${field.type}.load(${structOffset(target, field.offset)})
+                );`;
+            });
+          },
+        })(rhs);
+
+        // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
+        const params: NodeType[] = Object.values({
+          ...spreadKeys,
+          ...individualKeys,
+        }).map(p => transform([p, context]));
+
+        return {
+          ...lhs,
+          Type: Syntax.Block,
+          params: params,
+        };
+      }
+
       return {
         [Syntax.Struct]: _ => ([node, { userTypes }]) => {
           const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
@@ -95,13 +202,24 @@ export default function Struct(): SemanticPlugin {
             ...node,
             meta: {
               ...node.meta,
-              [TYPE_OBJECT]: offsetsByKey,
+              TYPE_OBJECT: offsetsByKey,
               OBJECT_SIZE: totalSize,
-              [OBJECT_KEY_TYPES]: keyTypeMap,
+              OBJECT_KEY_TYPES: keyTypeMap,
             },
           };
 
           userTypes[structNode.value] = structNode;
+
+          // Map over the strings for key types and replace them with struct
+          // references where necessary. We do this after creating the object
+          // to allow for self-referencing structs (linked lists etc)
+          structNode.meta.OBJECT_KEY_TYPES = Object.entries(
+            structNode.meta.OBJECT_KEY_TYPES
+          ).reduce((acc, [key, value]) => {
+            acc[key] = userTypes[value] || value;
+            return acc;
+          }, {});
+
           return structNode;
         },
         [Syntax.FunctionResult]: next => (args, transform) => {
@@ -115,7 +233,7 @@ export default function Struct(): SemanticPlugin {
             extendNode(
               {
                 type: STRUCT_NATIVE_TYPE,
-                meta: { ALIAS: node.type },
+                meta: { STRUCT_TYPE: userTypes[node.type] },
                 params: node.params.map(p => transform([p, context])),
               },
               node
@@ -135,115 +253,28 @@ export default function Struct(): SemanticPlugin {
           // Convert all struct uses to STRUCT_NATIVE_TYPE types
           return {
             ...node,
-            meta: { ...node.meta, ...ref.meta, ALIAS: ref.type },
+            meta: {
+              ...node.meta,
+              ...ref.meta,
+              STRUCT_TYPE: userTypes[ref.type],
+            },
             type: STRUCT_NATIVE_TYPE,
           };
         },
-        [Syntax.Access]: next => (args, transform) => {
-          const [node, context] = args;
-          // const params = node.params.map(p => transform([p, context]));
-          // const [lookup, key] = params;
-          const [lookup, key] = node.params;
-          const struct = toStruct(context, lookup);
-          if (struct == null) {
-            return next(args);
-          }
-          const field = struct.field(key);
-
-          invariant(
-            field.type,
-            'PANIC - Undefined type for memory access' + `\n${print(node)}`
-          );
-          return transform([
-            stmt`${field.type}.load(${structOffset(lookup, field.offset)});`,
-            context,
-          ]);
-        },
-        [Syntax.MemoryAssignment]: next => (args, transform) => {
-          const [node, context] = args;
-          const [lhs, rhs] = node.params;
-          const [lookup, key] = lhs.params;
-          console.log(lookup);
-          const struct = toStruct(context, lookup);
-
-          if (struct == null) {
-            return next(args);
-          }
-
-          const field = struct.field(key);
-
-          invariant(
-            field.type,
-            'PANIC - Undefined type for memory access' + `\n${print(node)}`
-          );
-
-          return transform([
-            stmt`${field.type}.store(
-            ${structOffset(struct.base, field.offset)},
-            ${rhs}
-          );`,
-            context,
-          ]);
-        },
+        [Syntax.Access]: access,
         [Syntax.Assignment]: next => (args, transform) => {
-          const [node, context] = args;
-          const [lhs, rhs] = node.params;
-          const struct = toStruct(context, lhs);
+          const [node] = args;
+          const [lhs, rhs = {}] = node.params;
 
-          if (!(rhs && rhs.Type === Syntax.ObjectLiteral) || struct == null) {
-            return next(args);
+          if (lhs.Type === Syntax.Access) {
+            return fieldAssignment(args, transform);
           }
 
-          const individualKeys: NodeMap = {};
-          const spreadKeys: NodeMap = {};
+          if (rhs.Type === Syntax.ObjectLiteral) {
+            return objectAssignment(args, transform);
+          }
 
-          // We have to walk the nodes twice, once for regular prop keys and then again
-          // for ...(spread)
-          walkNode({
-            // Top level Identifiers _inside_ an object literal === shorthand
-            // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
-            // only way this is hit is if the identifier is TOP LEVEL
-            [Syntax.Identifier]: (identifier, _) => {
-              const field = struct.field(identifier);
-              individualKeys[identifier.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${identifier}
-              );`;
-            },
-            [Syntax.Pair]: (pair, _) => {
-              const [property, value] = pair.params;
-              const field = struct.field(property);
-
-              individualKeys[property.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${value}
-              );`;
-            },
-            [Syntax.Spread]: (spread, _) => {
-              // find userType
-              const [target] = spread.params;
-              // map over the keys
-              Object.keys(struct.offsetMap).forEach(key => {
-                const field = struct.field({ value: key });
-                spreadKeys[key] = stmt`${field.type}.store(
-                  ${structOffset(lhs, field.offset)},
-                  ${field.type}.load(${structOffset(target, field.offset)})
-                );`;
-              });
-            },
-          })(rhs);
-
-          // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
-          const params: NodeType[] = Object.values({
-            ...spreadKeys,
-            ...individualKeys,
-          }).map(p => transform([p, context]));
-
-          return {
-            ...lhs,
-            Type: Syntax.Block,
-            params: params,
-          };
+          return next(args);
         },
       };
     },

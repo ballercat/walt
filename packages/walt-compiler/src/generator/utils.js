@@ -5,6 +5,7 @@ import curry from 'curry';
 import invariant from 'invariant';
 import { I32, I64, F32, F64 } from '../emitter/value_type';
 import { LOCAL_INDEX, GLOBAL_INDEX, TYPE_CONST } from '../semantics/metadata';
+import print from '../utils/print-node';
 import type { IntermediateVariableType } from './flow/types';
 import type { NodeType } from '../flow/types';
 
@@ -17,7 +18,7 @@ export const scopeOperation = curry((op, node) => {
     index != null,
     `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(
       op
-    )} node: ${JSON.stringify(node, null, 2)}`
+    )} node: ${print(node)}`
   );
 
   const kind = local != null ? op + 'Local' : op + 'Global';

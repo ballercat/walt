@@ -6,18 +6,19 @@ export type StringIterator = {
   addr: i32,
   start: i32,
   value: i32,
-  done: i32
+  done: i32,
+  child: StringIterator
 };
 function decodeLEB(add: i32) : i64 {
   return 0;
 }
 
 export function next(iterator: StringIterator): StringIterator {
-  if (iterator.length == 0 || iterator.index == iterator.length) {
-    iterator.done = true;
-    // iterator.value = 0;
-    return iterator;
-  }
+  // if (iterator.length == 0 || iterator.index == iterator.length) {
+  //   // iterator.done = true;
+  //   // iterator.value = 0;
+  //   return iterator;
+  // }
 
   const leb: i64 = decodeLEB(iterator.addr);
 
