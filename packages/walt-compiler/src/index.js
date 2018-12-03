@@ -106,12 +106,12 @@ export const compile = (source: string, config: ConfigType) => {
   );
 
   const parser = makeParser(plugins.grammar);
-  const fragment = makeFragment(parser);
+  const stmt = makeFragment(parser);
   const ast = parser(source);
 
   const semanticAST = semantics(ast, plugins.semantics, {
     parser,
-    fragment,
+    stmt,
   });
 
   validate(semanticAST, options);

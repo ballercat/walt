@@ -1,5 +1,5 @@
 import test from 'ava';
-import { compile, getIR } from '..';
+import { compile } from '..';
 
 test('default arguments', t => {
   const walt = `
@@ -41,7 +41,7 @@ test('function pointer', t => {
 });
 
 test('functions', t => {
-  const walt = `
+  const src = `
   // For pointers
   const table: Table<{ element: 'anyfunc', initial: 10, max: 10 }>;
   // For object operations
@@ -84,9 +84,9 @@ test('functions', t => {
     return addArray(arr, 0, 4);
   }
 `;
-  t.throws(() => getIR('function test() { return y; }'));
-  const wasm = getIR(walt);
-  return WebAssembly.instantiate(wasm.buffer()).then(result => {
+  t.throws(() => compile('function test() { return y; }'));
+  const walt = compile(src);
+  return WebAssembly.instantiate(walt.buffer()).then(result => {
     const exports = result.instance.exports;
     t.is(exports.testParams(2, 2), 4, 'function params');
     t.is(exports.testGlobalScope(), 42, 'local scope > global scope');

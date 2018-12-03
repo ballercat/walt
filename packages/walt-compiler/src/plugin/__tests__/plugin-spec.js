@@ -5,7 +5,7 @@ import { map } from 'walt-parser-tools/map-node';
 import { combineParsers } from '..';
 import { compile } from '../..';
 
-const fragment = makeFragment(makeParser([]));
+const stmt = makeFragment(makeParser([]));
 
 test('plugin system', t => {
   const calls = [];
@@ -87,7 +87,7 @@ test('plugin system', t => {
   const plugins = [base, plugin1, plugin2];
   const parsers = combineParsers(plugins.map(p => p().semantics()));
 
-  const binaryExpression = fragment('(x + 2)');
+  const binaryExpression = stmt`(x + 2);`;
 
   const node = map(parsers)([binaryExpression]);
 
@@ -116,7 +116,7 @@ test('plugin invariants', t => {
     }),
   });
 
-  const binaryExpression = fragment('(x + 2)');
+  const binaryExpression = stmt`(x + 2);`;
   const parsers = combineParsers([plugin].map(p => p().semantics()));
 
   t.throws(() => map(parsers)([binaryExpression]));

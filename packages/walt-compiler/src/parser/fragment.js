@@ -28,9 +28,19 @@ export const makeFragment = (parser: Parser) => {
   const parse = src => {
     // 1st node is a function.
     // 3rd node of a function is a block, containing a single expression
-    return parser(`function fragment() {
-      ${src}
-    }`).params[0].params[2].params[0];
+    try {
+      return parser(`function fragment() {
+        ${src}
+      }`).params[0].params[2].params[0];
+    } catch (e) {
+      throw new Error(
+        `Invalid fragment input:
+
+${src}
+
+Parse Error: ${e.message}`
+      );
+    }
   };
 
   return (template: string[], ...replacements: Array<string | NodeType>) => {

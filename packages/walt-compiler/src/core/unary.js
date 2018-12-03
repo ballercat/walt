@@ -15,7 +15,7 @@ const shifts = {
 // Unary expressions need to be patched so that the LHS type matches the RHS
 export default function(): SemanticPlugin {
   return {
-    semantics({ fragment }) {
+    semantics({ stmt }) {
       return {
         [Syntax.UnaryExpression]: _ignore => (args, transform) => {
           const [unaryNode, context] = args;
@@ -26,12 +26,9 @@ export default function(): SemanticPlugin {
             // Transform bang
             case '!':
               const shift = shifts[lhs.type];
+              console.log(lhs);
               return transform([
-                fragment(
-                  `(((${String(lhs.value)} >> ${shift}) | ((~${String(
-                    lhs.value
-                  )} + 1) >> ${shift})) + 1)`
-                ),
+                stmt`(((${lhs} >> ${shift}) | ((~${lhs} + 1) >> ${shift})) + 1);`,
                 context,
               ]);
             case '~':
@@ -40,10 +37,7 @@ export default function(): SemanticPlugin {
               )
                 ? '0xffffffffffff'
                 : '0xffffff';
-              return transform([
-                fragment(`(${String(lhs.value)} ^ ${mask})`),
-                context,
-              ]);
+              return transform([stmt`(${lhs} ^ ${mask});`, context]);
             case '-':
               // Fold negation into a single opcode (a negative constant).
               // The parser _currently_ generates 0 - <const> node pairs instead

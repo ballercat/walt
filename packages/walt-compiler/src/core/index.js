@@ -61,7 +61,7 @@ const balanceTypesInMathExpression = expression => {
 // Core plugin
 export default function Core(): SemanticPlugin {
   return {
-    semantics() {
+    semantics({ stmt }) {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
         const scope = currentScope(context.scopes);
@@ -141,8 +141,12 @@ export default function Core(): SemanticPlugin {
         [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
           const [inputNode, context] = args;
           const params = inputNode.params.map(p => transform([p, context]));
-          const { type } = params[0];
-          return { ...inputNode, params, type };
+          const [location, value] = params;
+
+          return transform([
+            stmt`${value.type}.store(${location}, ${value});`,
+            context,
+          ]);
         },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([

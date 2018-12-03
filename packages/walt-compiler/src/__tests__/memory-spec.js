@@ -48,8 +48,7 @@ test('memory of any shape can be imported', t => {
 
 test('wide array offsets', t => {
   const SAFE_OFFSET = 65536;
-  return WebAssembly.instantiate(
-    compile(`
+  const walt = compile(`
       export const memory: Memory<{initial: ${1 + (SAFE_OFFSET >> 16)}}>;
       export function populateArray(): f64 {
         const array: f64[] = ${SAFE_OFFSET};
@@ -61,9 +60,9 @@ test('wide array offsets', t => {
 
         return array[4];
       }
-  `).buffer(),
-    {}
-  ).then(({ instance }) => {
+  `);
+
+  return WebAssembly.instantiate(walt.buffer(), {}).then(({ instance }) => {
     const typedArray = new Float64Array(
       instance.exports.memory.buffer,
       SAFE_OFFSET,

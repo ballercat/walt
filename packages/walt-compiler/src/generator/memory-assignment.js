@@ -29,11 +29,11 @@ const generateMemoryAssignment: GeneratorType = (node, parent) => {
       { kind: opcode.i32Shl, params: [] },
     ]);
     type = isArray;
+    block.push({ kind: opcode.i32Add, params: [] });
   }
 
   // The sequence of opcodes to perfrom a memory load is
   // get(Local|Global) base, i32Const offset[, i32Const size, i32Mul ], i32Add
-  block.push({ kind: opcode.i32Add, params: [] });
 
   block.push.apply(
     block,

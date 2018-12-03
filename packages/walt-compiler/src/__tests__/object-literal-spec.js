@@ -2,7 +2,7 @@ import test from 'ava';
 import { compile } from '..';
 
 test('objects', t => {
-  const walt = `
+  const src = `
   const memory: Memory = { initial: 1 };
   type TestType = { x: i32, y: i32, z: i32 };
   type MixedType = { x: i32, y: f32, z: i64, w: f64 };
@@ -54,9 +54,9 @@ test('objects', t => {
   }
 `;
 
-  const buffer = compile(walt, { encodeNames: true }).buffer();
+  const walt = compile(src, { encodeNames: true });
 
-  return WebAssembly.instantiate(buffer).then(result => {
+  return WebAssembly.instantiate(walt.buffer()).then(result => {
     const exports = result.instance.exports;
 
     t.is(exports.testSubscript(), 4, 'Regular old string subscripts');

@@ -32,10 +32,11 @@ test(
   })
 );
 
-test('chained subscripts', t => {
+test.only('chained subscripts', t => {
   return harness(path.resolve(__dirname, './subscripts-spec.walt'), null, {
-    printBinary: false,
+    prntBinary: false,
     printNode: false,
+    prettyPrint: true,
   })(t);
 });
 

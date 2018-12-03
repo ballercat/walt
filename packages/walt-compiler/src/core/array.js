@@ -4,13 +4,21 @@
  * @flow
  */
 import Syntax from 'walt-syntax';
+import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import { TYPE_ARRAY } from '../semantics/metadata';
 import type { SemanticPlugin } from '../flow/types';
+import print from '../utils/print-node';
 
+const shiftAmount = {
+  i32: 2,
+  f32: 2,
+  i64: 3,
+  f64: 3,
+};
 export default function arrayPlugin(): SemanticPlugin {
   return {
-    semantics() {
+    semantics({ stmt }) {
       const declaration = next => args => {
         const [node, context] = args;
 
@@ -28,6 +36,14 @@ export default function arrayPlugin(): SemanticPlugin {
         }
 
         return next(args);
+      };
+
+      const arrayOffset = (base, offset) => {
+        const shift = shiftAmount[base.meta[TYPE_ARRAY]];
+
+        return offset
+          ? stmt`(${base} + (${offset} << ${shift}));`
+          : stmt`(${base});`;
       };
 
       return {
@@ -51,22 +67,43 @@ export default function arrayPlugin(): SemanticPlugin {
 
           return next(args);
         },
-        [Syntax.ArraySubscript]: _ignore => (args, transform) => {
+        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
           const [node, context] = args;
+          const [location, value] = node.params;
+          const type = transform([value, context]).type;
+          let index = location;
+          if (location.Type === Syntax.ArraySubscript) {
+            const [id, offset] = location.params.map(p =>
+              transform([p, context])
+            );
+            index = arrayOffset(id, offset);
+          }
 
+          invariant(
+            type,
+            `PANIC - Undefined type for memory access: ${print(node)}`
+          );
+
+          return transform([stmt`${type}.store(${index}, ${value});`, context]);
+        },
+        [Syntax.ArraySubscript]: _ignore => (args, transform) => {
+          console.log('ARRAY');
+          const [node, context] = args;
           // To find out the type of this subscript we first must process it's
           // parameters <identifier, field>
           const params = node.params.map(p => transform([p, context]));
-
-          const [identifier] = params;
-
+          const [identifier, offset] = params;
           const type = identifier.meta[TYPE_ARRAY];
 
-          return {
-            ...node,
-            params,
+          invariant(
             type,
-          };
+            `PANIC - Undefined type for memory access: ${print(node)}`
+          );
+
+          return transform([
+            stmt`${type}.load(${arrayOffset(identifier, offset)});`,
+            context,
+          ]);
         },
       };
     },
