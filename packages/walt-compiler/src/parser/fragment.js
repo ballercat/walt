@@ -34,11 +34,11 @@ export const makeFragment = (parser: Parser) => {
       }`).params[0].params[2].params[0];
     } catch (e) {
       throw new Error(
-        `Invalid fragment input:
+        `PANIC - Invalid fragment input:
 
 ${src}
 
-Parse Error: ${e.message}`
+Parse Error: ${e.stack}`
       );
     }
   };

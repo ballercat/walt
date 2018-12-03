@@ -101,7 +101,7 @@ export default curry(function parse(
   // something then we did something wrong and we hard exit the compiler pipeline.
   invariant(
     parser.results.length === 1,
-    `Ambiguous syntax number of productions: ${parser.results.length}`
+    `PANIC - Ambiguous Syntax! Number of productions (${parser.results.length})`
   );
 
   return parser.results[0];

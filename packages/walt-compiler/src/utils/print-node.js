@@ -89,7 +89,7 @@ const getPrinters = add => ({
     add(')', 0, -2);
   },
   [Syntax.GenericType]: (node, _print) => {
-    add('; Pseudo type', 0, 0);
+    add(';; Pseudo type', 0, 0);
     add('(type-generic ' + node.value + ')', 0, 0);
   },
   [Syntax.FunctionCall]: ({ value, params }, print) => {
@@ -106,7 +106,8 @@ const getPrinters = add => ({
     printFormatted(add, print, { value: text, params: node.params });
   },
   [Syntax.ArraySubscript]: ({ params }, print) => {
-    printFormatted(add, print, { value: 'i32.add', params });
+    add(';; unparsed', 0, 0);
+    printFormatted(add, print, { value: 'subscript', params });
   },
   [Syntax.Typedef]: (node, _) => {
     add(typedefString(node));
@@ -161,10 +162,9 @@ const getPrinters = add => ({
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ArraySubscript]: (node, print) => {
-    add('(' + String(node.type) + '.load', 2, 0);
-    node.params.forEach(print);
-    add(')', 0, -2);
+  [Syntax.Access]: ({ params }, print) => {
+    add(';; unparsed', 0, 0);
+    printFormatted(add, print, { value: 'access', params });
   },
   [Syntax.MemoryAssignment]: (node, print) => {
     add('(' + String(node.type) + '.store', 2, 0);
@@ -175,6 +175,9 @@ const getPrinters = add => ({
     const [target, ...params] = node.params;
     const scope = target.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     add(`(set_${scope} ${target.value}`, 2);
+    if ([Syntax.ArraySubscript, Syntax.Access].includes(target.Type)) {
+      print(target);
+    }
     params.forEach(print);
     add(')', 0, -2);
   },
