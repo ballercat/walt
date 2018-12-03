@@ -55,7 +55,7 @@ export function imports(options, compile) {
 }
 
 export function plugin() {
-  const semantics = ({ parser, fragment }) => {
+  const semantics = ({ parser, stmt }) => {
     // Declaration parser, re-used for mutable/immutable declarations
     const declarationParser = next => (args, transform) => {
       const [node, context] = args;
@@ -100,9 +100,9 @@ export function plugin() {
 
       const [lhs] = parsed.params;
       const ref = environment[parsed.value];
-      const call = fragment(
-        `__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`
-      );
+      const call = stmt`__closure_set_${ref.type}(__env_ptr + ${
+        ref.meta.ENV_OFFSET
+      });`;
       return transform([
         {
           ...call,
@@ -202,7 +202,7 @@ export function plugin() {
                 // Parens are necessary around a fragment as it has to be a complete
                 // expression, a ; would also likely work and be discarded but that would
                 // be even odder in the context of function arguments
-                params: [fragment('(__env_ptr : i32)'), ...fnArgs.params],
+                params: [stmt`(__env_ptr : i32);`, ...fnArgs.params],
               },
               result,
               ...rest,
@@ -217,7 +217,7 @@ export function plugin() {
         context.closures.push(real);
 
         return transform([
-          fragment(`(${real.value} | ((__env_ptr : i64) << 32))`),
+          stmt`(${real.value} | ((__env_ptr : i64) << 32));`,
           context,
         ]);
       },
@@ -259,7 +259,7 @@ export function plugin() {
 
         // We will initialize with an empty env for now and patch this once we
         // know the sizes of all environment variables
-        const injectedEnv = fragment('const __env_ptr : i32 = 0');
+        const injectedEnv = stmt`const __env_ptr : i32 = 0;`;
         const [fnArgs, result, block] = node.params;
 
         const closureContext = {
@@ -284,7 +284,7 @@ export function plugin() {
           if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
             const size = Object.values(envSize).reduce(sum, 0);
             return transform([
-              fragment(`const __env_ptr : i32 = __closure_malloc(${size})`),
+              stmt`const __env_ptr : i32 = __closure_malloc(${size});`,
               { ...context, scopes: enter(context.scopes, LOCAL_INDEX) },
             ]);
           }
@@ -332,7 +332,7 @@ export function plugin() {
 
         const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
 
-        const call = fragment(`__closure_set_${type}(__env_ptr + ${offset})`);
+        const call = stmt`__closure_set_${type}(__env_ptr + ${offset});`;
         return transform([
           {
             ...call,
@@ -352,7 +352,7 @@ export function plugin() {
         const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
 
         return transform([
-          fragment(`__closure_get_${type}(__env_ptr + ${offset})`),
+          stmt`__closure_get_${type}(__env_ptr + ${offset});`,
           context,
         ]);
       },
@@ -365,9 +365,9 @@ export function plugin() {
           // possible syntax so we need to manually structure an indirect call node
 
           const params = [
-            fragment(`((${local.value} >> 32) : i32)`),
+            stmt`((${local.value} >> 32) : i32);`,
             ...call.params.slice(1),
-            fragment(`(${local.value} : i32)`),
+            stmt`(${local.value} : i32);`,
           ].map(p => transform([p, context]));
 
           const typedef = types[local.meta.ALIAS];
