@@ -159,7 +159,7 @@ test('unknown user types at global scope, error', t => {
   t.snapshot(error);
 });
 
-test.skip('invalid sucbscript target', t => {
+test('invalid sucbscript target', t => {
   const error = t.throws(() =>
     parseAndValidate(`
 const memory: Memory = {initial: 1};

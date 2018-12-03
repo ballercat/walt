@@ -58,6 +58,9 @@ const toStruct = node => {
     offsetMap,
     typeMap,
     field(field: { value: string, type?: string }) {
+      if (!offsetMap[field.value]) {
+        return null;
+      }
       let type = typeMap[field.value] || field.type;
       const offset = offsetMap[field.value];
       let STRUCT_TYPE = null;
@@ -96,11 +99,9 @@ export default function Struct(): SemanticPlugin {
             return next(args);
           }
           const field = struct.field(key);
-
-          invariant(
-            field.type,
-            'PANIC - Undefined type for memory access' + `\n${print(node)}`
-          );
+          if (!field) {
+            return node;
+          }
 
           return extendNode(
             {
@@ -128,11 +129,9 @@ export default function Struct(): SemanticPlugin {
         }
 
         const field = struct.field(key);
-
-        invariant(
-          field.type,
-          'PANIC - Undefined type for memory access' + `\n${print(node)}`
-        );
+        if (field == null) {
+          return node;
+        }
 
         return transform([
           stmt`${field.type}.store(
@@ -163,6 +162,10 @@ export default function Struct(): SemanticPlugin {
           // only way this is hit is if the identifier is TOP LEVEL
           [Syntax.Identifier]: (identifier, _) => {
             const field = struct.field(identifier);
+            if (field == null) {
+              return;
+            }
+
             individualKeys[identifier.value] = stmt`${field.type}.store(
                 ${structOffset(lhs, field.offset)},
                 ${identifier}
@@ -171,6 +174,9 @@ export default function Struct(): SemanticPlugin {
           [Syntax.Pair]: (pair, _) => {
             const [property, value] = pair.params;
             const field = struct.field(property);
+            if (field == null) {
+              return;
+            }
 
             individualKeys[property.value] = stmt`${field.type}.store(
                 ${structOffset(lhs, field.offset)},
@@ -183,6 +189,10 @@ export default function Struct(): SemanticPlugin {
             // map over the keys
             Object.keys(struct.offsetMap).forEach(key => {
               const field = struct.field({ value: key });
+              if (field == null) {
+                return;
+              }
+
               spreadKeys[key] = stmt`${field.type}.store(
                   ${structOffset(lhs, field.offset)},
                   ${field.type}.load(${structOffset(target, field.offset)})

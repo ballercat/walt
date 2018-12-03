@@ -26,7 +26,6 @@ export default function(): SemanticPlugin {
             // Transform bang
             case '!':
               const shift = shifts[lhs.type];
-              console.log(lhs);
               return transform([
                 stmt`(((${lhs} >> ${shift}) | ((~${lhs} + 1) >> ${shift})) + 1);`,
                 context,

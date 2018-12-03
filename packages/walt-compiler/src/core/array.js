@@ -38,13 +38,17 @@ function semantics({ stmt }) {
   function arrayOffset(base, offset) {
     const shift = shifts[base.meta.TYPE_ARRAY];
 
+    if (shift == null) {
+      return null;
+    }
+
     return offset.Type !== Syntax.Constant || Number(offset.value)
       ? stmt`(${base} + (${offset} << ${shift}));`
       : stmt`(${base});`;
   }
 
-  function sanityCheck(type, node) {
-    invariant(type, `PANIC - Undefined type for memory access: ${print(node)}`);
+  function sanityCheck(subscript) {
+    return !(subscript.type == null || subscript.index == null);
   }
 
   function produceSubscript([base, offset]) {
@@ -77,20 +81,24 @@ function semantics({ stmt }) {
       }
 
       const transform = withContext(t, context);
-      const { type, index } = produceSubscript(lhs.params.map(transform));
+      const subscript = produceSubscript(lhs.params.map(transform));
+      const { type, index } = subscript;
 
-      sanityCheck(type);
+      if (!sanityCheck(subscript)) {
+        return next(args);
+      }
 
       return transform(stmt`${type}.store(${index}, ${rhs});`);
     },
-    [Syntax.ArraySubscript]: _ => (args, t) => {
+    [Syntax.ArraySubscript]: next => (args, t) => {
       const [node, context] = args;
       const transform = withContext(t, context);
-      const { type, index, TYPE_ARRAY } = produceSubscript(
-        node.params.map(transform)
-      );
+      const subscript = produceSubscript(node.params.map(transform));
+      const { type, index, TYPE_ARRAY } = subscript;
 
-      sanityCheck(type);
+      if (!sanityCheck(subscript)) {
+        return next(args);
+      }
 
       return extendNode(
         { meta: { TYPE_ARRAY } },
