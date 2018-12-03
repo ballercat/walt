@@ -8,7 +8,6 @@ import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 import { extendNode } from '../utils/extend-node';
-import print from '../utils/print-node';
 import type { NodeMap, NodeType, SemanticPlugin } from '../flow/types';
 
 const sizeMap = {
