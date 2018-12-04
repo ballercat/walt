@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
+    "babel-plugin-transform-node-env-inline": "^0.4.3",
     "coveralls": "^3.0.0",
     "nyc": "^11.7.1",
     "prettier": "^1.12.0",

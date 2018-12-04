@@ -21,25 +21,32 @@ type Parser = string => NodeType;
  *
  * @return {Function} tag template literal
  */
+/* istanbul ignore next */
 export const makeFragment = (parser: Parser) => {
   // For fragments we must wrap the source in a function
   // otherwise the parser will fail as it's not a valid
   // place for an expression
   const parse = src => {
-    // 1st node is a function.
-    // 3rd node of a function is a block, containing a single expression
-    try {
-      return parser(`function fragment() {
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        // 1st node is a function.
+        // 3rd node of a function is a block, containing a single expression
+        return parser(`function fragment() {
         ${src}
       }`).params[0].params[2].params[0];
-    } catch (e) {
-      throw new Error(
-        `PANIC - Invalid fragment input:
+      } catch (e) {
+        throw new Error(
+          `PANIC - Invalid fragment input:
 
 ${src}
 
 Parse Error: ${e.stack}`
-      );
+        );
+      }
+    } else {
+      return parser(`function fragment() {
+        ${src}
+      }`).params[0].params[2].params[0];
     }
   };
 
