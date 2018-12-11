@@ -21,7 +21,6 @@ type Parser = string => NodeType;
  *
  * @return {Function} tag template literal
  */
-/* istanbul ignore next */
 export const makeFragment = (parser: Parser) => {
   // For fragments we must wrap the source in a function
   // otherwise the parser will fail as it's not a valid
