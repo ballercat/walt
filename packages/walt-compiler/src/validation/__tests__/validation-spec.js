@@ -73,7 +73,7 @@ test('unterminated assignment statements', t => {
   t.snapshot(error);
 });
 
-test.skip('undefined object properties', t => {
+test('undefined object properties', t => {
   const error = t.throws(() =>
     parseAndValidate(`
     type T = { x: i32 };

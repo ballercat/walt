@@ -8,7 +8,9 @@ import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import walkNode from 'walt-parser-tools/walk-node';
 import { extendNode } from '../utils/extend-node';
-import type { NodeMap, NodeType, SemanticPlugin } from '../flow/types';
+import type { NodeType, SemanticPlugin } from '../flow/types';
+
+type FieldType = { type: string, offset: number };
 
 const sizeMap = {
   i64: 8,
@@ -117,6 +119,13 @@ export default function Struct(): SemanticPlugin {
         };
       }
 
+      function store(base, field: FieldType, rhs) {
+        return stmt`${field.type}.store(
+          ${structOffset(base, field.offset)},
+          ${rhs}
+        );`;
+      }
+
       function fieldAssignment(args, transform) {
         const [node, context] = args;
         const [lhs, rhs] = node.params;
@@ -132,13 +141,7 @@ export default function Struct(): SemanticPlugin {
           return node;
         }
 
-        return transform([
-          stmt`${field.type}.store(
-            ${structOffset(struct.base, field.offset)},
-            ${rhs}
-          );`,
-          context,
-        ]);
+        return transform([store(struct.base, field, rhs), context]);
       }
 
       function objectAssignment(args, transform) {
@@ -150,8 +153,7 @@ export default function Struct(): SemanticPlugin {
           return node;
         }
 
-        const individualKeys: NodeMap = {};
-        const spreadKeys: NodeMap = {};
+        const kvs = [];
 
         // We have to walk the nodes twice, once for regular prop keys and then again
         // for ...(spread)
@@ -159,28 +161,14 @@ export default function Struct(): SemanticPlugin {
           // Top level Identifiers _inside_ an object literal === shorthand
           // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
           // only way this is hit is if the identifier is TOP LEVEL
-          [Syntax.Identifier]: (identifier, _) => {
-            const field = struct.field(identifier);
-            if (field == null) {
-              return;
-            }
-
-            individualKeys[identifier.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${identifier}
-              );`;
+          [Syntax.Identifier]: (value, _) => {
+            const field = struct.field(value);
+            kvs.push({ field, value });
           },
           [Syntax.Pair]: (pair, _) => {
             const [property, value] = pair.params;
             const field = struct.field(property);
-            if (field == null) {
-              return;
-            }
-
-            individualKeys[property.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${value}
-              );`;
+            kvs.push({ field, value });
           },
           [Syntax.Spread]: (spread, _) => {
             // find userType
@@ -188,23 +176,24 @@ export default function Struct(): SemanticPlugin {
             // map over the keys
             Object.keys(struct.offsetMap).forEach(key => {
               const field = struct.field({ value: key });
-              if (field == null) {
-                return;
-              }
 
-              spreadKeys[key] = stmt`${field.type}.store(
-                  ${structOffset(lhs, field.offset)},
-                  ${field.type}.load(${structOffset(target, field.offset)})
-                );`;
+              invariant(field != null, `PANIC - undefined object key "${key}`);
+
+              kvs.push({
+                field,
+                value: stmt`${field.type}.load(${structOffset(
+                  target,
+                  field.offset
+                )});`,
+              });
             });
           },
         })(rhs);
 
-        // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
-        const params: NodeType[] = Object.values({
-          ...spreadKeys,
-          ...individualKeys,
-        }).map(p => transform([p, context]));
+        const params: NodeType[] = kvs
+          .filter(({ field }) => field != null)
+          /* $FlowFixMe */
+          .map(kv => transform([store(lhs, kv.field, kv.value), context]));
 
         return {
           ...lhs,
