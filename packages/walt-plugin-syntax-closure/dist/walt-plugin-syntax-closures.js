@@ -84,7 +84,69 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
   const Table = 'Table';
   const bool = 'bool';
 
-  const builtinTypes = {
+  exports.Program = Program;
+  exports.Keyword = Keyword;
+  exports.Export = Export;
+  exports.Import = Import;
+  exports.Statement = Statement;
+  exports.IfThenElse = IfThenElse;
+  exports.Select = Select;
+  exports.Else = Else;
+  exports.UnaryExpression = UnaryExpression;
+  exports.BinaryExpression = BinaryExpression;
+  exports.TernaryExpression = TernaryExpression;
+  exports.NumberLiteral = NumberLiteral;
+  exports.StringLiteral = StringLiteral;
+  exports.CharacterLiteral = CharacterLiteral;
+  exports.Punctuator = Punctuator;
+  exports.Identifier = Identifier;
+  exports.ArraySubscript = ArraySubscript;
+  exports.Constant = Constant;
+  exports.Type = Type;
+  exports.GenericType = GenericType;
+  exports.UserType = UserType;
+  exports.FunctionType = FunctionType;
+  exports.Declaration = Declaration;
+  exports.ImmutableDeclaration = ImmutableDeclaration;
+  exports.FunctionDeclaration = FunctionDeclaration;
+  exports.ArrayDeclaration = ArrayDeclaration;
+  exports.IndirectFunctionCall = IndirectFunctionCall;
+  exports.FunctionCall = FunctionCall;
+  exports.Loop = Loop;
+  exports.MemoryAssignment = MemoryAssignment;
+  exports.Assignment = Assignment;
+  exports.Param = Param;
+  exports.Typedef = Typedef;
+  exports.Struct = Struct;
+  exports.ReturnStatement = ReturnStatement;
+  exports.Sequence = Sequence;
+  exports.ObjectLiteral = ObjectLiteral;
+  exports.Pair = Pair;
+  exports.TypeCast = TypeCast;
+  exports.Break = Break;
+  exports.Comment = Comment;
+  exports.Sizeof = Sizeof;
+  exports.Spread = Spread;
+  exports.Closure = Closure;
+  exports.Noop = Noop;
+  exports.ClosureType = ClosureType;
+  exports.Block = Block;
+  exports.ObjectField = ObjectField;
+  exports.FunctionIndex = FunctionIndex;
+  exports.FunctionIdentifier = FunctionIdentifier;
+  exports.FunctionPointer = FunctionPointer;
+  exports.FunctionArguments = FunctionArguments;
+  exports.FunctionResult = FunctionResult;
+  exports.FunctionLocals = FunctionLocals;
+  exports.NativeMethod = NativeMethod;
+  exports.i32 = i32;
+  exports.f32 = f32;
+  exports.i64 = i64;
+  exports.f64 = f64;
+  exports.Memory = Memory;
+  exports.Table = Table;
+  exports.bool = bool;
+  exports.builtinTypes = {
     i32,
     f32,
     i64,
@@ -93,8 +155,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     Table,
     bool
   };
-
-  const statements = {
+  exports.statements = {
     // Main Program
     Program,
 
@@ -123,8 +184,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     Noop,
     Block
   };
-
-  var index = {
+  exports.default = {
     // Main Program
     Program,
 
@@ -189,72 +249,6 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     // Natives
     NativeMethod
   };
-
-  exports.Program = Program;
-  exports.Keyword = Keyword;
-  exports.Export = Export;
-  exports.Import = Import;
-  exports.Statement = Statement;
-  exports.IfThenElse = IfThenElse;
-  exports.Select = Select;
-  exports.Else = Else;
-  exports.UnaryExpression = UnaryExpression;
-  exports.BinaryExpression = BinaryExpression;
-  exports.TernaryExpression = TernaryExpression;
-  exports.NumberLiteral = NumberLiteral;
-  exports.StringLiteral = StringLiteral;
-  exports.CharacterLiteral = CharacterLiteral;
-  exports.Punctuator = Punctuator;
-  exports.Identifier = Identifier;
-  exports.ArraySubscript = ArraySubscript;
-  exports.Constant = Constant;
-  exports.Type = Type;
-  exports.GenericType = GenericType;
-  exports.UserType = UserType;
-  exports.FunctionType = FunctionType;
-  exports.Declaration = Declaration;
-  exports.ImmutableDeclaration = ImmutableDeclaration;
-  exports.FunctionDeclaration = FunctionDeclaration;
-  exports.ArrayDeclaration = ArrayDeclaration;
-  exports.IndirectFunctionCall = IndirectFunctionCall;
-  exports.FunctionCall = FunctionCall;
-  exports.Loop = Loop;
-  exports.MemoryAssignment = MemoryAssignment;
-  exports.Assignment = Assignment;
-  exports.Param = Param;
-  exports.Typedef = Typedef;
-  exports.Struct = Struct;
-  exports.ReturnStatement = ReturnStatement;
-  exports.Sequence = Sequence;
-  exports.ObjectLiteral = ObjectLiteral;
-  exports.Pair = Pair;
-  exports.TypeCast = TypeCast;
-  exports.Break = Break;
-  exports.Comment = Comment;
-  exports.Sizeof = Sizeof;
-  exports.Spread = Spread;
-  exports.Closure = Closure;
-  exports.Noop = Noop;
-  exports.ClosureType = ClosureType;
-  exports.Block = Block;
-  exports.ObjectField = ObjectField;
-  exports.FunctionIndex = FunctionIndex;
-  exports.FunctionIdentifier = FunctionIdentifier;
-  exports.FunctionPointer = FunctionPointer;
-  exports.FunctionArguments = FunctionArguments;
-  exports.FunctionResult = FunctionResult;
-  exports.FunctionLocals = FunctionLocals;
-  exports.NativeMethod = NativeMethod;
-  exports.i32 = i32;
-  exports.f32 = f32;
-  exports.i64 = i64;
-  exports.f64 = f64;
-  exports.Memory = Memory;
-  exports.Table = Table;
-  exports.bool = bool;
-  exports.builtinTypes = builtinTypes;
-  exports.statements = statements;
-  exports.default = index;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 });
@@ -358,7 +352,7 @@ var scope_4 = scope.find;
  * Check if an AST has a specific Node Type, return boolean
  *
  */
-var hasNode$2 = function hasNode(Type, ast) {
+var hasNode$2 = function (Type, ast) {
   const test = node => node && node.Type === Type;
 
   const walker = node => {
@@ -376,7 +370,7 @@ var hasNode = hasNode$2;
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-var walkNode$2 = function walker(visitor) {
+var walkNode$2 = function (visitor) {
   const walkNode = node => {
     if (node == null) {
       return node;
@@ -421,35 +415,32 @@ function grammar() {
   const { Syntax } = this;
   const { drop, extendNode } = this.helpers;
   const { node, typeGeneric } = this.nodes(this.lexer);
-  const voidClosure = d => {
-    const [args, block] = drop(d);
-    const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
-    return extendNode({
-      params: [extendNode({
-        params: [args, resultNode, block]
-      }, node(Syntax.FunctionDeclaration)([]))]
-    }, node(Syntax.Closure)([]));
-  };
-  const closure = d => {
-    const [args, resultNode, block] = drop(d);
-    return extendNode({
-      params: [extendNode({
-        params: [args, resultNode, block]
-      }, node(Syntax.FunctionDeclaration)([]))]
-    }, node(Syntax.Closure)([]));
-  };
 
-  const genericType = d => {
-    const [id, gen, typeNode] = drop(d);
-    return extendNode({
-      value: id.value,
-      params: [gen, typeNode]
-    }, node(Syntax.GenericType)([]));
-  };
 
   return {
     Lexer: undefined,
-    ParserRules: [{ "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "GenericType", "_", "SEPARATOR"], "postprocess": genericType }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "Type", "_", "GT"], "postprocess": typeGeneric }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FATARROW", "_", "Block"], "postprocess": voidClosure }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FunctionResult", "_", "FATARROW", "_", "Block"], "postprocess": closure }, { "name": "Expression", "symbols": ["Closure"], "postprocess": id }],
+    ParserRules: [{ "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "GenericType", "_", "SEPARATOR"], "postprocess": d => {
+        const [id, gen, typeNode] = drop(d);
+        return extendNode({
+          value: id.value,
+          params: [gen, typeNode]
+        }, node(Syntax.GenericType)([]));
+      } }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "Type", "_", "GT"], "postprocess": typeGeneric }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FATARROW", "_", "Block"], "postprocess": d => {
+        const [args, block] = drop(d);
+        const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
+        return extendNode({
+          params: [extendNode({
+            params: [args, resultNode, block]
+          }, node(Syntax.FunctionDeclaration)([]))]
+        }, node(Syntax.Closure)([]));
+      } }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FunctionResult", "_", "FATARROW", "_", "Block"], "postprocess": d => {
+        const [args, resultNode, block] = drop(d);
+        return extendNode({
+          params: [extendNode({
+            params: [args, resultNode, block]
+          }, node(Syntax.FunctionDeclaration)([]))]
+        }, node(Syntax.Closure)([]));
+      } }, { "name": "Expression", "symbols": ["Closure"], "postprocess": id }],
     ParserStart: "TypeDef"
   };
 }
@@ -519,276 +510,275 @@ function imports(options, compile) {
 }
 
 function plugin() {
-  const semantics = ({ parser, fragment }) => {
-    // Declaration parser, re-used for mutable/immutable declarations
-    const declarationParser = next => (args, transform) => {
-      const [node, context] = args;
-      const { environment, types } = context;
-
-      // Not a closure scan and not an environment variable
-      if (!context.isParsingClosure || !environment[node.value]) {
-        // Check if the declaration is a lambda, as we will need to unroll this
-        // into an i64
-        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
-          return next([_extends({}, node, {
-            type: 'i64',
-            meta: _extends({}, node.meta, {
-              CLOSURE_INSTANCE: true,
-              ALIAS: node.type
-            })
-          }), context]);
-        }
-        return next(args);
-      }
-
-      const parsed = next(args);
-      environment[parsed.value] = _extends({}, parsed, {
-        meta: _extends({}, parsed.meta, {
-          ENV_OFFSET: Object.values(context.envSize).reduce(sum, 0)
-        })
-      });
-      context.envSize[parsed.value] = sizes[parsed.type] || 4;
-
-      // If the variable is declared but has no initializer we simply nullify the
-      // node as there is nothing else to do here.
-      if (!parsed.params.length) {
-        return _extends({}, parsed, { Type: Syntax.Noop });
-      }
-
-      const [lhs] = parsed.params;
-      const ref = environment[parsed.value];
-      const call = fragment(`__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET})`);
-      return transform([_extends({}, call, {
-        params: [...call.params, lhs]
-      }), context]);
-    };
-
-    return {
-      // One drawback of having a plugin for closures isntead of built in support
-      // is that it's rather difficult to pre-parse the Generic Closure types.
-      // Since generics depend on the real type nodes being already processed we
-      // loose the benifit of using a generic type before its defined.
-      GenericType: _ => semanticArgs => {
-        const [node, context] = semanticArgs;
-        const { types } = context;
-        const [generic] = node.params;
-        const [T] = generic.params;
-        const realType = types[T.value];
-        const [args, result] = realType.params;
-        // Patch the node to be a real type which we can reference later
-        const patch = _extends({}, realType, {
-          range: generic.range,
-          value: node.value,
-          meta: _extends({}, realType.meta, {
-            CLOSURE_TYPE: generic.value === 'Lambda'
-          }),
-          params: [_extends({}, args, {
-            params: [_extends({}, args, {
-              params: [],
-              type: 'i32',
-              value: 'i32',
-              Type: Syntax.Type
-            }), ...args.params]
-          }), result]
-        });
-        types[patch.value] = patch;
-
-        return patch;
-      },
-      Program: next => semanticArgs => {
-        const [program, context] = semanticArgs;
-
-        if (!hasNode(Syntax.Closure, program)) {
-          return next(semanticArgs);
-        }
-
-        const closureImportsHeader = parser(importsSource).params;
-        const closures = [];
-        const parsedProgram = next([_extends({}, program, {
-          params: [...closureImportsHeader, ...program.params]
-        }), _extends({}, context, { closures })]);
-
-        const result = _extends({}, parsedProgram, {
-          params: [...parsedProgram.params, ...closures]
-        });
-        return result;
-      },
-      Closure: _next => (args, transform) => {
-        const [closure, context] = args;
-
-        // NOTE: All variables should really be kept in a single "scope" object
-
-        const [declaration] = closure.params;
-        const [fnArgs, result, ...rest] = declaration.params;
-        // Create the real function node to be compiled which was originally a
-        // closure EXPRESSION inside it's parent function. Once this run we will
-        // have a function table reference which we will reference in the output
-        // of this method.
-        const real = transform([_extends({}, declaration, {
-          value: `__closure_${context.isParsingClosure}_0`,
-          // Each closure now needs to have a pointer to it's environment. We inject
-          // that that at the front of the arguments list as an i32 local.
-          //
-          // Let the rest of the function parser continue as normal
-          params: [_extends({}, fnArgs, {
-            // Parens are necessary around a fragment as it has to be a complete
-            // expression, a ; would also likely work and be discarded but that would
-            // be even odder in the context of function arguments
-            params: [fragment('(__env_ptr : i32)'), ...fnArgs.params]
-          }), result, ...rest]
-        }), context]);
-
-        // Before we complete our work here, we have to attach the 'real' function
-        // created above to the output of the program so that it can become part
-        // of the final WASM output.
-        context.closures.push(real);
-
-        return transform([fragment(`(${real.value} | ((__env_ptr : i64) << 32))`), context]);
-      },
-      FunctionDeclaration: next => (args, transform) => {
-        const [node, context] = args;
-        const globals = context.scopes[0];
-        if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {
-          return next(args);
-        }
-
-        const environment = {};
-        const envSize = {};
-        walkNode({
-          Closure(closure, _) {
-            // All closures have their own __env_ptr passed in at call site
-            const declarations = { __env_ptr: true };
-            walkNode({
-              // We need to make sure we ignore the arguments to the closure.
-              // Otherwise they will be treaded as "closed over" variables
-              FunctionArguments(closureArgs, _ignore) {
-                walkNode({
-                  Pair(pair) {
-                    const [identifier] = pair.params;
-                    declarations[identifier.value] = identifier;
-                  }
-                })(closureArgs);
-              },
-              Declaration(decl, __) {
-                declarations[decl.value] = decl;
-              },
-              Identifier(id) {
-                if (!declarations[id.value] && !globals[id.value]) {
-                  environment[id.value] = id;
-                }
-              }
-            })(closure);
-          }
-        })(node);
-
-        // We will initialize with an empty env for now and patch this once we
-        // know the sizes of all environment variables
-        const injectedEnv = fragment('const __env_ptr : i32 = 0');
-        const [fnArgs, result, block] = node.params;
-
-        const closureContext = _extends({}, context, {
-          environment,
-          envSize,
-          isParsingClosure: node.value
-        });
-        const fun = next([_extends({}, node, {
-          params: [fnArgs, result, _extends({}, block, { params: [injectedEnv, ...block.params] })]
-        }), closureContext]);
-
-        fun.params = fun.params.map(p => {
-          if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
-            const size = Object.values(envSize).reduce(sum, 0);
-            return transform([fragment(`const __env_ptr : i32 = __closure_malloc(${size})`), _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
-          }
-
-          return p;
-        });
-
-        return fun;
-      },
-      Declaration: declarationParser,
-      ImmutableDeclaration: declarationParser,
-      FunctionResult: next => args => {
-        const [node, context] = args;
-        const { types } = context;
-
-        if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
-          return next([_extends({}, node, {
-            type: 'i64',
-            value: 'i64',
-            meta: _extends({}, node.meta, {
-              ALIAS: node.type
-            })
-          }), context]);
-        }
-        return next(args);
-      },
-      Assignment: next => (args, transform) => {
-        const [node, context] = args;
-        const { scopes, environment } = context;
-        const [rhs, lhs] = node.params;
-
-        if (!context.isParsingClosure) {
-          return next(args);
-        }
-
-        // Closures are functions and have their own locals
-        if (scope_3(scopes)[rhs.value]) {
-          return next(args);
-        }
-
-        const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
-
-        const call = fragment(`__closure_set_${type}(__env_ptr + ${offset})`);
-        return transform([_extends({}, call, {
-          params: [...call.params, lhs]
-        }), context]);
-      },
-      Identifier: next => (args, transform) => {
-        const [node, context] = args;
-        const { environment } = context;
-
-        if (!context.isParsingClosure || !environment[node.value]) {
-          return next(args);
-        }
-
-        const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
-
-        return transform([fragment(`__closure_get_${type}(__env_ptr + ${offset})`), context]);
-      },
-      FunctionCall: next => (args, transform) => {
-        const [call, context] = args;
-        const { scopes, types } = context;
-        const local = scope_4(scopes, call.value);
-        if (local && local.meta.CLOSURE_INSTANCE) {
-          // Unfortunately, we cannot create a statement for this within the
-          // possible syntax so we need to manually structure an indirect call node
-
-          const params = [fragment(`((${local.value} >> 32) : i32)`), ...call.params.slice(1), fragment(`(${local.value} : i32)`)].map(p => transform([p, context]));
-
-          const typedef = types[local.meta.ALIAS];
-          const typeIndex = Object.keys(types).indexOf(typedef.value);
-
-          const icall = _extends({}, call, {
-            meta: _extends({}, local.meta, call.meta, {
-              TYPE_INDEX: typeIndex
-            }),
-            type: typedef != null ? typedef.type : call.type,
-            params,
-            Type: Syntax.IndirectFunctionCall
-          });
-
-          return icall;
-        }
-
-        return next(args);
-      }
-    };
-  };
 
   return {
     grammar,
-    semantics
+    semantics: ({ parser, stmt }) => {
+      // Declaration parser, re-used for mutable/immutable declarations
+      const declarationParser = next => (args, transform) => {
+        const [node, context] = args;
+        const { environment, types } = context;
+
+        // Not a closure scan and not an environment variable
+        if (!context.isParsingClosure || !environment[node.value]) {
+          // Check if the declaration is a lambda, as we will need to unroll this
+          // into an i64
+          if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
+            return next([_extends({}, node, {
+              type: 'i64',
+              meta: _extends({}, node.meta, {
+                CLOSURE_INSTANCE: true,
+                ALIAS: node.type
+              })
+            }), context]);
+          }
+          return next(args);
+        }
+
+        const parsed = next(args);
+        environment[parsed.value] = _extends({}, parsed, {
+          meta: _extends({}, parsed.meta, {
+            ENV_OFFSET: Object.values(context.envSize).reduce(sum, 0)
+          })
+        });
+        context.envSize[parsed.value] = sizes[parsed.type] || 4;
+
+        // If the variable is declared but has no initializer we simply nullify the
+        // node as there is nothing else to do here.
+        if (!parsed.params.length) {
+          return _extends({}, parsed, { Type: Syntax.Noop });
+        }
+
+        const [lhs] = parsed.params;
+        const ref = environment[parsed.value];
+        const call = stmt`__closure_set_${ref.type}(__env_ptr + ${ref.meta.ENV_OFFSET});`;
+        return transform([_extends({}, call, {
+          params: [...call.params, lhs]
+        }), context]);
+      };
+
+      return {
+        // One drawback of having a plugin for closures isntead of built in support
+        // is that it's rather difficult to pre-parse the Generic Closure types.
+        // Since generics depend on the real type nodes being already processed we
+        // loose the benifit of using a generic type before its defined.
+        GenericType: _ => semanticArgs => {
+          const [node, context] = semanticArgs;
+          const { types } = context;
+          const [generic] = node.params;
+          const [T] = generic.params;
+          const realType = types[T.value];
+          const [args, result] = realType.params;
+          // Patch the node to be a real type which we can reference later
+          const patch = _extends({}, realType, {
+            range: generic.range,
+            value: node.value,
+            meta: _extends({}, realType.meta, {
+              CLOSURE_TYPE: generic.value === 'Lambda'
+            }),
+            params: [_extends({}, args, {
+              params: [_extends({}, args, {
+                params: [],
+                type: 'i32',
+                value: 'i32',
+                Type: Syntax.Type
+              }), ...args.params]
+            }), result]
+          });
+          types[patch.value] = patch;
+
+          return patch;
+        },
+        Program: next => semanticArgs => {
+          const [program, context] = semanticArgs;
+
+          if (!hasNode(Syntax.Closure, program)) {
+            return next(semanticArgs);
+          }
+
+          const closureImportsHeader = parser(importsSource).params;
+          const closures = [];
+          const parsedProgram = next([_extends({}, program, {
+            params: [...closureImportsHeader, ...program.params]
+          }), _extends({}, context, { closures })]);
+
+          const result = _extends({}, parsedProgram, {
+            params: [...parsedProgram.params, ...closures]
+          });
+          return result;
+        },
+        Closure: _next => (args, transform) => {
+          const [closure, context] = args;
+
+          // NOTE: All variables should really be kept in a single "scope" object
+
+          const [declaration] = closure.params;
+          const [fnArgs, result, ...rest] = declaration.params;
+          // Create the real function node to be compiled which was originally a
+          // closure EXPRESSION inside it's parent function. Once this run we will
+          // have a function table reference which we will reference in the output
+          // of this method.
+          const real = transform([_extends({}, declaration, {
+            value: `__closure_${context.isParsingClosure}_0`,
+            // Each closure now needs to have a pointer to it's environment. We inject
+            // that that at the front of the arguments list as an i32 local.
+            //
+            // Let the rest of the function parser continue as normal
+            params: [_extends({}, fnArgs, {
+              // Parens are necessary around a fragment as it has to be a complete
+              // expression, a ; would also likely work and be discarded but that would
+              // be even odder in the context of function arguments
+              params: [stmt`(__env_ptr : i32);`, ...fnArgs.params]
+            }), result, ...rest]
+          }), context]);
+
+          // Before we complete our work here, we have to attach the 'real' function
+          // created above to the output of the program so that it can become part
+          // of the final WASM output.
+          context.closures.push(real);
+
+          return transform([stmt`(${real.value} | ((__env_ptr : i64) << 32));`, context]);
+        },
+        FunctionDeclaration: next => (args, transform) => {
+          const [node, context] = args;
+          const globals = context.scopes[0];
+          if (context.isParsingClosure || !hasNode(Syntax.Closure, node)) {
+            return next(args);
+          }
+
+          const environment = {};
+          const envSize = {};
+          walkNode({
+            Closure(closure, _) {
+              // All closures have their own __env_ptr passed in at call site
+              const declarations = { __env_ptr: true };
+              walkNode({
+                // We need to make sure we ignore the arguments to the closure.
+                // Otherwise they will be treaded as "closed over" variables
+                FunctionArguments(closureArgs, _ignore) {
+                  walkNode({
+                    Pair(pair) {
+                      const [identifier] = pair.params;
+                      declarations[identifier.value] = identifier;
+                    }
+                  })(closureArgs);
+                },
+                Declaration(decl, __) {
+                  declarations[decl.value] = decl;
+                },
+                Identifier(id) {
+                  if (!declarations[id.value] && !globals[id.value]) {
+                    environment[id.value] = id;
+                  }
+                }
+              })(closure);
+            }
+          })(node);
+
+          // We will initialize with an empty env for now and patch this once we
+          // know the sizes of all environment variables
+          const injectedEnv = stmt`const __env_ptr : i32 = 0;`;
+          const [fnArgs, result, block] = node.params;
+
+          const closureContext = _extends({}, context, {
+            environment,
+            envSize,
+            isParsingClosure: node.value
+          });
+          const fun = next([_extends({}, node, {
+            params: [fnArgs, result, _extends({}, block, { params: [injectedEnv, ...block.params] })]
+          }), closureContext]);
+
+          fun.params = fun.params.map(p => {
+            if (p.Type === Syntax.Declaration && p.value === '__env_ptr') {
+              const size = Object.values(envSize).reduce(sum, 0);
+              return transform([stmt`const __env_ptr : i32 = __closure_malloc(${size});`, _extends({}, context, { scopes: scope_1(context.scopes, LOCAL_INDEX) })]);
+            }
+
+            return p;
+          });
+
+          return fun;
+        },
+        Declaration: declarationParser,
+        ImmutableDeclaration: declarationParser,
+        FunctionResult: next => args => {
+          const [node, context] = args;
+          const { types } = context;
+
+          if (types[node.type] && types[node.type].meta.CLOSURE_TYPE) {
+            return next([_extends({}, node, {
+              type: 'i64',
+              value: 'i64',
+              meta: _extends({}, node.meta, {
+                ALIAS: node.type
+              })
+            }), context]);
+          }
+          return next(args);
+        },
+        Assignment: next => (args, transform) => {
+          const [node, context] = args;
+          const { scopes, environment } = context;
+          const [rhs, lhs] = node.params;
+
+          if (!context.isParsingClosure) {
+            return next(args);
+          }
+
+          // Closures are functions and have their own locals
+          if (scope_3(scopes)[rhs.value]) {
+            return next(args);
+          }
+
+          const { type, meta: { ENV_OFFSET: offset } } = environment[rhs.value];
+
+          const call = stmt`__closure_set_${type}(__env_ptr + ${offset});`;
+          return transform([_extends({}, call, {
+            params: [...call.params, lhs]
+          }), context]);
+        },
+        Identifier: next => (args, transform) => {
+          const [node, context] = args;
+          const { environment } = context;
+
+          if (!context.isParsingClosure || !environment[node.value]) {
+            return next(args);
+          }
+
+          const { type, meta: { ENV_OFFSET: offset } } = environment[node.value];
+
+          return transform([stmt`__closure_get_${type}(__env_ptr + ${offset});`, context]);
+        },
+        FunctionCall: next => (args, transform) => {
+          const [call, context] = args;
+          const { scopes, types } = context;
+          const local = scope_4(scopes, call.value);
+          if (local && local.meta.CLOSURE_INSTANCE) {
+            // Unfortunately, we cannot create a statement for this within the
+            // possible syntax so we need to manually structure an indirect call node
+
+            const params = [stmt`((${local.value} >> 32) : i32);`, ...call.params.slice(1), stmt`(${local.value} : i32);`].map(p => transform([p, context]));
+
+            const typedef = types[local.meta.ALIAS];
+            const typeIndex = Object.keys(types).indexOf(typedef.value);
+
+            const icall = _extends({}, call, {
+              meta: _extends({}, local.meta, call.meta, {
+                TYPE_INDEX: typeIndex
+              }),
+              type: typedef != null ? typedef.type : call.type,
+              params,
+              Type: Syntax.IndirectFunctionCall
+            });
+
+            return icall;
+          }
+
+          return next(args);
+        }
+      };
+    }
   };
 }
 

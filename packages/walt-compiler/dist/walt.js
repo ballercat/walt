@@ -95,7 +95,7 @@ var mapNode_2 = mapNode.mapNode;
 
 // Dead simple AST walker, takes a visitor object and calls all methods for
 // appropriate node Types.
-var walkNode$2 = function walker(visitor) {
+var walkNode$2 = function (visitor) {
   const walkNode = node => {
     if (node == null) {
       return node;
@@ -139,25 +139,11 @@ var walkNode = walkNode$2;
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var NODE_ENV = undefined;
-
 var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (NODE_ENV !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
+  if (format === undefined) {
+    throw new Error('invariant requires an error message argument');
   }
+
 
   if (!condition) {
     var error;
@@ -195,16 +181,6 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
 (function (global, factory) {
   factory(exports);
 })(commonjsGlobal, function (exports) {
-  const keyword = [
-  // EcmaScript
-  'break', 'if', 'else', 'import', 'as', 'from', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'while', 'throw', 'function',
-
-  // s-expression
-  'global', 'module', 'type', 'lambda'];
-  const punctuator = ['+', '++', '-', '--', '>>', '>>>', '<<', '=', '==', '+=', '-=', '=>', '<=', '>=', '!=', '%', '*', '/', '^', '&', '~', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', '[', ']', ';', '>', '<', '?', '||', '&&', '{', '}', '...'];
-
-  const type = ['i32', 'i64', 'f32', 'f64', 'bool'];
-
   const tokens = {
     whitespace: /[ \t]+/,
     comment: [{ match: /\/\/.*?$/ }, { match: /\/\*[^]*?\*\//, lineBreaks: true }],
@@ -213,9 +189,14 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     string: [{ match: /"(?:\\["\\rn]|[^"\\\n])*?"/, value: x => x.slice(1, -1) }, { match: /'(?:\\['\\bfnrtv0]|[^'\\\n])*?'/, value: x => x.slice(1, -1) }, { match: /`(?:\\['\\bfnrtv0]|[^'\\])*?`/, value: x => x.slice(1, -1) }],
     identifier: {
       match: /[A-Za-z_$][A-Za-z0-9_$]*/,
-      keywords: { keyword, type }
+      keywords: { keyword: [
+        // EcmaScript
+        'break', 'if', 'else', 'import', 'as', 'from', 'export', 'return', 'switch', 'case', 'default', 'const', 'let', 'for', 'continue', 'do', 'while', 'throw', 'function',
+
+        // s-expression
+        'global', 'module', 'type', 'lambda'], type: ['i32', 'i64', 'f32', 'f64', 'bool'] }
     },
-    punctuator,
+    punctuator: ['+', '++', '-', '--', '>>', '>>>', '<<', '=', '==', '+=', '-=', '=>', '<=', '>=', '!=', '%', '*', '/', '^', '&', '~', '|', '!', '**', ':', '(', ')', '.', '{', '}', ',', '[', ']', ';', '>', '<', '?', '||', '&&', '{', '}', '...'],
     newline: { match: /(?:\r\n|\r|\n)/, lineBreaks: true }
   };
 
@@ -290,7 +271,74 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
   const Table = 'Table';
   const bool = 'bool';
 
-  const builtinTypes = {
+  exports.Program = Program;
+  exports.Keyword = Keyword;
+  exports.Export = Export;
+  exports.Import = Import;
+  exports.Statement = Statement;
+  exports.IfThenElse = IfThenElse;
+  exports.Select = Select;
+  exports.Else = Else;
+  exports.UnaryExpression = UnaryExpression;
+  exports.BinaryExpression = BinaryExpression;
+  exports.TernaryExpression = TernaryExpression;
+  exports.NumberLiteral = NumberLiteral;
+  exports.StringLiteral = StringLiteral;
+  exports.CharacterLiteral = CharacterLiteral;
+  exports.Punctuator = Punctuator;
+  exports.Identifier = Identifier;
+  exports.ArraySubscript = ArraySubscript;
+  exports.Constant = Constant;
+  exports.Type = Type;
+  exports.GenericType = GenericType;
+  exports.UserType = UserType;
+  exports.FunctionType = FunctionType;
+  exports.Declaration = Declaration;
+  exports.StaticDeclaration = StaticDeclaration;
+  exports.StaticValueList = StaticValueList;
+  exports.ImmutableDeclaration = ImmutableDeclaration;
+  exports.FunctionDeclaration = FunctionDeclaration;
+  exports.ArrayDeclaration = ArrayDeclaration;
+  exports.IndirectFunctionCall = IndirectFunctionCall;
+  exports.FunctionCall = FunctionCall;
+  exports.Loop = Loop;
+  exports.MemoryAssignment = MemoryAssignment;
+  exports.Assignment = Assignment;
+  exports.AssignmentExpression = AssignmentExpression;
+  exports.Param = Param;
+  exports.Typedef = Typedef;
+  exports.Struct = Struct;
+  exports.ReturnStatement = ReturnStatement;
+  exports.Sequence = Sequence;
+  exports.ObjectLiteral = ObjectLiteral;
+  exports.Pair = Pair;
+  exports.TypeCast = TypeCast;
+  exports.Break = Break;
+  exports.Comment = Comment;
+  exports.Sizeof = Sizeof;
+  exports.Spread = Spread;
+  exports.Closure = Closure;
+  exports.Noop = Noop;
+  exports.ClosureType = ClosureType;
+  exports.Block = Block;
+  exports.ObjectField = ObjectField;
+  exports.FunctionIndex = FunctionIndex;
+  exports.FunctionIdentifier = FunctionIdentifier;
+  exports.FunctionPointer = FunctionPointer;
+  exports.FunctionArguments = FunctionArguments;
+  exports.FunctionResult = FunctionResult;
+  exports.FunctionLocals = FunctionLocals;
+  exports.NativeMethod = NativeMethod;
+  exports.Unreachable = Unreachable;
+  exports.Access = Access;
+  exports.i32 = i32;
+  exports.f32 = f32;
+  exports.i64 = i64;
+  exports.f64 = f64;
+  exports.Memory = Memory;
+  exports.Table = Table;
+  exports.bool = bool;
+  exports.builtinTypes = {
     i32,
     f32,
     i64,
@@ -299,8 +347,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     Table,
     bool
   };
-
-  const statements = {
+  exports.statements = {
     // Main Program
     Program,
 
@@ -330,8 +377,7 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     Block,
     Unreachable
   };
-
-  var index = {
+  exports.default = {
     // Main Program
     Program,
 
@@ -400,77 +446,6 @@ var waltSyntax = createCommonjsModule(function (module, exports) {
     NativeMethod,
     Unreachable
   };
-
-  exports.Program = Program;
-  exports.Keyword = Keyword;
-  exports.Export = Export;
-  exports.Import = Import;
-  exports.Statement = Statement;
-  exports.IfThenElse = IfThenElse;
-  exports.Select = Select;
-  exports.Else = Else;
-  exports.UnaryExpression = UnaryExpression;
-  exports.BinaryExpression = BinaryExpression;
-  exports.TernaryExpression = TernaryExpression;
-  exports.NumberLiteral = NumberLiteral;
-  exports.StringLiteral = StringLiteral;
-  exports.CharacterLiteral = CharacterLiteral;
-  exports.Punctuator = Punctuator;
-  exports.Identifier = Identifier;
-  exports.ArraySubscript = ArraySubscript;
-  exports.Constant = Constant;
-  exports.Type = Type;
-  exports.GenericType = GenericType;
-  exports.UserType = UserType;
-  exports.FunctionType = FunctionType;
-  exports.Declaration = Declaration;
-  exports.StaticDeclaration = StaticDeclaration;
-  exports.StaticValueList = StaticValueList;
-  exports.ImmutableDeclaration = ImmutableDeclaration;
-  exports.FunctionDeclaration = FunctionDeclaration;
-  exports.ArrayDeclaration = ArrayDeclaration;
-  exports.IndirectFunctionCall = IndirectFunctionCall;
-  exports.FunctionCall = FunctionCall;
-  exports.Loop = Loop;
-  exports.MemoryAssignment = MemoryAssignment;
-  exports.Assignment = Assignment;
-  exports.AssignmentExpression = AssignmentExpression;
-  exports.Param = Param;
-  exports.Typedef = Typedef;
-  exports.Struct = Struct;
-  exports.ReturnStatement = ReturnStatement;
-  exports.Sequence = Sequence;
-  exports.ObjectLiteral = ObjectLiteral;
-  exports.Pair = Pair;
-  exports.TypeCast = TypeCast;
-  exports.Break = Break;
-  exports.Comment = Comment;
-  exports.Sizeof = Sizeof;
-  exports.Spread = Spread;
-  exports.Closure = Closure;
-  exports.Noop = Noop;
-  exports.ClosureType = ClosureType;
-  exports.Block = Block;
-  exports.ObjectField = ObjectField;
-  exports.FunctionIndex = FunctionIndex;
-  exports.FunctionIdentifier = FunctionIdentifier;
-  exports.FunctionPointer = FunctionPointer;
-  exports.FunctionArguments = FunctionArguments;
-  exports.FunctionResult = FunctionResult;
-  exports.FunctionLocals = FunctionLocals;
-  exports.NativeMethod = NativeMethod;
-  exports.Unreachable = Unreachable;
-  exports.Access = Access;
-  exports.i32 = i32;
-  exports.f32 = f32;
-  exports.i64 = i64;
-  exports.f64 = f64;
-  exports.Memory = Memory;
-  exports.Table = Table;
-  exports.bool = bool;
-  exports.builtinTypes = builtinTypes;
-  exports.statements = statements;
-  exports.default = index;
   exports.tokens = tokens;
 
   Object.defineProperty(exports, '__esModule', { value: true });
@@ -1171,11 +1146,11 @@ function grammar() {
 
   return {
     Lexer: lexer,
-    ParserRules: [{ "name": "_$ebnf$1", "symbols": [] }, { "name": "_$ebnf$1", "symbols": ["_$ebnf$1", "wschar"], "postprocess": function arrpush(d) {
+    ParserRules: [{ "name": "_$ebnf$1", "symbols": [] }, { "name": "_$ebnf$1", "symbols": ["_$ebnf$1", "wschar"], "postprocess": function (d) {
         return d[0].concat([d[1]]);
       } }, { "name": "_", "symbols": ["_$ebnf$1"], "postprocess": function (d) {
         return null;
-      } }, { "name": "__$ebnf$1", "symbols": ["wschar"] }, { "name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function arrpush(d) {
+      } }, { "name": "__$ebnf$1", "symbols": ["wschar"] }, { "name": "__$ebnf$1", "symbols": ["__$ebnf$1", "wschar"], "postprocess": function (d) {
         return d[0].concat([d[1]]);
       } }, { "name": "__", "symbols": ["__$ebnf$1"], "postprocess": function (d) {
         return null;
@@ -1446,9 +1421,10 @@ var nearley = createCommonjsModule(function (module) {
 
         // Setup a table
         var column = new Column(grammar, 0);
-        var table = this.table = [column];
+        this.table = [column];
 
         // I could be expecting anything.
+
         column.wants[grammar.start] = [];
         column.predict(grammar.start);
         // TODO what if start rule is nullable?
@@ -1670,76 +1646,6 @@ function factory(lexer) {
     return node(Type, { value: operator.value })([lhs, rhs]);
   };
 
-  const constant = d => {
-    const value = d[0].value;
-    return extendNode({
-      value: `${value}`,
-      type: value.toString().indexOf('.') !== -1 ? 'f32' : 'i32'
-    }, node(Syntax.Constant)([]));
-  };
-
-  const identifier = d => node('Identifier', { value: d.join('') })([]);
-
-  const declaration = Type => d => {
-    const [pair, ...init] = drop(d);
-    const [id, type] = pair.params;
-    return extendNode({
-      value: id.value,
-      type: type.value
-    }, node(Type)(init));
-  };
-
-  const unary = ([operator, target]) => {
-    let params = [target];
-
-    if (operator.value === '-') {
-      params = [_extends({}, target, {
-        value: '0',
-        Type: Syntax.Constant,
-        params: [],
-        meta: {}
-      }), target];
-    }
-
-    return extendNode({
-      value: operator.value,
-      params
-    }, node(Syntax.UnaryExpression)([operator, target]));
-  };
-
-  const ternary = d => {
-    return extendNode({
-      value: '?'
-    }, node(Syntax.TernaryExpression)(d));
-  };
-
-  const subscript = d => {
-    const [id, field] = d.filter(nonEmpty);
-    return extendNode({
-      value: id.value,
-      params: [id, field]
-    }, node(Syntax.ArraySubscript)([id, field]));
-  };
-
-  const fun = d => {
-    const [name, args, result, block] = d.filter(nonEmpty);
-    return _extends({}, name, {
-      Type: Syntax.FunctionDeclaration,
-      meta: [],
-      params: [args, result, block]
-    });
-  };
-
-  const voidFun = d => {
-    const params = drop(d);
-    const [name, args, block] = params;
-    const result = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
-    return extendNode({
-      value: name.value,
-      params: [args, result, block]
-    }, node(Syntax.FunctionDeclaration)(params));
-  };
-
   const result = d => {
     const [type] = drop(d);
 
@@ -1748,59 +1654,87 @@ function factory(lexer) {
     }, node(Syntax.FunctionResult)(d));
   };
 
-  const call = d => {
-    let [id, ...params] = drop(d);
-
-    return extendNode({
-      value: id.value
-    }, node(Syntax.FunctionCall)([id, ...params]));
-  };
-
-  const struct = d => {
-    const [id, ...params] = drop(d);
-    return extendNode({
-      value: id.value
-    }, node(Syntax.Struct)(params));
-  };
-
-  const typedef = d => {
-    const [id, args, res] = drop(d);
-
-    return extendNode({
-      value: id.value,
-      params: [node(Syntax.FunctionArguments)(args), extendNode({
-        type: res.value
-      }, node(Syntax.FunctionResult)([res]))],
-      type: res.type
-    }, node(Syntax.Typedef)([id, args, result]));
-  };
-
-  const string = d => {
-    return extendNode({
-      value: d[0].value,
-      type: 'i32'
-    }, node(Syntax.StringLiteral)([]));
-  };
-
   return {
     node,
     binary,
-    constant,
-    identifier,
-    unary,
-    ternary,
-    subscript,
+    constant: d => {
+      const value = d[0].value;
+      return extendNode({
+        value: `${value}`,
+        type: value.toString().indexOf('.') !== -1 ? 'f32' : 'i32'
+      }, node(Syntax.Constant)([]));
+    },
+    identifier: d => node('Identifier', { value: d.join('') })([]),
+    unary: ([operator, target]) => {
+      let params = [target];
+
+      if (operator.value === '-') {
+        params = [_extends({}, target, {
+          value: '0',
+          Type: Syntax.Constant,
+          params: [],
+          meta: {}
+        }), target];
+      }
+
+      return extendNode({
+        value: operator.value,
+        params
+      }, node(Syntax.UnaryExpression)([operator, target]));
+    },
+    ternary: d => {
+      return extendNode({
+        value: '?'
+      }, node(Syntax.TernaryExpression)(d));
+    },
+    subscript: d => {
+      const [id, field] = d.filter(nonEmpty);
+      return extendNode({
+        value: id.value,
+        params: [id, field]
+      }, node(Syntax.ArraySubscript)([id, field]));
+    },
     access(d) {
       return extendNode({
         value: d[0].value + '.' + d[1].value
       }, node(Syntax.Access)(d));
     },
-    fun,
-    declaration,
-    call,
-    struct,
+    fun: d => {
+      const [name, args, result, block] = d.filter(nonEmpty);
+      return _extends({}, name, {
+        Type: Syntax.FunctionDeclaration,
+        meta: [],
+        params: [args, result, block]
+      });
+    },
+    declaration: Type => d => {
+      const [pair, ...init] = drop(d);
+      const [id, type] = pair.params;
+      return extendNode({
+        value: id.value,
+        type: type.value
+      }, node(Type)(init));
+    },
+    call: d => {
+      let [id, ...params] = drop(d);
+
+      return extendNode({
+        value: id.value
+      }, node(Syntax.FunctionCall)([id, ...params]));
+    },
+    struct: d => {
+      const [id, ...params] = drop(d);
+      return extendNode({
+        value: id.value
+      }, node(Syntax.Struct)(params));
+    },
     result,
-    string,
+    string: d => {
+      return extendNode({
+        value: d[0].value,
+        type: 'i32'
+      }, node(Syntax.StringLiteral)([]));
+    },
     char(d) {
       return extendNode({
         value: d[0].value,
@@ -1822,8 +1756,26 @@ function factory(lexer) {
         params: [obj]
       }, node(Syntax.Type)(d));
     },
-    typedef,
-    voidFun,
+    typedef: d => {
+      const [id, args, res] = drop(d);
+
+      return extendNode({
+        value: id.value,
+        params: [node(Syntax.FunctionArguments)(args), extendNode({
+          type: res.value
+        }, node(Syntax.FunctionResult)([res]))],
+        type: res.type
+      }, node(Syntax.Typedef)([id, args, result]));
+    },
+    voidFun: d => {
+      const params = drop(d);
+      const [name, args, block] = params;
+      const result = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
+      return extendNode({
+        value: name.value,
+        params: [args, result, block]
+      }, node(Syntax.FunctionDeclaration)(params));
+    },
     assignment(d, value) {
       if (['-=', '+='].includes(value)) {
         const operator = value[0];
@@ -1925,7 +1877,7 @@ function makeLexer() {
   };
 }
 
-var makeParser = curry_1(function parse(extraGrammar, source) {
+var makeParser = curry_1(function (extraGrammar, source) {
   const grammarList = [grammar, grammar$1, ...extraGrammar];
   const context = {
     lexer: makeLexer(),
@@ -2115,7 +2067,7 @@ const TYPE_CAST = 'type/cast';
 
 const AST_METADATA = 'AST_METADATA';
 const FUNCTION_METADATA = 'FUNCTION_METADATA';
-const ALIAS = 'alias';
+
 
 // Statics
 
@@ -2190,7 +2142,7 @@ const balanceTypesInMathExpression = expression => {
 // Core plugin
 function Core() {
   return {
-    semantics({ stmt }) {
+    semantics() {
       // Parse declaration node
       const declaration = next => ([node, context]) => {
         const scope$$1 = scope_3(context.scopes);
@@ -2256,13 +2208,6 @@ function Core() {
 
           return next(args);
         },
-        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
-          const [inputNode, context] = args;
-          const params = inputNode.params.map(p => transform([p, context]));
-          const [location, value] = params;
-
-          return transform([stmt`${value.type}.store(${location}, ${value});`, context]);
-        },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([balanceTypesInMathExpression(_extends({}, node, {
             // Flatten out the parameters, put the condition node last
@@ -2279,7 +2224,7 @@ function base() {
   return {
     semantics() {
       return {
-        '*': _ => function baseSemanticsParser([node, ...rest], t) {
+        '*': _ => function ([node, ...rest], t) {
           const result = _extends({}, node, {
             params: node.params.map(child => t([child, ...rest]))
           });
@@ -2724,9 +2669,7 @@ function semantics$2({ stmt }) {
       const subscript = produceSubscript(lhs.params.map(transform));
       const { type, index } = subscript;
 
-      if (!sanityCheck(subscript)) {
-        return next(args);
-      }
+      invariant_1(sanityCheck(subscript), `PANIC - Cannot assign to subscript of ${lhs.value}`);
 
       return transform(stmt`${type}.store(${index}, ${rhs});`);
     },
@@ -3240,7 +3183,7 @@ function functionPointer() {
     semantics() {
       return {
         // Handle Table definitions
-        [Syntax.ImmutableDeclaration]: next => function defineTable(args) {
+        [Syntax.ImmutableDeclaration]: next => function (args) {
           const [decl, context] = args;
 
           // Short circuit since memory is a special type of declaration
@@ -3254,7 +3197,7 @@ function functionPointer() {
 
           return next(args);
         },
-        [Syntax.Identifier]: next => function pointer(args) {
+        [Syntax.Identifier]: next => function (args) {
           const [node, context] = args;
           const { functions, table, scopes } = context;
 
@@ -3287,7 +3230,7 @@ function functionPointer() {
             params: node.params.map(p => transform([p, context]))
           }, node), context]);
         },
-        [Syntax.FunctionCall]: next => function indirectCall(args, transform) {
+        [Syntax.FunctionCall]: next => function (args, transform) {
           const [call, context] = args;
           const { scopes, types } = context;
           const ref = scope_4(scopes, call.value);
@@ -3398,27 +3341,11 @@ function Struct() {
         return offset ? stmt`(${base} + ${offset});` : stmt`(${base});`;
       };
 
-      function access(next) {
-        return (args, transform) => {
-          const [node, context] = args;
-          const [lookup, key] = node.params;
-          const struct = toStruct(transform([lookup, context]));
-
-          if (struct == null) {
-            return next(args);
-          }
-          const field = struct.field(key);
-          if (!field) {
-            return node;
-          }
-
-          return extendNode({
-            meta: {
-              STRUCT_TYPE: field.STRUCT_TYPE,
-              TYPE_ARRAY: field.TYPE_ARRAY
-            }
-          }, transform([stmt`${field.type}.load(${structOffset(lookup, field.offset)});`, context]));
-        };
+      function store(base, field, rhs) {
+        return stmt`${field.type}.store(
+          ${structOffset(base, field.offset)},
+          ${rhs}
+        );`;
       }
 
       function fieldAssignment(args, transform) {
@@ -3436,10 +3363,7 @@ function Struct() {
           return node;
         }
 
-        return transform([stmt`${field.type}.store(
-            ${structOffset(struct.base, field.offset)},
-            ${rhs}
-          );`, context]);
+        return transform([store(struct.base, field, rhs), context]);
       }
 
       function objectAssignment(args, transform) {
@@ -3447,12 +3371,9 @@ function Struct() {
         const [lhs, rhs] = node.params;
         const struct = toStruct(transform([lhs, context]));
 
-        if (struct == null) {
-          return node;
-        }
+        invariant_1(struct, `PANIC - Cannot use object assignment on ${lhs.value}`);
 
-        const individualKeys = {};
-        const spreadKeys = {};
+        const kvs = [];
 
         // We have to walk the nodes twice, once for regular prop keys and then again
         // for ...(spread)
@@ -3460,28 +3381,14 @@ function Struct() {
           // Top level Identifiers _inside_ an object literal === shorthand
           // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
           // only way this is hit is if the identifier is TOP LEVEL
-          [Syntax.Identifier]: (identifier, _) => {
-            const field = struct.field(identifier);
-            if (field == null) {
-              return;
-            }
-
-            individualKeys[identifier.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${identifier}
-              );`;
+          [Syntax.Identifier]: (value, _) => {
+            const field = struct.field(value);
+            kvs.push({ field, value });
           },
           [Syntax.Pair]: (pair, _) => {
             const [property, value] = pair.params;
             const field = struct.field(property);
-            if (field == null) {
-              return;
-            }
-
-            individualKeys[property.value] = stmt`${field.type}.store(
-                ${structOffset(lhs, field.offset)},
-                ${value}
-              );`;
+            kvs.push({ field, value });
           },
           [Syntax.Spread]: (spread, _) => {
             // find userType
@@ -3489,20 +3396,20 @@ function Struct() {
             // map over the keys
             Object.keys(struct.offsetMap).forEach(key => {
               const field = struct.field({ value: key });
-              if (field == null) {
-                return;
-              }
 
-              spreadKeys[key] = stmt`${field.type}.store(
-                  ${structOffset(lhs, field.offset)},
-                  ${field.type}.load(${structOffset(target, field.offset)})
-                );`;
+              invariant_1(field != null, `PANIC - undefined object key "${key}`);
+
+              kvs.push({
+                field,
+                value: stmt`${field.type}.load(${structOffset(target, field.offset)});`
+              });
             });
           }
         })(rhs);
 
-        // $FlowFixMe - Flow is dumb sometimes. clearly values here are all NodeType
-        const params = Object.values(_extends({}, spreadKeys, individualKeys)).map(p => transform([p, context]));
+        const params = kvs.filter(({ field }) => field != null)
+        /* $FlowFixMe */
+        .map(kv => transform([store(lhs, kv.field, kv.value), context]));
 
         return _extends({}, lhs, {
           Type: Syntax.Block,
@@ -3563,10 +3470,29 @@ function Struct() {
             type: STRUCT_NATIVE_TYPE
           });
         },
-        [Syntax.Access]: access,
+        [Syntax.Access]: function (_next) {
+          return (args, transform) => {
+            const [node, context] = args;
+            const [lookup, key] = node.params;
+            const struct = toStruct(transform([lookup, context]));
+
+            invariant_1(struct, `PANIC - Cannot use access properties of ${lookup.value}`);
+
+            const field = struct.field(key);
+
+            invariant_1(field, `PANIC - Cannot access property ${key.value} on ${lookup.value}`);
+
+            return extendNode({
+              meta: {
+                STRUCT_TYPE: field.STRUCT_TYPE,
+                TYPE_ARRAY: field.TYPE_ARRAY
+              }
+            }, transform([stmt`${field.type}.load(${structOffset(lookup, field.offset)});`, context]));
+          };
+        },
         [Syntax.Assignment]: next => (args, transform) => {
           const [node] = args;
-          const [lhs, rhs = {}] = node.params;
+          const [lhs, rhs] = node.params;
 
           if (lhs.Type === Syntax.Access) {
             return fieldAssignment(args, transform);
@@ -4148,8 +4074,8 @@ const parseBounds = node => {
 const getText$1 = node => {
   const value = node.value || '??';
   const hasType = node.type;
-  const type = hasType || 'i32';
-  const op = opcodeFromOperator({ value, type });
+
+  const op = opcodeFromOperator({ value, type: hasType || 'i32' });
 
   if (!hasType) {
     return op.text.replace('i32', '??');
@@ -4367,7 +4293,7 @@ const scopeOperation = curry_1((op, node) => {
   const _global = node.meta[GLOBAL_INDEX];
   const index = local != null ? local : _global;
 
-  invariant_1(index != null, `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(op)} node: ${printNode(node)}`);
+  invariant_1(index != null, `Undefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(op)} node: ${printNode(node)}`);
 
   const kind = local != null ? op + 'Local' : op + 'Global';
   const params = [Number(index)];
@@ -4480,14 +4406,8 @@ function validate(ast, {
         [Syntax.Access]: (node, _validator) => {
           const [identifier, offset] = node.params;
           const [start, end] = node.range;
-          if (!node.meta.ALIAS) {
-            problems.push(generateErrorString('Cannot generate property access', `Target ${identifier.value} does not appear to be a struct.`, { start, end }, filename, functionName));
-          }
 
-          if (offset.value == null) {
-            const alias = offset.meta[ALIAS];
-            problems.push(generateErrorString('Cannot generate property access', `Undefined key ${alias != null ? alias : offset.value} for type ${String(identifier.meta.ALIAS)}`, { start, end }, filename, functionName));
-          }
+          problems.push(generateErrorString('Cannot generate property access', `Target "${identifier.value}" with key "${offset.value}"`, { start, end }, filename, functionName));
         },
         [Syntax.ReturnStatement]: (node, validator) => {
           node.params.map(validator);
@@ -4806,9 +4726,7 @@ const generateNative = (node, parent) => {
   } else {
     const alignment = alignCodes[operation];
 
-    const params = [alignment, 0];
-
-    block.push({ kind: textMap[node.value], params });
+    block.push({ kind: textMap[node.value], params: [alignment, 0] });
   }
 
   return block;
@@ -5845,9 +5763,9 @@ const makeFragment = parser => {
   // otherwise the parser will fail as it's not a valid
   // place for an expression
   const parse = src => {
-    // 1st node is a function.
-    // 3rd node of a function is a block, containing a single expression
     try {
+      // 1st node is a function.
+      // 3rd node of a function is a block, containing a single expression
       return parser(`function fragment() {
         ${src}
       }`).params[0].params[2].params[0];
