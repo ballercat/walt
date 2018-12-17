@@ -16,7 +16,7 @@ export const scopeOperation = curry((op, node) => {
 
   invariant(
     index != null,
-    `Unefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(
+    `Undefined index for scope Operation. Possibly missing metadata. op: ${JSON.stringify(
       op
     )} node: ${print(node)}`
   );
