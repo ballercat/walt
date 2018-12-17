@@ -39,7 +39,12 @@ export default {
           },
         ],
       ],
-      plugins: ['external-helpers', 'transform-object-rest-spread'],
+      plugins: [
+        'external-helpers',
+        'transform-object-rest-spread',
+        'transform-node-env-inline',
+        ['minify-dead-code-elimination', { 'keepFnArgs': true }]
+      ],
     }),
     resolve({
       jail: __dirname,

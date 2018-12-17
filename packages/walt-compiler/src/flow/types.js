@@ -85,7 +85,7 @@ export type NodeMap = { [string]: NodeType };
 // Semantics
 export type SemanticOptions = {
   parser: string => NodeType,
-  fragment: string => NodeType,
+  stmt: any => NodeType,
 };
 export type Context = {
   functions: { [string]: FunctionDeclaration },

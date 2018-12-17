@@ -47,12 +47,12 @@ function link(file, api) {
 export const harness = (
   filepath,
   env,
-  { printNode = false, printBinary = false } = {}
+  { printNode = false, printBinary = false, prettyPrint = false } = {}
 ) => t => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const decodeText = getText(memory);
   const parser = makeParser([]);
-  const fragment = makeFragment(parser);
+  const stmt = makeFragment(parser);
 
   const { log } = console;
   const build = link(filepath, {
@@ -62,9 +62,12 @@ export const harness = (
     walkNode,
     parser,
     semantics(ast) {
-      const sast = semantics(ast, [], { parser, fragment });
+      const sast = semantics(ast, [], { parser, stmt });
       if (printNode) {
         log(print(sast));
+      }
+      if (prettyPrint) {
+        log(prettyPrintNode(sast));
       }
       return sast;
     },

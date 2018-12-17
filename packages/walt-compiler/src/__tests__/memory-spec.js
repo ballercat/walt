@@ -6,9 +6,8 @@ const compileAndRun = (src, imports) =>
 const outputIs = (t, value) => result =>
   t.is(result.instance.exports.test(), value);
 
-test('memory can be defined', t =>
-  compileAndRun(
-    `
+test('memory can be defined', t => {
+  const src = `
   const memory: Memory<{ initial: 2, max: 2 }>;
 
   export function test(): i32 {
@@ -17,8 +16,11 @@ test('memory can be defined', t =>
     x[0] = 21;
     x[y] = 2;
     return x[0] * x[y];
-  }`
-  ).then(outputIs(t, 42)));
+  }`;
+
+  const walt = compile(src);
+  return WebAssembly.instantiate(walt.buffer()).then(outputIs(t, 42));
+});
 
 test('memory of any shape can be imported', t => {
   const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
@@ -34,22 +36,22 @@ test('memory of any shape can be imported', t => {
   );
   const view = new Int32Array(memory.buffer);
   view[1024] = 42;
-  return compileAndRun(
-    `
+  const src = `
   import { memory: Memory<{initial: 1, max: 1 }> } from 'env';
   export function test(): i32 {
     const pointer: i32[] = 0;
     return pointer[1024];
   }
-  `,
-    { env: { memory } }
-  ).then(outputIs(t, 42));
+  `;
+  const walt = compile(src);
+  return WebAssembly.instantiate(walt.buffer(), { env: { memory } }).then(
+    outputIs(t, 42)
+  );
 });
 
 test('wide array offsets', t => {
   const SAFE_OFFSET = 65536;
-  return WebAssembly.instantiate(
-    compile(`
+  const walt = compile(`
       export const memory: Memory<{initial: ${1 + (SAFE_OFFSET >> 16)}}>;
       export function populateArray(): f64 {
         const array: f64[] = ${SAFE_OFFSET};
@@ -61,9 +63,9 @@ test('wide array offsets', t => {
 
         return array[4];
       }
-  `).buffer(),
-    {}
-  ).then(({ instance }) => {
+  `);
+
+  return WebAssembly.instantiate(walt.buffer(), {}).then(({ instance }) => {
     const typedArray = new Float64Array(
       instance.exports.memory.buffer,
       SAFE_OFFSET,

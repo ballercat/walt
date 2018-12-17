@@ -212,9 +212,12 @@ export default function factory(lexer) {
     ternary,
     subscript,
     access(d) {
-      const n = subscript(d);
-      n.Type = 'Access';
-      return n;
+      return extendNode(
+        {
+          value: d[0].value + '.' + d[1].value,
+        },
+        node(Syntax.Access)(d)
+      );
     },
     fun,
     declaration,
@@ -255,24 +258,16 @@ export default function factory(lexer) {
     typedef,
     voidFun,
     assignment(d, value) {
-      let Type = Syntax.Assignment;
-      if (
-        d[0] &&
-        (d[0].Type === Syntax.ArraySubscript || d[0].Type === 'Access')
-      ) {
-        Type = Syntax.MemoryAssignment;
-      }
-
       if (['-=', '+='].includes(value)) {
         const operator = value[0];
         const [target, amount] = drop(d);
         const b = binary([target, { value: operator }, amount]);
-        return node(Type, {
+        return node(Syntax.Assignment, {
           value: '=',
         })([target, b]);
       }
 
-      return node(Type, { value })(d);
+      return node(Syntax.Assignment, { value })(d);
     },
     assignmentExpr(d, value) {
       if (['-=', '+='].includes(value)) {

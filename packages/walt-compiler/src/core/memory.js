@@ -14,7 +14,7 @@ const isMemoryIdentifier = (context, id) => {
 
 export default function memoryPlugin(): SemanticPlugin {
   return {
-    semantics() {
+    semantics({ stmt }) {
       return {
         [Syntax.ImmutableDeclaration]: next => args => {
           const [decl, context] = args;
@@ -41,29 +41,10 @@ export default function memoryPlugin(): SemanticPlugin {
         [Syntax.FunctionCall]: next => (args, transform) => {
           const [node, context] = args;
           const [subscript, ...rest] = node.params;
-          const [id, field = {}] = subscript.params;
+          const [id = {}, field = {}] = subscript.params;
 
           const callMap = {
-            dataSize: {
-              ...id,
-              type: 'i32',
-              meta: { ALIAS: 'Memory' },
-              Type: Syntax.Access,
-              params: [
-                {
-                  ...id,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-                {
-                  ...id,
-                  type: 'i32',
-                  value: '0',
-                  Type: Syntax.Constant,
-                },
-              ],
-            },
+            dataSize: transform([stmt`i32.load(0);`, context]),
             grow: {
               ...id,
               value: 'grow_memory',

@@ -5,9 +5,9 @@ import semantics from '../../semantics';
 import validate from '..';
 
 const parser = makeParser([]);
-const fragment = makeFragment(parser);
+const stmt = makeFragment(parser);
 const parseAndValidate = source =>
-  validate(semantics(parser(source), [], { parser, fragment }), {
+  validate(semantics(parser(source), [], { parser, stmt }), {
     lines: source.split('/n'),
     filename: 'spec.walt',
     extraSemantics: [],

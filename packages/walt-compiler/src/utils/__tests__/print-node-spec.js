@@ -5,8 +5,8 @@ import { makeFragment } from '../../parser/fragment';
 import semantics from '../../semantics';
 
 const parser = makeParser([]);
-const fragment = makeFragment(parser);
-const getAST = src => semantics(parser(src), [], { parser, fragment });
+const stmt = makeFragment(parser);
+const getAST = src => semantics(parser(src), [], { parser, stmt });
 
 test('full ast printer', t => {
   const node = getAST(`

@@ -2,7 +2,7 @@
 // @flow
 import walkNode from 'walt-parser-tools/walk-node';
 import Syntax from 'walt-syntax';
-import { GLOBAL_INDEX, TYPE_CONST } from '../semantics/metadata';
+import { GLOBAL_INDEX } from '../semantics/metadata';
 import { opcodeFromOperator, getTypecastOpcode } from '../emitter/opcode';
 import { parseBounds } from './resizable-limits';
 import type { NodeType, TypeCastType } from '../flow/types';
@@ -49,6 +49,15 @@ const typedefString = (node: NodeType): string => {
   );
 };
 
+const printFormatted = (add, print, { value, params }) => {
+  if (params.filter(Boolean).length) {
+    add(`(${value}`, 2);
+    params.forEach(print);
+    add(')', 0, -2);
+  } else {
+    add(`(${value})`, 0, 0);
+  }
+};
 const getPrinters = add => ({
   [Syntax.Import]: (node, _print) => {
     const [nodes, mod] = node.params;
@@ -80,27 +89,25 @@ const getPrinters = add => ({
     add(')', 0, -2);
   },
   [Syntax.GenericType]: (node, _print) => {
-    add('(type-generic ' + node.value + ')', 0, 0, ' pseudo type');
+    add(';; Pseudo type', 0, 0);
+    add('(type-generic ' + node.value + ')', 0, 0);
   },
-  [Syntax.FunctionCall]: (node, print) => {
-    if (node.params.length > 0) {
-      add(`(call ${node.value}`, 2);
-      node.params.forEach(print);
-      add(')', 0, -2);
-    } else {
-      add(`(call ${node.value})`);
-    }
+  [Syntax.FunctionCall]: ({ value, params }, print) => {
+    printFormatted(add, print, { value: `call ${value}`, params });
+  },
+  [Syntax.Block]: ({ params }, print) => {
+    printFormatted(add, print, { value: 'block', params });
+  },
+  [Syntax.NativeMethod]: (node, print) => {
+    printFormatted(add, print, node);
   },
   [Syntax.BinaryExpression]: (node: NodeType, print) => {
     const text = getText(node);
-    add('(' + text, 2);
-    node.params.forEach(print);
-    add(')', 0, -2);
+    printFormatted(add, print, { value: text, params: node.params });
   },
-  [Syntax.ArraySubscript]: (node: NodeType, print) => {
-    add('(i32.add', 2);
-    node.params.forEach(print);
-    add(')', 0, -2);
+  [Syntax.ArraySubscript]: ({ params }, print) => {
+    add(';; unparsed', 0, 0);
+    printFormatted(add, print, { value: 'subscript', params });
   },
   [Syntax.Typedef]: (node, _) => {
     add(typedefString(node));
@@ -122,19 +129,11 @@ const getPrinters = add => ({
     rest.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ReturnStatement]: (node, print) => {
-    add('(return', 2);
-    node.params.forEach(print);
-    add(')', 0, -2);
+  [Syntax.ReturnStatement]: ({ params }, print) => {
+    printFormatted(add, print, { value: 'return', params });
   },
   [Syntax.Declaration]: (node, print) => {
-    const mutability = node.meta[TYPE_CONST] != null ? 'immutable' : 'mutable';
-    add(
-      '(local ' + node.value + ' ' + String(node.type),
-      2,
-      0,
-      ` ${mutability}`
-    );
+    add('(local ' + node.value + ' ' + String(node.type), 2, 0);
     node.params.forEach(print);
     add(')', 0, -2);
   },
@@ -144,18 +143,14 @@ const getPrinters = add => ({
       const memory = parseBounds(node);
       add(`(memory ${memory.initial}${memory.max ? ` ${memory.max}` : ''})`);
     } else {
-      add(
-        `(${scope} ` + node.value + ' ' + String(node.type),
-        2,
-        0,
-        ' immutable'
-      );
+      add(`(${scope} ` + node.value + ' ' + String(node.type), 2, 0);
       node.params.forEach(print);
       add(')', 0, -2);
     }
   },
   [Syntax.StringLiteral]: node => {
-    add('(i32.const ??)', 0, 0, ` string "${node.value}"`);
+    add(`; string "${node.value}"`, 0, 0);
+    add('(i32.const ??)', 0, 0);
   },
   [Syntax.Type]: node => {
     add(node.value);
@@ -167,10 +162,9 @@ const getPrinters = add => ({
     node.params.forEach(print);
     add(')', 0, -2);
   },
-  [Syntax.ArraySubscript]: (node, print) => {
-    add('(' + String(node.type) + '.load', 2, 0);
-    node.params.forEach(print);
-    add(')', 0, -2);
+  [Syntax.Access]: ({ params }, print) => {
+    add(';; unparsed', 0, 0);
+    printFormatted(add, print, { value: 'access', params });
   },
   [Syntax.MemoryAssignment]: (node, print) => {
     add('(' + String(node.type) + '.store', 2, 0);
@@ -181,6 +175,9 @@ const getPrinters = add => ({
     const [target, ...params] = node.params;
     const scope = target.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     add(`(set_${scope} ${target.value}`, 2);
+    if ([Syntax.ArraySubscript, Syntax.Access].includes(target.Type)) {
+      print(target);
+    }
     params.forEach(print);
     add(')', 0, -2);
   },
@@ -217,10 +214,8 @@ const printNode = (node?: NodeType): string => {
   let depth = 0;
   const offsets = [];
   const pieces = [];
-  const comments = [];
-  const add = (piece, post = 0, pre = 0, comment = '') => {
+  const add = (piece, post = 0, pre = 0) => {
     depth += pre;
-    comments.push(comment);
     pieces.push(piece);
     offsets.push(depth + piece.length);
     depth += post;
@@ -228,14 +223,8 @@ const printNode = (node?: NodeType): string => {
 
   walkNode(getPrinters(add))(node);
 
-  const max = Math.max(...offsets);
-  const edge = max + 4;
   const result = pieces.reduce((acc, val, i) => {
-    acc +=
-      val.padStart(offsets[i], ' ').padEnd(edge, ' ') +
-      ';' +
-      comments[i] +
-      '\n';
+    acc += val.padStart(offsets[i], ' ') + '\n';
     return acc;
   }, '');
 

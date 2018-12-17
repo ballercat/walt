@@ -12,10 +12,8 @@ import generateIf from './if-then-else';
 import generateFunctionPointer from './function-pointer';
 import generateReturn from './return-statement';
 import generateDeclaration from './declaration';
-import generateArraySubscript from './array-subscript';
 import generateAssignment from './assignment';
 import generateAssignmentExpression from './assignment-expression';
-import generateMemoryAssignment from './memory-assignment';
 import generateLoop from './loop';
 import generateTypecast from './typecast';
 import generateBreak from './break';
@@ -24,7 +22,6 @@ import generateBlock from './block';
 import generateElse from './else';
 import generateSelect from './select';
 import generateNative from './native';
-import generateAccess from './access';
 import generateConstant from './constant';
 
 import Syntax from 'walt-syntax';
@@ -34,7 +31,6 @@ import invariant from 'invariant';
 import type { MapSyntaxType, GeneratorType } from './flow/types';
 
 export const syntaxMap: { [string]: GeneratorType } = {
-  [Syntax.Access]: generateAccess,
   [Syntax.FunctionCall]: generateFunctionCall,
   [Syntax.IndirectFunctionCall]: generateIndirectFunctionCall,
   // Unary
@@ -51,11 +47,8 @@ export const syntaxMap: { [string]: GeneratorType } = {
   [Syntax.ReturnStatement]: generateReturn,
   // Binary
   [Syntax.Declaration]: generateDeclaration,
-  [Syntax.ArraySubscript]: generateArraySubscript,
   [Syntax.Assignment]: generateAssignment,
   [Syntax.AssignmentExpression]: generateAssignmentExpression,
-  // Memory
-  [Syntax.MemoryAssignment]: generateMemoryAssignment,
   // Loops
   [Syntax.Loop]: generateLoop,
   [Syntax.Break]: generateBreak,

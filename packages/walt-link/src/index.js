@@ -43,14 +43,14 @@ function link(file, options = { logger: console }, api) {
   api = api || compiler;
 
   const parser = api.makeParser([]);
-  const fragment = api.makeFragment(parser);
+  const stmt = api.makeFragment(parser);
   const { semantics } = api;
 
   api = Object.assign({}, api, {
     parser,
-    fragment,
+    stmt,
     semantics(ast) {
-      return semantics(ast, [], { parser, fragment });
+      return semantics(ast, [], { parser, stmt });
     },
   });
 

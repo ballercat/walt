@@ -41,7 +41,7 @@ function encodeArray(array, type) {
 export default function Strings(): SemanticPlugin {
   let count = 0;
   return {
-    semantics: () => ({
+    semantics: ({ stmt }) => ({
       [Syntax.StaticDeclaration]: _next => ([node, context], transform) => {
         const { userTypes, statics } = context;
 
@@ -62,6 +62,7 @@ export default function Strings(): SemanticPlugin {
             TYPE_OBJECT: {},
             OBJECT_KEY_TYPES: {},
             VALUES: [],
+            STATIC: bareType,
           }
         );
 
@@ -82,6 +83,7 @@ export default function Strings(): SemanticPlugin {
         return transform([
           {
             ...node,
+            meta,
             type: uid,
             Type: Syntax.ImmutableDeclaration,
             params: [
@@ -92,6 +94,21 @@ export default function Strings(): SemanticPlugin {
               },
             ],
           },
+          context,
+        ]);
+      },
+      [Syntax.ArraySubscript]: next => ([node, context], transform) => {
+        const [target, offset] = node.params.map(p => transform([p, context]));
+        if (!target.meta.STATIC) {
+          return next([node, context]);
+        }
+
+        const shift = { i32: 2, f32: 2, i64: 3, f64: 3 }[target.meta.STATIC];
+
+        return transform([
+          stmt`${
+            target.meta.STATIC
+          }.load(${target} + (${offset} << ${shift}));`,
           context,
         ]);
       },

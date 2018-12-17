@@ -35,17 +35,28 @@ const balanceTypesInMathExpression = expression => {
       paramNode.type != null &&
       typeWeight(paramNode.type) !== typeWeight(type)
     ) {
-      return {
-        ...paramNode,
-        type,
-        value: paramNode.value,
-        Type: Syntax.TypeCast,
-        meta: {
-          ...paramNode.meta,
-          [TYPE_CAST]: { to: type, from: paramNode.type },
+      // Convert constants to the desired type directly
+      if (paramNode.Type === Syntax.Constant) {
+        return extendNode(
+          {
+            type,
+          },
+          paramNode
+        );
+      }
+
+      return extendNode(
+        {
+          type,
+          value: paramNode.value,
+          Type: Syntax.TypeCast,
+          meta: {
+            [TYPE_CAST]: { to: type, from: paramNode.type },
+          },
+          params: [paramNode],
         },
-        params: [paramNode],
-      };
+        paramNode
+      );
     }
 
     return paramNode;
@@ -137,12 +148,6 @@ export default function Core(): SemanticPlugin {
           }
 
           return next(args);
-        },
-        [Syntax.MemoryAssignment]: _ignore => (args, transform) => {
-          const [inputNode, context] = args;
-          const params = inputNode.params.map(p => transform([p, context]));
-          const { type } = params[0];
-          return { ...inputNode, params, type };
         },
         [Syntax.TernaryExpression]: next => ([node, context]) => {
           return next([

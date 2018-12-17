@@ -153,10 +153,10 @@ TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPA
 Assignment -> _Assignment _ SEPARATOR {% id %}
 
 _Assignment ->
-    Access _ EQUALS _ Expression    {% d => assignment(d, '=') %}
-  | Access _ PLSEQUALS _ Expression {% d => assignment(d, '+=') %}
-  | Access _ MINEQUALS _ Expression {% d => assignment(d, '-=') %}
-  | Access _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
+    Subscript _ EQUALS _ Expression    {% d => assignment(d, '=') %}
+  | Subscript _ PLSEQUALS _ Expression {% d => assignment(d, '+=') %}
+  | Subscript _ MINEQUALS _ Expression {% d => assignment(d, '-=') %}
+  | Subscript _ EQUALS _ ObjectLiteral {% d => assignment(d, '=') %}
 
 # Expression
 ExpressionStatement -> Call _ SEPARATOR {% id %}
@@ -234,20 +234,23 @@ Unary ->
   | Call      {% id %}
 
 Call ->
-    Access _ LB _ ArgumentList _ RB {% compose(call, flatten) %}
-  | Access _ LB _ RB            {% call %}
-  | Access {% id %}
+    Subscript _ LB _ ArgumentList _ RB {% compose(call, flatten) %}
+  | Subscript _ LB _ RB            {% call %}
+  | Subscript {% id %}
 
 ArgumentList ->
     Expression                        {% id %}
-  # Support for sizeof(i32) etc.,
   | NativeType                        {% id %}
   | Expression _ COMMA _ ArgumentList {% flatten %}
 
+Subscript ->
+    Access LSB _ Expression _ RSB Subscript {% subscript %}
+  | Access LSB _ Expression _ RSB           {% subscript %}
+  | Access                              {% id %}
+
 Access ->
-    Identifier DOT Identifier         {% access %}
-  | NativeType DOT Identifier         {% access %}
-  | Access LSB _ Ternary _ RSB        {% subscript %}
+    Access DOT Identifier             {% compose(access, drop) %}
+  | NativeType DOT Access             {% compose(access, drop) %}
   | Grouping                          {% id %}
 
 Grouping ->
