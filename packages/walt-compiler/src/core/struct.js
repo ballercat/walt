@@ -98,7 +98,7 @@ export default function Struct(): SemanticPlugin {
 
           invariant(
             struct,
-            `PANIC - Cannot use access properties of ${lookup.value}`
+            `PANIC - Cannot access properties of ${lookup.value}`
           );
 
           const field = struct.field(key);
@@ -209,18 +209,37 @@ export default function Struct(): SemanticPlugin {
 
       return {
         [Syntax.Struct]: _ => ([node, { userTypes }]) => {
-          const [offsetsByKey, totalSize, keyTypeMap] = getByteOffsetsAndSize(
-            node.params[0]
-          );
+          const [union] = node.params;
+
           const structNode = {
             ...node,
             meta: {
               ...node.meta,
-              TYPE_OBJECT: offsetsByKey,
-              OBJECT_SIZE: totalSize,
-              OBJECT_KEY_TYPES: keyTypeMap,
+              TYPE_OBJECT: {},
+              OBJECT_SIZE: 0,
+              OBJECT_KEY_TYPES: {},
             },
           };
+
+          walkNode({
+            [Syntax.ObjectLiteral]: obj => {
+              const [offsets, size, typeMap] = getByteOffsetsAndSize(obj);
+              structNode.meta.TYPE_OBJECT = {
+                ...structNode.meta.TYPE_OBJECT,
+                ...offsets,
+              };
+              structNode.meta.OBJECT_SIZE += size;
+              structNode.meta.OBJECT_KEY_TYPES = {
+                ...structNode.meta.OBJECT_KEY_TYPES,
+                ...typeMap,
+              };
+            },
+            [Syntax.Type]: type => {
+              if (String(type.type).endsWith('[]')) {
+                structNode.meta.TYPE_ARRAY = type.type.slice(0, -2);
+              }
+            },
+          })(union);
 
           userTypes[structNode.value] = structNode;
 

@@ -59,8 +59,7 @@ test('export type statements compile', t => {
 
 test.only('union types', t => {
   const run = harness(path.resolve(__dirname, './union-type-spec.walt'), null, {
-    printBinary: false,
-    printNode: true,
+    prettyPrint: true,
   });
 
   return run(t);

@@ -7,11 +7,12 @@ type String = { length: i32 } | i32[];
 
 export function run() {
   const string : String = 12;
-  string[1] = 'h';
-  string[2] = 'e';
-  string[3] = 'l';
-  string[4] = 'l';
-  string[5] = 'o';
+  string.length = 5;
+  // string[1] = 'h';
+  // string[2] = 'e';
+  // string[3] = 'l';
+  // string[4] = 'l';
+  // string[5] = 'o';
 
-  assert("subscript on union", string[3], 'l');
+  assert("subscript on union", string.length, 5);
 }
