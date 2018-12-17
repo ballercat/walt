@@ -4,7 +4,7 @@ import Syntax from 'walt-syntax';
 import walkNode from 'walt-parser-tools/walk-node';
 import error from '../utils/generate-error';
 import { isBuiltinType } from '../generator/utils';
-import { TYPE_CONST, ALIAS, AST_METADATA } from '../semantics/metadata';
+import { TYPE_CONST, AST_METADATA } from '../semantics/metadata';
 import { typeWeight } from '../types';
 import type { NodeType } from '../flow/types';
 
