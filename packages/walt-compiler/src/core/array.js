@@ -4,6 +4,7 @@
  * @flow
  */
 import Syntax from 'walt-syntax';
+import invariant from 'invariant';
 import { find } from 'walt-parser-tools/scope';
 import { extendNode } from '../utils/extend-node';
 import withContext from '../utils/transform-with-context';
@@ -82,9 +83,10 @@ function semantics({ stmt }) {
       const subscript = produceSubscript(lhs.params.map(transform));
       const { type, index } = subscript;
 
-      if (!sanityCheck(subscript)) {
-        return next(args);
-      }
+      invariant(
+        sanityCheck(subscript),
+        `PANIC - Cannot assign to subscript of ${lhs.value}`
+      );
 
       return transform(stmt`${type}.store(${index}, ${rhs});`);
     },

@@ -90,19 +90,23 @@ export default function Struct(): SemanticPlugin {
         return offset ? stmt`(${base} + ${offset});` : stmt`(${base});`;
       };
 
-      function access(next) {
+      function access(_next) {
         return (args, transform) => {
           const [node, context] = args;
           const [lookup, key] = node.params;
           const struct = toStruct(transform([lookup, context]));
 
-          if (struct == null) {
-            return next(args);
-          }
+          invariant(
+            struct,
+            `PANIC - Cannot use access properties of ${lookup.value}`
+          );
+
           const field = struct.field(key);
-          if (!field) {
-            return node;
-          }
+
+          invariant(
+            field,
+            `PANIC - Cannot access property ${key.value} on ${lookup.value}`
+          );
 
           return extendNode(
             {
@@ -149,9 +153,10 @@ export default function Struct(): SemanticPlugin {
         const [lhs, rhs] = node.params;
         const struct = toStruct(transform([lhs, context]));
 
-        if (struct == null) {
-          return node;
-        }
+        invariant(
+          struct,
+          `PANIC - Cannot use object assignment on ${lhs.value}`
+        );
 
         const kvs = [];
 
@@ -273,7 +278,7 @@ export default function Struct(): SemanticPlugin {
         [Syntax.Access]: access,
         [Syntax.Assignment]: next => (args, transform) => {
           const [node] = args;
-          const [lhs, rhs = {}] = node.params;
+          const [lhs, rhs] = node.params;
 
           if (lhs.Type === Syntax.Access) {
             return fieldAssignment(args, transform);
