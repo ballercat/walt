@@ -34,21 +34,4 @@ Property ->
   | SPREAD Identifier {% spread %}
   | Identifier {% id %}
 
-StructDefinition -> LCB _ PropertyNameAndTypeList _ RCB
-  {% compose(node(Syntax.ObjectLiteral), flatten) %}
 
-PropertyNameAndTypeList ->
-    PropertyNameAndType                                   {% id %}
-  | PropertyNameAndType _ COMMA _ PropertyNameAndTypeList {% flatten %}
-
-PropertyNameAndType -> PropertyName _ COLON _ Type {% node(Syntax.Pair) %}
-
-TypeDefinition ->
-    LB _ TypeList _ RB  {% flatten %}
-  | LB _ RB             {% flatten %}
-
-TypeList ->
-    Type                    {% id %}
-  | Type _ COMMA _ TypeList {% flatten %}
-
-PropertyName -> Identifier {% id %}

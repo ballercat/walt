@@ -39,6 +39,7 @@
 
 @lexer lexer
 
+@include "./types.ne"
 @include "./objects.ne"
 @include "./import.ne"
 @include "./control-flow.ne"
@@ -89,31 +90,31 @@ FunctionParameters ->
   | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten, flatten) %}
 
 ParameterList ->
-    PropertyNameAndType {% id %}
-  | PropertyNameAndType _ COMMA _ ParameterList {% flatten  %}
+    NameAndType {% id %}
+  | NameAndType _ COMMA _ ParameterList {% flatten  %}
 
 FunctionResult -> COLON _ Type {% compose(result, drop) %}
 
 GlobalDeclaration ->
-    LET _ PropertyNameAndType _ SEPARATOR {% declaration(Syntax.Declaration) %}
-  | LET _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+    LET _ NameAndType _ SEPARATOR {% declaration(Syntax.Declaration) %}
+  | LET _ NameAndType _ EQUALS _ Atom _ SEPARATOR
       {% declaration(Syntax.Declaration) %}
 
 GlobalImmutableDeclaration ->
     CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
-  | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
+  | CONST _ NameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
-  | CONST _ PropertyNameAndType _ EQUALS _ Atom _ SEPARATOR
+  | CONST _ NameAndType _ EQUALS _ Atom _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
 
 Declaration ->
-    LET _ PropertyNameAndType _ EQUALS _ Expression _ SEPARATOR {% declaration(Syntax.Declaration) %}
-  | LET _ PropertyNameAndType _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
+    LET _ NameAndType _ EQUALS _ Expression _ SEPARATOR {% declaration(Syntax.Declaration) %}
+  | LET _ NameAndType _ SEPARATOR                    {% declaration(Syntax.Declaration) %}
 
 ImmutableDeclaration ->
-    CONST _ PropertyNameAndType _ EQUALS _ Expression _ SEPARATOR
+    CONST _ NameAndType _ EQUALS _ Expression _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
-  | CONST _ PropertyNameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
+  | CONST _ NameAndType _ EQUALS _ ObjectLiteral _ SEPARATOR
       {% declaration(Syntax.ImmutableDeclaration) %}
   | CONST _ Identifier _ COLON _ GenericType _ SEPARATOR {% builtinDecl %}
 
@@ -145,8 +146,6 @@ ReturnStatement ->
     RETURN __ Expression _ SEPARATOR   {% node(Syntax.ReturnStatement) %}
   | RETURN (";" {% nuller %})          {% node(Syntax.ReturnStatement) %}
 
-Struct -> TYPE __ Identifier _ EQUALS _ StructDefinition SEPARATOR {% struct %}
-TypeDef -> TYPE __ Identifier _ EQUALS _ TypeDefinition _ FATARROW _ Type _ SEPARATOR {% compose(typedef) %}
 
 # Assignment is NOT a valid expression in Walt/Wasm. Assignment in WebAssembly
 # Does not yield the value assigned, it creates two values on the stack.
@@ -310,6 +309,7 @@ LSB       -> "["        {% nuller %}
 RSB       -> "]"        {% nuller %}
 LCB       -> "{"        {% nuller %}
 RCB       -> "}"        {% nuller %}
+OR        -> "|"        {% nuller %}
 COLON     -> ":"        {% nuller %}
 EQUALS    -> "="        {% nuller %}
 PLSEQUALS -> "+="       {% nuller %}

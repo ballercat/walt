@@ -1,0 +1,17 @@
+import { assert : Assert } from 'env';
+type Assert = (i32, i32, i32) => void;
+
+const memory : Memory = { initial: 1 };
+
+type String = { length: i32 } | i32[];
+
+export function run() {
+  const string : String = 12;
+  string[1] = 'h';
+  string[2] = 'e';
+  string[3] = 'l';
+  string[4] = 'l';
+  string[5] = 'o';
+
+  assert("subscript on union", string[3], 'l');
+}

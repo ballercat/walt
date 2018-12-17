@@ -1,5 +1,7 @@
 import test from 'ava';
-import { compile, getIR } from '../..';
+import path from 'path';
+import { harness } from '../../utils/test-utils';
+import { compile } from '../..';
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
@@ -33,8 +35,8 @@ test('type parsing', t => {
   }
   `;
 
-  const importWASM = getIR(imports);
-  const sourceWASM = getIR(source);
+  const importWASM = compile(imports);
+  const sourceWASM = compile(source);
   return WebAssembly.instantiate(importWASM.buffer()).then(deps => {
     return WebAssembly.instantiate(sourceWASM.buffer(), {
       env: { ...deps.instance.exports },
@@ -53,4 +55,13 @@ test('invalid type definition', t => {
 
 test('export type statements compile', t => {
   t.notThrows(() => compile('export type Foo = (i32, i32) => i32;').buffer());
+});
+
+test.only('union types', t => {
+  const run = harness(path.resolve(__dirname, './union-type-spec.walt'), null, {
+    printBinary: false,
+    printNode: true,
+  });
+
+  return run(t);
 });
