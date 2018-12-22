@@ -37,9 +37,9 @@ function semantics({ stmt }) {
   function arrayOffset(base, offset) {
     const shift = shifts[base.meta.TYPE_ARRAY] || 2;
 
-    if (shift == null) {
-      return null;
-    }
+    // if (shift == null) {
+    //   return null;
+    // }
 
     return offset.Type !== Syntax.Constant || Number(offset.value)
       ? stmt`(${base} + (${offset} << ${shift}));`
@@ -50,11 +50,11 @@ function semantics({ stmt }) {
     return !(subscript.type == null || subscript.index == null);
   }
 
-  function produceSubscript([base, offset], context) {
+  function produceSubscript([base, offset]) {
     let type = base.meta.TYPE_ARRAY;
-    if (context.userTypes[type]) {
-      type = 'i32';
-    }
+    // if (context.userTypes[type]) {
+    //   type = 'i32';
+    // }
     const index = arrayOffset(base, offset);
 
     return { type, index, TYPE_ARRAY: base.meta.TYPE_ARRAY };
@@ -83,7 +83,7 @@ function semantics({ stmt }) {
       }
 
       const transform = withContext(t, context);
-      const subscript = produceSubscript(lhs.params.map(transform), context);
+      const subscript = produceSubscript(lhs.params.map(transform));
       const { type, index } = subscript;
 
       invariant(
@@ -96,7 +96,7 @@ function semantics({ stmt }) {
     [Syntax.ArraySubscript]: next => (args, t) => {
       const [node, context] = args;
       const transform = withContext(t, context);
-      const subscript = produceSubscript(node.params.map(transform), context);
+      const subscript = produceSubscript(node.params.map(transform));
       const { type, index, TYPE_ARRAY } = subscript;
 
       if (!sanityCheck(subscript)) {

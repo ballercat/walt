@@ -45,7 +45,7 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
 };
 
 type StructType = {
-  load: () => NodeType,
+  load: NodeType,
   store: any => NodeType,
   offset: NodeType,
   type: string,
@@ -53,7 +53,7 @@ type StructType = {
 const makeStruct = stmt => (base, field): StructType => {
   const unreachable = stmt`throw;`;
   const fatal = {
-    load: () => unreachable,
+    load: unreachable,
     store: rhs =>
       extendNode(
         { range: field.range },
@@ -75,7 +75,7 @@ const makeStruct = stmt => (base, field): StructType => {
     return fatal;
   }
 
-  let type = typeMap[field.value] || field.type;
+  let type = typeMap[field.value];
   const direct = type[0] === '&';
   const offset = address ? stmt`(${base} + ${address});` : stmt`(${base});`;
   let STRUCT_TYPE = null;
@@ -101,7 +101,7 @@ const makeStruct = stmt => (base, field): StructType => {
     offset,
     type,
     store: rhs => withMeta(stmt`${type}.store(${offset}, ${rhs});`),
-    load: () => withMeta(direct ? offset : stmt`${type}.load(${offset});`),
+    load: withMeta(direct ? offset : stmt`${type}.load(${offset});`),
   };
 };
 
@@ -115,7 +115,7 @@ export default function Struct(): SemanticPlugin {
           const [node, context] = args;
           const [lookup, key] = node.params;
           const s = structure(transform([lookup, context]), key);
-          return transform([s.load(), context]);
+          return transform([s.load, context]);
         };
       }
 
@@ -153,12 +153,20 @@ export default function Struct(): SemanticPlugin {
             const target = transform([spread.params[0], context]);
             // map over the keys
             Object.keys(target.meta.TYPE_OBJECT).forEach(key => {
-              const field = structure(base, { value: key, type: null });
-              const s = structure(target, { value: key, type: null });
+              const field = structure(base, {
+                value: key,
+                type: null,
+                range: target.range,
+              });
+              const s = structure(target, {
+                value: key,
+                type: null,
+                range: target.range,
+              });
 
               kvs.push({
                 field,
-                value: s.load(),
+                value: s.load,
               });
             });
           },

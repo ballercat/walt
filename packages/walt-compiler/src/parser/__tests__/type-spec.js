@@ -49,7 +49,7 @@ test('type parsing', t => {
   });
 });
 
-test.skip('invalid type definition', t => {
+test('invalid type definition', t => {
   const error = t.throws(() => compile('type Type = i32 => void;').buffer());
   t.snapshot(error);
 });
@@ -58,10 +58,20 @@ test('export type statements compile', t => {
   t.notThrows(() => compile('export type Foo = (i32, i32) => i32;').buffer());
 });
 
-test.skip('union types', t => {
+test('union types and direct addressing', t => {
   const run = harness(path.resolve(__dirname, './union-type-spec.walt'), null, {
-    prettyPrint: true,
+    prettyPrint: false,
   });
 
-  return run(t).then(({ instance }) => {});
+  return run(t).then(({ instance }) => {
+    const memory = instance.exports.memory;
+    const decoder = new TextDecoder();
+    const pointer = instance.exports.run();
+    const view = new DataView(memory.buffer);
+    const byteLength = view.getUint32(pointer, true);
+    const str = decoder.decode(
+      memory.buffer.slice(pointer + 4, pointer + 4 + byteLength)
+    );
+    t.is(str, 'fooz', 'sanity check subscripts & text decoding');
+  });
 });

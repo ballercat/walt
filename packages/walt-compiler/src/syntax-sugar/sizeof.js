@@ -50,7 +50,7 @@ export default function sizeofPlugin(): SemanticPlugin {
 
           return {
             ...sizeof,
-            value: sizes[String(node ? node.type : target.value)] || '4',
+            value: sizes[String(node ? node.type : target.value)],
             type: 'i32',
             params: [],
             Type: Syntax.Constant,

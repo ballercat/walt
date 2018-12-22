@@ -1,7 +1,7 @@
 import test from 'ava';
 import { compile } from '..';
 
-test.only('default arguments', t => {
+test('default arguments', t => {
   const walt = `
   import { extern: Add } from 'env';
   type Add = (i32, i32 = 0) => i32;
@@ -43,7 +43,7 @@ test('function pointer', t => {
 test('functions', t => {
   const src = `
   // For pointers
-  const table: Table<{ element: 'anyfunc', initial: 10, max: 10 }>;
+  const table: Table = { element: 'anyfunc', initial: 10, max: 10 };
   // For object operations
   const memory: Memory<{ initial: 1 }>;
 

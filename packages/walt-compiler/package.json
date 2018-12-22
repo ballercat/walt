@@ -124,6 +124,7 @@
       "src/**/__tests__/*.js",
       "src/**/grammar.js",
       "src/parser/grammar/generator.js",
+      "src/parser/grammar/helpers.js",
       "dist/*.js"
     ]
   }

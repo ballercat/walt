@@ -7,10 +7,8 @@ import OutputStream from '../../utils/output-stream';
 import opcode from '../opcode';
 
 const emitLocal = (stream, local) => {
-  if (local.isParam == null) {
-    stream.push(varuint32, 1, 'number of locals of following type');
-    stream.push(varint7, local.type, `${getTypeString(local.type)}`);
-  }
+  stream.push(varuint32, 1, 'number of locals of following type');
+  stream.push(varint7, local.type, `${getTypeString(local.type)}`);
 };
 
 const emitFunctionBody = (stream, { locals, code, debug: functionName }) => {
