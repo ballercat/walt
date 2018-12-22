@@ -2,6 +2,7 @@ import test from 'ava';
 import path from 'path';
 import { harness } from '../../utils/test-utils';
 import { compile } from '../..';
+import { TextDecoder } from 'util';
 
 // Passing in other WASM functions as ENV imports to another module causes
 // the host to perform compile time Function definition validation for us.
@@ -48,7 +49,7 @@ test('type parsing', t => {
   });
 });
 
-test('invalid type definition', t => {
+test.skip('invalid type definition', t => {
   const error = t.throws(() => compile('type Type = i32 => void;').buffer());
   t.snapshot(error);
 });
@@ -57,10 +58,10 @@ test('export type statements compile', t => {
   t.notThrows(() => compile('export type Foo = (i32, i32) => i32;').buffer());
 });
 
-test.only('union types', t => {
+test.skip('union types', t => {
   const run = harness(path.resolve(__dirname, './union-type-spec.walt'), null, {
     prettyPrint: true,
   });
 
-  return run(t);
+  return run(t).then(({ instance }) => {});
 });

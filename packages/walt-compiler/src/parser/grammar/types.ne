@@ -14,10 +14,14 @@ StructDefinition ->
     {% compose(node(Syntax.ObjectLiteral), flatten) %}
 
 StructBody ->
-    NameAndType                      {% id %}
-  | NameAndType _ COMMA _ StructBody {% flatten %}
+    StructNameAndType                      {% id %}
+  | StructNameAndType _ COMMA _ StructBody {% flatten %}
 
-NameAndType -> Identifier _ COLON _ Type {% node(Syntax.Pair) %}
+StructNameAndType ->
+    Identifier _ COLON _ Type {% node(Syntax.Pair) %}
+  | AddressOf _ COLON _ Type {% node(Syntax.Pair) %}
+
+AddressOf -> AND Identifier {% addressOf %}
 
 # Type definitions are used for function types
 # type Foo = (i32, i32) => f32;

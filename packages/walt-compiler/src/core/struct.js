@@ -10,15 +10,15 @@ import walkNode from 'walt-parser-tools/walk-node';
 import { extendNode } from '../utils/extend-node';
 import type { NodeType, SemanticPlugin } from '../flow/types';
 
-type FieldType = { type: string, offset: number };
-
+const STRUCT_NATIVE_TYPE = 'i32';
+const DIRECT_ADDRESS = '__DIRECT_ADDRESS__';
 const sizeMap = {
   i64: 8,
   f64: 8,
   i32: 4,
   f32: 4,
+  [DIRECT_ADDRESS]: 4,
 };
-const STRUCT_NATIVE_TYPE = 'i32';
 
 export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   const offsetsByKey = {};
@@ -26,138 +26,111 @@ export const getByteOffsetsAndSize = (objectLiteralNode: NodeType) => {
   let size = 0;
   walkNode({
     [Syntax.Pair]: keyTypePair => {
-      const { value: key } = keyTypePair.params[0];
-      const { value: typeString } = keyTypePair.params[1];
+      const [lhs] = keyTypePair.params;
+      const key = lhs.value;
+      const type = keyTypePair.params[1].value;
+
       invariant(
         offsetsByKey[key] == null,
         `Duplicate key ${key} not allowed in object type`
       );
 
-      keyTypeMap[key] = typeString;
+      keyTypeMap[key] = `${lhs.Type === 'AddressOf' ? '&' : ''}${type}`;
       offsetsByKey[key] = size;
-      size += sizeMap[typeString] || 4;
+      size += sizeMap[type] || 4;
     },
   })(objectLiteralNode);
 
   return [offsetsByKey, size, keyTypeMap];
 };
 
-const toStruct = node => {
-  // Lookup the Struct Type so that any expression returning a struct
-  // works as a base offset
-  if (node.meta.STRUCT_TYPE == null) {
-    return null;
+type StructType = {
+  load: () => NodeType,
+  store: any => NodeType,
+  offset: NodeType,
+  type: string,
+};
+const makeStruct = stmt => (base, field): StructType => {
+  const unreachable = stmt`throw;`;
+  const fatal = {
+    load: () => unreachable,
+    store: rhs =>
+      extendNode(
+        { range: field.range },
+        stmt`i32.store(${unreachable}, ${rhs});`
+      ),
+    offset: unreachable,
+    type: 'void',
+  };
+  if (base.meta.STRUCT_TYPE == null) {
+    return fatal;
   }
 
-  const typedef = node.meta.STRUCT_TYPE;
+  const typedef = base.meta.STRUCT_TYPE;
   const offsetMap = typedef.meta.TYPE_OBJECT;
   const typeMap = typedef.meta.OBJECT_KEY_TYPES;
+  const address = offsetMap[field.value];
+
+  if (address == null) {
+    return fatal;
+  }
+
+  let type = typeMap[field.value] || field.type;
+  const direct = type[0] === '&';
+  const offset = address ? stmt`(${base} + ${address});` : stmt`(${base});`;
+  let STRUCT_TYPE = null;
+  let TYPE_ARRAY = null;
+
+  // Nested stuct type access
+  if (type != null && typeof type === 'object') {
+    STRUCT_TYPE = type;
+    type = STRUCT_NATIVE_TYPE;
+  }
+
+  if (String(type).endsWith('[]')) {
+    TYPE_ARRAY = type.slice(0, -2).replace('&', '');
+    type = 'i32';
+  }
+
+  const withMeta = extendNode({
+    range: base.range,
+    meta: { STRUCT_TYPE, TYPE_ARRAY },
+  });
 
   return {
-    base: node,
-    typedef,
-    offsetMap,
-    typeMap,
-    field(field: { value: string, type?: string }) {
-      if (offsetMap[field.value] == null) {
-        return null;
-      }
-      let type = typeMap[field.value] || field.type;
-      const offset = offsetMap[field.value];
-      let STRUCT_TYPE = null;
-      let TYPE_ARRAY = null;
-
-      // Nested stuct type access
-      if (type != null && typeof type === 'object') {
-        STRUCT_TYPE = type;
-        type = STRUCT_NATIVE_TYPE;
-      }
-
-      if (String(type).endsWith('[]')) {
-        TYPE_ARRAY = type.slice(0, -2);
-        type = 'i32';
-      }
-
-      return { offset, type, STRUCT_TYPE, TYPE_ARRAY };
-    },
+    offset,
+    type,
+    store: rhs => withMeta(stmt`${type}.store(${offset}, ${rhs});`),
+    load: () => withMeta(direct ? offset : stmt`${type}.load(${offset});`),
   };
 };
 
 export default function Struct(): SemanticPlugin {
   return {
     semantics({ stmt }) {
-      const structOffset = (base, offset) => {
-        return offset ? stmt`(${base} + ${offset});` : stmt`(${base});`;
-      };
+      const structure = makeStruct(stmt);
 
       function access(_next) {
         return (args, transform) => {
           const [node, context] = args;
           const [lookup, key] = node.params;
-          const struct = toStruct(transform([lookup, context]));
-
-          invariant(
-            struct,
-            `PANIC - Cannot access properties of ${lookup.value}`
-          );
-
-          const field = struct.field(key);
-
-          invariant(
-            field,
-            `PANIC - Cannot access property ${key.value} on ${lookup.value}`
-          );
-
-          return extendNode(
-            {
-              meta: {
-                STRUCT_TYPE: field.STRUCT_TYPE,
-                TYPE_ARRAY: field.TYPE_ARRAY,
-              },
-            },
-            transform([
-              stmt`${field.type}.load(${structOffset(lookup, field.offset)});`,
-              context,
-            ])
-          );
+          const s = structure(transform([lookup, context]), key);
+          return transform([s.load(), context]);
         };
-      }
-
-      function store(base, field: FieldType, rhs) {
-        return stmt`${field.type}.store(
-          ${structOffset(base, field.offset)},
-          ${rhs}
-        );`;
       }
 
       function fieldAssignment(args, transform) {
         const [node, context] = args;
         const [lhs, rhs] = node.params;
         const [root, key] = lhs.params;
-        const struct = toStruct(transform([root, context]));
-
-        if (struct == null) {
-          return node;
-        }
-
-        const field = struct.field(key);
-        if (field == null) {
-          return node;
-        }
-
-        return transform([store(struct.base, field, rhs), context]);
+        const s = structure(transform([root, context]), key);
+        return transform([s.store(rhs), context]);
       }
 
       function objectAssignment(args, transform) {
         const [node, context] = args;
         const [lhs, rhs] = node.params;
-        const struct = toStruct(transform([lhs, context]));
-
-        invariant(
-          struct,
-          `PANIC - Cannot use object assignment on ${lhs.value}`
-        );
-
+        const base = transform([lhs, context]);
         const kvs = [];
 
         // We have to walk the nodes twice, once for regular prop keys and then again
@@ -167,29 +140,25 @@ export default function Struct(): SemanticPlugin {
           // Notice that we ignore chld mappers in both Pairs and Spread(s) so the
           // only way this is hit is if the identifier is TOP LEVEL
           [Syntax.Identifier]: (value, _) => {
-            const field = struct.field(value);
+            const field = structure(base, value);
             kvs.push({ field, value });
           },
           [Syntax.Pair]: (pair, _) => {
             const [property, value] = pair.params;
-            const field = struct.field(property);
+            const field = structure(base, property);
             kvs.push({ field, value });
           },
           [Syntax.Spread]: (spread, _) => {
             // find userType
-            const [target] = spread.params;
+            const target = transform([spread.params[0], context]);
             // map over the keys
-            Object.keys(struct.offsetMap).forEach(key => {
-              const field = struct.field({ value: key });
-
-              invariant(field != null, `PANIC - undefined object key "${key}`);
+            Object.keys(target.meta.TYPE_OBJECT).forEach(key => {
+              const field = structure(base, { value: key, type: null });
+              const s = structure(target, { value: key, type: null });
 
               kvs.push({
                 field,
-                value: stmt`${field.type}.load(${structOffset(
-                  target,
-                  field.offset
-                )});`,
+                value: s.load(),
               });
             });
           },
@@ -198,7 +167,7 @@ export default function Struct(): SemanticPlugin {
         const params: NodeType[] = kvs
           .filter(({ field }) => field != null)
           /* $FlowFixMe */
-          .map(kv => transform([store(lhs, kv.field, kv.value), context]));
+          .map(kv => transform([kv.field.store(kv.value), context]));
 
         return {
           ...lhs,
@@ -289,6 +258,7 @@ export default function Struct(): SemanticPlugin {
             meta: {
               ...node.meta,
               ...ref.meta,
+              ...userTypes[ref.type].meta,
               STRUCT_TYPE: userTypes[ref.type],
             },
             type: STRUCT_NATIVE_TYPE,

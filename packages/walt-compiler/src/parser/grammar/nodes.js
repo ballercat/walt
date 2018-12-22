@@ -304,5 +304,15 @@ export default function factory(lexer) {
         node(Syntax.ImmutableDeclaration)(d)
       );
     },
+    addressOf(d) {
+      const [id] = drop(d);
+      return extendNode(
+        {
+          value: id.value,
+          params: [],
+        },
+        node('AddressOf')(d)
+      );
+    },
   };
 }

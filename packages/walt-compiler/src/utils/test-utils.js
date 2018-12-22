@@ -94,5 +94,8 @@ export const harness = (
       },
       ...env,
     },
-  }).then(module => module.instance.exports.run());
+  }).then(module => {
+    module.instance.exports.run();
+    return module;
+  });
 };

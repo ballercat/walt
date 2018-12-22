@@ -1,7 +1,7 @@
 import test from 'ava';
 import { compile } from '..';
 
-test('default arguments', t => {
+test.only('default arguments', t => {
   const walt = `
   import { extern: Add } from 'env';
   type Add = (i32, i32 = 0) => i32;

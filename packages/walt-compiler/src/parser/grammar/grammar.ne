@@ -34,6 +34,7 @@
     spread,
     builtinDecl,
     assignmentExpr,
+    addressOf,
   } = this.nodes(lexer);
 %}
 
@@ -92,6 +93,8 @@ FunctionParameters ->
 ParameterList ->
     NameAndType {% id %}
   | NameAndType _ COMMA _ ParameterList {% flatten  %}
+
+NameAndType -> Identifier _ COLON _ Type {% node(Syntax.Pair) %}
 
 FunctionResult -> COLON _ Type {% compose(result, drop) %}
 
@@ -302,6 +305,7 @@ digit ->
 SEPARATOR -> _ ";"      {% nuller %}
 QUESTION  -> "?"        {% nuller %}
 COMMA     -> ","        {% nuller %}
+AND       -> "&"        {% nuller %}
 DOT       -> "."        {% nuller %}
 LB        -> "("        {% nuller %}
 RB        -> ")"        {% nuller %}

@@ -152,14 +152,24 @@ export default function validate(
             );
           }
         },
-        [Syntax.Access]: (node, _validator) => {
-          const [identifier, offset] = node.params;
+        [Syntax.NativeMethod]: (node, _validator) => {
+          const { value } = node;
+          const [offset = {}, rhs] = node.params;
           const [start, end] = node.range;
+
+          if (
+            !(
+              offset.value === 'unreachable' &&
+              (value.includes('store') || value.includes('load'))
+            )
+          ) {
+            return;
+          }
 
           problems.push(
             error(
               'Cannot generate property access',
-              `Target "${identifier.value}" with key "${offset.value}"`,
+              `Cannot assign "${rhs.value}". Key is "${offset.value}"`,
               { start, end },
               filename,
               functionName

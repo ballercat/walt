@@ -1,18 +1,26 @@
 import { assert : Assert } from 'env';
 type Assert = (i32, i32, i32) => void;
 
-const memory : Memory = { initial: 1 };
+export const memory : Memory = { initial: 1 };
 
-type String = { length: i32 } | i32[];
+type String = { byteLength: i32 } | i32[];
+type Node = {
+  value: i32,
+  &children: Node[]
+};
 
 export function run() {
-  const string : String = 12;
-  string.length = 5;
-  // string[1] = 'h';
-  // string[2] = 'e';
-  // string[3] = 'l';
-  // string[4] = 'l';
-  // string[5] = 'o';
+  // const string : String = 1024;
+  // string.byteLength = 4;
+  // string[1] = ('l' << 24) | ('l' << 16) | ('e' << 8) | 'h';
 
-  assert("subscript on union", string.length, 5);
+  // assert('property access on union', string.byteLength, 4);
+  // assert("subscript on union", string[1] & 0xFF, 'h');
+  // assert("subscript on union (index 0)", string[0], string.byteLength);
+
+  const node : Node = 1048;
+  const left : Node = node.children[0];
+  left.children[0] = 1096;
 }
+
+
