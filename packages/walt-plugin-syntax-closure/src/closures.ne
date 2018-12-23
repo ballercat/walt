@@ -51,9 +51,8 @@
   };
 %}
 
-TypeDef -> TYPE __ Identifier _ EQUALS _ GenericType _ SEPARATOR {% genericType %}
-
-GenericType -> Identifier LT _ Type _ GT {% typeGeneric %}
+TypeDef -> TYPE __ Identifier _ EQUALS _ Lambda _ SEPARATOR {% genericType %}
+Lambda -> Identifier LT _ Type _ GT {% typeGeneric %}
 
 Closure ->
     FunctionParameters _ FATARROW _ Block                  {% voidClosure %}
