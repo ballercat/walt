@@ -91,7 +91,7 @@ FunctionParameters ->
   | LB _ ParameterList  _ RB {% compose(node(Syntax.FunctionArguments), flatten, flatten) %}
 
 ParameterList ->
-    NameAndType {% id %}
+    NameAndType                         {% id %}
   | NameAndType _ COMMA _ ParameterList {% flatten  %}
 
 NameAndType -> Identifier _ COLON _ Type {% node(Syntax.Pair) %}

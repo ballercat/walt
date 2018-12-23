@@ -137,20 +137,18 @@ export default function validate(
         },
         [Syntax.ArraySubscript]: node => {
           const [target] = node.params;
-          if (target.meta.TYPE_ARRAY == null) {
-            const [start, end] = node.range;
-            problems.push(
-              error(
-                'Invalid subscript target',
-                `Expected array type for ${target.value}, received ${
-                  target.type
-                }`,
-                { start, end },
-                filename,
-                functionName
-              )
-            );
-          }
+          const [start, end] = node.range;
+          problems.push(
+            error(
+              'Invalid subscript target',
+              `Expected array type for ${target.value}, received ${
+                target.type
+              }`,
+              { start, end },
+              filename,
+              functionName
+            )
+          );
         },
         [Syntax.NativeMethod]: (node, _validator) => {
           const { value } = node;

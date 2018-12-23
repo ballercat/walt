@@ -19,7 +19,7 @@ const combineMiddleware = transforms => {
   };
 };
 
-export const combineParsers = (sortedParsers = []) => {
+export const combineParsers = sortedParsers => {
   const wildcards = [];
 
   // Normalize parsers by type
@@ -49,5 +49,3 @@ export const combineParsers = (sortedParsers = []) => {
     return acc;
   }, {});
 };
-
-export default function plugin() {}

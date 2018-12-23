@@ -53,7 +53,10 @@ type StructType = {
 const makeStruct = stmt => (base, field): StructType => {
   const unreachable = stmt`throw;`;
   const fatal = {
-    load: unreachable,
+    load: extendNode(
+      { range: field.range },
+      stmt`i32.load(${unreachable}, ${unreachable});`
+    ),
     store: rhs =>
       extendNode(
         { range: field.range },
