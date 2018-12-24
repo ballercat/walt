@@ -8,8 +8,9 @@ Union ->
   | StructDefinition _ OR _ Union {% node(Syntax.UnionType) %}
 
 StructDefinition ->
-    Type
-    {% id %}
+    NativeType                {% id %}
+  | ArrayType                 {% id %}
+  | Identifier                {% id %}
   | LCB _ StructBody _ RCB
     {% compose(node(Syntax.ObjectLiteral), flatten) %}
 
@@ -42,7 +43,7 @@ _Type ->
   | Identifier  {% id %}
 
 ArrayType ->
-  _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
+  _Type _ LSB _ RSB   {% arrayType %}
 
 Type ->
     _Type               {% id %}

@@ -188,7 +188,8 @@ export default function Struct(): SemanticPlugin {
       }
 
       return {
-        [Syntax.Struct]: _ => ([node, { userTypes, aliases }]) => {
+        [Syntax.Struct]: _ => ([node, context], transform) => {
+          const { userTypes, aliases } = context;
           const [union] = node.params;
 
           let structNode = {
@@ -204,46 +205,64 @@ export default function Struct(): SemanticPlugin {
           const Alias = () => {
             aliases[node.value] = union.value;
           };
+          const objectLiteral = (obj, __) => {
+            const [offsets, size, typeMap] = getByteOffsetsAndSize(obj);
+            structNode.meta.TYPE_OBJECT = {
+              ...structNode.meta.TYPE_OBJECT,
+              ...offsets,
+            };
+            structNode.meta.OBJECT_SIZE += size;
+            structNode.meta.OBJECT_KEY_TYPES = {
+              ...structNode.meta.OBJECT_KEY_TYPES,
+              ...typeMap,
+            };
+          };
+
           const parsers = {
             [Syntax.Type]: Alias,
             [Syntax.Identifier]: Alias,
-            [Syntax.ObjectLiteral]: () => {},
+            [Syntax.ObjectLiteral]: () => {
+              objectLiteral(node);
+              userTypes[structNode.value] = structNode;
+            },
             [Syntax.UnionType]: () => {
               walkNode({
-                [Syntax.ObjectLiteral]: obj => {
-                  const [offsets, size, typeMap] = getByteOffsetsAndSize(obj);
+                [Syntax.ObjectLiteral]: objectLiteral,
+                [Syntax.ArrayType]: type => {
+                  structNode.meta.TYPE_ARRAY = type.type.slice(0, -2);
+                },
+                [Syntax.Identifier]: id => {
+                  const structReference =
+                    userTypes[transform([id, context]).value];
+
                   structNode.meta.TYPE_OBJECT = {
-                    ...structNode.meta.TYPE_OBJECT,
-                    ...offsets,
+                    ...structNode.TYPE_OBJECT,
+                    ...structReference.meta.TYPE_OBJECT,
                   };
-                  structNode.meta.OBJECT_SIZE += size;
+                  structNode.meta.OBJECT_SIZE +=
+                    structReference.meta.OBJECT_SIZE;
                   structNode.meta.OBJECT_KEY_TYPES = {
                     ...structNode.meta.OBJECT_KEY_TYPES,
-                    ...typeMap,
+                    ...structReference.meta.OBJECT_KEY_TYPES,
                   };
-                },
-                [Syntax.Type]: type => {
-                  if (String(type.type).endsWith('[]')) {
-                    structNode.meta.TYPE_ARRAY = type.type.slice(0, -2);
-                  }
                 },
               })(union);
 
               userTypes[structNode.value] = structNode;
-
-              // Map over the strings for key types and replace them with struct
-              // references where necessary. We do this after creating the object
-              // to allow for self-referencing structs (linked lists etc)
-              structNode.meta.OBJECT_KEY_TYPES = Object.entries(
-                structNode.meta.OBJECT_KEY_TYPES
-              ).reduce((acc, [key, value]) => {
-                acc[key] = userTypes[value] || value;
-                return acc;
-              }, {});
             },
           };
 
           parsers[union.Type]();
+
+          // Map over the strings for key types and replace them with struct
+          // references where necessary. We do this after creating the object
+          // to allow for self-referencing structs (linked lists etc)
+          structNode.meta.OBJECT_KEY_TYPES = Object.entries(
+            structNode.meta.OBJECT_KEY_TYPES
+          ).reduce((acc, [key, value]) => {
+            acc[key] = userTypes[value] || value;
+            return acc;
+          }, {});
 
           return structNode;
         },

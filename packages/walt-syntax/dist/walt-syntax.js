@@ -129,6 +129,7 @@
   const ArraySubscript = 'ArraySubscript';
   const Constant = 'Constant';
   const Type = 'Type';
+  const ArrayType = 'ArrayType';
   const DeclType = 'DeclType';
   const GenericType = 'GenericType';
   const UserType = 'UserType';
@@ -246,6 +247,7 @@
     ArraySubscript,
     Constant,
     Type,
+    ArrayType,
     DeclType,
     GenericType,
     UserType,
@@ -314,6 +316,7 @@
   exports.ArraySubscript = ArraySubscript;
   exports.Constant = Constant;
   exports.Type = Type;
+  exports.ArrayType = ArrayType;
   exports.DeclType = DeclType;
   exports.GenericType = GenericType;
   exports.UserType = UserType;

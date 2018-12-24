@@ -20,6 +20,7 @@ export const Identifier = 'Identifier';
 export const ArraySubscript = 'ArraySubscript';
 export const Constant = 'Constant';
 export const Type = 'Type';
+export const ArrayType = 'ArrayType';
 export const DeclType = 'DeclType';
 export const GenericType = 'GenericType';
 export const UserType = 'UserType';
@@ -137,6 +138,7 @@ export default {
   ArraySubscript,
   Constant,
   Type,
+  ArrayType,
   DeclType,
   GenericType,
   UserType,

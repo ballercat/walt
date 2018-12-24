@@ -244,6 +244,19 @@ export default function factory(lexer) {
         node(Syntax.Type)(d)
       );
     },
+    arrayType(d) {
+      // d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" })
+      const p = drop(d);
+      const type = p[0];
+      return extendNode(
+        {
+          value: type.value + '[]',
+          type: type.type + '[]',
+          params: [],
+        },
+        node(Syntax.ArrayType)(d)
+      );
+    },
     typeGeneric(d) {
       const [id, obj] = drop(d);
       return extendNode(

@@ -36,6 +36,7 @@
     typedef,
     voidFun,
     type,
+    arrayType,
     assignment,
     forLoop,
     whileLoop,
