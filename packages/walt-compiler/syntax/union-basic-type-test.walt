@@ -1,7 +1,0 @@
-import { assert : Assert, memory: Memory } from 'env';
-
-type Assert = (i32, i32, i32) => void;
-
-export function run() {
-  assert("sanity check something", 1, 0.0);
-}

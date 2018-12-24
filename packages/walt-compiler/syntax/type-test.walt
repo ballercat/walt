@@ -1,0 +1,14 @@
+import { assert : Assert, memory: Memory } from 'env';
+
+export const INTROSPECT_PRETTY_PRINT : bool = true;
+
+type Assert = (i32, i32, i32) => void;
+
+type Int32 = f32;
+
+function native_type_alias() : Int32 {
+  return 2 + 2;
+}
+
+export function run() {
+}
