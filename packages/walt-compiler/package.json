@@ -99,7 +99,8 @@
     "source": [
       "src/**/*.js",
       "src/**/*.walt",
-      "src/**/*.ne"
+      "src/**/*.ne",
+      "syntax/**/*.walt"
     ],
     "failFast": true,
     "failWithoutAssertions": false,
