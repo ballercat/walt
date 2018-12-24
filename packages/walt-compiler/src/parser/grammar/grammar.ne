@@ -6,7 +6,16 @@
 @{%
   const lexer = this.lexer;
   const Syntax = this.Syntax;
-  const { drop, nth, nuller, nonEmpty, add, flatten, compose } = this.helpers;
+  const {
+    extendNode,
+    drop,
+    nth,
+    nuller,
+    nonEmpty,
+    add,
+    flatten,
+    compose
+  } = this.helpers;
   const {
     node,
     binary,
@@ -94,7 +103,8 @@ ParameterList ->
     NameAndType                         {% id %}
   | NameAndType _ COMMA _ ParameterList {% flatten  %}
 
-NameAndType -> Identifier _ COLON _ Type {% node(Syntax.Pair) %}
+NameAndType -> Identifier _ COLON _ DeclType {% node(Syntax.Pair) %}
+DeclType -> Type {% compose(extendNode({ Type: Syntax.DeclType }), nth(0)) %}
 
 FunctionResult -> COLON _ Type {% compose(result, drop) %}
 
@@ -222,8 +232,8 @@ Product ->
   | Typecast                 {% id %}
 
 Typecast ->
-    Expression _ COLON _ Type {% node(Syntax.Pair) %}
-  | Expression _ AS _ Type  {% node(Syntax.Pair) %}
+    Expression _ COLON _ DeclType {% node(Syntax.Pair) %}
+  | Expression _ AS _ DeclType  {% node(Syntax.Pair) %}
   | Unary                   {% id %}
 
 Unary ->
@@ -265,22 +275,7 @@ Atom ->
   | CharacterLiteral {% id %}
   | Number           {% id %}
 
-_Type ->
-    NativeType  {% id %}
-  | GenericType {% id %}
-  | Identifier  {% id %}
-
-ArrayType ->
-  _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
-
-Type ->
-    _Type               {% id %}
-  | ArrayType           {% id %}
-
-
-NativeType -> %type {% type %}
-GenericType -> Identifier LT _ StaticObjectLiteral _ GT {% typeGeneric %}
-
+NativeType        -> %type        {% type %}
 Identifier        -> %identifier  {% identifier %}
 Number            -> %number      {% constant %}
 StringLiteral     -> %string      {% string %}

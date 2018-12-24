@@ -104,6 +104,7 @@ function semantics(
     scopes: enterScope([], GLOBAL_INDEX),
     memories: [],
     tables: [],
+    aliases: {},
   };
   // Parse the current ast
   const parsed = map(combined)([ast, context]);

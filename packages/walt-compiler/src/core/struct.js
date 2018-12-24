@@ -188,10 +188,10 @@ export default function Struct(): SemanticPlugin {
       }
 
       return {
-        [Syntax.Struct]: _ => ([node, { userTypes }]) => {
+        [Syntax.Struct]: _ => ([node, { userTypes, aliases }]) => {
           const [union] = node.params;
 
-          const structNode = {
+          let structNode = {
             ...node,
             meta: {
               ...node.meta,
@@ -201,43 +201,88 @@ export default function Struct(): SemanticPlugin {
             },
           };
 
-          walkNode({
-            [Syntax.ObjectLiteral]: obj => {
-              const [offsets, size, typeMap] = getByteOffsetsAndSize(obj);
-              structNode.meta.TYPE_OBJECT = {
-                ...structNode.meta.TYPE_OBJECT,
-                ...offsets,
-              };
-              structNode.meta.OBJECT_SIZE += size;
-              structNode.meta.OBJECT_KEY_TYPES = {
-                ...structNode.meta.OBJECT_KEY_TYPES,
-                ...typeMap,
-              };
-            },
-            [Syntax.Type]: type => {
-              if (String(type.type).endsWith('[]')) {
-                structNode.meta.TYPE_ARRAY = type.type.slice(0, -2);
-              }
-            },
-          })(union);
+          const Alias = () => {
+            aliases[node.value] = union.value;
+          };
+          const parsers = {
+            [Syntax.Type]: Alias,
+            [Syntax.Identifier]: Alias,
+            [Syntax.ObjectLiteral]: () => {},
+            [Syntax.UnionType]: () => {
+              walkNode({
+                [Syntax.ObjectLiteral]: obj => {
+                  const [offsets, size, typeMap] = getByteOffsetsAndSize(obj);
+                  structNode.meta.TYPE_OBJECT = {
+                    ...structNode.meta.TYPE_OBJECT,
+                    ...offsets,
+                  };
+                  structNode.meta.OBJECT_SIZE += size;
+                  structNode.meta.OBJECT_KEY_TYPES = {
+                    ...structNode.meta.OBJECT_KEY_TYPES,
+                    ...typeMap,
+                  };
+                },
+                [Syntax.Type]: type => {
+                  if (String(type.type).endsWith('[]')) {
+                    structNode.meta.TYPE_ARRAY = type.type.slice(0, -2);
+                  }
+                },
+              })(union);
 
-          userTypes[structNode.value] = structNode;
+              userTypes[structNode.value] = structNode;
 
-          // Map over the strings for key types and replace them with struct
-          // references where necessary. We do this after creating the object
-          // to allow for self-referencing structs (linked lists etc)
-          structNode.meta.OBJECT_KEY_TYPES = Object.entries(
-            structNode.meta.OBJECT_KEY_TYPES
-          ).reduce((acc, [key, value]) => {
-            acc[key] = userTypes[value] || value;
-            return acc;
-          }, {});
+              // Map over the strings for key types and replace them with struct
+              // references where necessary. We do this after creating the object
+              // to allow for self-referencing structs (linked lists etc)
+              structNode.meta.OBJECT_KEY_TYPES = Object.entries(
+                structNode.meta.OBJECT_KEY_TYPES
+              ).reduce((acc, [key, value]) => {
+                acc[key] = userTypes[value] || value;
+                return acc;
+              }, {});
+            },
+          };
+
+          parsers[union.Type]();
 
           return structNode;
         },
+        // Declaration type remapping is done for aliases here but not for struct
+        // types since that is achieved in the declaration parser.
+        [Syntax.DeclType]: next => (args, transform) => {
+          const [node, context] = args;
+          const { aliases } = context;
+
+          if (aliases[node.value]) {
+            return transform([
+              extendNode(
+                { value: aliases[node.value], type: aliases[node.value] },
+                node
+              ),
+              context,
+            ]);
+          }
+
+          return next(args);
+        },
         [Syntax.FunctionResult]: next => (args, transform) => {
           const [node, context] = args;
-          const { userTypes } = context;
+          const { userTypes, aliases } = context;
+
+          // If this type is an alias, then:
+          //  * unroll it to be pointed to type
+          //  * recursively untill the type is a base type or a struct
+          if (aliases[node.type]) {
+            // This operation is RECURSIVE, because:
+            //
+            // transform() applies ALL transforms top to bottom including the one
+            // we are in currently.
+            return transform([
+              extendNode({ type: aliases[node.type] }, node),
+              context,
+            ]);
+          }
+
           if (!userTypes[String(node.type)]) {
             return next(args);
           }

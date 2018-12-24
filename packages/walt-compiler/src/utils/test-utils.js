@@ -101,6 +101,7 @@ export const harness = (
       run,
       INTROSPECT_PRINT_NODES,
       INTROSPECT_PRETTY_PRINT,
+      INTROSPECT_DEBUG_BINARY,
     } = module.instance.exports;
 
     if (INTROSPECT_PRINT_NODES) {
@@ -108,6 +109,9 @@ export const harness = (
     }
     if (INTROSPECT_PRETTY_PRINT) {
       log(prettyPrintNode(sast));
+    }
+    if (INTROSPECT_DEBUG_BINARY) {
+      log(debug(wasm));
     }
 
     // Execute the assertions _inside_ the module

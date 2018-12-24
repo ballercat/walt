@@ -5,7 +5,7 @@ Struct -> TYPE __ Identifier _ EQUALS _ Union SEPARATOR {% struct %}
 
 Union ->
     StructDefinition              {% id %}
-  | StructDefinition _ OR _ Union {% node('UnionType') %}
+  | StructDefinition _ OR _ Union {% node(Syntax.UnionType) %}
 
 StructDefinition ->
     Type
@@ -35,3 +35,17 @@ TypeList ->
     Type                    {% id %}
   | Type _ COMMA _ TypeList {% flatten %}
 
+# Base cases for types
+_Type ->
+    NativeType  {% id %}
+  | GenericType {% id %}
+  | Identifier  {% id %}
+
+ArrayType ->
+  _Type _ LSB _ RSB   {% d => ({ ...d[0], value: d[0].value + "[]", type: d[0].type + "[]" }) %}
+
+Type ->
+    _Type               {% id %}
+  | ArrayType           {% id %}
+
+GenericType -> Identifier LT _ StaticObjectLiteral _ GT {% typeGeneric %}

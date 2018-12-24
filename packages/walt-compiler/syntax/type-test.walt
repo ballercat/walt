@@ -4,11 +4,14 @@ export const INTROSPECT_PRETTY_PRINT : bool = true;
 
 type Assert = (i32, i32, i32) => void;
 
-type Int32 = f32;
+// Type aliases
+type Float = f32;
+type Integer = i32;
 
-function native_type_alias() : Int32 {
-  return 2 + 2;
+function native_type_alias(x: Integer, y: Float) : Float {
+  return x + y;
 }
 
 export function run() {
+  assert("native type aliases", native_type_alias(2, 2.0) : Integer, 4);
 }

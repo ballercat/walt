@@ -97,6 +97,7 @@ export type Context = {
   scopes: NodeMap[],
   memories: NodeType[],
   tables: NodeType[],
+  aliases: { [string]: string },
 };
 export type Transform = ([NodeType, Context]) => NodeType;
 export type NodeParser = NodeParser => (

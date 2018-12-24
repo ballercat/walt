@@ -20,6 +20,7 @@ export const Identifier = 'Identifier';
 export const ArraySubscript = 'ArraySubscript';
 export const Constant = 'Constant';
 export const Type = 'Type';
+export const DeclType = 'DeclType';
 export const GenericType = 'GenericType';
 export const UserType = 'UserType';
 export const FunctionType = 'FunctionType';
@@ -38,6 +39,7 @@ export const AssignmentExpression = 'AssignmentExpression';
 export const Param = 'Param';
 export const Typedef = 'Typedef';
 export const Struct = 'Struct';
+export const UnionType = 'UnionType';
 export const ReturnStatement = 'ReturnStatement';
 export const Sequence = 'Sequence';
 export const ObjectLiteral = 'ObjectLiteral';
@@ -98,6 +100,7 @@ export const statements = {
   Assignment,
   Typedef,
   Struct,
+  UnionType,
   ReturnStatement,
   Sequence,
   ObjectLiteral,
@@ -134,6 +137,7 @@ export default {
   ArraySubscript,
   Constant,
   Type,
+  DeclType,
   GenericType,
   UserType,
   FunctionType,
@@ -152,6 +156,7 @@ export default {
   Param,
   Typedef,
   Struct,
+  UnionType,
   ReturnStatement,
   Sequence,
   ObjectLiteral,
