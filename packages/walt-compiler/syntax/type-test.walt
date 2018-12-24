@@ -1,14 +1,20 @@
 import { assert : Assert, memory: Memory } from 'env';
 
-export const INTROSPECT_PRETTY_PRINT : bool = true;
-
-type Assert = (i32, i32, i32) => void;
+export const INTROSPECT_PRETTY_PRINT : bool = false;
 
 // Type aliases
 type Float = f32;
 type Integer = i32;
 
-function native_type_alias(x: Integer, y: Float) : Float {
+// Function types
+type Assert = (i32, i32, i32) => void;
+
+// Type aliases can be chained
+type Int = Integer;
+type F32 = Float;
+type FloatingPoint = F32;
+
+function native_type_alias(x: Int, y: Float) : FloatingPoint {
   return x + y;
 }
 
