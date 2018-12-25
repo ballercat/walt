@@ -4,12 +4,12 @@
 Struct -> TYPE __ Identifier _ EQUALS _ Union SEPARATOR {% struct %}
 
 Union ->
-    StructDefinition              {% id %}
+    NativeType                    {% id %}
+  | StructDefinition              {% id %}
   | StructDefinition _ OR _ Union {% node(Syntax.UnionType) %}
 
 StructDefinition ->
-    NativeType                {% id %}
-  | ArrayType                 {% id %}
+    ArrayType                 {% id %}
   | Identifier                {% id %}
   | LCB _ StructBody _ RCB
     {% compose(node(Syntax.ObjectLiteral), flatten) %}
@@ -42,8 +42,7 @@ _Type ->
   | GenericType {% id %}
   | Identifier  {% id %}
 
-ArrayType ->
-  _Type _ LSB _ RSB   {% arrayType %}
+ArrayType -> _Type _ LSB _ RSB   {% arrayType %}
 
 Type ->
     _Type               {% id %}

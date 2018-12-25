@@ -108,7 +108,7 @@ function inferImportTypes(ast, deps, compiler) {
                 Object.assign({}, identifier, {
                   value: glbl.type,
                   type: glbl.type,
-                  Type: "Type",
+                  Type: "DeclType",
                 }),
               ],
               Type: "Pair",
