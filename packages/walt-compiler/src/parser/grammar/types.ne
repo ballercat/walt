@@ -1,11 +1,12 @@
 # Type Definition Grammar
 
 # Struct types are object like definitions
-Struct -> TYPE __ Identifier _ EQUALS _ Union SEPARATOR {% struct %}
+Struct ->
+    TYPE __ Identifier _ EQUALS _ Union SEPARATOR       {% struct %}
+  | TYPE __ Identifier _ EQUALS _ NativeType SEPARATOR  {% struct %}
 
 Union ->
-    NativeType                    {% id %}
-  | StructDefinition              {% id %}
+    StructDefinition              {% id %}
   | StructDefinition _ OR _ Union {% node(Syntax.UnionType) %}
 
 StructDefinition ->

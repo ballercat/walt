@@ -1,26 +1,25 @@
-import { assert : Assert, memory : Memory } from 'env';
-type Assert = (i32, i32, i32) => void;
-
-
-let OFFSET : i32;
-
 /**
  * Assert that structs may be joined with sugary array types to allow for
- * indexing into a struct
+ * indexing into a struct.
  *
  *
  */
+import { Assert } from '../src/walt/tests.walt';
+import { assert : Assert, memory : Memory } from 'env';
 
-// String type is a union of String and i32[]
-type String = { byteLength: i32, &data: i32[] };
-type FloatString = String | f32;
-type IndexedString = String | i32[];
+export const INTROSPECT_PRETTY_PRINT : i32 = 0;
 
-function array_struct_unions() {
+let OFFSET : i32;
 
-  const string : IndexedString = OFFSET;
-  string.byteLength = 4;
+type BaseString = { byteLength: i32 };
+type DataAccess = { spacer: i32, &data: i32[] };
+type String = BaseString | DataAccess | i32[];
 
+
+function assert_unions(string : String) {
+  string.spacer = 4;
+
+  assert("setting values of union fields", string.spacer, string.byteLength);
   // Test union types. Assign the value of "fooz" to the first index in the
   // i32[] array type version of string
   string[1] = 'f' | ('o' << 8) | ('o' << 16) | ('z' << 24);
@@ -38,8 +37,14 @@ function array_struct_unions() {
   assert("address sanity check - z", i32.load8_u(1024 + 4 + 3), 'z');
 }
 
+function array_struct_unions() {
+  const base : BaseString = OFFSET;
+  assert_unions(base);
+  const string : String = base;
+  assert_unions(string);
+}
+
 export function run() {
-  // array_native_unions();
   array_struct_unions();
 }
 

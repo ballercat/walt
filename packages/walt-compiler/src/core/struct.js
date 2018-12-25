@@ -236,11 +236,13 @@ export default function Struct(): SemanticPlugin {
                     userTypes[transform([id, context]).value];
 
                   structNode.meta.TYPE_OBJECT = {
-                    ...structNode.TYPE_OBJECT,
+                    ...structNode.meta.TYPE_OBJECT,
                     ...structReference.meta.TYPE_OBJECT,
                   };
-                  structNode.meta.OBJECT_SIZE +=
-                    structReference.meta.OBJECT_SIZE;
+                  structNode.meta.OBJECT_SIZE = Math.max(
+                    structNode.meta.OBJECT_SIZE,
+                    structReference.meta.OBJECT_SIZE
+                  );
                   structNode.meta.OBJECT_KEY_TYPES = {
                     ...structNode.meta.OBJECT_KEY_TYPES,
                     ...structReference.meta.OBJECT_KEY_TYPES,
