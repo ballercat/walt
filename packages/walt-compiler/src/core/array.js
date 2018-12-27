@@ -37,10 +37,6 @@ function semantics({ stmt }) {
   function arrayOffset(base, offset) {
     const shift = shifts[base.meta.TYPE_ARRAY] || 2;
 
-    // if (shift == null) {
-    //   return null;
-    // }
-
     return offset.Type !== Syntax.Constant || Number(offset.value)
       ? stmt`(${base} + (${offset} << ${shift}));`
       : stmt`(${base});`;
@@ -51,10 +47,7 @@ function semantics({ stmt }) {
   }
 
   function produceSubscript([base, offset]) {
-    let type = base.meta.TYPE_ARRAY;
-    // if (context.userTypes[type]) {
-    //   type = 'i32';
-    // }
+    const type = base.meta.TYPE_ARRAY;
     const index = arrayOffset(base, offset);
 
     return { type, index, TYPE_ARRAY: base.meta.TYPE_ARRAY };
@@ -110,6 +103,7 @@ function semantics({ stmt }) {
     },
   };
 }
+
 export default function arrayPlugin(): SemanticPlugin {
   return { semantics };
 }
