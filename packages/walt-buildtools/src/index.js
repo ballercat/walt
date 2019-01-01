@@ -59,7 +59,7 @@ function buildTree(index, api) {
   const modules = {};
 
   const dependency = (module, parent) => {
-    const filepath = api.resolve(module);
+    const filepath = api.resolve(module, parent);
     if (modules[filepath] != null) {
       return modules[filepath];
     }
