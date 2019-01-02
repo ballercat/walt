@@ -43,7 +43,7 @@ test('function pointer', t => {
 test('functions', t => {
   const src = `
   // For pointers
-  const table: Table<{ element: 'anyfunc', initial: 10, max: 10 }>;
+  const table: Table = { element: 'anyfunc', initial: 10, max: 10 };
   // For object operations
   const memory: Memory<{ initial: 1 }>;
 

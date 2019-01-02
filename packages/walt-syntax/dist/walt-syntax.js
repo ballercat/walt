@@ -129,6 +129,8 @@
   const ArraySubscript = 'ArraySubscript';
   const Constant = 'Constant';
   const Type = 'Type';
+  const ArrayType = 'ArrayType';
+  const DeclType = 'DeclType';
   const GenericType = 'GenericType';
   const UserType = 'UserType';
   const FunctionType = 'FunctionType';
@@ -147,6 +149,7 @@
   const Param = 'Param';
   const Typedef = 'Typedef';
   const Struct = 'Struct';
+  const UnionType = 'UnionType';
   const ReturnStatement = 'ReturnStatement';
   const Sequence = 'Sequence';
   const ObjectLiteral = 'ObjectLiteral';
@@ -207,6 +210,7 @@
     Assignment,
     Typedef,
     Struct,
+    UnionType,
     ReturnStatement,
     Sequence,
     ObjectLiteral,
@@ -243,6 +247,8 @@
     ArraySubscript,
     Constant,
     Type,
+    ArrayType,
+    DeclType,
     GenericType,
     UserType,
     FunctionType,
@@ -261,6 +267,7 @@
     Param,
     Typedef,
     Struct,
+    UnionType,
     ReturnStatement,
     Sequence,
     ObjectLiteral,
@@ -309,6 +316,8 @@
   exports.ArraySubscript = ArraySubscript;
   exports.Constant = Constant;
   exports.Type = Type;
+  exports.ArrayType = ArrayType;
+  exports.DeclType = DeclType;
   exports.GenericType = GenericType;
   exports.UserType = UserType;
   exports.FunctionType = FunctionType;
@@ -327,6 +336,7 @@
   exports.Param = Param;
   exports.Typedef = Typedef;
   exports.Struct = Struct;
+  exports.UnionType = UnionType;
   exports.ReturnStatement = ReturnStatement;
   exports.Sequence = Sequence;
   exports.ObjectLiteral = ObjectLiteral;

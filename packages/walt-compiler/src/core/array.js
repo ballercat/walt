@@ -35,11 +35,7 @@ function semantics({ stmt }) {
   };
 
   function arrayOffset(base, offset) {
-    const shift = shifts[base.meta.TYPE_ARRAY];
-
-    if (shift == null) {
-      return null;
-    }
+    const shift = shifts[base.meta.TYPE_ARRAY] || 2;
 
     return offset.Type !== Syntax.Constant || Number(offset.value)
       ? stmt`(${base} + (${offset} << ${shift}));`
@@ -105,8 +101,11 @@ function semantics({ stmt }) {
         transform(stmt`${type}.load(${index});`)
       );
     },
+    // Function result types can be (pre) parsed exactly like declarations
+    [Syntax.FunctionResult]: declaration,
   };
 }
+
 export default function arrayPlugin(): SemanticPlugin {
   return { semantics };
 }

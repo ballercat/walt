@@ -112,6 +112,13 @@ const getPrinters = add => ({
   [Syntax.Typedef]: (node, _) => {
     add(typedefString(node));
   },
+  [Syntax.Struct]: (node, print) => {
+    add(';; Pseudo struct type', 0, 0);
+    printFormatted(add, print, {
+      value: 'type-struct ' + node.value,
+      params: node.params,
+    });
+  },
   [Syntax.Identifier]: node => {
     const scope = node.meta[GLOBAL_INDEX] != null ? 'global' : 'local';
     add(`(get_${scope} ${node.value})`);

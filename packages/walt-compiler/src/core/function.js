@@ -7,7 +7,7 @@
  */
 import Syntax from 'walt-syntax';
 import { current, enter, exit, signature } from 'walt-parser-tools/scope';
-import walkNode from 'walt-parser-tools/walk-node';
+import { mapNode } from 'walt-parser-tools/map-node';
 import {
   FUNCTION_INDEX,
   FUNCTION_METADATA,
@@ -76,10 +76,11 @@ export default function coreFunctionPlugin(): SemanticPlugin {
 
           currentScope[signature].arguments = [];
 
-          walkNode({
-            [Syntax.Pair]: node => {
-              const [identifier, typeNode] = node.params;
+          const mapped = mapNode({
+            [Syntax.Pair]: (node, _) => {
+              const [identifier, utype] = node.params;
 
+              const typeNode = transform([utype, context]);
               currentScope[signature].arguments.push(node);
 
               transform([
@@ -92,10 +93,12 @@ export default function coreFunctionPlugin(): SemanticPlugin {
                 },
                 context,
               ]);
+
+              return { ...node, params: [identifier, typeNode] };
             },
           })({ ...args, params: args.params.filter(Boolean) });
 
-          return args;
+          return mapped;
         },
         // Regular function calls
         [Syntax.FunctionCall]: next => ([call, context]) => {

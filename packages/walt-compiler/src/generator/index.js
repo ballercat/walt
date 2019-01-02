@@ -170,16 +170,13 @@ function generator(ast: NodeType, config: GeneratorOptions): ProgramType {
       program.Exports.push(generateExport(nodeToExport));
     },
     [Syntax.ImmutableDeclaration]: node => {
-      const globalMeta = node.meta[GLOBAL_INDEX];
-      if (globalMeta != null) {
-        switch (node.type) {
-          case 'Memory':
-            program.Memory.push(generateMemory(node));
-            break;
-          case 'Table':
-            program.Table.push(generateTable(node));
-            break;
-        }
+      switch (node.type) {
+        case 'Memory':
+          program.Memory.push(generateMemory(node));
+          break;
+        case 'Table':
+          program.Table.push(generateTable(node));
+          break;
       }
     },
     [Syntax.Declaration]: node => {

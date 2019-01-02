@@ -63,6 +63,9 @@ export default function generateType(
   const params = [];
 
   walkNode({
+    [Syntax.DeclType]: (t, __) => {
+      params.push(getType(t.value));
+    },
     [Syntax.Type]: (t, __) => {
       params.push(getType(t.value));
     },

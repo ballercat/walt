@@ -1,0 +1,21 @@
+import { Assert } from '../src/walt/tests';
+import { assert : Assert, memory: Memory } from 'env';
+
+export const INTROSPECT_PRETTY_PRINT : i32 = 0;
+
+// Type aliases
+type Float = f32;
+type Integer = i32;
+
+// Type aliases can be chained
+type Int = Integer;
+type F32 = Float;
+type FloatingPoint = F32;
+
+function native_type_alias(x: Int, y: Float) : FloatingPoint {
+  return x + y;
+}
+
+export function run() {
+  assert("native type aliases", native_type_alias(2, 2.0) : Integer, 4);
+}

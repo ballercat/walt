@@ -15,9 +15,9 @@ export default function generateErrorString(
   const end = marker.end.col;
   const Line = marker.end.sourceLine;
 
-  const highlight = new Array(end - col + 2)
+  const highlight = new Array(end - col + 1)
     .join('^')
-    .padStart(marker.start.col - 2, ' ');
+    .padStart(marker.start.col - 1, ' ');
   return (
     '\n' +
     Line +

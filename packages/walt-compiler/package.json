@@ -99,7 +99,8 @@
     "source": [
       "src/**/*.js",
       "src/**/*.walt",
-      "src/**/*.ne"
+      "src/**/*.ne",
+      "syntax/**/*.walt"
     ],
     "failFast": true,
     "failWithoutAssertions": false,
@@ -124,6 +125,7 @@
       "src/**/__tests__/*.js",
       "src/**/grammar.js",
       "src/parser/grammar/generator.js",
+      "src/parser/grammar/helpers.js",
       "dist/*.js"
     ]
   }

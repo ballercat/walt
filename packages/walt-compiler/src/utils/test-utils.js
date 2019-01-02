@@ -55,6 +55,8 @@ export const harness = (
   const stmt = makeFragment(parser);
 
   const { log } = console;
+  let wasm;
+  let sast;
   const build = link(filepath, {
     resolve,
     getFileContents,
@@ -62,18 +64,33 @@ export const harness = (
     walkNode,
     parser,
     semantics(ast) {
-      const sast = semantics(ast, [], { parser, stmt });
+      sast = semantics(ast, [], { parser, stmt });
       if (printNode) {
         log(print(sast));
       }
       if (prettyPrint) {
         log(prettyPrintNode(sast));
       }
+
+      const exports = sast.meta.AST_METADATA.exports;
+      if (
+        exports.INTROSPECT_PRETTY_PRINT &&
+        exports.INTROSPECT_PRETTY_PRINT.params[0].value === '1'
+      ) {
+        log(prettyPrintNode(sast));
+      }
+
+      if (
+        exports.INTROSPECT_PRINT_NODES &&
+        exports.INTROSPECT_PRINT_NODES.params[0].value === '1'
+      ) {
+        log(print(sast));
+      }
       return sast;
     },
     validate,
     emitter(...args) {
-      const wasm = emitter(...args);
+      wasm = emitter(...args);
       if (printBinary) {
         log(debug(wasm));
       }
@@ -94,5 +111,16 @@ export const harness = (
       },
       ...env,
     },
-  }).then(module => module.instance.exports.run());
+  }).then(module => {
+    const { run, INTROSPECT_DEBUG_BINARY } = module.instance.exports;
+
+    if (INTROSPECT_DEBUG_BINARY) {
+      log(debug(wasm));
+    }
+
+    // Execute the assertions _inside_ the module
+    run();
+
+    return module;
+  });
 };

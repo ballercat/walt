@@ -12,9 +12,9 @@ TypeList ->
 DefaultArgument -> Type _ EQUALS _ Atom {% node(Syntax.Assignment) %}
 
 ParameterList ->
-    DefaultFunctionArgument  {% id %}
+    DefaultFunctionArgument                         {% id %}
   | DefaultFunctionArgument _ COMMA _ ParameterList {% flatten %}
 
 DefaultFunctionArgument ->
-    PropertyNameAndType _ EQUALS _ Atom {% node(Syntax.Assignment) %}
+    NameAndType _ EQUALS _ Atom {% node(Syntax.Assignment) %}
 

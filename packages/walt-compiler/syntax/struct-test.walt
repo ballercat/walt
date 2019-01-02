@@ -1,0 +1,49 @@
+import { malloc } from '../src/walt/malloc';
+import { Assert } from '../src/walt/tests';
+import { assert : Assert, memory: Memory } from 'env';
+
+export const INTROSPECT_PRETTY_PRINT : i32 = false;
+
+type Vector = {
+  x: i32,
+  y: i32
+};
+
+function struct_type_test() : Vector {
+  const vector: Vector = malloc(sizeof(Vector));
+  // NOTE: {} on a right-hand-side of assignment does not create a new object.
+  // It only writes the fields into the source memory locations.
+  vector = { x: 10, y: -10 };
+
+  return vector;
+}
+
+function struct_array_test() : Vector[] {
+  const arr: Vector[] = malloc(sizeof(Vector) * 2);
+
+  const Va : Vector = arr[0];
+  Va = { x: 5, y: 5 };
+
+  // This is functonally equivalent to the setting of values for "Va", however
+  // there are few additional instructions here to look-up the value of arr[1]
+  // for every key set.
+  arr[1] = { x: -5, y: -5 };
+
+  return arr;
+}
+
+export function run() {
+  const vec: Vector = struct_type_test();
+  const arr: Vector[] = struct_array_test();
+
+  assert("struct fields, vector.x", vec.x, 10);
+  assert("struct fields, vector.y", vec.y, -10);
+
+  const Va : Vector = arr[0];
+  assert("struct arrays, vector a -- field x", Va.x, 5);
+  assert("struct arrays, vector a -- field y", Va.y, 5);
+
+  const Vb : Vector = arr[1];
+  assert("struct arrays, vector b -- field x", Vb.x, -5);
+  assert("struct arrays, vector b -- field y", Vb.y, -5);
+}

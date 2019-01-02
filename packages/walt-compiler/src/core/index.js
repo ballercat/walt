@@ -95,6 +95,13 @@ export default function Core(): SemanticPlugin {
       };
 
       return {
+        [Syntax.Export]: next => ([node, context]) => {
+          const parsed = next([node, context]);
+          const [child] = parsed.params;
+          context.exports[child.value] = child;
+
+          return parsed;
+        },
         [Syntax.Declaration]: declaration,
         [Syntax.ImmutableDeclaration]: declaration,
         // CharacterLiteral: next => ([node]) => next([mapCharacterLiteral(node)]),

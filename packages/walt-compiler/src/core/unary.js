@@ -10,7 +10,13 @@ const shifts = {
   i64: 63,
   f64: 63,
   i32: 31,
-  f32: 32,
+  f32: 31,
+};
+const masks = {
+  i64: '0xffffffffffff',
+  f64: '0xffffffffffff',
+  i32: '0xffffff',
+  f32: '0xffffff',
 };
 // Unary expressions need to be patched so that the LHS type matches the RHS
 export default function(): SemanticPlugin {
@@ -31,11 +37,7 @@ export default function(): SemanticPlugin {
                 context,
               ]);
             case '~':
-              const mask = ['i64', 'f64'].includes(
-                transform([lhs, context]).type
-              )
-                ? '0xffffffffffff'
-                : '0xffffff';
+              const mask = masks[transform([lhs, context]).type];
               return transform([stmt`(${lhs} ^ ${mask});`, context]);
             case '-':
               // Fold negation into a single opcode (a negative constant).
