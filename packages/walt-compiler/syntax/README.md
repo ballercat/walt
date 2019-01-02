@@ -2,7 +2,6 @@
 
 ## Numbers
 
-## Arrays
 
 ## Types
 
@@ -10,6 +9,8 @@
 
 ```js
 ```
+
+## Structs
 
 ## Union Types
 
