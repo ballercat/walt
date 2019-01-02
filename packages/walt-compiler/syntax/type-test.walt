@@ -1,4 +1,4 @@
-import { Assert } from '../src/walt/tests.walt';
+import { Assert } from '../src/walt/tests';
 import { assert : Assert, memory: Memory } from 'env';
 
 export const INTROSPECT_PRETTY_PRINT : i32 = 0;

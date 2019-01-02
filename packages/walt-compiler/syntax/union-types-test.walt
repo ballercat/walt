@@ -31,6 +31,7 @@ function assert_unions(string : String) {
   assert("char offset of string - o", i32.load8_u(string.data + 2), 'o');
   assert("char offset of string - z", i32.load8_u(string.data + 3), 'z');
 
+  // NOTE: using the offset (1024) here to sanity check the "start" logic
   assert("address sanity check - f", i32.load8_u(1024 + 4), 'f');
   assert("address sanity check - o", i32.load8_u(1024 + 4 + 1), 'o');
   assert("address sanity check - o", i32.load8_u(1024 + 4 + 2), 'o');
