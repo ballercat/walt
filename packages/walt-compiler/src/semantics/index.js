@@ -105,11 +105,20 @@ function semantics(
     memories: [],
     tables: [],
     aliases: {},
+    exports: {},
   };
   // Parse the current ast
   const parsed = map(combined)([ast, context]);
 
-  const { functions, scopes, types, userTypes, statics, hoist } = context;
+  const {
+    functions,
+    scopes,
+    types,
+    userTypes,
+    statics,
+    hoist,
+    exports,
+  } = context;
   return {
     ...parsed,
     meta: {
@@ -121,6 +130,7 @@ function semantics(
         types,
         userTypes,
         statics,
+        exports,
       },
     },
     params: [...parsed.params, ...hoist],

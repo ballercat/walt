@@ -71,6 +71,21 @@ export const harness = (
       if (prettyPrint) {
         log(prettyPrintNode(sast));
       }
+
+      const exports = sast.meta.AST_METADATA.exports;
+      if (
+        exports.INTROSPECT_PRETTY_PRINT &&
+        exports.INTROSPECT_PRETTY_PRINT.params[0].value === '1'
+      ) {
+        log(prettyPrintNode(sast));
+      }
+
+      if (
+        exports.INTROSPECT_PRINT_NODES &&
+        exports.INTROSPECT_PRINT_NODES.params[0].value === '1'
+      ) {
+        log(print(sast));
+      }
       return sast;
     },
     validate,
@@ -97,19 +112,8 @@ export const harness = (
       ...env,
     },
   }).then(module => {
-    const {
-      run,
-      INTROSPECT_PRINT_NODES,
-      INTROSPECT_PRETTY_PRINT,
-      INTROSPECT_DEBUG_BINARY,
-    } = module.instance.exports;
+    const { run, INTROSPECT_DEBUG_BINARY } = module.instance.exports;
 
-    if (INTROSPECT_PRINT_NODES) {
-      log(print(sast));
-    }
-    if (INTROSPECT_PRETTY_PRINT) {
-      log(prettyPrintNode(sast));
-    }
     if (INTROSPECT_DEBUG_BINARY) {
       log(debug(wasm));
     }
