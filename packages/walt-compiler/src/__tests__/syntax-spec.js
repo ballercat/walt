@@ -7,6 +7,9 @@ import fs from 'fs';
 import path from 'path';
 import { harness } from '../utils/test-utils';
 
+// Whitelist for "focusing" on specific specs, disabling specs etc.
+const whitelist = ['struct', 'type', 'union-types'];
+
 test('Syntax test suite', t => {
   let resolve;
   let reject;
@@ -15,12 +18,15 @@ test('Syntax test suite', t => {
     reject = rj;
   });
 
+  const postfix = '-test.walt';
+  const isWhitelisted = f => whitelist.includes(f.slice(0, -postfix.length));
+
   fs.readdir(path.resolve(__dirname, '../../syntax'), (err, files) => {
     if (err != null) {
       reject(err);
     }
 
-    let testCases = files.filter(f => f.endsWith('-test.walt'));
+    let testCases = files.filter(isWhitelisted);
     const runTest = file => {
       const T = {
         is: (e, r, text) => t.is(e, r, file + ' - ' + text),
