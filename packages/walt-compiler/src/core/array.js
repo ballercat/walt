@@ -101,6 +101,8 @@ function semantics({ stmt }) {
         transform(stmt`${type}.load(${index});`)
       );
     },
+    // Function result types can be (pre) parsed exactly like declarations
+    [Syntax.FunctionResult]: declaration,
   };
 }
 

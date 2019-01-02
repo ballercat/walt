@@ -356,6 +356,37 @@ export default function Struct(): SemanticPlugin {
 
           return next(args);
         },
+
+        /**
+         * Short-circuit parser for Struct[] type array subscripts. Since an
+         * array of structs is a contiguous list of struct data in memory we
+         * don't want to "load" the data at index into a variable, instead we
+         * want the address-of the index!
+         */
+        [Syntax.ArraySubscript]: next => (args, t) => {
+          const [node, context] = args;
+          const parsed = next(args);
+          if (context.userTypes[parsed.meta.TYPE_ARRAY] == null) {
+            return parsed;
+          }
+
+          // instead of using a .load() instruction like for native i32s for
+          // example, we simply return an offset from base.
+          const [base, offset] = node.params.map(p => t([p, context]));
+
+          return t([
+            extendNode(
+              {
+                type: STRUCT_NATIVE_TYPE,
+                meta: {
+                  STRUCT_TYPE: context.userTypes[parsed.meta.TYPE_ARRAY],
+                },
+              },
+              stmt`(${base} + (${offset} * sizeof(${parsed.meta.TYPE_ARRAY})));`
+            ),
+            context,
+          ]);
+        },
       };
     },
   };
