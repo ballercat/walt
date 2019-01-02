@@ -419,13 +419,13 @@ function grammar() {
 
   return {
     Lexer: undefined,
-    ParserRules: [{ "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "GenericType", "_", "SEPARATOR"], "postprocess": d => {
+    ParserRules: [{ "name": "TypeDef", "symbols": ["TYPE", "__", "Identifier", "_", "EQUALS", "_", "Lambda", "_", "SEPARATOR"], "postprocess": d => {
         const [id, gen, typeNode] = drop(d);
         return extendNode({
           value: id.value,
           params: [gen, typeNode]
         }, node(Syntax.GenericType)([]));
-      } }, { "name": "GenericType", "symbols": ["Identifier", "LT", "_", "Type", "_", "GT"], "postprocess": typeGeneric }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FATARROW", "_", "Block"], "postprocess": d => {
+      } }, { "name": "Lambda", "symbols": ["Identifier", "LT", "_", "Type", "_", "GT"], "postprocess": typeGeneric }, { "name": "Closure", "symbols": ["FunctionParameters", "_", "FATARROW", "_", "Block"], "postprocess": d => {
         const [args, block] = drop(d);
         const resultNode = extendNode({ type: null }, node(Syntax.FunctionResult)([]));
         return extendNode({
