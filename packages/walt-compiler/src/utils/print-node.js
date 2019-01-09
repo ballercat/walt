@@ -210,6 +210,9 @@ const getPrinters = add => ({
     }
     add(')', 0, -2);
   },
+  [Syntax.Break]: () => {
+    add('(break)');
+  },
   [Syntax.ObjectLiteral]: (_, __) => {},
 });
 

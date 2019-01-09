@@ -1,0 +1,210 @@
+/**
+ * Tokenizer
+ */
+export const memory : Memory = { initial: 1 };
+const table : Table = { initial: 20, element: 'anyfunc' };
+
+let COL  : i32 = 0;
+let LINE : i32 = 0;
+
+const keywords : i32[] = ["const", "let"];
+const alphabet : i32[] = [
+  0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0
+];
+
+function _resetAlphabet() {
+  let i : i32 = 26;
+  while (i) {
+    i -= 1;
+    i32.store(alphabet + i, 0);
+  }
+}
+
+function peek(location : i32) : i32 {
+  return i32.load8_u(location);
+}
+
+function whitespace(location : i32) : i32 {
+  const start : i32 = location;
+
+  while (peek(location) == ' ') {
+    location += 1;
+  }
+
+  if (start < location) {
+    return location;
+  }
+
+  return 0;
+}
+
+function punctuator(location : i32) : i32 {
+  const start : i32 = location;
+
+  if (
+    peek(location) == '+'
+  ) {
+    location += 1;
+    if (peek(location) == '+') {
+      location += 1;
+    }
+  }
+  else if (
+    peek(location) == '-'
+  ) {
+    location += 1;
+    if (peek(location) == '-') {
+      location += 1;
+    }
+  }
+  else if (
+    peek(location) == '&'
+  ) {
+    location += 1;
+    if (peek(location) == '&') {
+      location += 1;
+    }
+  }
+  else if (
+    peek(location) == '='
+  ) {
+    location += 1;
+    if (peek(location) == '=') {
+      location += 1;
+    }
+  }
+  else if (
+    peek(location) == ':' ||
+    peek(location) == '*' ||
+    peek(location) == ';'
+  ) {
+    location += 1;
+  }
+
+  if (start < location) {
+    return location;
+  }
+
+  return 0;
+}
+
+function number(location : i32) : i32 {
+  const start : i32 = location;
+
+  while (peek(location) >= '0' && peek(location) <= '9') {
+    location += 1;
+  }
+
+  if (start < location) {
+    return location;
+  }
+
+  return 0;
+}
+
+function keyword(location : i32) : i32 {
+
+  if (
+    peek(location) == 'c' &&
+    peek(location + 1) == 'o' &&
+    peek(location + 2) == 'n' &&
+    peek(location + 3) == 's' &&
+    peek(location + 4) == 't'
+  ) {
+    return location + 5;
+  }
+
+  return 0;
+}
+
+function identifier(location : i32) : i32 {
+  while (
+    (peek(location) > 64 && peek(location) < 91) ||
+    (peek(location) > 96 && peek(location) < 123) ||
+    (peek(location) == '_')
+    ) {
+    location += 1;
+  }
+
+  return location;
+}
+
+function _type(location : i32) : i32 {
+  if (
+    peek(location) == 'i' &&
+    peek(location + 1) == '3' &&
+    peek(location + 2) == '2'
+  ) {
+    return location + 3;
+  }
+
+  return 0;
+}
+
+export function next(location : i32) : i32 {
+  const TYPE_WHITESPACE : i32 = 0;
+  const TYPE_NUMBER : i32 = 2;
+  const TYPE_IDENTIFIER : i32 = 5;
+  const TYPE_PUNCTUATOR : i32 = 6;
+  const TYPE_KEYWORD : i32 = 7;
+  const TYPE_TYPE : i32 = 8;
+
+  let match : i32 = false;
+  let length : i32 = 1; // length, 29-bits, 0xFFFFFFF8
+  let char : i32 = peek(location);
+  let T : i32 = 0; // type, 3-bits
+
+  while (match == false) {
+    match = whitespace(location);
+    if (match) {
+      T = TYPE_WHITESPACE;
+      length = match - location;
+      break;
+    }
+
+    match = punctuator(location);
+    if (match) {
+      T = TYPE_PUNCTUATOR;
+      length = match - location;
+      break;
+    }
+
+    match = _type(location);
+    if (match) {
+      T = TYPE_TYPE;
+      length = match - location;
+      break;
+    }
+
+    match = keyword(location);
+    if (match) {
+      T = TYPE_KEYWORD;
+      length = match - location;
+      break;
+    }
+
+    match = number(location);
+    if (match) {
+      T = TYPE_NUMBER;
+      length = match - location;
+      break;
+    }
+
+    match = identifier(location);
+    length =  match - location;
+    T = TYPE_IDENTIFIER;
+  }
+
+  return (length << 4) | T;
+}
+
+export function reset(col : i32, line : i32) {
+  COL = col;
+  LINE = line;
+}
+
+export function run() {
+}
