@@ -1,6 +1,7 @@
 import test from "ava";
 import { compile } from "walt-compiler";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import compileFromFile from "../compile-from-file";
 import write from "../write";
@@ -44,11 +45,11 @@ export function run(): i32 {
   })
     .then(wasm => {
       const view = new Uint8Array(wasm.buffer());
-      return write(view, "/tmp/test-walt-result.wasm", fs);
+      return write(view, path.join(os.tmpdir(), "test-walt-result.wasm"), fs);
     })
     .catch(err => console.log("write failed", err))
     .then(() => {
-      const b = fs.readFileSync("/tmp/test-walt-result.wasm");
+      const b = fs.readFileSync(path.join(os.tmpdir(), "test-walt-result.wasm"));
 
       const memory = new WebAssembly.Memory({ initial: 1 });
       const { log } = console;
