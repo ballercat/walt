@@ -41,6 +41,8 @@ attempt to take C/Rust out of the equation and write 'as close to the metal' as 
 I feel like this is currently a problem. Most Web engineers are not familiar with the C family languages or Rust. It's a barrier for wide spread adoption of WebAssembly. A competent Front-end engineer
 should be able to edit WebAssembly as easily as any other systems programmer.
 
+Corollary: The D language makes C a little easier by adding cruft-free classes, closures, and garbage collection. It can compile directly to WASM and can directly call JavaScript functions.
+
 # Solution
 
 Provide a **thin layer** of syntax sugar on top of `.wat` text format. Preferably porting as much of JavaScript syntax to WebAssembly as possible. This improved syntax should give direct control over
