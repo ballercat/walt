@@ -17,7 +17,7 @@ Notes
   and is left up to the user to implement.
 * The top-level function returns a factory method which returns a function taking
   an import object. Every call to the method returns a brand new module
-* _importObj_ used in the factory method is _shared accross all modules_.
+* _importObj_ used in the factory method is _shared across all modules_.
 * Walt Dependencies are shared within a single WebAssembly module instance. Each
   import is a stand alone module linked by the linker. This is useful if you want
   shared module state across imports, similar to node modules.
