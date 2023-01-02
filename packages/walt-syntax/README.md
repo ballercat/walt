@@ -10,7 +10,7 @@ Syntax definitions for the Walt, WebAssembly Alternative Syntax.
 * [x] floating point `1.1`
 * [x] hex `0xFF`
 
-### Stings
+### Strings
 
 * [x] character literals `'x'`
 * [x] words `"hello world!"`\*
